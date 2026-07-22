@@ -1,0 +1,276 @@
+.warehouse-management {
+    width: 100%;
+    min-height: 100vh;
+
+    display: grid;
+    grid-template-areas:
+        "management-header management-header"
+        "warehouse-list-panel warehouse-detail";
+
+    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+
+    padding: 10px;
+    gap: 10px;
+
+}
+
+/* =========================
+   Header
+========================= */
+
+.management-header {
+    grid-area: management-header;
+    padding: 10px 10px;
+}
+
+/* =========================
+   창고 목록
+========================= */
+
+.warehouse-list-panel {
+    padding: 20px 20px;
+
+    border: var(--border);
+
+}
+
+.warehouse-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 20px;
+}
+
+.warehouse-list-header h2 {
+    font-size: 24px;
+    font-weight: 500;
+}
+
+.warehouse-button {
+    height: 40px;
+
+    padding: 0 10px;
+
+    border: var(--border);
+
+    background: var(--background-color);
+
+    font-size: 15px;
+}
+
+.warehouse-button:hover {
+    background: var(--hover-color);
+}
+
+.warehouse-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+.warehouse-list-item {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 18px;
+
+    border: var(--border);
+
+    background: var(--background-color);
+
+    text-align: left;
+}
+
+.warehouse-list-item.active {
+    border: var(--border);
+}
+
+.warehouse-list-item:hover {
+    background: var(--hover-color);
+}
+
+.warehouse-list-info {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.warehouse-list-info strong {
+    font-size: 18px;
+}
+
+.warehouse-list-info span {
+    font-size: 14px;
+    color: var(--font-color);
+}
+
+.warehouse-status {
+    padding: 5px 10px;
+
+    border: var(--border);
+
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+/* =========================
+   상세
+========================= */
+
+.warehouse-detail {
+    min-width: 0;
+
+    padding: 20px;
+    border: var(--border);
+}
+
+.warehouse-detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 10px;
+}
+
+.warehouse-title-group {
+    display: flex;
+    align-items: center;
+
+    gap: 15px;
+}
+
+.warehouse-title-group h1 {
+    font-size: 32px;
+    font-weight: 500;
+}
+
+.detail-status {
+    padding: 6px 12px;
+
+    border: var(--border);
+
+    font-size: 14px;
+}
+
+.warehouse-action-buttons {
+    display: flex;
+
+    gap: 10px;
+}
+
+.warehouse-action-buttons button {
+    width: 100px;
+    height: 45px;
+
+    border: var(--border);
+
+    background: var(--background-color);
+
+    font-size: 15px;
+}
+
+.warehouse-action-buttons button:hover {
+    background: var(--hover-color);
+}
+
+/* =========================
+   상세 콘텐츠
+========================= */
+
+.warehouse-detail-content {
+    display: grid;
+
+    grid-template-columns:
+        minmax(300px, 450px) minmax(300px, 1fr);
+
+    gap: 40px;
+
+    margin-bottom: 20px;
+}
+
+.warehouse-preview {
+    min-height: 350px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: var(--border);
+}
+
+.warehouse-preview-placeholder {
+    font-size: 24px;
+    color: #555555;
+}
+
+.warehouse-info {
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+
+    gap: 25px;
+}
+
+.warehouse-info-row {
+    display: grid;
+
+    grid-template-columns:
+        130px minmax(0, 1fr);
+
+    gap: 20px;
+}
+
+.warehouse-info-row span {
+    font-size: 16px;
+    color: #555555;
+}
+
+.warehouse-info-row strong {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+/* =========================
+   KPI 카드
+========================= */
+
+.warehouse-metrics {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 20px;
+}
+
+.warehouse-metric-card {
+    min-height: 150px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 20px;
+
+    padding: 20px;
+
+    border: var(--border);
+
+    background: var(--background-color);
+}
+
+.warehouse-metric-card span {
+    font-size: 16px;
+}
+
+.warehouse-metric-card strong {
+    font-size: 32px;
+    font-weight: 500;
+}

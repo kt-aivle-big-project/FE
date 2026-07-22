@@ -1,13 +1,15 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import "../styles/layout.css";
-import Simulation from "./Simulation";
 
 function MainLayout() {
     return (
         <div className="main-layout">
             <Sidebar />
-            <Simulation />
+
+            <main className="simulation-wrapper">
+                <Outlet />
+            </main>
         </div>
     );
 }
