@@ -1,0 +1,210 @@
+/* =========================
+   회원가입 전체 화면
+========================= */
+
+.signup-page {
+    width: 100%;
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 40px;
+
+    background:
+        linear-gradient(
+            rgba(255, 255, 255, 0.65),
+            rgba(255, 255, 255, 0.65)
+        ),
+        url("/images/login-background.jpg");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+
+/* =========================
+   회원가입 박스
+========================= */
+
+.signup-box {
+    width: 550px;
+
+    padding: 45px 50px;
+
+    background: var(--background-color);
+
+    border: var(--border);
+}
+
+
+/* =========================
+   Logo
+========================= */
+
+.signup-logo {
+    margin-bottom: 35px;
+
+    text-align: center;
+}
+
+.signup-logo h1 {
+    margin-bottom: 15px;
+
+    font-size: 70px;
+    font-weight: 700;
+
+    letter-spacing: 8px;
+}
+
+.signup-logo p {
+    font-size: 20px;
+}
+
+
+/* =========================
+   Signup Form
+========================= */
+
+.signup-form {
+    width: 100%;
+}
+
+.signup-input-group {
+    margin-bottom: 20px;
+}
+
+.signup-input-group label {
+    display: block;
+
+    margin-bottom: 10px;
+
+    font-size: 17px;
+    font-weight: 500;
+}
+
+
+/* =========================
+   Input
+========================= */
+
+.signup-input-wrapper {
+    position: relative;
+
+    width: 100%;
+    height: 55px;
+
+    display: flex;
+    align-items: center;
+}
+
+.signup-input-wrapper input {
+    width: 100%;
+    height: 100%;
+
+    padding:
+        0
+        70px
+        0
+        50px;
+
+    font-size: 16px;
+}
+
+.signup-input-icon {
+    position: absolute;
+
+    left: 18px;
+
+    z-index: 1;
+
+    font-size: 20px;
+}
+
+
+/* =========================
+   비밀번호 보기
+========================= */
+
+.signup-password-view-button {
+    position: absolute;
+
+    right: 10px;
+
+    border: none;
+
+    background: transparent;
+
+    font-size: 13px;
+}
+
+.signup-password-view-button:hover {
+    background: transparent;
+}
+
+
+/* =========================
+   비밀번호 오류
+========================= */
+
+.password-error {
+    margin-top: 7px;
+
+    color: #ff0000;
+
+    font-size: 13px;
+}
+
+
+
+.signup-submit-button {
+    width: 100%;
+    height: 55px;
+
+    margin-top: 10px;
+
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.signup-submit-button:hover {
+    background: var(--hover-color);
+}
+
+
+.signup-divider {
+    display: flex;
+    align-items: center;
+
+    gap: 15px;
+
+    margin: 30px 0 20px;
+
+    font-size: 14px;
+
+    white-space: nowrap;
+}
+
+.signup-divider::before,
+.signup-divider::after {
+    content: "";
+
+    width: 100%;
+    height: 0.5px;
+
+    background: var(--border-color);
+}
+
+.signup-login-button {
+    width: 100%;
+    height: 55px;
+
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.signup-login-button:hover {
+    background: var(--hover-color);
+}
