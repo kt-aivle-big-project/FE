@@ -19,6 +19,8 @@ function Simulation() {
 
     return (
         <div className="simulation-wrapper">
+
+            {/* 상단 헤더 */}
             <header className="header">
                 <div className="header-title">
                     시뮬레이션 실행
@@ -57,10 +59,12 @@ function Simulation() {
                 </div>
             </header>
 
+            {/* 시뮬레이션 화면 */}
             <main className="simulation-view">
                 창고 화면
             </main>
 
+            {/* 오른쪽 패널 */}
             <aside className="simulation-panel">
                 <div className="panel-group">
 
@@ -112,6 +116,7 @@ function Simulation() {
                 </div>
             </aside>
 
+            {/* 작업 현황 */}
             <section className="simulation-task">
                 <div className="task-section">
 
@@ -144,6 +149,7 @@ function Simulation() {
                 </div>
             </section>
 
+            {/* 시뮬레이션 설정 */}
             <section className="simulation-setting">
                 <div className="section-title">
                     시뮬레이션 설정
@@ -224,6 +230,7 @@ function Simulation() {
                 </button>
             </section>
 
+            {/* 하단 footer */}
             <footer className="footer">
                 Footer
             </footer>

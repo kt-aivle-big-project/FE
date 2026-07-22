@@ -3,10 +3,11 @@
 ========================= */
 
 .simulation-wrapper {
-    width: 100%;
+    width: 1500px;
     min-height: 100vh;
 
     display: grid;
+    margin-left: 5px;
 
     grid-template-areas:
         "header header"
@@ -57,7 +58,7 @@
     margin-bottom: 5px;
 
     font-size: 16px;
-    color: #000000;
+    color: var(--font-color);
 }
 
 .item-name {
@@ -70,9 +71,9 @@
     margin-top: 5px;
     padding: 5px 14px;
 
-    border: 1px solid #000000;
+    border: var(--border);
 
-    background: #ffffff;
+    background: var(--background-color);
 
     font-size: 16px;
 }
@@ -93,15 +94,15 @@
 
     padding: 0 12px;
 
-    border: 1px solid #000000;
+    border: var(--border);
 
-    background: #ffffff;
+    background: var(--background-color);
 
     font-size: 16px;
 }
 
 .header-button button:hover {
-    background: #e7e7e7;
+    background: var(--hover-color);
 }
 
 .profile {
@@ -117,7 +118,7 @@
     width: 52px;
     height: 52px;
 
-    border: 1px solid #000000;
+    border: var(--border);
     border-radius: 50%;
 }
 
@@ -135,7 +136,7 @@
     min-width: 0;
     min-height: 400px;
 
-    border: 1px solid #000000;
+    border: var(--border);
 
     font-size: 40px;
     font-weight: 400;
@@ -151,7 +152,7 @@
     display: flex;
     flex-direction: column;
 
-    border: 1px solid #000000;
+    border: var(--border);
 }
 
 .panel-group {
@@ -172,7 +173,7 @@
 .natural-language {
     position: relative;
 
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .natural-language .textarea {
@@ -183,31 +184,18 @@
 
 .natural-language textarea {
     width: 100%;
-    height: 170px;
-
+    height: 200px;
     padding: 10px;
-
     resize: none;
-
-    border: 1px solid #000000;
-
-    background: #ffffff;
-
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .input-button {
     position: absolute;
-
-    right: 5px;
-    bottom: 5px;
-
+    right: 0px;
+    bottom: 4px;
     width: 50px;
     height: 40px;
-
-    border: 1px solid #000000;
-
-    background: #ffffff;
 }
 
 /* =========================
@@ -230,10 +218,6 @@
     margin-top: 8px;
     padding: 0 12px;
 
-    border: 1px solid #000000;
-
-    background: #ffffff;
-
     font-size: 16px;
 }
 
@@ -243,7 +227,7 @@
 
 .simulation-task {
     grid-area: simulation-task;
-    border: 1px solid #000000;
+    border: var(--border);
 }
 
 .task-section {
@@ -267,12 +251,10 @@
 
 .task-card {
     min-height: 150px;
-
     padding: 15px;
 
-    border: 1px solid #000000;
-
-    background: #ffffff;
+    border: var(--border);
+    background: var(--background-color);
 
     font-size: 16px;
 }
@@ -290,12 +272,14 @@
         180px repeat(4, minmax(180px, 1fr)) 180px;
 
     align-items: end;
-    border: 1px solid #000000;
+
+    border: var(--border);
+
     gap: 10px;
     padding: 20px 30px;
 }
 
-.simulation-setting>.section-title {
+.simulation-setting > .section-title {
     align-self: center;
 
     margin: 0;
@@ -317,13 +301,12 @@
 
 .setting-item select {
     width: 100%;
-    height: 45px;
 
     text-align: center;
 
-    border: 1px solid #000000;
+    border: var(--border);
 
-    background: #ffffff;
+    background: var(--background-color);
 
     font-size: 16px;
 }
@@ -337,14 +320,14 @@
 
     grid-template-columns: 40px minmax(0, 1fr) 40px;
 
-    height: 45px;
+    height: 30px;
 }
 
 .robot-count button,
 .robot-count input {
-    border: 1px solid #000000;
+    border: var(--border);
 
-    background: #ffffff;
+    background: var(--background-color);
 
     text-align: center;
 }
@@ -367,18 +350,18 @@
 ========================= */
 
 .save-button {
-    width: 150px;
-    height: 55px;
+    width: 100px;
+    height: 40px;
 
-    border: 1px solid #000000;
+    border: var(--border);
 
-    background: #ffffff;
+    background: var(--background-color);
 
     font-size: 18px;
 }
 
 .save-button:hover {
-    background: #e7e7e7;
+    background: var(--hover-color);
 }
 
 /* =========================
@@ -387,7 +370,6 @@
 
 .footer {
     grid-area: footer;
-    border: 1px solid #000000;
 
+    border: var(--border);
 }
-
