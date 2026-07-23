@@ -1,33 +1,157 @@
 /* =========================
+   공통 변수
+========================= */
+
+:root {
+    --border-color: #000000;
+    --border: 1px solid var(--border-color);
+    --background-color: #ffffff;
+    --font-color: #000000;
+    --hover-color: #e7e7e7;
+}
+
+
+/* =========================
+   전체 기본 설정
+========================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    font-family: Arial, "Noto Sans KR", sans-serif;
+
+    background: var(--background-color);
+    color: var(--font-color);
+}
+
+
+/* =========================
+   링크
+========================= */
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+
+/* =========================
+   리스트
+========================= */
+
+ul,
+ol {
+    list-style: none;
+}
+
+
+/* =========================
+   Form 공통
+========================= */
+
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+    font-size: 14px;
+}
+
+
+/* =========================
+   Button 공통
+========================= */
+
+button {
+    border: var(--border);
+
+    background: var(--background-color);
+    color: var(--font-color);
+
+    cursor: pointer;
+}
+
+button:hover {
+    background: var(--hover-color);
+}
+
+
+/* =========================
+   Input / Select / Textarea 공통
+========================= */
+
+input,
+select,
+textarea {
+    border: var(--border);
+
+    background: var(--background-color);
+    color: var(--font-color);
+}
+
+input,
+select {
+    height: 30px;
+}
+
+textarea {
+    padding: 10px 10px;
+
+    resize: vertical;
+}
+
+
+/* =========================
+   Focus
+========================= */
+
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+
+    border-color: var(--border-color);
+}
+
+
+/* =========================
    전체 레이아웃
 ========================= */
 
 .main-layout {
     width: 100%;
     min-height: 100vh;
+
     display: flex;
 }
 
 .sidebar {
-    width: 200px;
+    width: 190px;
     min-height: 100vh;
 
     display: flex;
     flex-direction: column;
 
+    flex-shrink: 0;
 
-    border-right: 1px solid #000000;
-    background: #ffffff;
+    border-right: var(--border);
 }
 
-.page-content {
-    flex: 1;
-    min-width: 0;
-    min-height: 100vh;
-}
 
 /* =========================
-   Sidebar
+   Logo
 ========================= */
 
 .logo {
@@ -43,40 +167,66 @@
     letter-spacing: 2px;
 }
 
+
+/* =========================
+   Navigation
+========================= */
+
 .navigation {
-    padding: 20px 10px;
+    padding: 5px 25px;
 }
 
 .navigation li {
     margin-bottom: 30px;
+    font-size: 18px;
+}
+
+.navigation a {
+    display: block;
 }
 
 .navigation a:hover {
-    color: #666;
+    color: var(--hover-color);
 }
 
 .navigation a.active {
     font-weight: 600;
 }
 
-.system-status {
-    margin: auto 26px 30px;
-    padding: 20px 15px;
 
-    border: 1px solid #000000;
+/* =========================
+   System Status
+========================= */
+
+.system-status {
+    margin: 120px 10px 20px;
+
+    padding: 10px;
+
+    border: var(--border);
 
     text-align: center;
     line-height: 2;
-
-    background: #ffffff;
 }
 
 .system-status h3 {
-    margin-bottom: 15px;
     font-size: 20px;
 }
 
 .system-status p {
     font-size: 16px;
+
     white-space: nowrap;
+}
+
+
+/* =========================
+   Page Content
+========================= */
+
+.page-content {
+    flex: 1;
+
+    min-width: 0;
+    min-height: 100vh;
 }
