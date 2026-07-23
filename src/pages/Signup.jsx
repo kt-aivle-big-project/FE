@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/signup.css";
 
+const API_URL = "http://localhost:8080/api";
+
 function Signup() {
     const navigate = useNavigate();
 
@@ -13,18 +15,56 @@ function Signup() {
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
-    const handleSignup = (e) => {
+    const handleSignup = async (e) => {
         e.preventDefault();
 
+        if (!name.trim() || !email.trim() || !password.trim()) {
+            alert("모든 항목을 입력해주세요.");
+            return;
+        }
         if (password !== passwordConfirm) {
             alert("비밀번호가 일치하지 않습니다.");
             return;
         }
 
-        // 추후 회원가입 API 연결
-        console.log("name:", name);
-        console.log("email:", email);
-        console.log("password:", password);
+        // 백엔드로 전달
+        const signupData = {
+            name: name.trim(),
+            email: email.trim(),
+            password: password,
+        };
+
+        try {
+            // 회원가입 API 호출
+            const response = await fetch(
+                `${API_URL}/signup`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(signupData),
+                }
+            );
+
+            if (!response.ok) {
+                const errorMessage = await response.text();
+
+                throw new Error(
+                    errorMessage || "회원가입에 실패했습니다."
+                );
+            }
+
+            alert("회원가입이 완료되었습니다.");
+            navigate("/login");
+        } catch (error) {
+            console.error("회원가입 실패:", error);
+            alert(
+                error.message || "회원가입 중 오류가 발생했습니다."
+            );
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleLogin = () => {
@@ -39,18 +79,12 @@ function Signup() {
                     <p>창고 시뮬레이션 운영 플랫폼</p>
                 </div>
 
-                <form className="signup-form" onSubmit={handleSignup}
-                >
-
+                <form className="signup-form" onSubmit={handleSignup}>
                     <div className="signup-input-group">
-                        <label htmlFor="name">
-                            이름
-                        </label>
+                        <label htmlFor="name">이름</label>
 
                         <div className="signup-input-wrapper">
-                            <span className="signup-input-icon">
-                                👩🏻
-                            </span>
+                            <span className="signup-input-icon">👩🏻</span>
 
                             <input
                                 id="name"
@@ -65,14 +99,10 @@ function Signup() {
                     </div>
 
                     <div className="signup-input-group">
-                        <label htmlFor="signup-email">
-                            이메일
-                        </label>
+                        <label htmlFor="signup-email">이메일</label>
 
                         <div className="signup-input-wrapper">
-                            <span className="signup-input-icon">
-                                ✉️
-                            </span>
+                            <span className="signup-input-icon">✉️</span>
 
                             <input
                                 id="signup-email"
@@ -88,14 +118,10 @@ function Signup() {
                     </div>
 
                     <div className="signup-input-group">
-                        <label htmlFor="signup-password">
-                            비밀번호
-                        </label>
+                        <label htmlFor="signup-password">비밀번호</label>
 
                         <div className="signup-input-wrapper">
-                            <span className="signup-input-icon">
-                                🔢
-                            </span>
+                            <span className="signup-input-icon">🔢</span>
 
                             <input
                                 id="signup-password"
@@ -127,14 +153,10 @@ function Signup() {
                     </div>
 
                     <div className="signup-input-group">
-                        <label htmlFor="password-confirm">
-                            비밀번호 확인
-                        </label>
+                        <label htmlFor="password-confirm">비밀번호 확인</label>
 
                         <div className="signup-input-wrapper">
-                            <span className="signup-input-icon">
-                                🔢
-                            </span>
+                            <span className="signup-input-icon">🔢</span>
 
                             <input
                                 id="password-confirm"
@@ -194,7 +216,6 @@ function Signup() {
                 >
                     로그인
                 </button>
-
             </div>
         </div>
     );

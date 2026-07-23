@@ -2,22 +2,54 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/login.css";
 
+const API_URL = "http://localhost:8080/api";
+
 function Login() {
-    const navigate = useNavigate();
-
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
 
-        // 추후 백엔드 로그인 API 연결
-        console.log("email:", email);
-        console.log("password:", password);
-        
-        navigate("/simulation");
+        if (!email.trim() || !password.trim()) {
+            alert("이메일과 비밀번호를 입력해주세요.");
+            return;
+        }
+
+        // 백엔드로 전달
+        const loginData = {
+            email: email.trim(),
+            password: password,
+        };
+
+        try {
+            const response = await fetch(
+                `${API_URL}/login`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(loginData),
+                }
+            );
+
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                throw new Error(
+                    errorMessage ||
+                    "이메일 또는 비밀번호가 올바르지 않습니다."
+                );
+            }
+
+            alert("로그인되었습니다.");
+            navigate("/simulation");
+        } catch (error) {
+            console.error("로그인 실패:", error);
+            alert(
+                error.message ||
+                "로그인 중 오류가 발생했습니다."
+            );
+        }
     };
+
 
     const handleSignup = () => {
         navigate("/signup");
@@ -33,15 +65,10 @@ function Login() {
 
                 <form className="login-form" onSubmit={handleLogin}>
                     <div className="login-input-group">
-
-                        <label htmlFor="email">
-                            이메일
-                        </label>
+                        <label htmlFor="email">이메일</label>
 
                         <div className="login-input-wrapper">
-                            <span className="login-input-icon">
-                                ✉️
-                            </span>
+                            <span className="login-input-icon">✉️</span>
 
                             <input
                                 id="email"
@@ -56,16 +83,11 @@ function Login() {
                         </div>
                     </div>
 
-
                     <div className="login-input-group">
-                        <label htmlFor="password">
-                            비밀번호
-                        </label>
+                        <label htmlFor="password">비밀번호</label>
 
                         <div className="login-input-wrapper">
-                            <span className="login-input-icon">
-                                🔢
-                            </span>
+                            <span className="login-input-icon">🔢</span>
 
                             <input
                                 id="password"
@@ -111,7 +133,6 @@ function Login() {
                     비밀번호 찾기
                 </button>
 
-
                 <div className="login-divider">
                     <div className="signup-area">
                         <p>아직 계정이 없으신가요?</p>
@@ -124,7 +145,6 @@ function Login() {
                         회원가입
                     </button>
                 </div>
-
             </div>
         </div>
     );
