@@ -1,0 +1,120 @@
+/* =========================
+   로봇 관리 전체
+========================= */
+
+.robot-management {
+    width: 100%;
+    min-height: 100vh;
+
+    padding: 10px;
+}
+
+
+/* =========================
+   Header
+========================= */
+
+.management-header {
+    grid-area: management-header;
+    padding: 10px 10px;
+}
+
+
+/* =========================
+   로봇 목록
+========================= */
+
+.robot-list {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+
+/* =========================
+   로봇 Row
+========================= */
+
+.robot-row {
+    width: 100%;
+    min-height: 120px;
+
+    display: grid;
+
+    grid-template-columns:
+        120px
+        repeat(4, minmax(0, 1fr))
+        140px;
+
+    border: var(--border);
+}
+
+
+/* =========================
+   로봇 이름
+========================= */
+
+.robot-name {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 15px;
+
+    border-right: var(--border);
+
+    font-size: 25px;
+    font-weight: 500;
+}
+
+
+/* =========================
+   로봇 정보
+========================= */
+
+.robot-info {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    gap: 10px;
+
+    padding: 20px;
+
+    border-right: var(--border);
+}
+
+.robot-info-label {
+    font-size: 20px;
+}
+
+.robot-info-value {
+    font-size: 30px;
+}
+
+
+/* =========================
+   로봇 제어 버튼
+========================= */
+
+.robot-actions {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    gap: 10px;
+
+    padding: 10px;
+}
+
+.robot-actions button {
+    width: 100%;
+    height: 40px;
+
+    font-size: 16px;
+}

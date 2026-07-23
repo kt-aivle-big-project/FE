@@ -1,0 +1,402 @@
+/* =========================
+   창고 화면 전체
+========================= */
+
+.warehouse-static-view {
+    width: 100%;
+    height: 100%;
+
+    overflow: auto;
+
+}
+
+.warehouse-static-svg {
+    width: 100%;
+    min-width: 1200px;
+    height: auto;
+
+    display: block;
+
+    background: var(--background-color);
+
+    font-family:
+        Arial,
+        "Noto Sans KR",
+        sans-serif;
+}
+
+
+/* =========================
+   창고 배경 및 외곽
+========================= */
+
+.warehouse-page-background {
+    fill: var(--background-color);
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+.warehouse-main-frame {
+    fill: var(--background-color);
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+
+/* =========================
+   컨베이어
+========================= */
+
+.conveyor-track {
+    fill: none;
+
+    stroke: gray;
+    stroke-width: 55;
+}
+
+.conveyor-dash {
+    fill: none;
+
+    stroke: var(--background-color);
+    stroke-width: 2;
+
+    stroke-dasharray: 10 8;
+}
+
+.conveyor-direction {
+    fill: var(--font-color);
+
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.conveyor-arrow {
+    font-size: 48px;
+    font-weight: 700;
+}
+
+.conveyor-small-arrow {
+    fill: var(--background-color);
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+
+/* =========================
+   입고 엘리베이터
+========================= */
+
+.warehouse-inbound-panel {
+    fill: var(--background-color);
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+.warehouse-inbound-title {
+    fill: purple;
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+.warehouse-inbound-node {
+    fill: purple;
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+
+/* =========================
+   출고지
+========================= */
+
+.warehouse-outbound-panel {
+    fill: var(--background-color);
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+.warehouse-outbound-title {
+    fill: green;
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+.warehouse-outbound-node {
+    fill: green;
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+
+/* =========================
+   입고 / 출고 제목
+========================= */
+
+.warehouse-area-title {
+    fill: var(--background-color);
+
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.warehouse-station-id {
+    fill: var(--font-color);
+
+    font-size: 10px;
+}
+
+.warehouse-station-letter {
+    fill: var(--background-color);
+
+    font-size: 13px;
+    font-weight: 700;
+
+    pointer-events: none;
+}
+
+
+/* =========================
+   모든 경로 공통
+========================= */
+
+.warehouse-edge {
+    fill: none;
+
+    stroke-width: 2;
+}
+
+
+/* 로봇 이동 경로 */
+
+.route-edge {
+    stroke: red;
+}
+
+
+/* 선반 접근 경로 */
+
+.rack-edge {
+    stroke: blue;
+}
+
+
+/* 입고 엘리베이터 경로 */
+
+.inbound-edge {
+    stroke: purple;
+}
+
+
+/* 출고지 연결 경로 */
+
+.outbound-edge {
+    stroke: green;
+}
+
+
+/* 충전소 연결 경로 */
+
+.charging-edge {
+    stroke: orange;
+}
+
+
+/* =========================
+   경로 노드
+========================= */
+
+.warehouse-route-node {
+    fill: red;
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+.warehouse-junction-node {
+    fill: orange;
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+.warehouse-node-id {
+    fill: var(--font-color);
+
+    font-size: 7px;
+
+    paint-order: stroke;
+
+    stroke: var(--background-color);
+    stroke-width: 2px;
+}
+
+
+/* =========================
+   선반 영역
+========================= */
+
+.warehouse-rack-background {
+    fill: var(--background-color);
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+.warehouse-rack-title {
+    fill: var(--font-color);
+
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.warehouse-rack-name {
+    fill: var(--font-color);
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+/* =========================
+   선반 3단 상태
+========================= */
+
+/* 비어 있음 */
+
+.warehouse-level-empty {
+    fill: blue;
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+
+/* 일부 적재 */
+
+.warehouse-level-partial {
+    fill: orange;
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+
+/* 가득 참 */
+
+.warehouse-level-full {
+    fill: red;
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+.warehouse-level-label {
+    fill: var(--font-color);
+
+    font-size: 6px;
+}
+
+
+/* =========================
+   충전 구역
+========================= */
+
+.warehouse-charging-zone {
+    fill: var(--background-color);
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+.warehouse-charging-title {
+    fill: var(--font-color);
+
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.warehouse-charging-slot {
+    fill: orange;
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+.warehouse-charging-code {
+    fill: var(--font-color);
+
+    font-size: 8px;
+    font-weight: 600;
+}
+
+
+/* =========================
+   범례
+========================= */
+
+.warehouse-legend-background {
+    fill: var(--background-color);
+
+    stroke: var(--border-color);
+    stroke-width: 1;
+}
+
+.warehouse-legend text {
+    fill: var(--font-color);
+
+    font-size: 12px;
+}
+
+
+/* 범례 안의 선 색상 */
+
+.warehouse-legend .route-edge {
+    stroke: red;
+}
+
+.warehouse-legend .rack-edge {
+    stroke: blue;
+}
+
+
+/* 범례 안의 노드 색상 */
+
+.warehouse-legend .warehouse-route-node {
+    fill: red;
+}
+
+.warehouse-legend .warehouse-level-empty {
+    fill: blue;
+}
+
+.warehouse-legend .warehouse-inbound-node {
+    fill: orange;
+}
+
+.warehouse-legend .warehouse-outbound-node {
+    fill: green;
+}
+
+.warehouse-legend .warehouse-charging-slot {
+    fill: orange;
+}
+
+
+/* =========================
+   작은 화면
+========================= */
+
+@media (max-width: 1000px) {
+    .warehouse-static-svg {
+        min-width: 1100px;
+    }
+}

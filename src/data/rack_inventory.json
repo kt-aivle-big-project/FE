@@ -1,0 +1,985 @@
+{
+  "title": "자동창고 선반별 3개 층 빈 재고",
+  "source_graph_file": "warehouse_graph.json",
+  "updated_at": "2026-07-21T06:29:03.259140Z",
+  "level_rule": {
+    "1": "하단",
+    "2": "중단",
+    "3": "상단"
+  },
+  "status_codes": {
+    "EMPTY": "비어 있음",
+    "PARTIAL": "일부 적재",
+    "FULL": "가득 참"
+  },
+  "summary": {
+    "rack_count": 48,
+    "level_count": 144,
+    "occupied_level_count": 0,
+    "empty_level_count": 144,
+    "partial_level_count": 0,
+    "full_level_count": 0
+  },
+  "racks": [
+    {
+      "rack_node_id": "K0_1",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K0_2",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K0_3",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K0_4",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K0_6",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K0_7",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K0_8",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K0_9",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K1_1",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K1_2",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K1_3",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K1_4",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K1_6",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K1_7",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K1_8",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K1_9",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K2_1",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K2_2",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K2_3",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K2_4",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K2_6",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K2_7",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K2_8",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K2_9",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K3_1",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K3_2",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K3_3",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K3_4",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K3_6",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K3_7",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K3_8",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K3_9",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K4_1",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K4_2",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K4_3",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K4_4",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K4_6",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K4_7",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K4_8",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K4_9",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K5_1",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K5_2",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K5_3",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K5_4",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K5_6",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K5_7",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K5_8",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    },
+    {
+      "rack_node_id": "K5_9",
+      "levels": [
+        {
+          "level": 1,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 2,
+          "status": "EMPTY",
+          "item": null
+        },
+        {
+          "level": 3,
+          "status": "EMPTY",
+          "item": null
+        }
+      ]
+    }
+  ]
+}

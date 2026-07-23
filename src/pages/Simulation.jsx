@@ -1,0 +1,731 @@
+import { useEffect, useState } from "react";
+import "../styles/simulation.css";
+import SimulationView from "../components/SimulationView";
+
+import scenarios from "../data/scenarios.json";
+import alerts from "../data/alerts.json";
+import tasks from "../data/tasks.json";
+import robots from "../data/robots.json";
+import products from "../data/products.json";
+import inbound from "../data/inbound.json";
+import outbound from "../data/outbound.json";
+
+
+function Simulation() {
+    /* ===== 상단 헤더 - 시뮬레이션 실행  ===== */
+
+    // 시나리오 설정
+    const [scenarioSettings, setScenarioSettings] = useState(scenarios);
+    const [selectedScenario, setSelectedScenario] = useState(scenarios[0]?.scenario_id ?? "");
+    const [simulationSpeed, setSimulationSpeed] = useState(1);
+    const [simulationStatus, setSimulationStatus] = useState("대기");
+    const [simulationTime, setSimulationTime] = useState(0);
+
+    // 시뮬레이션 타이머
+    useEffect(() => {
+        if (simulationStatus !== "실행" && simulationStatus !== "재계획") { return; }
+        const timer = setInterval(() => {
+            setSimulationTime((time) => time + simulationSpeed);
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [simulationStatus, simulationSpeed]);
+
+    const formatSimulationTime = (totalSeconds) => {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return [hours, minutes, seconds]
+            .map((value) =>
+                String(value).padStart(2, "0")
+            )
+            .join(":");
+    };
+
+    // 시뮬레이션 시나리오 선택 (저장된 설정값 불러오기)
+    const handleScenarioChange = (scenarioId) => {
+        setSelectedScenario(scenarioId);
+    };
+
+
+    // 시뮬레이션 시작
+    const handleStart = async () => {
+        if (!selectedScenario) {
+            alert("시나리오를 선택해주세요.");
+            return;
+        }
+        if (inboundRatioTotal !== 100) {
+            alert("입고 품목 구성 비율의 합계가 100%가 되어야 합니다.");
+            return;
+        }
+
+        // 백엔드로 전달할 데이터
+        const simulationData = {
+            scenario_id: selectedScenario,
+            simulation_speed: simulationSpeed,
+            inbound: inboundSettings,
+            outbound: outboundSettings,
+        };
+
+        try {
+            /*
+             * 로그인 / 인증 연동 후 fetch 추가
+             * const response = await fetch(...);
+             */
+            console.log(
+                "시뮬레이션 실행 데이터:",
+                simulationData
+            );
+            // 현재는 프론트 테스트용
+            setSimulationStatus("실행");
+        } catch (error) {
+            console.error(
+                "시뮬레이션 시작 실패:",
+                error
+            );
+            alert(
+                "시뮬레이션을 시작하지 못했습니다."
+            );
+        }
+    };
+
+
+    // 시뮬레이션 일시정지 
+    const handlePause = async () => {
+        if (simulationStatus !== "실행") {
+            return;
+        }
+        try {
+            // 로그인 / 인증 연동 후 fetch 추가
+            setSimulationStatus("일시정지");
+        } catch (error) {
+            console.error(
+                "시뮬레이션 일시정지 실패:",
+                error
+            );
+        }
+    };
+
+    // 시뮬레이션 초기화 
+    const handleReset = () => {
+
+        setSimulationStatus("대기");
+        setSimulationTime(0);
+    };
+
+    // 시뮬레이션 재계획
+    const handleReplan = async () => {
+        if (simulationStatus !== "실행") {
+            return;
+        }
+        try {
+            // 로그인 / 인증 연동 후 fetch 추가
+            setSimulationStatus("재계획");
+        } catch (error) {
+            console.error(
+                "시뮬레이션 재계획 실패:",
+                error
+            );
+        }
+    };
+
+
+    /* ===== 입고 설정 ===== */
+    const [inboundSettings, setInboundSettings] = useState(inbound);
+    const [newProductCode, setNewProductCode] = useState("");
+    const [newProductRatio, setNewProductRatio] = useState("");
+
+    // 입고 설정 변경
+    const handleInboundChange = (field, value) => {
+        setInboundSettings((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+
+    // 품목명 불러오기
+    const getProductName = (productCode) => {
+        const product = products.find(
+            (product) => product.product_code === productCode
+        );
+
+        return product?.product_name ?? "";
+    };
+
+    // 이미 추가한 품목은 목록에서 제외
+    const availableProducts = products.filter(
+        (product) =>
+            !inboundSettings.products.some(
+                (inboundProduct) =>
+                    inboundProduct.product_code === product.product_code
+            )
+    );
+
+    // 품목 추가
+    const handleAddInboundProduct = () => {
+        if (!newProductCode) {
+            alert("추가할 품목을 선택해주세요.");
+            return;
+        }
+
+        const ratio = Number(newProductRatio);
+
+        if (ratio <= 0) {
+            alert("품목 비율을 입력해주세요.");
+            return;
+        }
+
+        if (inboundRatioTotal + ratio > 100) {
+            alert("품목 구성 비율의 합계는 100%를 초과할 수 없습니다.");
+            return;
+        }
+
+        setInboundSettings((prev) => ({
+            ...prev,
+            products: [
+                ...prev.products,
+                {
+                    product_code: newProductCode,
+                    ratio: ratio,
+                },
+            ],
+        }));
+
+        setNewProductCode("");
+        setNewProductRatio("");
+    };
+
+    // 품목 삭제
+    const handleDeleteInboundProduct = (productCode) => {
+        setInboundSettings((prev) => ({
+            ...prev,
+            products: prev.products.filter(
+                (product) => product.product_code !== productCode
+            ),
+        }));
+    };
+
+    // 품목 비율 수정
+    const handleInboundRatioChange = (productCode, value) => {
+        const ratio = Math.max(
+            0,
+            Math.min(100, Number(value))
+        );
+
+        setInboundSettings((prev) => ({
+            ...prev,
+            products: prev.products.map((product) =>
+                product.product_code === productCode
+                    ? {
+                        ...product,
+                        ratio: ratio,
+                    }
+                    : product
+            ),
+        }));
+    };
+
+    // 품목 비율 합계
+    const inboundRatioTotal = inboundSettings.products.reduce(
+        (total, product) => total + product.ratio,
+        0
+    );
+
+    /* ===== 출고 설정 ===== */
+    const [outboundSettings, setOutboundSettings] = useState(outbound);
+
+    // 출고 설정 변경
+    const handleOutboundChange = (field, value) => {
+        setOutboundSettings((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+
+
+    // 자연어 명령
+    const [naturalCommand, setNaturalCommand] = useState("");
+    const handleNaturalCommand = () => {
+        const command = naturalCommand.trim();
+
+        if (!command) {
+            alert("명령을 입력해주세요.");
+            return;
+        }
+
+        const commandRequest = {
+            command: command,
+        };
+
+        console.log("자연어 명령:", commandRequest);
+
+        // 전송 완료됐다고 가정
+        setNaturalCommand("");
+    };
+
+
+    return (
+        <div className="simulation-wrapper">
+
+            {/* 상단 헤더 */}
+            <header className="simulation-header">
+                <div className="simulation-header-title">
+                    <h2>시뮬레이션 실행</h2>
+                </div>
+
+                <div className="simulation-header-info">
+                    {/* 시나리오 선택 */}
+                    <div className="simulation-header-info-item simulation-scenario">
+                        <span className="simulation-header-label">
+                            시나리오
+                        </span>
+
+                        <select
+                            value={selectedScenario}
+                            onChange={(e) =>
+                                handleScenarioChange(e.target.value)
+                            }
+                        >
+                            {scenarioSettings.map((scenario) => (
+                                <option
+                                    key={scenario.scenario_id}
+                                    value={scenario.scenario_id}
+                                >
+                                    {scenario.scenario_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+
+                    {/* 현재 시뮬레이션 상태 */}
+                    <div className="simulation-header-info-item">
+                        <span className="simulation-header-label">
+                            상태
+                        </span>
+                        <span className="simulation-header-status">
+                            {simulationStatus}
+                        </span>
+
+                    </div>
+
+
+                    {/* 시뮬레이션 타이머 */}
+                    <div className="simulation-header-info-item">
+                        <span className="simulation-header-label">
+                            실행 시간
+                        </span>
+                        <span className="simulation-header-time">
+                            {formatSimulationTime(simulationTime)}
+                        </span>
+                    </div>
+
+                    {/* 시뮬레이션 실행 속도 */}
+                    <div className="simulation-header-info-item">
+                        <span className="simulation-header-label">
+                            실행 속도
+                        </span>
+
+                        <select
+                            className="simulation-header-speed"
+                            value={simulationSpeed}
+                            onChange={(e) =>
+                                setSimulationSpeed(Number(e.target.value))
+                            }
+                        >
+                            <option value={1}>1배</option>
+                            <option value={2}>2배</option>
+                            <option value={3}>3배</option>
+                            <option value={5}>5배</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* 시뮬레이션 제어 버튼 */}
+                <div className="simulation-header-buttons">
+                    <button
+                        type="button"
+                        className="simulation-header-button start"
+                        onClick={handleStart}
+                    >
+                        시작
+                    </button>
+                    <button
+                        type="button"
+                        className="simulation-header-button"
+                        onClick={handlePause}
+                    >
+                        일시정지
+                    </button>
+                    <button
+                        type="button"
+                        className="simulation-header-button"
+                        onClick={handleReset}
+                    >
+                        초기화
+                    </button>
+                    <button
+                        type="button"
+                        className="simulation-header-button"
+                        onClick={handleReplan}
+                    >
+                        재계획
+                    </button>
+                </div>
+            </header>
+
+            {/* 시뮬레이션 화면 */}
+            <main className="simulation-view">
+                <SimulationView />
+            </main>
+
+            <aside className="simulation-panel">
+                {/* 입고 설정 */}
+                <section className="simulation-setting-panel">
+
+                    <h2 className="simulation-setting-title">
+                        입고 설정
+                    </h2>
+
+                    <div className="simulation-setting-row">
+                        <label>입고 예정 건수</label>
+
+                        <div className="simulation-input-unit">
+                            <input
+                                type="number"
+                                value={inboundSettings.inbound_count}
+                                onChange={(e) =>
+                                    handleInboundChange(
+                                        "inbound_count",
+                                        Number(e.target.value)
+                                    )
+                                }
+                            />
+                            <span>건</span>
+                        </div>
+                    </div>
+
+                    <div className="simulation-setting-row">
+                        <label>총 입고 예정량</label>
+
+                        <div className="simulation-input-unit">
+                            <input
+                                type="number"
+                                value={inboundSettings.total_quantity}
+                                onChange={(e) =>
+                                    handleInboundChange(
+                                        "total_quantity",
+                                        Number(e.target.value)
+                                    )
+                                }
+                            />
+                            <span>BOX</span>
+                        </div>
+                    </div>
+
+                    <div className="simulation-setting-row">
+                        <label>입고 발생 패턴</label>
+
+                        <select
+                            value={inboundSettings.arrival_pattern}
+                            onChange={(e) =>
+                                handleInboundChange(
+                                    "arrival_pattern",
+                                    e.target.value
+                                )
+                            }
+                        >
+                            <option value="UNIFORM">균등</option>
+                            <option value="RANDOM">랜덤</option>
+                            <option value="PEAK">집중</option>
+                        </select>
+                    </div>
+
+
+                    {/* 품목 구성 */}
+                    <div className="inbound-product-section">
+
+                        <div className="inbound-product-header">
+
+                            <h3>품목 구성</h3>
+
+                            <span
+                                className={
+                                    inboundRatioTotal === 100
+                                        ? "inbound-ratio-valid"
+                                        : "inbound-ratio-invalid"
+                                }
+                            >
+                                합계 {inboundRatioTotal}%
+                            </span>
+
+                        </div>
+
+
+                        {/* 추가된 품목 */}
+                        <div className="inbound-product-list">
+
+                            {inboundSettings.products.map((product) => (
+
+                                <div
+                                    className="inbound-poducrt-row"
+                                    key={product.product_code}
+                                >
+
+                                    <div className="inbound-product-info">
+
+                                        <strong>
+                                            {product.product_code}
+                                        </strong>
+
+                                        <span>
+                                            {getProductName(product.product_code)}
+                                        </span>
+
+                                    </div>
+
+
+                                    <div className="inbound-product-control">
+
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            value={product.ratio}
+                                            onChange={(e) =>
+                                                handleInboundRatioChange(
+                                                    product.product_code,
+                                                    e.target.value
+                                                )
+                                            }
+                                        />
+
+                                        <span>%</span>
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                handleDeleteInboundProduct(
+                                                    product.product_code
+                                                )
+                                            }
+                                        >
+                                            삭제
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            ))}
+
+                        </div>
+
+
+                        {/* 품목 추가 */}
+                        {availableProducts.length > 0 && (
+
+                            <div className="inbound-product-add">
+
+                                <select
+                                    value={newProductCode}
+                                    onChange={(e) =>
+                                        setNewProductCode(e.target.value)
+                                    }
+                                >
+
+                                    <option value="">
+                                        품목 선택
+                                    </option>
+
+                                    {availableProducts.map((product) => (
+
+                                        <option
+                                            key={product.product_code}
+                                            value={product.product_code}
+                                        >
+                                            {product.product_code} {product.product_name}
+                                        </option>
+
+                                    ))}
+
+                                </select>
+
+
+                                <div className="inbound-add-ratio">
+
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="100"
+                                        placeholder="비율"
+                                        value={newProductRatio}
+                                        onChange={(e) =>
+                                            setNewProductRatio(e.target.value)
+                                        }
+                                    />
+
+                                    <span>%</span>
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    onClick={handleAddInboundProduct}
+                                >
+                                    추가
+                                </button>
+
+                            </div>
+
+                        )}
+
+                    </div>
+
+                </section>
+
+                {/* 출고 설정 */}
+                <section className="simulation-setting-panel">
+
+                    <h2 className="simulation-setting-title">
+                        출고 설정
+                    </h2>
+
+                    <div className="simulation-setting-row">
+                        <label>출고 주문 건수</label>
+
+                        <div className="simulation-input-unit">
+                            <input
+                                type="number"
+                                value={outboundSettings.order_count}
+                                onChange={(e) =>
+                                    handleOutboundChange(
+                                        "order_count",
+                                        Number(e.target.value)
+                                    )
+                                }
+                            />
+                            <span>건</span>
+                        </div>
+                    </div>
+
+                    <div className="simulation-setting-row">
+                        <label>총 출고 예정량</label>
+
+                        <div className="simulation-input-unit">
+                            <input
+                                type="number"
+                                value={outboundSettings.total_quantity}
+                                onChange={(e) =>
+                                    handleOutboundChange(
+                                        "total_quantity",
+                                        Number(e.target.value)
+                                    )
+                                }
+                            />
+                            <span>BOX</span>
+                        </div>
+                    </div>
+
+                    <div className="simulation-setting-row">
+                        <label>주문 발생 패턴</label>
+
+                        <select
+                            value={outboundSettings.arrival_pattern}
+                            onChange={(e) =>
+                                handleOutboundChange(
+                                    "arrival_pattern",
+                                    e.target.value
+                                )
+                            }
+                        >
+                            <option value="UNIFORM">균등</option>
+                            <option value="RANDOM">랜덤</option>
+                            <option value="PEAK">집중</option>
+                        </select>
+                    </div>
+
+                    <div className="simulation-setting-row">
+                        <label>출고 처리기한</label>
+
+                        <div className="simulation-input-unit">
+                            <input
+                                type="number"
+                                value={outboundSettings.processing_deadline_minutes}
+                                onChange={(e) =>
+                                    handleOutboundChange(
+                                        "processing_deadline_minutes",
+                                        Number(e.target.value)
+                                    )
+                                }
+                            />
+                            <span>분</span>
+                        </div>
+                    </div>
+
+                    <div className="simulation-setting-row">
+                        <label>부분 출고</label>
+
+                        <select
+                            value={
+                                outboundSettings.allow_partial_shipment
+                                    ? "true"
+                                    : "false"
+                            }
+                            onChange={(e) =>
+                                handleOutboundChange(
+                                    "allow_partial_shipment",
+                                    e.target.value === "true"
+                                )
+                            }
+                        >
+                            <option value="true">허용</option>
+                            <option value="false">허용 안 함</option>
+                        </select>
+                    </div>
+
+                </section>
+
+                <section className="simulation-setting-panel">
+
+                    <h2 className="simulation-setting-title">
+                        명령 입력
+                    </h2>
+
+                    <div className="natural-command-content">
+                        <textarea
+                            id="natural-command"
+                            value={naturalCommand}
+                            onChange={(e) =>
+                                setNaturalCommand(e.target.value)
+                            }
+                            placeholder="예: A 상품 출고 작업을 우선 처리해줘"
+                        />
+
+                        <div className="natural-command-actions">
+
+                            <button
+                                type="button"
+                                onClick={handleNaturalCommand}
+                                disabled={!naturalCommand.trim()}
+                            >
+                                명령 실행
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </section>
+            </aside>
+
+
+            {/* 하단 footer */}
+            <footer className="footer">
+                Footer
+            </footer>
+        </div>
+    );
+}
+
+export default Simulation;

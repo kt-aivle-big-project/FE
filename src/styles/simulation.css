@@ -1,0 +1,448 @@
+/* =========================
+   시뮬레이션 전체 레이아웃
+========================= */
+
+.simulation-wrapper {
+    width: 1500px;
+    min-height: 100vh;
+
+    display: grid;
+    margin-left: 5px;
+
+    grid-template-areas:
+        "simulation-header simulation-header"
+        "simulation-view simulation-panel"
+        "simulation-view simulation-panel"
+        "simulation-task simulation-panel"
+        "simulation-setting simulation-setting"
+        "footer footer";
+
+    grid-template-columns: minmax(0, 1fr) 250px;
+    grid-template-rows:
+        80px auto auto auto auto 100px;
+
+    gap: 10px;
+}
+
+/* =========================
+   상단 시뮬레이션 헤더
+========================= */
+
+.simulation-header {
+    grid-area: simulation-header;
+
+    width: 100%;
+    min-width: 0;
+    height: 80px;
+
+    display: grid;
+    grid-template-columns: 250px minmax(500px, 1fr) auto;
+    align-items: center;
+
+    border: var(--border);
+    background: var(--background-color);
+    color: var(--font-color);
+}
+
+.simulation-header-title {
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 20px;
+
+    border-right: var(--border);
+}
+
+.simulation-header-title h2 {
+    font-size: 25px;
+}
+
+.simulation-header-info {
+    height: 100%;
+    min-width: 0;
+
+    display: grid;
+    grid-template-columns: 200px 75px 110px 120px;
+
+    align-items: stretch;
+}
+
+.simulation-header-info-item {
+    height: 100%;
+    min-width: 0;
+
+    display: grid;
+    grid-template-rows: 32px 1fr;
+
+    padding: 0;
+
+    border-right: var(--border);
+}
+
+.simulation-header-label {
+    width: 100%;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+
+    margin: 0;
+    padding: 0px;
+
+    box-sizing: border-box;
+
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.simulation-header-info-item select {
+    width: 100%;
+    height: 30px;
+
+    margin: 0;
+    padding: 0 10px;
+
+    box-sizing: border-box;
+    border: var(--border);
+    background: var(--background-color);
+    color: var(--font-color);
+
+    font-size: 14px;
+    outline: none;
+}
+
+.simulation-header-info-item select:hover {
+    background: var(--hover-color);
+}
+
+.simulation-header-status {
+    font-size: 16px;
+}
+
+.simulation-header-time {
+    min-width: 70px;
+
+    font-size: 18px;
+    font-variant-numeric: tabular-nums;
+}
+
+.simulation-header-buttons {
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 0 10px;
+}
+
+.simulation-header-button {
+    height: 40px;
+    font-size: 16px;
+    padding: 0 25px;
+    border: var(--border);
+
+    background: var(--background-color);
+    color: var(--font-color);
+
+    cursor: pointer;
+}
+
+.simulation-header-button:hover {
+    background: var(--hover-color);
+}
+
+
+.simulation-header-button.start {
+    color: red;
+}
+
+/* =========================
+   입출고 패널 공통 
+========================= */
+.simulation-panel {
+    grid-area: simulation-panel;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    align-self: start;
+}
+
+.simulation-setting-panel {
+    width: 100%;
+    padding: 10px;
+    border: var(--border);
+    background: var(--background-color);
+    color: var(--font-color);
+    box-sizing: border-box;
+}
+
+.simulation-setting-title {
+    margin: 0 0 5px;
+    font-size: 16px;
+}
+
+.simulation-setting-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    align-items: center;
+}
+
+.simulation-setting-row:last-child {
+    margin-bottom: 0;
+}
+
+.simulation-setting-row label {
+    font-size: 14px;
+}
+
+.simulation-setting-row input,
+.simulation-setting-row select {
+    width: 100%;
+    padding: 5px;
+    border: var(--border);
+    border-radius: 0;
+    background: var(--background-color);
+    color: var(--font-color);
+    box-sizing: border-box;
+}
+
+.simulation-setting-row select:hover {
+    background: var(--hover-color);
+}
+
+.simulation-input-unit {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2px;
+}
+
+.simulation-input-unit span {
+    font-size: 12px;
+}
+
+/* =========================
+   입고 품목 구성
+========================= */
+
+.inbound-product-section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: var(--border);
+}
+
+.inbound-product-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.inbound-product-header h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.inbound-product-header span {
+    font-size: 12px;
+}
+
+.inbound-product-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+}
+
+.inbound-product-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.inbound-product-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.inbound-product-info strong {
+    width: 10px;
+}
+
+.inbound-product-control {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.inbound-product-control input {
+    width: 50px;
+    border: var(--border);
+    background: var(--background-color);
+    color: var(--font-color);
+    text-align: right;
+    box-sizing: border-box;
+}
+
+.inbound-product-control span {
+    font-size: 12px;
+}
+
+.inbound-product-control button {
+    padding: 0px 0px;
+    border: var(--border);
+    border-radius: 0;
+    background: var(--background-color);
+    color: var(--font-color);
+    cursor: pointer;
+}
+
+.inbound-product-control button:hover {
+    background: var(--hover-color);
+}
+
+.inbound-product-add {
+    display: grid;
+    grid-template-columns: 1fr 80px auto;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.inbound-product-add select,
+.inbound-product-add input,
+.inbound-product-add button {
+    padding: 4px 8px;
+    border: var(--border);
+    border-radius: 0;
+    background: var(--background-color);
+    color: var(--font-color);
+    box-sizing: border-box;
+}
+
+.inbound-product-add select {
+    width: 100%;
+}
+
+.inbound-product-add button {
+    cursor: pointer;
+}
+
+.inbound-product-add button:hover {
+    background: var(--hover-color);
+}
+
+.inbound-add-ratio {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.inbound-add-ratio input {
+    width: 100%;
+    text-align: right;
+}
+
+.inbound-add-ratio span {
+    font-size: 13px;
+}
+
+.inbound-ratio-valid {
+    color: green;
+}
+
+.inbound-ratio-invalid,
+.inbound-ratio-message {
+    color: red;
+}
+
+/* =========================
+   자연어 명령
+========================= */
+
+.natural-command-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.natural-command-content label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.natural-command-content textarea {
+    width: 100%;
+    padding: 8px;
+
+    border: var(--border);
+    border-radius: 0;
+
+    background: var(--background-color);
+    color: var(--font-color);
+
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+.natural-command-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.natural-command-actions button {
+    padding: 7px 12px;
+
+    border: var(--border);
+    border-radius: 0;
+
+    background: var(--background-color);
+    color: var(--font-color);
+
+    cursor: pointer;
+}
+
+.natural-command-actions button:hover:not(:disabled) {
+    background: var(--hover-color);
+}
+
+.natural-command-actions button:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+
+
+/* =========================
+   시뮬레이션 창고 화면
+========================= */
+
+.simulation-view {
+    grid-area: simulation-view;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    min-width: 0;
+    min-height: 400px;
+
+    border: var(--border);
+
+    font-size: 40px;
+    font-weight: 400;
+}
+
+/* =========================
+   Footer
+========================= */
+
+.footer {
+    grid-area: footer;
+
+    border: var(--border);
+}
