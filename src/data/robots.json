@@ -16,7 +16,7 @@
     {
         "robot_id": 3,
         "robot_code": "R3",
-        "node_id": "C03",
+        "node_id": "C07",
         "battery": 10,
         "status": "REPLENISH"
     },
