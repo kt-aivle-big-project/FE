@@ -1,0 +1,62 @@
+[
+    {
+        "task_code": "T1",
+        "task_name": "피킹",
+        "start_node": "시작 위치",
+        "end_node": "도착 위치",
+        "robot_id": "R1",
+        "status": "진행",
+        "started": "00:00",
+        "ended": "00:00"
+    },
+    {
+        "task_code": "T2",
+        "task_name": "피킹",
+        "start_node": "시작 위치",
+        "end_node": "도착 위치",
+        "robot_id": "R1",
+        "status": "진행",
+        "started": "00:00",
+        "ended": "00:00"
+    },
+    {
+        "task_code": "T3",
+        "task_name": "분류",
+        "start_node": "시작 위치",
+        "end_node": "도착 위치",
+        "robot_id": "R1",
+        "status": "지연",
+        "started": "00:00",
+        "ended": "00:00"
+    },
+    {
+        "task_code": "T4",
+        "task_name": "분류",
+        "start_node": "시작 위치",
+        "end_node": "도착 위치",
+        "robot_id": "R1",
+        "status": "대기",
+        "started": "00:00",
+        "ended": "00:00"
+    },
+    {
+        "task_code": "T5",
+        "task_name": "운송",
+        "start_node": "시작 위치",
+        "end_node": "도착 위치",
+        "robot_id": "R1",
+        "status": "진행 중",
+        "started": "00:00",
+        "ended": "00:00"
+    },
+    {
+        "task_code": "T5",
+        "task_name": "포장",
+        "start_node": "시작 위치",
+        "end_node": "도착 위치",
+        "robot_id": "R1",
+        "status": "완료",
+        "started": "00:00",
+        "ended": "00:00"
+    }
+]

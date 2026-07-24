@@ -1,0 +1,15 @@
+{
+    "inbound_count": 10,
+    "total_quantity": 200,
+    "arrival_pattern": "RANDOM",
+    "products": [
+        {
+            "product_code": "A",
+            "ratio": 50
+        },
+        {
+            "product_code": "B",
+            "ratio": 50
+        }
+    ]
+}
