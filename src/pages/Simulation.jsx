@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
-import "../styles/simulation.css";
-import SimulationView from "../components/SimulationView";
-import WarehouseSVG from "../components/WarehouseSVG";
+import { useEffect, useState, useRef } from "react";
+import "../styles/simulation.css"; import WarehouseSVG from "../components/WarehouseSVG";
+import SimulationTask from "../components/SimulationTask";
+
 
 import scenarios from "../data/scenarios.json";
 import alerts from "../data/alerts.json";
 import tasks from "../data/tasks.json";
-import robots from "../data/robots.json";
+import robotsData from "../data/robots.json";
 import products from "../data/products.json";
 import inbound from "../data/inbound.json";
 import outbound from "../data/outbound.json";
@@ -47,19 +47,26 @@ function Simulation() {
         setSelectedScenario(scenarioId);
     };
 
-
     // 시뮬레이션 시작
     const handleStart = async () => {
+
+        if (simulationStatus === "일시정지") {
+            isPausedRef.current = false;
+            setSimulationStatus("실행");
+            return;
+        }
+
         if (!selectedScenario) {
             alert("시나리오를 선택해주세요.");
             return;
         }
+
         if (inboundRatioTotal !== 100) {
             alert("입고 품목 구성 비율의 합계가 100%가 되어야 합니다.");
             return;
         }
 
-        // 백엔드로 전달할 데이터
+        // 백엔드로 보낼 데이터
         const simulationData = {
             scenario_id: selectedScenario,
             simulation_speed: simulationSpeed,
@@ -68,21 +75,16 @@ function Simulation() {
         };
 
         try {
-            /*
-             * 로그인 / 인증 연동 후 fetch 추가
-             * const response = await fetch(...);
-             */
-            console.log(
-                "시뮬레이션 실행 데이터:",
-                simulationData
-            );
-            // 현재는 프론트 테스트용
+            console.log("시뮬레이션 실행 데이터:", simulationData);
+
             setSimulationStatus("실행");
+            isPausedRef.current = false;
+            movementRunRef.current += 1;
+
+            // 현재는 프론트 테스트용
+            moveRobot(1, testPath);
         } catch (error) {
-            console.error(
-                "시뮬레이션 시작 실패:",
-                error
-            );
+            console.error("시뮬레이션 시작 실패:", error);
             alert(
                 "시뮬레이션을 시작하지 못했습니다."
             );
@@ -97,18 +99,24 @@ function Simulation() {
         }
         try {
             // 로그인 / 인증 연동 후 fetch 추가
+            isPausedRef.current = true;
             setSimulationStatus("일시정지");
         } catch (error) {
-            console.error(
-                "시뮬레이션 일시정지 실패:",
-                error
-            );
+            console.error("시뮬레이션 일시정지 실패:", error);
         }
     };
 
     // 시뮬레이션 초기화 
     const handleReset = () => {
+        movementRunRef.current += 1;
+        isPausedRef.current = false;
 
+        // 로봇 위치 초기화
+        setRobots(
+            robotsData.map((robot) => ({
+                ...robot,
+            }))
+        );
         setSimulationStatus("대기");
         setSimulationTime(0);
     };
@@ -128,6 +136,80 @@ function Simulation() {
             );
         }
     };
+
+    /* ===== 로봇 ===== */
+
+    const [robots, setRobots] = useState(robotsData);
+    const isPausedRef = useRef(false);
+    // 실행 중인 이동을 구분하기 위한 값
+    // 초기화했을 때 기존 이동 루프를 중단하기 위해 사용
+    const movementRunRef = useRef(0);
+
+    // 테스트 경로
+    const testPath = [
+        "R6_0",
+        "R5_0",
+        "R4_0",
+        "R4_1",
+        "R4_2",
+        "R4_3",
+        "R4_4",
+        "R4_5",
+        "R4_6",
+        "R4_7",
+        "R4_8",
+        "R4_9",
+        "R4_10",
+        "R3_10",
+        "O_D",
+    ];
+
+    const sleep = (ms) => {
+        return new Promise((resolve) => {
+            setTimeout(resolve, ms);
+        });
+    };
+
+    const moveRobot = async (robotId, path) => {
+
+        // 이번 실행 번호 저장
+        const currentRun = movementRunRef.current;
+
+        for (const nodeId of path) {
+            if (currentRun !== movementRunRef.current) {
+                return;
+            }
+            while (isPausedRef.current) {
+                if (currentRun !== movementRunRef.current) {
+                    return;
+                }
+                await sleep(100);
+            }
+
+            // 해당 로봇의 현재 node_id 변경
+            setRobots((prevRobots) =>
+                prevRobots.map((robot) =>
+                    robot.robot_id === robotId
+                        ? {
+                            ...robot,
+                            node_id: nodeId,
+                        }
+                        : robot
+                )
+            );
+
+            // 시뮬레이션 속도 적용
+            // 0.5배속 → 1000ms / 1배속 → 500ms / 2배속 → 250ms
+            const delay = 500 / Number(simulationSpeed);
+            await sleep(delay);
+        }
+
+        if (currentRun === movementRunRef.current) {
+            setSimulationStatus("완료");
+        }
+    };
+
+    /* ===== 작업 카드 ===== */
 
 
     /* ===== 입고 설정 ===== */
@@ -333,10 +415,10 @@ function Simulation() {
                                 setSimulationSpeed(Number(e.target.value))
                             }
                         >
+                            <option value={0.5}>0.5배</option>
                             <option value={1}>1배</option>
                             <option value={2}>2배</option>
                             <option value={3}>3배</option>
-                            <option value={5}>5배</option>
                         </select>
                     </div>
                 </div>
@@ -376,8 +458,13 @@ function Simulation() {
 
             {/* 시뮬레이션 화면 */}
             <main className="simulation-view">
-                <WarehouseSVG robots={robots}/>
+                <WarehouseSVG
+                    robots={robots}
+                    simulationSpeed={simulationSpeed}
+                />
             </main>
+
+            <SimulationTask tasks={tasks} />
 
             <aside className="simulation-panel">
                 {/* 입고 설정 */}

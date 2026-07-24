@@ -14,7 +14,7 @@
         "task_name": "피킹",
         "start_node": "시작 위치",
         "end_node": "도착 위치",
-        "robot_id": "R1",
+        "robot_id": "R2",
         "status": "진행",
         "started": "00:00",
         "ended": "00:00"
@@ -24,7 +24,7 @@
         "task_name": "분류",
         "start_node": "시작 위치",
         "end_node": "도착 위치",
-        "robot_id": "R1",
+        "robot_id": "R3",
         "status": "지연",
         "started": "00:00",
         "ended": "00:00"
@@ -34,7 +34,7 @@
         "task_name": "분류",
         "start_node": "시작 위치",
         "end_node": "도착 위치",
-        "robot_id": "R1",
+        "robot_id": "R4",
         "status": "대기",
         "started": "00:00",
         "ended": "00:00"
@@ -44,8 +44,8 @@
         "task_name": "운송",
         "start_node": "시작 위치",
         "end_node": "도착 위치",
-        "robot_id": "R1",
-        "status": "진행 중",
+        "robot_id": "R5",
+        "status": "진행",
         "started": "00:00",
         "ended": "00:00"
     },
@@ -54,7 +54,7 @@
         "task_name": "포장",
         "start_node": "시작 위치",
         "end_node": "도착 위치",
-        "robot_id": "R1",
+        "robot_id": "R6",
         "status": "완료",
         "started": "00:00",
         "ended": "00:00"

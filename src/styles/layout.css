@@ -138,7 +138,7 @@ textarea:focus {
 }
 
 .sidebar {
-    width: 190px;
+    width: 140px;
     min-height: 100vh;
 
     display: flex;
@@ -155,16 +155,16 @@ textarea:focus {
 ========================= */
 
 .logo {
-    height: 150px;
+    height: 100px;
 
     display: flex;
     align-items: center;
 
-    padding-left: 20px;
+    padding-left: 12px;
 
-    font-size: 50px;
+    font-size: 40px;
     font-weight: 600;
-    letter-spacing: 2px;
+
 }
 
 
@@ -177,7 +177,7 @@ textarea:focus {
 }
 
 .navigation li {
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     font-size: 18px;
 }
 
@@ -199,9 +199,9 @@ textarea:focus {
 ========================= */
 
 .system-status {
-    margin: 120px 10px 20px;
+    margin: 200px 10px 10px;
 
-    padding: 10px;
+    padding: 5px;
 
     border: var(--border);
 
@@ -210,12 +210,11 @@ textarea:focus {
 }
 
 .system-status h3 {
-    font-size: 20px;
+    font-size: 18px;
 }
 
 .system-status p {
-    font-size: 16px;
-
+    font-size: 14px;
     white-space: nowrap;
 }
 

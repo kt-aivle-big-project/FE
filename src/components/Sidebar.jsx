@@ -15,25 +15,25 @@ function Sidebar() {
 
                     <li>
                         <NavLink to="/setting">
-                            시뮬레이션 설정
+                            설정
                         </NavLink>
                     </li>
 
                     <li>
                         <NavLink to="/robot">
-                            로봇 관리
+                            로봇
                         </NavLink>
                     </li>
 
                     <li>
                         <NavLink to="/warehouse">
-                            창고 관리
+                            창고
                         </NavLink>
                     </li>
 
                     <li>
                         <NavLink to="/operation">
-                            운영 관리
+                            운영
                         </NavLink>
                     </li>
 
