@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import warehouseGraph from "../data/warehouse_graph.json";
 import rackInventory from "../data/rack_inventory.json";
 
@@ -10,7 +12,10 @@ import robotReplenish from "../assets/robots/robot_replenish.png";
 
 import "../styles/warehouseSVG.css";
 
-function WarehouseSVG({ robots = [] }) {
+function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
+
+    // 노드 표시 ON / OFF
+    const [showNodeLabels, setShowNodeLabels] = useState(false);
 
     // SVG 크기
     const SVG_WIDTH = 1200;
@@ -83,8 +88,36 @@ function WarehouseSVG({ robots = [] }) {
         REPLENISH: robotReplenish,
     };
 
+    // 로봇 이동 속도/시간 조절
+    const getRobotTransitionDuration = (speed) => {
+        const baseDuration = 500 / Number(speed);
+
+        switch (Number(speed)) {
+            case 0.5:
+                return baseDuration * 2;
+            case 1:
+                return baseDuration;
+            case 2:
+                return baseDuration * 0.5;
+            case 3:
+                return baseDuration * 0.2;
+            default:
+                return baseDuration;
+        }
+    };
+
     return (
         <div className="warehouse-svg-wrapper">
+
+            {/* 노드 표시 ON / OFF */}
+            <button
+                type="button"
+                className="warehouse-node-toggle"
+                onClick={() => setShowNodeLabels((prev) => !prev)}
+            >
+                {showNodeLabels ? "노드 번호 숨기기" : "노드 번호 보기"}
+            </button>
+
             <svg
                 className="warehouse-svg"
                 viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
@@ -94,12 +127,12 @@ function WarehouseSVG({ robots = [] }) {
                 <defs>
                     <pattern
                         id="warehouse-grid"
-                        width="50"
-                        height="50"
+                        width="10"
+                        height="10"
                         patternUnits="userSpaceOnUse"
                     >
                         <path
-                            d="M 50 0 L 0 0 0 50"
+                            d="M 10 0 L 0 0 0 10"
                             fill="none"
                             stroke="#e5e5e5"
                             strokeWidth="1"
@@ -151,17 +184,37 @@ function WarehouseSVG({ robots = [] }) {
                     )}
                 </g>
 
-                {/* 로봇이 실제로 이동하는 route 노드 */}
-                <g className="warehouse-route-nodes">
+                {/* 통로 번호 */}
+                <g className="warehouse-aisle-labels">
                     {warehouseGraph.nodes
                         .filter(
                             (node) =>
-                                node.type === "route"
+                                node.type === "route" &&
+                                node.col === 0
                         )
-                        .map(
-                            (node) => (
+                        .map((node) => (
+
+                            <text
+                                key={`aisle-${node.row}`}
+                                x={convertX(node.x) - 10}
+                                y={convertY(node.y) + 4}
+                                textAnchor="end"
+                                className="warehouse-aisle-label"
+                            >
+                                {`A${String(node.row).padStart(2, "0")}`}
+                            </text>
+                        ))}
+                </g>
+
+                {/* 로봇이 실제로 이동하는 route 노드 */}
+                <g className="warehouse-route-nodes">
+                    {warehouseGraph.nodes
+                        .filter((node) => node.type === "route")
+                        .map((node) => (
+                            <g key={node.id}>
+
+                                {/* 이동 노드 */}
                                 <circle
-                                    key={node.id}
                                     cx={convertX(node.x)}
                                     cy={convertY(node.y)}
                                     r="3"
@@ -169,8 +222,20 @@ function WarehouseSVG({ robots = [] }) {
                                 >
                                     <title>{node.id}</title>
                                 </circle>
-                            )
-                        )}
+
+                                {/* 노드 번호 */}
+                                {showNodeLabels && (
+                                    <text
+                                        x={convertX(node.x)}
+                                        y={convertY(node.y) + 12}
+                                        textAnchor="middle"
+                                        className="warehouse-route-label"
+                                    >
+                                        {node.id}
+                                    </text>
+                                )}
+                            </g>
+                        ))}
                 </g>
 
                 {/* 충전소 연결 Junction
@@ -302,6 +367,18 @@ function WarehouseSVG({ robots = [] }) {
                                     >
                                         {node.label}
                                     </text>
+
+                                    {/* 입고 엘리베이터 노드 번호 */}
+                                    {showNodeLabels && (
+                                        <text
+                                            x={convertX(node.x)}
+                                            y={convertY(node.y) + 22}
+                                            textAnchor="middle"
+                                            className="warehouse-station-id"
+                                        >
+                                            {node.id}
+                                        </text>
+                                    )}
                                 </g>
                             )
                         )}
@@ -334,6 +411,17 @@ function WarehouseSVG({ robots = [] }) {
                                     >
                                         {node.label}
                                     </text>
+                                    {/* 출고 엘리베이터 노드 번호 */}
+                                    {showNodeLabels && (
+                                        <text
+                                            x={convertX(node.x)}
+                                            y={convertY(node.y) + 22}
+                                            textAnchor="middle"
+                                            className="warehouse-station-id"
+                                        >
+                                            {node.id}
+                                        </text>
+                                    )}
                                 </g>
                             )
                         )}
@@ -368,6 +456,18 @@ function WarehouseSVG({ robots = [] }) {
                                     >
                                         {node.index}
                                     </text>
+
+                                    {/* 충전소 노드 번호 */}
+                                    {showNodeLabels && (
+                                        <text
+                                            x={convertX(node.x)}
+                                            y={convertY(node.y) + 22}
+                                            textAnchor="middle"
+                                            className="warehouse-station-id"
+                                        >
+                                            {node.id}
+                                        </text>
+                                    )}
                                 </g>
                             )
                         )}
@@ -424,7 +524,13 @@ function WarehouseSVG({ robots = [] }) {
                             <g
                                 key={robot.robot_id}
                                 className="warehouse-robot"
-                                transform={`translate(${robotX}, ${robotY})`}
+                                style={{
+                                    transform: `translate(${robotX}px, ${robotY}px)`,
+
+                                    // moveRobot의 노드 이동 시간과 동일하게 맞춤
+                                    transitionDuration:
+                                        `${getRobotTransitionDuration(simulationSpeed)}ms`,
+                                }}
                             >
                                 <defs>
                                     <clipPath id="robot-rounded">

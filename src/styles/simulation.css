@@ -175,6 +175,185 @@
     box-sizing: border-box;
 }
 
+/* =========================
+   Simulation Task
+========================= */
+
+.simulation-task {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 16px;
+
+    background: #ffffff;
+    border: 1px solid #d5d5d5;
+}
+
+
+/* 작업 현황 헤더 */
+.simulation-task-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 14px;
+}
+
+.simulation-task-title {
+    margin: 0;
+
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.simulation-task-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    font-size: 13px;
+    color: #555555;
+}
+
+
+/* 작업 목록 */
+.simulation-task-list {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fill, minmax(220px, 1fr));
+
+    gap: 12px;
+}
+
+
+/* 작업 카드 */
+.simulation-task-card {
+    min-width: 0;
+
+    padding: 14px;
+
+    border: 1px solid #d5d5d5;
+    border-radius: 6px;
+
+    background: #ffffff;
+}
+
+
+/* 카드 상단 */
+.simulation-task-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin-bottom: 14px;
+}
+
+.simulation-task-card-title {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+/* 작업 유형 */
+.simulation-task-type {
+    padding: 3px 7px;
+
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+
+    font-size: 11px;
+    color: #555555;
+}
+
+
+/* 상태 */
+.simulation-task-status {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-waiting {
+    color: #777777;
+}
+
+.status-assigned {
+    color: #555555;
+}
+
+.status-running {
+    color: #222222;
+}
+
+.status-completed {
+    color: #555555;
+}
+
+.status-failed {
+    color: #333333;
+}
+
+
+/* 담당 로봇 */
+.simulation-task-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 12px;
+
+    font-size: 13px;
+}
+
+.simulation-task-info-label {
+    color: #777777;
+}
+
+
+/* 이동 경로 */
+.simulation-task-route {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    padding: 9px 10px;
+
+    background: #f7f7f7;
+
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.simulation-task-route-arrow {
+    color: #888888;
+}
+
+
+/* 주문 번호 */
+.simulation-task-order {
+    margin-top: 10px;
+
+    font-size: 11px;
+    color: #777777;
+}
+
+
+/* 작업 없음 */
+.simulation-task-empty {
+    padding: 30px;
+
+    text-align: center;
+
+    color: #888888;
+    font-size: 13px;
+}
+
 
 /* =========================
    입출고 패널 공통 
@@ -384,7 +563,7 @@
 .natural-command-content {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 9px;
 }
 
 .natural-command-content label {
