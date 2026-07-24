@@ -26,7 +26,7 @@
 
 
 /* =========================
-   회원가입 박스
+   회원가입
 ========================= */
 
 .signup-box {
@@ -38,11 +38,6 @@
 
     border: var(--border);
 }
-
-
-/* =========================
-   Logo
-========================= */
 
 .signup-logo {
     margin-bottom: 35px;
@@ -63,11 +58,6 @@
     font-size: 20px;
 }
 
-
-/* =========================
-   Signup Form
-========================= */
-
 .signup-form {
     width: 100%;
 }
@@ -84,11 +74,6 @@
     font-size: 17px;
     font-weight: 500;
 }
-
-
-/* =========================
-   Input
-========================= */
 
 .signup-input-wrapper {
     position: relative;
@@ -125,9 +110,8 @@
 
 
 /* =========================
-   비밀번호 보기
+   비밀번호 
 ========================= */
-
 .signup-password-view-button {
     position: absolute;
 
@@ -144,11 +128,6 @@
     background: transparent;
 }
 
-
-/* =========================
-   비밀번호 오류
-========================= */
-
 .password-error {
     margin-top: 7px;
 
@@ -156,8 +135,6 @@
 
     font-size: 13px;
 }
-
-
 
 .signup-submit-button {
     width: 100%;
@@ -172,7 +149,6 @@
 .signup-submit-button:hover {
     background: var(--hover-color);
 }
-
 
 .signup-divider {
     display: flex;

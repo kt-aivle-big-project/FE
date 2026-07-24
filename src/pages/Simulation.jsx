@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "../styles/simulation.css";
 import SimulationView from "../components/SimulationView";
+import WarehouseSVG from "../components/WarehouseSVG";
 
 import scenarios from "../data/scenarios.json";
 import alerts from "../data/alerts.json";
@@ -375,7 +376,7 @@ function Simulation() {
 
             {/* 시뮬레이션 화면 */}
             <main className="simulation-view">
-                <SimulationView />
+                <WarehouseSVG robots={robots}/>
             </main>
 
             <aside className="simulation-panel">

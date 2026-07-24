@@ -1,0 +1,32 @@
+[
+    {
+        "scenario_id": "S1",
+        "scenario_name": "시나리오 v1",
+        "robot_count": 5,
+        "simulation_speed": 1,
+        "initial_battery": 100,
+        "charging_threshold": 20,
+        "auto_replan": true,
+        "obstacle_enabled": false
+    },
+    {
+        "scenario_id": "S2",
+        "scenario_name": "시나리오 v2",
+        "robot_count": 5,
+        "simulation_speed": 1,
+        "initial_battery": 30,
+        "charging_threshold": 20,
+        "auto_replan": true,
+        "obstacle_enabled": false
+    },
+    {
+        "scenario_id": "S3",
+        "scenario_name": "시나리오 v3",
+        "robot_count": 5,
+        "simulation_speed": 2,
+        "initial_battery": 100,
+        "charging_threshold": 20,
+        "auto_replan": true,
+        "obstacle_enabled": true
+    }
+]

@@ -1,0 +1,221 @@
+/* =========================
+   Warehouse SVG Wrapper
+========================= */
+
+.warehouse-svg-wrapper {
+    width: 100%;
+    height: 100%;
+
+    min-width: 0;
+
+    box-sizing: border-box;
+    overflow: hidden;
+    background: var(--background-color);
+}
+
+/* =========================
+   Warehouse SVG
+========================= */
+
+.warehouse-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+
+    background: #ffffff;
+}
+
+/* =========================
+   Edge
+========================= */
+
+.warehouse-edge {
+    fill: none;
+
+    stroke: #c5c5c5;
+    stroke-width: 2;
+}
+
+/* 일반 이동 경로 */
+.edge-lane {
+    stroke: #c5c5c5;
+}
+
+/* 랙 접근 경로 */
+.edge-rack_access {
+    stroke: #b5b5b5;
+}
+
+/* 입고 엘리베이터 내부 */
+.edge-inbound_stations {
+    stroke: #b5b5b5;
+}
+
+/* 입고 연결 */
+.edge-inbound_connector {
+    stroke: #999999;
+}
+
+/* 출고 엘리베이터 내부 */
+.edge-outbound_stations {
+    stroke: #b5b5b5;
+}
+
+/* 출고 연결 */
+.edge-outbound_connector {
+    stroke: #999999;
+}
+
+/* 충전소 연결 */
+.edge-charging_connector {
+    stroke: #999999;
+
+    stroke-dasharray: 4 3;
+}
+
+/* =========================
+   Route Node
+========================= */
+.warehouse-route-node {
+    fill: #ffffff;
+
+    stroke: #777777;
+    stroke-width: 1;
+}
+
+/* =========================
+   Route ↔ Charging Junction
+========================= */
+.warehouse-charge-junction {
+    fill: #ffffff;
+
+    stroke: #333333;
+    stroke-width: 1;
+}
+
+/* =========================
+   Rack
+========================= */
+.warehouse-rack {
+    fill: #ffffff;
+
+    stroke: #333333;
+    stroke-width: 1.5;
+}
+
+/* 랙 내부 각 층 */
+.warehouse-rack-level {
+    stroke: #777777;
+    stroke-width: 0.5;
+}
+
+/* 비어 있음 */
+.rack-level-empty {
+    fill: #ffffff;
+}
+
+/* 일부 적재 */
+.rack-level-partial {
+    fill: #cccccc;
+}
+
+/* 가득 참 */
+.rack-level-full {
+    fill: #777777;
+}
+
+/* 랙 ID */
+.warehouse-rack-label {
+    font-size: 9px;
+
+    fill: #333333;
+
+    pointer-events: none;
+}
+
+/* =========================
+   Inbound
+========================= */
+.warehouse-inbound-node {
+    fill: #ffffff;
+
+    stroke: #333333;
+    stroke-width: 1.5;
+}
+
+/* =========================
+   Outbound
+========================= */
+.warehouse-outbound-node {
+    fill: #ffffff;
+
+    stroke: #333333;
+    stroke-width: 1.5;
+}
+
+/* 입출고 노드 글자 */
+.warehouse-station-label {
+    font-size: 10px;
+
+    fill: #333333;
+
+    pointer-events: none;
+}
+
+/* =========================
+   Charging
+========================= */
+.warehouse-charging-slot {
+    fill: #ffffff;
+
+    stroke: #333333;
+    stroke-width: 1.5;
+}
+
+.warehouse-charging-label {
+    font-size: 9px;
+
+    fill: #333333;
+
+    pointer-events: none;
+}
+
+/* =========================
+   Area Label
+
+   입고 엘리베이터
+   출고 엘리베이터
+   충전소
+========================= */
+.warehouse-area-title {
+    font-size: 14px;
+
+    font-weight: 600;
+
+    fill: #333333;
+
+    pointer-events: none;
+}
+
+/* =========================
+   Robot
+========================= */
+.warehouse-robot {
+    cursor: pointer;
+}
+
+.warehouse-robot-image {
+    pointer-events: none;
+}
+
+.warehouse-robot-id {
+    font-size: 12px;
+
+    fill: #222222;
+
+    paint-order: stroke;
+    stroke: #ffffff;
+    stroke-width: 3px;
+
+    pointer-events: none;
+}
