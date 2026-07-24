@@ -161,6 +161,22 @@
 }
 
 /* =========================
+   시뮬레이션 화면 
+========================= */
+
+.simulation-view {
+    width: 100%;
+    height: 650px;
+
+    min-width: 0;
+
+    display: flex;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================
    입출고 패널 공통 
 ========================= */
 .simulation-panel {
@@ -436,6 +452,8 @@
     font-size: 40px;
     font-weight: 400;
 }
+
+
 
 /* =========================
    Footer
