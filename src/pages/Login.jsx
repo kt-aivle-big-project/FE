@@ -21,7 +21,7 @@ function Login() {
 
         try {
             const response = await fetch(
-                `${API_URL}/login`,
+                `${API_URL}/auth/login`,
                 {
                     method: "POST",
                     headers: {
@@ -33,23 +33,29 @@ function Login() {
 
             if (!response.ok) {
                 const errorMessage = await response.text();
-                throw new Error(
-                    errorMessage ||
-                    "이메일 또는 비밀번호가 올바르지 않습니다."
-                );
+                throw new Error(errorMessage || "이메일 또는 비밀번호가 올바르지 않습니다.");
             }
+
+            // 백엔드 응답 JSON
+            const data = await response.json();
+
+            // 저장
+            localStorage.setItem("accessToken", data.accessToken);
+            localStorage.setItem("userId", String(data.userId));
+            localStorage.setItem("name", data.name);
+            localStorage.setItem("email", data.email);
+
+            console.log("로그인 사용자:", data);
 
             alert("로그인되었습니다.");
             navigate("/simulation");
+
         } catch (error) {
             console.error("로그인 실패:", error);
-            alert(
-                error.message ||
-                "로그인 중 오류가 발생했습니다."
-            );
+            
+            alert(error.message || "로그인 중 오류가 발생했습니다.");
         }
     };
-
 
     const handleSignup = () => {
         navigate("/signup");

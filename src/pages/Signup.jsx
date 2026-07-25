@@ -18,10 +18,11 @@ function Signup() {
     const handleSignup = async (e) => {
         e.preventDefault();
 
-        if (!name.trim() || !email.trim() || !password.trim()) {
+        if (!name.trim() || !email.trim() || !password.trim() || !passwordConfirm.trim()) {
             alert("모든 항목을 입력해주세요.");
             return;
         }
+
         if (password !== passwordConfirm) {
             alert("비밀번호가 일치하지 않습니다.");
             return;
@@ -35,9 +36,8 @@ function Signup() {
         };
 
         try {
-            // 회원가입 API 호출
             const response = await fetch(
-                `${API_URL}/signup`,
+                `${API_URL}/auth/signup`,
                 {
                     method: "POST",
                     headers: {
@@ -49,21 +49,15 @@ function Signup() {
 
             if (!response.ok) {
                 const errorMessage = await response.text();
-
-                throw new Error(
-                    errorMessage || "회원가입에 실패했습니다."
-                );
+                throw new Error(errorMessage || "회원가입에 실패했습니다.");
             }
 
             alert("회원가입이 완료되었습니다.");
             navigate("/login");
+
         } catch (error) {
             console.error("회원가입 실패:", error);
-            alert(
-                error.message || "회원가입 중 오류가 발생했습니다."
-            );
-        } finally {
-            setIsLoading(false);
+            alert(error.message || "회원가입 중 오류가 발생했습니다.");
         }
     };
 
