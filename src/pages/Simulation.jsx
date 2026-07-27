@@ -18,6 +18,25 @@ const API_URL = "http://localhost:8080/api";
 
 function Simulation() {
 
+    // 시나리오
+    const [scenarioSettings, setScenarioSettings] = useState([]);
+    const [selectedScenario, setSelectedScenario] = useState("");
+    const [simulationSpeed, setSimulationSpeed] = useState(1);
+    const [simulationStatus, setSimulationStatus] = useState("대기");
+    const [simulationTime, setSimulationTime] = useState(0);
+
+    // 입출고
+    const [inboundSettings, setInboundSettings] = useState(inbound);
+    const [outboundSettings, setOutboundSettings] = useState(outbound);
+
+    // 로봇
+    const [robotList, setRobots] = useState(robots);
+
+    // 시나리오 실행
+    const [simulationId, setSimulationId] = useState(null);
+    const [simulationRunId, setSimulationRunId] = useState(null);
+
+    // 시나리오 설정값 불러오기
     useEffect(() => {
         const fetchScenarios = async () => {
             try {
@@ -53,15 +72,13 @@ function Simulation() {
         fetchScenarios();
     }, []);
 
-    /* ===== 상단 헤더 - 시뮬레이션 실행  ===== */
+    // 불러온 설정값에서 시나리오 선택하기
+    const handleScenarioChange = (scenarioId) => {
+        setSelectedScenario(scenarioId);
+    };
 
-    // 시나리오 설정
-    const [scenarioSettings, setScenarioSettings] = useState([]);
-    const [selectedScenario, setSelectedScenario] = useState("");
-    const [simulationSpeed, setSimulationSpeed] = useState(1);
-    const [simulationStatus, setSimulationStatus] = useState("대기");
-    const [simulationTime, setSimulationTime] = useState(0);
 
+    /* ==================== 상단 헤더 - 시뮬레이션 실행  ==================== */
     // 시뮬레이션 타이머
     useEffect(() => {
         if (simulationStatus !== "실행" && simulationStatus !== "재계획") { return; }
@@ -82,14 +99,6 @@ function Simulation() {
             .map((value) => String(value).padStart(2, "0"))
             .join(":");
     };
-
-    // 시뮬레이션 시나리오 선택 (저장된 설정값 불러오기)
-    const handleScenarioChange = (scenarioId) => {
-        setSelectedScenario(scenarioId);
-    };
-
-    const [simulationId, setSimulationId] = useState(null);
-    const [simulationRunId, setSimulationRunId] = useState(null);
 
     // 시뮬레이션 시작
     const handleStart = async () => {
@@ -270,7 +279,7 @@ function Simulation() {
             isPausedRef.current = false;
 
             setRobots(
-                robotsData.map((robot) => ({
+                robots.map((robot) => ({
                     ...robot,
                 }))
             );
@@ -318,32 +327,12 @@ function Simulation() {
         }
     };
 
-    /* ===== 로봇 ===== */
-    const [robotList, setRobots] = useState(robots);
-    const isPausedRef = useRef(false);
 
+    /* ==================== 로봇 ==================== */
     // 실행 중인 이동을 구분하기 위한 값
     // 초기화했을 때 기존 이동 루프를 중단하기 위해 사용
+    const isPausedRef = useRef(false);
     const movementRunRef = useRef(0);
-
-    // 테스트 경로
-    const testPath = [
-        "R6_0",
-        "R5_0",
-        "R4_0",
-        "R4_1",
-        "R4_2",
-        "R4_3",
-        "R4_4",
-        "R4_5",
-        "R4_6",
-        "R4_7",
-        "R4_8",
-        "R4_9",
-        "R4_10",
-        "R3_10",
-        "O_D",
-    ];
 
     const sleep = (ms) => {
         return new Promise((resolve) => {
@@ -389,10 +378,8 @@ function Simulation() {
         }
     };
 
-    // Panel State
-    const [inboundSettings, setInboundSettings] = useState(inbound);
-    const [outboundSettings, setOutboundSettings] = useState(outbound);
 
+    /* ==================== 입출고 ==================== */
     // 입고 품목 비율 합계
     const inboundRatioTotal =
         inboundSettings.products.reduce(
@@ -453,7 +440,7 @@ function Simulation() {
             alert(error.message || "명령을 처리하지 못했습니다.");
         }
     };
-    
+
     return (
         <div className="simulation-wrapper">
 
