@@ -279,7 +279,7 @@ function Simulation() {
             isPausedRef.current = false;
 
             setRobots(
-                robotsData.map((robot) => ({
+                robots.map((robot) => ({
                     ...robot,
                 }))
             );
