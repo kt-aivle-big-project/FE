@@ -194,7 +194,6 @@ function RobotManagement() {
         return task;
     };
 
-
     // 선택한 로봇 상세 조회
     const loadRobotDetail = async (robotId, taskList = tasks) => {
         try {
@@ -218,10 +217,8 @@ function RobotManagement() {
 
                 console.error("작업 상세 조회 실패:", taskError);
 
-                /*
-                 * 상세 API 실패 시에도
-                 * 전체 작업 조회 데이터로 표시
-                 */
+                // 상세 조회 실패 시 전체 작업 조회 API로 표시
+                //
                 setSelectedTask(currentTask);
             }
         } catch (error) {
@@ -246,9 +243,7 @@ function RobotManagement() {
             setRobots(robotList);
             setTasks(taskList);
 
-            if (
-                robotList.length === 0
-            ) {
+            if (robotList.length === 0) {
                 setSelectedRobot(null);
                 setSelectedTask(null);
 
@@ -258,218 +253,99 @@ function RobotManagement() {
             let targetRobotId = preferredRobotId;
 
             const preferredExists = targetRobotId && robotList.some(
-                (robot) =>
-                    robot.robotId ===
-                    Number(targetRobotId)
+                (robot) => robot.robotId === Number(targetRobotId)
             );
-
 
             if (!preferredExists) {
+                const currentSelectedExists = selectedRobot && robotList.some(
+                    (robot) => robot.robotId === selectedRobot.robotId
+                );
 
-                const currentSelectedExists =
-                    selectedRobot &&
-                    robotList.some(
-                        (robot) =>
-                            robot.robotId ===
-                            selectedRobot.robotId
-                    );
-
-
-                targetRobotId =
-                    currentSelectedExists
-                        ? selectedRobot.robotId
-                        : robotList[0].robotId;
+                targetRobotId = currentSelectedExists
+                    ? selectedRobot.robotId
+                    : robotList[0].robotId;
             }
 
-
-            await loadRobotDetail(
-                Number(targetRobotId),
-                taskList
-            );
+            await loadRobotDetail(Number(targetRobotId), taskList);
 
         } catch (error) {
-
-            console.error(
-                "로봇 관리 데이터 조회 실패:",
-                error
-            );
-
-
-            alert(
-                error.message ||
-                "데이터를 불러오지 못했습니다."
-            );
+            console.error("로봇 관리 데이터 조회 실패:", error);
+            alert(error.message || "데이터를 불러오지 못했습니다.");
 
         } finally {
-
             setIsLoading(false);
         }
     };
 
-
-    /* =========================
-       최초 조회
-    ========================= */
-
+    // 최초 조회
     useEffect(() => {
-
         fetchPageData();
-
     }, []);
 
-
-    /* =========================
-       로봇 선택
-    ========================= */
-
-    const handleSelectRobot = (
-        robotId
-    ) => {
-
-        loadRobotDetail(
-            robotId,
-            tasks
-        );
+    // 로봇 선택
+    const handleSelectRobot = (robotId) => {
+        loadRobotDetail(robotId, tasks);
     };
 
 
-    /* =========================
-       로봇 상태 Filter 목록
-    ========================= */
+    // 로봇 상태 필터 목록
+    const statusOptions = useMemo(() => {
+        return [
+            ...new Set(
+                robots.map((robot) => robot.status).filter(Boolean)
+            ),
+        ];
+    }, [robots]);
 
-    const statusOptions =
-        useMemo(() => {
+    // 로봇 필터링
+    const filteredRobots = useMemo(() => {
+        const keyword = searchText.trim().toLowerCase();
 
-            return [
-                ...new Set(
-                    robots
-                        .map(
-                            (robot) =>
-                                robot.status
-                        )
-                        .filter(Boolean)
-                ),
-            ];
+        return robots.filter((robot) => {
+            const matchesSearch =
+                !keyword ||
+                robot.name
+                    ?.toLowerCase()
+                    .includes(keyword) ||
+                String(robot.robotId).includes(keyword);
 
-        }, [robots]);
+            const matchesStatus =
+                statusFilter === "ALL" ||
+                robot.status === statusFilter;
 
+            return (matchesSearch && matchesStatus);
+        });
+    }, [robots, searchText, statusFilter,]);
 
-    /* =========================
-       로봇 필터링
-    ========================= */
+    // 상태별 요약
+    const statusSummary = useMemo(() => {
+        const counts = {};
 
-    const filteredRobots =
-        useMemo(() => {
+        robots.forEach((robot) => {
+            const status = robot.status || "UNKNOWN";
+            counts[status] = (counts[status] || 0) + 1;
+        }
+        );
 
-            const keyword =
-                searchText
-                    .trim()
-                    .toLowerCase();
+        return counts;
+    }, [robots]);
 
-
-            return robots.filter(
-                (robot) => {
-
-                    const matchesSearch =
-                        !keyword ||
-                        robot.name
-                            ?.toLowerCase()
-                            .includes(
-                                keyword
-                            ) ||
-                        String(
-                            robot.robotId
-                        ).includes(
-                            keyword
-                        );
-
-
-                    const matchesStatus =
-                        statusFilter ===
-                        "ALL" ||
-                        robot.status ===
-                        statusFilter;
-
-
-                    return (
-                        matchesSearch &&
-                        matchesStatus
-                    );
-                }
-            );
-
-        }, [
-            robots,
-            searchText,
-            statusFilter,
-        ]);
-
-
-    /* =========================
-       상태별 요약
-    ========================= */
-
-    const statusSummary =
-        useMemo(() => {
-
-            const counts = {};
-
-
-            robots.forEach(
-                (robot) => {
-
-                    const status =
-                        robot.status ||
-                        "UNKNOWN";
-
-
-                    counts[status] =
-                        (
-                            counts[status] ||
-                            0
-                        ) + 1;
-                }
-            );
-
-
-            return counts;
-
-        }, [robots]);
-
-
-    /* =========================
-       Filter 초기화
-    ========================= */
-
+    // 필터 초기화
     const handleResetFilter = () => {
-
         setSearchText("");
         setStatusFilter("ALL");
     };
 
-
-    /* =========================
-       등록 Form 변경
-    ========================= */
-
-    const handleNewRobotChange = (
-        field,
-        value
-    ) => {
-
-        setNewRobot(
-            (prev) => ({
-                ...prev,
-                [field]: value,
-            })
-        );
+    // 로봇 등록 폼 입력값 변경 공통 함수
+    const handleNewRobotChange = (field, value) => {
+        setNewRobot((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
     };
 
-
     const handleCloseModal = () => {
-
         setIsAddModalOpen(false);
-
 
         setNewRobot({
             robotId: "",
@@ -480,12 +356,7 @@ function RobotManagement() {
         });
     };
 
-
-    /* =========================
-       로봇 등록
-       POST /api/robots/{robotId}
-    ========================= */
-
+    // 로봇 등록 (/api/robots/{robotId} 붙여야 함)
     const handleAddRobot = () => {
 
         if (!newRobot.robotId) {
@@ -498,35 +369,18 @@ function RobotManagement() {
             return;
         }
 
-        if (
-            Number(newRobot.battery) < 0 ||
-            Number(newRobot.battery) > 100
-        ) {
-            alert(
-                "배터리는 0~100 사이로 입력해주세요."
-            );
+        if (Number(newRobot.battery) < 0 || Number(newRobot.battery) > 100) {
+            alert("배터리는 0~100 사이로 입력해주세요.");
             return;
         }
 
-
-        const robotId =
-            Number(newRobot.robotId);
-
-
-        const duplicatedRobot =
-            robots.some(
-                (robot) =>
-                    robot.robotId === robotId
-            );
-
+        const robotId = Number(newRobot.robotId);
+        const duplicatedRobot = robots.some((robot) => robot.robotId === robotId);
 
         if (duplicatedRobot) {
-            alert(
-                "이미 존재하는 로봇 ID입니다."
-            );
+            alert("이미 존재하는 로봇 ID입니다.");
             return;
         }
-
 
         const robotData = {
             robotId,
@@ -537,7 +391,6 @@ function RobotManagement() {
             y: Number(newRobot.y),
         };
 
-
         setRobots((prev) => [
             ...prev,
             robotData,
@@ -545,7 +398,6 @@ function RobotManagement() {
 
         setSelectedRobot(robotData);
         setSelectedTask(null);
-
 
         setNewRobot({
             robotId: "",
@@ -555,10 +407,8 @@ function RobotManagement() {
             y: 0,
         });
 
-
         setIsAddModalOpen(false);
     };
-
 
     return (
         <div className="robot-management-wrapper">
@@ -701,7 +551,7 @@ function RobotManagement() {
                                         로봇 정보를 불러오는 중입니다.
                                     </td>
                                 </tr>
-                                
+
                             ) : filteredRobots.length === 0 ? (
                                 <tr>
                                     <td
@@ -744,10 +594,11 @@ function RobotManagement() {
                                                     <div className="robot-battery-track">
                                                         <div
                                                             className="robot-battery-fill"
-                                                            style={{width:`${Math.max(0,
-                                                                        Math.min(100,
-                                                                            Number(robot.battery ??0)
-                                                                        ))}%`,
+                                                            style={{
+                                                                width: `${Math.max(0,
+                                                                    Math.min(100,
+                                                                        Number(robot.battery ?? 0)
+                                                                    ))}%`,
                                                             }}
                                                         />
                                                     </div>
@@ -839,10 +690,11 @@ function RobotManagement() {
                             <div className="robot-detail-battery-track">
                                 <div
                                     className="robot-detail-battery-fill"
-                                    style={{width:`${Math.max(0,
-                                                Math.min(100,
-                                                    Number(selectedRobot.battery ?? 0)
-                                                ))}%`,
+                                    style={{
+                                        width: `${Math.max(0,
+                                            Math.min(100,
+                                                Number(selectedRobot.battery ?? 0)
+                                            ))}%`,
                                     }}
                                 />
                             </div>
@@ -870,7 +722,7 @@ function RobotManagement() {
                                             className={`task-status task-${selectedTask.status
                                                 ?.toLowerCase()
                                                 .replaceAll("_", "-")
-                                            }`}
+                                                }`}
                                         >
                                             {getTaskStatusLabel(selectedTask.status)}
                                         </span>
@@ -989,7 +841,7 @@ function RobotManagement() {
                                         type="number"
                                         value={newRobot.x}
                                         onChange={(e) => handleNewRobotChange(
-                                            "x", 
+                                            "x",
                                             e.target.value
                                         )}
                                     />
@@ -1001,7 +853,7 @@ function RobotManagement() {
                                         type="number"
                                         value={newRobot.y}
                                         onChange={(e) => handleNewRobotChange(
-                                            "y", 
+                                            "y",
                                             e.target.value
                                         )}
                                     />
