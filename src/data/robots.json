@@ -1,44 +1,42 @@
 [
     {
-        "robot_id": 1,
-        "robot_code": "R1",
-        "node_id": "C01",
-        "battery": 80,
-        "status": "CHARGING"
+        "robotId": 1,
+        "name": "R1",
+        "status": "IDLE",
+        "battery": 85,
+        "x": 10,
+        "y": 20
     },
     {
-        "robot_id": 2,
-        "robot_code": "R2",
-        "node_id": "C02",
-        "battery": 40,
-        "status": "PUTAWAY"
+        "robotId": 2,
+        "name": "R2",
+        "status": "MOVING",
+        "battery": 62,
+        "x": 30,
+        "y": 40
     },
     {
-        "robot_id": 3,
-        "robot_code": "R3",
-        "node_id": "C07",
-        "battery": 10,
-        "status": "REPLENISH"
+        "robotId": 3,
+        "name": "R3",
+        "status": "CHARGING",
+        "battery": 62,
+        "x": 30,
+        "y": 40
     },
     {
-        "robot_id": 4,
-        "robot_code": "R4",
-        "node_id": "C04",
-        "battery": 80,
-        "status": "IDLE"
+        "robotId": 4,
+        "name": "R4",
+        "status": "ERROR",
+        "battery": 62,
+        "x": 30,
+        "y": 40
     },
     {
-        "robot_id": 5,
-        "robot_code": "R5",
-        "node_id": "C05",
-        "battery": 80,
-        "status": "PICKING"
-    },
-    {
-        "robot_id": 6,
-        "robot_code": "R6",
-        "node_id": "C06",
-        "battery": 80,
-        "status": "RELOCATION"
+        "robotId": 5,
+        "name": "R5",
+        "status": "OFFLINE",
+        "battery": 62,
+        "x": 30,
+        "y": 40
     }
 ]

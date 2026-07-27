@@ -223,13 +223,3 @@
     border: var(--border);
     background: var(--background-color);
 }
-
-/* =========================
-    하단
-========================= */
-
-.footer {
-    grid-area: footer;
-
-    border: var(--border);
-}
