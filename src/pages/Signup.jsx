@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/signup.css";
+import "../styles/Signup.css";
 
 const API_URL = "http://localhost:8080/api";
 

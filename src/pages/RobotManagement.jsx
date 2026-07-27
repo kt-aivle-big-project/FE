@@ -1,4 +1,4 @@
-import "../styles/robotManagement.css";
+import "../styles/RobotManagement.css";
 
 function RobotManagement() {
     const robots = [
