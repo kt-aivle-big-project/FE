@@ -136,7 +136,6 @@ function RobotManagement() {
         }
     };
 
-
     // 로봇의 현재 작업 찾기
     // 진행 중 작업 우선 없으면 배정된 작업
     const getCurrentTask = (robotId, taskList = tasks) => {
@@ -173,22 +172,12 @@ function RobotManagement() {
         return robot;
     };
 
-    /* =========================
-       작업 상세 조회
-       GET /api/tasks/{taskId}
-    ========================= */
-
+    // 작업 상세 조회 (/api/tasks/{taskId} 붙여야 됨)
     const fetchTaskDetail = async (taskId) => {
-
-        const task = tasksData.find(
-            (task) =>
-                task.id === taskId
-        );
+        const task = tasksData.find((task) => task.id === taskId);
 
         if (!task) {
-            throw new Error(
-                "작업을 찾을 수 없습니다."
-            );
+            throw new Error("작업을 찾을 수 없습니다.");
         }
 
         return task;
