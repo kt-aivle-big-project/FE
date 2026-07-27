@@ -1,0 +1,301 @@
+/* =========================
+   Simulation Task
+========================= */
+.simulation-task-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin-bottom: 10px;
+}
+
+.simulation-task-title {
+    margin: 0;
+    font-size: 16px;
+}
+
+.simulation-task-summary {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.task-summary-failed {
+    color: red;
+    font-weight: 500;
+}
+
+/* =========================
+   Card Area
+========================= */
+.simulation-task-card-area {
+    display: grid;
+
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+
+    align-items: stretch;
+
+    gap: 10px;
+
+    min-width: 0;
+    width: 100%;
+}
+
+/* =========================
+   Scroll Button
+========================= */
+.simulation-task-scroll-button {
+    width: 30px;
+
+    padding: 0;
+
+    font-size: 23px;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease;
+    
+    border: var(--border);
+    background: var(--background-color);
+}
+
+.simulation-task-scroll-button:hover {
+    background: var(--background-color);
+    background: var(--hover-color);
+}
+
+.simulation-task-scroll-button:active {
+    background: var(--hover-color);
+}
+
+/* =========================
+   Task List
+========================= */
+.simulation-task-list {
+    display: flex;
+
+    gap: 10px;
+
+    min-width: 0;
+    width: 100%;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    scroll-behavior: smooth;
+
+    scrollbar-width: none;
+}
+
+.simulation-task-list::-webkit-scrollbar {
+    display: none;
+}
+
+/* =========================
+   Task Card
+========================= */
+.simulation-task-card {
+    flex: 0 0 180px;
+
+    min-width: 180px;
+
+    box-sizing: border-box;
+
+    padding: 10px 10px;
+
+    border: var(--border);
+    background: var(--background-color);
+}
+
+.simulation-task-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 5px;
+
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+
+    border-bottom: var(--border);
+}
+
+.simulation-task-card-title {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    min-width: 0;
+}
+
+.simulation-task-card-title strong {
+    font-size: 14px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+.simulation-task-type {
+    padding: 2px 7px;
+
+    background: #f2f3f5;
+
+    border-radius: 4px;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    white-space: nowrap;
+}
+
+.simulation-task-status {
+    flex-shrink: 0;
+
+    padding: 3px 6px;
+
+    border-radius: 10px;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.status-pending {
+    background: #f0f0f0;
+    color: #666666;
+}
+
+.status-assigned {
+    background: #eef1f5;
+    color: #59697b;
+}
+
+.status-in_progress {
+    background: #e9f2ff;
+    color: #3f78b5;
+}
+
+.status-completed {
+    background: #eaf5ed;
+    color: #468257;
+}
+
+.status-failed {
+    background: #fcecec;
+    color: #c14a4a;
+}
+
+.status-default {
+    background: #f0f0f0;
+    color: #777777;
+}
+
+/* =========================
+   로봇 상태
+========================= */
+.simulation-task-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin-bottom: 7px;
+
+    font-size: 11px;
+}
+
+.simulation-task-info-label {
+    color: #777777;
+}
+
+.simulation-task-info strong {
+    font-size: 13px;
+}
+
+/* =========================
+   Route
+========================= */
+.simulation-task-route {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding: 10px 20px;
+
+    margin-bottom: 10px;
+
+    background: #f7f7f8;
+
+    border-radius: 5px;
+}
+
+.simulation-task-node {
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+}
+
+
+.simulation-task-node-label {
+    font-size: 10px;
+
+    color: #888888;
+}
+
+
+.simulation-task-node strong {
+    font-size: 14px;
+}
+
+.simulation-task-route-arrow {
+    flex-shrink: 0;
+
+    font-size: 16px;
+
+    color: #888888;
+}
+
+/* =========================
+   Time
+========================= */
+.simulation-task-time {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+.simulation-task-time > div {
+    display: flex;
+    align-items: center;
+
+    gap: 3px;
+
+    min-width: 0;
+}
+
+.simulation-task-time span {
+    font-size: 10px;
+
+    color: #888888;
+}
+
+.simulation-task-time strong {
+    font-size: 12px;
+    white-space: nowrap;
+}

@@ -10,7 +10,7 @@ import robotPutaway from "../assets/robots/robot_putaway.png";
 import robotRelocation from "../assets/robots/robot_relocation.png";
 import robotReplenish from "../assets/robots/robot_replenish.png";
 
-import "../styles/warehouseSVG.css";
+import "../styles/WarehouseSVG.css";
 
 function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../styles/simulationSetting.css";
+import "../styles/SimulationSetting.css";
 
 import scenarios from "../data/scenarios.json";
 

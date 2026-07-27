@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../styles/operationManagement.css";
+import "../styles/OperationManagement.css";
 import { data } from "react-router-dom";
 
 const tasks = [

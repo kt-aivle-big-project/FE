@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../styles/warehouseManagement.css";
+import "../styles/WarehouseManagement.css";
 
 const warehouses = [
     {
