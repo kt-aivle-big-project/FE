@@ -21,9 +21,7 @@ function Simulation() {
     useEffect(() => {
         const fetchScenarios = async () => {
             try {
-                const accessToken =
-                    localStorage.getItem("accessToken");
-
+                const accessToken = localStorage.getItem("accessToken");
                 const response = await fetch(
                     `${API_URL}/simulations/scenarios`,
                     {
@@ -40,21 +38,15 @@ function Simulation() {
                 }
 
                 const data = await response.json();
-
                 setScenarioSettings(data);
 
                 // 첫 번째 시나리오 기본 선택
                 if (data.length > 0) {
-                    setSelectedScenario(
-                        data[0].scenario_id
-                    );
+                    setSelectedScenario(data[0].scenario_id);
                 }
 
             } catch (error) {
-                console.error(
-                    "시나리오 조회 실패:",
-                    error
-                );
+                console.error("시나리오 조회 실패:", error);
             }
         };
 
@@ -73,9 +65,11 @@ function Simulation() {
     // 시뮬레이션 타이머
     useEffect(() => {
         if (simulationStatus !== "실행" && simulationStatus !== "재계획") { return; }
+    
         const timer = setInterval(() => {
             setSimulationTime((time) => time + simulationSpeed);
         }, 1000);
+
         return () => clearInterval(timer);
     }, [simulationStatus, simulationSpeed]);
 
@@ -83,10 +77,9 @@ function Simulation() {
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = totalSeconds % 60;
+
         return [hours, minutes, seconds]
-            .map((value) =>
-                String(value).padStart(2, "0")
-            )
+            .map((value) => String(value).padStart(2, "0"))
             .join(":");
     };
 
@@ -94,7 +87,6 @@ function Simulation() {
     const handleScenarioChange = (scenarioId) => {
         setSelectedScenario(scenarioId);
     };
-
 
     // 시뮬레이션 시작
     const handleStart = async () => {
@@ -110,15 +102,12 @@ function Simulation() {
         }
 
         if (inboundRatioTotal !== 100) {
-            alert(
-                "입고 품목 구성 비율의 합계가 100%가 되어야 합니다."
-            );
+            alert("입고 품목 구성 비율의 합계가 100%가 되어야 합니다.");
             return;
         }
 
         try {
-            const accessToken =
-                localStorage.getItem("accessToken");
+            const accessToken = localStorage.getItem("accessToken");
 
             const response = await fetch(
                 `${API_URL}/simulations/${simulationId}/start`,
@@ -132,18 +121,14 @@ function Simulation() {
             );
 
             if (!response.ok) {
-                const errorMessage =
-                    await response.text();
+                const errorMessage = await response.text();
 
-                throw new Error(
-                    errorMessage || "시뮬레이션 실행에 실패했습니다."
-                );
+                throw new Error(errorMessage || "시뮬레이션 실행에 실패했습니다.");
             }
 
             const data = await response.json();
 
             console.log("시뮬레이션 실행 응답:", data);
-
             setSimulationId(data.simulationId);
 
             if (data.status === "RUNNING") {
@@ -156,6 +141,7 @@ function Simulation() {
 
             // 로봇 정보 반영
             if (Array.isArray(data.robots)) {
+
                 setRobots((prevRobots) =>
                     prevRobots.map((robot) => {
 
@@ -185,6 +171,7 @@ function Simulation() {
 
             isPausedRef.current = false;
             movementRunRef.current += 1;
+            
         } catch (error) {
             console.error("시뮬레이션 시작 실패:", error);
             alert(error.message || "시뮬레이션을 시작하지 못했습니다.");
@@ -199,6 +186,7 @@ function Simulation() {
 
         try {
             const accessToken = localStorage.getItem("accessToken");
+
             const response = await fetch(
                 `${API_URL}/simulation-runs/${simulationRunId}/pause`,
                 {
@@ -210,9 +198,7 @@ function Simulation() {
             );
 
             if (!response.ok) {
-                throw new Error(
-                    "시뮬레이션 일시정지에 실패했습니다."
-                );
+                throw new Error("시뮬레이션 일시정지에 실패했습니다.");
             }
 
             isPausedRef.current = true;
@@ -232,6 +218,7 @@ function Simulation() {
 
         try {
             const accessToken = localStorage.getItem("accessToken");
+
             const response = await fetch(
                 `${API_URL}/simulation-runs/${simulationRunId}/resume`,
                 {
@@ -304,6 +291,7 @@ function Simulation() {
         try {
             const accessToken = localStorage.getItem("accessToken");
             setSimulationStatus("재계획");
+            
             const response = await fetch(
                 `재계획 API`,
                 {
