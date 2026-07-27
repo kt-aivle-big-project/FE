@@ -1,0 +1,67 @@
+[
+    {
+        "id": 50,
+        "warehouseId": 1,
+        "robotId": 5,
+        "taskId": 100,
+        "eventType": "PATH_BLOCKED",
+        "description": "3번 노드 통로 차단",
+        "nodeId": 3,
+        "occurredAt": "2026-07-24T14:05:00",
+        "resolvedAt": null,
+        "overlapping": null,
+        "affectedSimulationIds": null
+    },
+    {
+        "id": 51,
+        "warehouseId": 1,
+        "robotId": 3,
+        "taskId": 101,
+        "eventType": "PATH_BLOCKED",
+        "description": "12번 노드 통로 차단",
+        "nodeId": 12,
+        "occurredAt": "2026-07-24T14:02:00",
+        "resolvedAt": "2026-07-24T14:04:30",
+        "overlapping": null,
+        "affectedSimulationIds": null
+    },
+    {
+        "id": 52,
+        "warehouseId": 1,
+        "robotId": 2,
+        "taskId": 102,
+        "eventType": "PATH_BLOCKED",
+        "description": "28번 노드에 장애물 발생",
+        "nodeId": 28,
+        "occurredAt": "2026-07-24T13:58:00",
+        "resolvedAt": null,
+        "overlapping": null,
+        "affectedSimulationIds": null
+    },
+    {
+        "id": 53,
+        "warehouseId": 1,
+        "robotId": 4,
+        "taskId": 104,
+        "eventType": "PATH_BLOCKED",
+        "description": "61번 노드 이동 경로 차단",
+        "nodeId": 61,
+        "occurredAt": "2026-07-24T13:54:00",
+        "resolvedAt": "2026-07-24T13:57:00",
+        "overlapping": null,
+        "affectedSimulationIds": null
+    },
+    {
+        "id": 54,
+        "warehouseId": 1,
+        "robotId": null,
+        "taskId": null,
+        "eventType": "PATH_BLOCKED",
+        "description": "44번 노드 통로 차단",
+        "nodeId": 44,
+        "occurredAt": "2026-07-24T13:48:00",
+        "resolvedAt": null,
+        "overlapping": null,
+        "affectedSimulationIds": null
+    }
+]
