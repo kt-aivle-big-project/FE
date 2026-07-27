@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Signup.css";
 
-const API_URL = "http://localhost:8080/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 function Signup() {
     const navigate = useNavigate();
@@ -11,6 +11,7 @@ function Signup() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [passwordConfirm, setPasswordConfirm] = useState("");
+    const [privacyAgreed, setPrivacyAgreed] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
@@ -29,10 +30,16 @@ function Signup() {
         }
 
         // 백엔드로 전달
+        if (!privacyAgreed) {
+            alert("개인정보 수집 및 이용에 동의해 주세요.");
+            return;
+        }
+
         const signupData = {
             name: name.trim(),
             email: email.trim(),
             password: password,
+            privacyAgreed,
         };
 
         try {
@@ -190,6 +197,17 @@ function Signup() {
                                 </p>
                             )}
                     </div>
+
+                    <label className="privacy-agreement">
+                        <input
+                            type="checkbox"
+                            checked={privacyAgreed}
+                            onChange={(e) =>
+                                setPrivacyAgreed(e.target.checked)
+                            }
+                        />
+                        <span>개인정보 수집 및 이용에 동의합니다. (필수)</span>
+                    </label>
 
                     <button
                         type="submit"

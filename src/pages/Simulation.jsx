@@ -3,6 +3,7 @@ import "../styles/Simulation.css";
 import WarehouseSVG from "../Simulation/WarehouseSVG";
 import SimulationTask from "../Simulation/SimulationTask";
 import SimulationEvent from "../Simulation/SimulationEvent";
+import { apiFetch } from "../api/apiFetch";
 
 
 import scenarios from "../data/scenarios.json";
@@ -14,7 +15,7 @@ import inbound from "../data/inbound.json";
 import outbound from "../data/outbound.json";
 import events from "../data/events.json";
 
-const API_URL = "http://localhost:8080/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 function Simulation() {
 
@@ -22,7 +23,7 @@ function Simulation() {
         const fetchScenarios = async () => {
             try {
                 const accessToken = localStorage.getItem("accessToken");
-                const response = await fetch(
+                const response = await apiFetch(
                     `${API_URL}/simulations/scenarios`,
                     {
                         method: "GET",
@@ -109,7 +110,7 @@ function Simulation() {
         try {
             const accessToken = localStorage.getItem("accessToken");
 
-            const response = await fetch(
+            const response = await apiFetch(
                 `${API_URL}/simulations/${simulationId}/start`,
                 {
                     method: "POST",
@@ -187,7 +188,7 @@ function Simulation() {
         try {
             const accessToken = localStorage.getItem("accessToken");
 
-            const response = await fetch(
+            const response = await apiFetch(
                 `${API_URL}/simulation-runs/${simulationRunId}/pause`,
                 {
                     method: "POST",
@@ -219,7 +220,7 @@ function Simulation() {
         try {
             const accessToken = localStorage.getItem("accessToken");
 
-            const response = await fetch(
+            const response = await apiFetch(
                 `${API_URL}/simulation-runs/${simulationRunId}/resume`,
                 {
                     method: "POST",
@@ -248,7 +249,7 @@ function Simulation() {
             const accessToken = localStorage.getItem("accessToken");
 
             if (simulationRunId) {
-                const response = await fetch(
+                const response = await apiFetch(
                     `${API_URL}/simulation-runs/${simulationRunId}/stop`,
                     {
                         method: "POST",
@@ -292,7 +293,7 @@ function Simulation() {
             const accessToken = localStorage.getItem("accessToken");
             setSimulationStatus("재계획");
             
-            const response = await fetch(
+            const response = await apiFetch(
                 `재계획 API`,
                 {
                     method: "POST",
