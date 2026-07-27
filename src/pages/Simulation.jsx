@@ -16,8 +16,6 @@ import {
 } from "../api/client";
 
 import scenariosData from "../data/scenarios.json";
-import tasksData from "../data/tasks.json";
-import eventsData from "../data/events.json";
 import robotsData from "../data/robots.json";
 import productsData from "../data/products.json";
 import inbound from "../data/inbound.json";
@@ -98,8 +96,10 @@ function Simulation() {
     };
 
     // 작업 / 이벤트 / 품목 목록
-    const [taskList, setTaskList] = useState(tasksData);
-    const [eventList, setEventList] = useState(eventsData);
+    // 목업이 아니라 백엔드에서 받은 것만 보여준다.
+    // 시작하면 그 실행의 작업으로 채워지고, 이후 WebSocket 으로 갱신된다.
+    const [taskList, setTaskList] = useState([]);
+    const [eventList, setEventList] = useState([]);
     const [products, setProducts] = useState(productsData);
 
     /* =========================================================
@@ -190,6 +190,28 @@ function Simulation() {
        시뮬레이션 제어
     ========================================================= */
 
+    /**
+     * 해당 실행의 작업 목록을 백엔드에서 다시 읽어온다.
+     * 시작/초기화 시점에 화면을 그 실행의 작업만으로 맞춘다.
+     */
+    const reloadTasks = async (runId) => {
+        try {
+            const runTasks = await simulationRunApi.getTasks(runId);
+            setTaskList(Array.isArray(runTasks) ? runTasks : []);
+        } catch (error) {
+            console.warn("작업 목록 조회 실패", error.message);
+            setTaskList([]);
+        }
+    };
+
+    // 새로고침해도 진행 중이던 실행의 작업 목록을 되살린다
+    useEffect(() => {
+        if (simulationRunId) {
+            reloadTasks(simulationRunId);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [simulationRunId]);
+
     // 시뮬레이션 시작
     const handleStart = async () => {
         // 일시정지 상태면 재개
@@ -275,6 +297,10 @@ function Simulation() {
             if (snapshot?.robots?.length) {
                 setRobots(snapshot.robots.map(toRobotView));
             }
+
+            // 이 실행의 작업 목록으로 교체한다.
+            // (이전 실행의 작업이나 목업 데이터가 남지 않도록)
+            await reloadTasks(runId);
         } catch (error) {
             console.error("시뮬레이션 시작 실패:", error);
             alert(error.message ?? "시뮬레이션을 시작하지 못했습니다.");
@@ -330,6 +356,8 @@ function Simulation() {
         if (simulationRunId) {
             try {
                 await simulationRunApi.reset(simulationRunId);
+                // 작업이 전부 대기 상태로 돌아간 목록을 다시 읽어온다
+                await reloadTasks(simulationRunId);
             } catch (error) {
                 console.error("시뮬레이션 초기화 실패:", error);
             }
@@ -405,6 +433,12 @@ function Simulation() {
     // 작업 변경 수신 → 목록 갱신
     // 백엔드 TaskResponse 형태를 그대로 보관한다. (SimulationTask 가 같은 형태를 읽는다)
     const applyTask = (task) => {
+        // /topic/tasks 는 모든 실행의 작업을 뿌리므로
+        // 지금 보고 있는 실행의 작업만 화면에 반영한다.
+        if (task.simulationRunId !== simulationRunId) {
+            return;
+        }
+
         setTaskList((prevTasks) => {
             const exists = prevTasks.some((item) => item.id === task.id);
 
