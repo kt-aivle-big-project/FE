@@ -1,0 +1,244 @@
+/* =========================
+   입출고 패널 공통 
+========================= */
+
+.simulation-setting-panel {
+    width: 100%;
+    padding: 10px;
+    border: var(--border);
+    background: var(--background-color);
+    color: var(--font-color);
+    box-sizing: border-box;
+}
+
+.simulation-setting-title {
+    margin: 0 0 5px;
+    font-size: 16px;
+}
+
+.simulation-setting-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    align-items: center;
+}
+
+.simulation-setting-row:last-child {
+    margin-bottom: 0;
+}
+
+.simulation-setting-row label {
+    font-size: 14px;
+}
+
+.simulation-setting-row input,
+.simulation-setting-row select {
+    width: 100%;
+    padding: 5px;
+    border: var(--border);
+    border-radius: 0;
+    background: var(--background-color);
+    color: var(--font-color);
+    box-sizing: border-box;
+}
+
+.simulation-setting-row select:hover {
+    background: var(--hover-color);
+}
+
+.simulation-input-unit {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2px;
+}
+
+.simulation-input-unit span {
+    font-size: 12px;
+}
+
+/* =========================
+   입고 품목 구성
+========================= */
+
+.inbound-product-section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: var(--border);
+}
+
+.inbound-product-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.inbound-product-header h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.inbound-product-header span {
+    font-size: 12px;
+}
+
+.inbound-product-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+}
+
+.inbound-product-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.inbound-product-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.inbound-product-info strong {
+    width: 10px;
+}
+
+.inbound-product-control {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.inbound-product-control input {
+    width: 50px;
+    border: var(--border);
+    background: var(--background-color);
+    color: var(--font-color);
+    text-align: right;
+    box-sizing: border-box;
+}
+
+.inbound-product-control span {
+    font-size: 12px;
+}
+
+.inbound-product-control button {
+    padding: 0px 0px;
+    border: var(--border);
+    border-radius: 0;
+    background: var(--background-color);
+    color: var(--font-color);
+    cursor: pointer;
+}
+
+.inbound-product-control button:hover {
+    background: var(--hover-color);
+}
+
+.inbound-product-add {
+    display: grid;
+    grid-template-columns: 1fr 80px auto;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.inbound-product-add select,
+.inbound-product-add input,
+.inbound-product-add button {
+    padding: 4px 8px;
+    border: var(--border);
+    border-radius: 0;
+    background: var(--background-color);
+    color: var(--font-color);
+    box-sizing: border-box;
+}
+
+.inbound-product-add select {
+    width: 100%;
+}
+
+.inbound-product-add button {
+    cursor: pointer;
+}
+
+.inbound-product-add button:hover {
+    background: var(--hover-color);
+}
+
+.inbound-add-ratio {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.inbound-add-ratio input {
+    width: 100%;
+    text-align: right;
+}
+
+.inbound-add-ratio span {
+    font-size: 13px;
+}
+
+.inbound-ratio-valid {
+    color: green;
+}
+
+.inbound-ratio-invalid,
+.inbound-ratio-message {
+    color: red;
+}
+
+/* =========================
+   자연어 명령
+========================= */
+
+.natural-command-content {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.natural-command-content label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.natural-command-content textarea {
+    width: 100%;
+    padding: 8px;
+
+    border: var(--border);
+    border-radius: 0;
+
+    background: var(--background-color);
+    color: var(--font-color);
+
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+.natural-command-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.natural-command-actions button {
+    padding: 7px 12px;
+
+    border: var(--border);
+    background: var(--background-color);
+    color: var(--font-color);
+
+    cursor: pointer;
+}
+
+.natural-command-actions button:hover:not(:disabled) {
+    background: var(--hover-color);
+}
+
+.natural-command-actions button:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
