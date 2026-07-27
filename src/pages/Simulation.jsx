@@ -3,8 +3,7 @@ import "../styles/Simulation.css";
 import WarehouseSVG from "../Simulation/WarehouseSVG";
 import SimulationTask from "../Simulation/SimulationTask";
 import SimulationEvent from "../Simulation/SimulationEvent";
-import { apiFetch } from "../api/apiFetch";
-
+import SimulationPanel from "../simulation/SimulationPanel";
 
 import scenarios from "../data/scenarios.json";
 import alerts from "../data/alerts.json";
@@ -15,15 +14,34 @@ import inbound from "../data/inbound.json";
 import outbound from "../data/outbound.json";
 import events from "../data/events.json";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+const API_URL = "http://localhost:8080/api";
 
 function Simulation() {
 
+    // 시나리오
+    const [scenarioSettings, setScenarioSettings] = useState([]);
+    const [selectedScenario, setSelectedScenario] = useState("");
+    const [simulationSpeed, setSimulationSpeed] = useState(1);
+    const [simulationStatus, setSimulationStatus] = useState("대기");
+    const [simulationTime, setSimulationTime] = useState(0);
+
+    // 입출고
+    const [inboundSettings, setInboundSettings] = useState(inbound);
+    const [outboundSettings, setOutboundSettings] = useState(outbound);
+
+    // 로봇
+    const [robotList, setRobots] = useState(robots);
+
+    // 시나리오 실행
+    const [simulationId, setSimulationId] = useState(null);
+    const [simulationRunId, setSimulationRunId] = useState(null);
+
+    // 시나리오 설정값 불러오기
     useEffect(() => {
         const fetchScenarios = async () => {
             try {
                 const accessToken = localStorage.getItem("accessToken");
-                const response = await apiFetch(
+                const response = await fetch(
                     `${API_URL}/simulations/scenarios`,
                     {
                         method: "GET",
@@ -54,19 +72,17 @@ function Simulation() {
         fetchScenarios();
     }, []);
 
-    /* ===== 상단 헤더 - 시뮬레이션 실행  ===== */
+    // 불러온 설정값에서 시나리오 선택하기
+    const handleScenarioChange = (scenarioId) => {
+        setSelectedScenario(scenarioId);
+    };
 
-    // 시나리오 설정
-    const [scenarioSettings, setScenarioSettings] = useState(scenarios);
-    const [selectedScenario, setSelectedScenario] = useState(scenarios[0]?.scenario_id ?? "");
-    const [simulationSpeed, setSimulationSpeed] = useState(1);
-    const [simulationStatus, setSimulationStatus] = useState("대기");
-    const [simulationTime, setSimulationTime] = useState(0);
 
+    /* ==================== 상단 헤더 - 시뮬레이션 실행  ==================== */
     // 시뮬레이션 타이머
     useEffect(() => {
         if (simulationStatus !== "실행" && simulationStatus !== "재계획") { return; }
-    
+
         const timer = setInterval(() => {
             setSimulationTime((time) => time + simulationSpeed);
         }, 1000);
@@ -84,16 +100,11 @@ function Simulation() {
             .join(":");
     };
 
-    // 시뮬레이션 시나리오 선택 (저장된 설정값 불러오기)
-    const handleScenarioChange = (scenarioId) => {
-        setSelectedScenario(scenarioId);
-    };
-
     // 시뮬레이션 시작
     const handleStart = async () => {
 
         if (simulationStatus === "일시정지") {
-            isPausedRef.current = false;
+            await handleResume();
             return;
         }
 
@@ -110,7 +121,7 @@ function Simulation() {
         try {
             const accessToken = localStorage.getItem("accessToken");
 
-            const response = await apiFetch(
+            const response = await fetch(
                 `${API_URL}/simulations/${simulationId}/start`,
                 {
                     method: "POST",
@@ -172,7 +183,7 @@ function Simulation() {
 
             isPausedRef.current = false;
             movementRunRef.current += 1;
-            
+
         } catch (error) {
             console.error("시뮬레이션 시작 실패:", error);
             alert(error.message || "시뮬레이션을 시작하지 못했습니다.");
@@ -188,7 +199,7 @@ function Simulation() {
         try {
             const accessToken = localStorage.getItem("accessToken");
 
-            const response = await apiFetch(
+            const response = await fetch(
                 `${API_URL}/simulation-runs/${simulationRunId}/pause`,
                 {
                     method: "POST",
@@ -220,7 +231,7 @@ function Simulation() {
         try {
             const accessToken = localStorage.getItem("accessToken");
 
-            const response = await apiFetch(
+            const response = await fetch(
                 `${API_URL}/simulation-runs/${simulationRunId}/resume`,
                 {
                     method: "POST",
@@ -249,7 +260,7 @@ function Simulation() {
             const accessToken = localStorage.getItem("accessToken");
 
             if (simulationRunId) {
-                const response = await apiFetch(
+                const response = await fetch(
                     `${API_URL}/simulation-runs/${simulationRunId}/stop`,
                     {
                         method: "POST",
@@ -268,7 +279,7 @@ function Simulation() {
             isPausedRef.current = false;
 
             setRobots(
-                robotsData.map((robot) => ({
+                robots.map((robot) => ({
                     ...robot,
                 }))
             );
@@ -292,8 +303,8 @@ function Simulation() {
         try {
             const accessToken = localStorage.getItem("accessToken");
             setSimulationStatus("재계획");
-            
-            const response = await apiFetch(
+
+            const response = await fetch(
                 `재계획 API`,
                 {
                     method: "POST",
@@ -316,31 +327,12 @@ function Simulation() {
         }
     };
 
-    /* ===== 로봇 ===== */
-    const isPausedRef = useRef(false);
 
+    /* ==================== 로봇 ==================== */
     // 실행 중인 이동을 구분하기 위한 값
     // 초기화했을 때 기존 이동 루프를 중단하기 위해 사용
+    const isPausedRef = useRef(false);
     const movementRunRef = useRef(0);
-
-    // 테스트 경로
-    const testPath = [
-        "R6_0",
-        "R5_0",
-        "R4_0",
-        "R4_1",
-        "R4_2",
-        "R4_3",
-        "R4_4",
-        "R4_5",
-        "R4_6",
-        "R4_7",
-        "R4_8",
-        "R4_9",
-        "R4_10",
-        "R3_10",
-        "O_D",
-    ];
 
     const sleep = (ms) => {
         return new Promise((resolve) => {
@@ -348,9 +340,8 @@ function Simulation() {
         });
     };
 
+    // 로봇 이동
     const moveRobot = async (robotId, path) => {
-
-        // 이번 실행 번호 저장
         const currentRun = movementRunRef.current;
 
         for (const nodeId of path) {
@@ -387,125 +378,19 @@ function Simulation() {
         }
     };
 
-    /* ===== 작업 카드 ===== */
 
-
-    /* ===== 입고 설정 ===== */
-    const [inboundSettings, setInboundSettings] = useState(inbound);
-    const [newProductCode, setNewProductCode] = useState("");
-    const [newProductRatio, setNewProductRatio] = useState("");
-
-    // 입고 설정 변경
-    const handleInboundChange = (field, value) => {
-        setInboundSettings((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-    };
-
-    // 품목명 불러오기
-    const getProductName = (productCode) => {
-        const product = products.find(
-            (product) => product.product_code === productCode
+    /* ==================== 입출고 ==================== */
+    // 입고 품목 비율 합계
+    const inboundRatioTotal =
+        inboundSettings.products.reduce(
+            (total, product) =>
+                total + Number(product.ratio),
+            0
         );
 
-        return product?.product_name ?? "";
-    };
-
-    // 이미 추가한 품목은 목록에서 제외
-    const availableProducts = products.filter(
-        (product) =>
-            !inboundSettings.products.some(
-                (inboundProduct) =>
-                    inboundProduct.product_code === product.product_code
-            )
-    );
-
-    // 품목 추가
-    const handleAddInboundProduct = () => {
-        if (!newProductCode) {
-            alert("추가할 품목을 선택해주세요.");
-            return;
-        }
-
-        const ratio = Number(newProductRatio);
-
-        if (ratio <= 0) {
-            alert("품목 비율을 입력해주세요.");
-            return;
-        }
-
-        if (inboundRatioTotal + ratio > 100) {
-            alert("품목 구성 비율의 합계는 100%를 초과할 수 없습니다.");
-            return;
-        }
-
-        setInboundSettings((prev) => ({
-            ...prev,
-            products: [
-                ...prev.products,
-                {
-                    product_code: newProductCode,
-                    ratio: ratio,
-                },
-            ],
-        }));
-
-        setNewProductCode("");
-        setNewProductRatio("");
-    };
-
-    // 품목 삭제
-    const handleDeleteInboundProduct = (productCode) => {
-        setInboundSettings((prev) => ({
-            ...prev,
-            products: prev.products.filter(
-                (product) => product.product_code !== productCode
-            ),
-        }));
-    };
-
-    // 품목 비율 수정
-    const handleInboundRatioChange = (productCode, value) => {
-        const ratio = Math.max(
-            0,
-            Math.min(100, Number(value))
-        );
-
-        setInboundSettings((prev) => ({
-            ...prev,
-            products: prev.products.map((product) =>
-                product.product_code === productCode
-                    ? {
-                        ...product,
-                        ratio: ratio,
-                    }
-                    : product
-            ),
-        }));
-    };
-
-    // 품목 비율 합계
-    const inboundRatioTotal = inboundSettings.products.reduce(
-        (total, product) => total + product.ratio,
-        0
-    );
-
-    /* ===== 출고 설정 ===== */
-    const [outboundSettings, setOutboundSettings] = useState(outbound);
-
-    // 출고 설정 변경
-    const handleOutboundChange = (field, value) => {
-        setOutboundSettings((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-    };
-
-
-    // 자연어 명령
+    // 자연어 명령 처리
     const [naturalCommand, setNaturalCommand] = useState("");
-    const handleNaturalCommand = () => {
+    const handleNaturalCommand = async () => {
         const command = naturalCommand.trim();
 
         if (!command) {
@@ -513,16 +398,48 @@ function Simulation() {
             return;
         }
 
+        if (!simulationRunId) {
+            alert("먼저 시뮬레이션을 실행해주세요.");
+            return;
+        }
+
         const commandRequest = {
             command: command,
         };
 
-        console.log("자연어 명령:", commandRequest);
+        try {
+            const accessToken = localStorage.getItem("accessToken");
 
-        // 전송 완료됐다고 가정
-        setNaturalCommand("");
+            console.log("자연어 명령:", commandRequest);
+
+            const response = await fetch(
+                `${API_URL}/simulation-runs/${simulationRunId}/commands`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify(commandRequest),
+                }
+            );
+
+            if (!response.ok) {
+                const errorMessage = await response.text();
+
+                throw new Error(errorMessage || "자연어 명령 처리에 실패했습니다.");
+            }
+
+            const data = await response.json();
+
+            console.log("자연어 명령 응답:", data);
+            setNaturalCommand("");
+
+        } catch (error) {
+            console.error("자연어 명령 처리 실패:", error);
+            alert(error.message || "명령을 처리하지 못했습니다.");
+        }
     };
-
 
     return (
         <div className="simulation-wrapper">
@@ -572,7 +489,6 @@ function Simulation() {
                         </span>
 
                     </div>
-
 
                     {/* 시뮬레이션 타이머 */}
                     <div className="simulation-header-info-item">
@@ -641,324 +557,22 @@ function Simulation() {
             {/* 시뮬레이션 화면 */}
             <main className="simulation-view">
                 <WarehouseSVG
-                    robots={robots}
+                    robots={robotList}
                     simulationSpeed={simulationSpeed}
                 />
             </main>
 
-            <aside className="simulation-panel">
-
-                {/* 입고 설정 */}
-                <section className="simulation-setting-panel">
-                    <h2 className="simulation-setting-title">
-                        입고 설정
-                    </h2>
-
-                    <div className="simulation-setting-row">
-                        <label>입고 예정 건수</label>
-
-                        <div className="simulation-input-unit">
-                            <input
-                                type="number"
-                                value={inboundSettings.inbound_count}
-                                onChange={(e) =>
-                                    handleInboundChange(
-                                        "inbound_count",
-                                        Number(e.target.value)
-                                    )
-                                }
-                            />
-                            <span>건</span>
-                        </div>
-                    </div>
-
-                    <div className="simulation-setting-row">
-                        <label>총 입고 예정량</label>
-
-                        <div className="simulation-input-unit">
-                            <input
-                                type="number"
-                                value={inboundSettings.total_quantity}
-                                onChange={(e) =>
-                                    handleInboundChange(
-                                        "total_quantity",
-                                        Number(e.target.value)
-                                    )
-                                }
-                            />
-                            <span>BOX</span>
-                        </div>
-                    </div>
-
-                    <div className="simulation-setting-row">
-                        <label>입고 발생 패턴</label>
-
-                        <select
-                            value={inboundSettings.arrival_pattern}
-                            onChange={(e) =>
-                                handleInboundChange(
-                                    "arrival_pattern",
-                                    e.target.value
-                                )
-                            }
-                        >
-                            <option value="UNIFORM">균등</option>
-                            <option value="RANDOM">랜덤</option>
-                            <option value="PEAK">집중</option>
-                        </select>
-                    </div>
-
-
-                    {/* 품목 구성 */}
-                    <div className="inbound-product-section">
-
-                        <div className="inbound-product-header">
-
-                            <h3>품목 구성</h3>
-
-                            <span
-                                className={
-                                    inboundRatioTotal === 100
-                                        ? "inbound-ratio-valid"
-                                        : "inbound-ratio-invalid"
-                                }
-                            >
-                                합계 {inboundRatioTotal}%
-                            </span>
-
-                        </div>
-
-
-                        {/* 추가된 품목 */}
-                        <div className="inbound-product-list">
-                            {inboundSettings.products.map((product) => (
-                                <div
-                                    className="inbound-poducrt-row"
-                                    key={product.product_code}
-                                >
-
-                                    <div className="inbound-product-info">
-
-                                        <strong>
-                                            {product.product_code}
-                                        </strong>
-
-                                        <span>
-                                            {getProductName(product.product_code)}
-                                        </span>
-
-                                    </div>
-
-
-                                    <div className="inbound-product-control">
-
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max="100"
-                                            value={product.ratio}
-                                            onChange={(e) =>
-                                                handleInboundRatioChange(
-                                                    product.product_code,
-                                                    e.target.value
-                                                )
-                                            }
-                                        />
-
-                                        <span>%</span>
-
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                handleDeleteInboundProduct(
-                                                    product.product_code
-                                                )
-                                            }
-                                        >
-                                            삭제
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* 품목 추가 */}
-                        {availableProducts.length > 0 && (
-                            <div className="inbound-product-add">
-
-                                <select
-                                    value={newProductCode}
-                                    onChange={(e) =>
-                                        setNewProductCode(e.target.value)
-                                    }
-                                >
-
-                                    <option value="">
-                                        품목 선택
-                                    </option>
-
-                                    {availableProducts.map((product) => (
-                                        <option
-                                            key={product.product_code}
-                                            value={product.product_code}
-                                        >
-                                            {product.product_code} {product.product_name}
-                                        </option>
-                                    ))}
-                                </select>
-
-                                <div className="inbound-add-ratio">
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="100"
-                                        placeholder="비율"
-                                        value={newProductRatio}
-                                        onChange={(e) =>
-                                            setNewProductRatio(e.target.value)
-                                        }
-                                    />
-                                    <span>%</span>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={handleAddInboundProduct}
-                                >
-                                    추가
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </section>
-
-                {/* 출고 설정 */}
-                <section className="simulation-setting-panel">
-                    <h2 className="simulation-setting-title">
-                        출고 설정
-                    </h2>
-
-                    <div className="simulation-setting-row">
-                        <label>출고 주문 건수</label>
-
-                        <div className="simulation-input-unit">
-                            <input
-                                type="number"
-                                value={outboundSettings.order_count}
-                                onChange={(e) =>
-                                    handleOutboundChange(
-                                        "order_count",
-                                        Number(e.target.value)
-                                    )
-                                }
-                            />
-                            <span>건</span>
-                        </div>
-                    </div>
-
-                    <div className="simulation-setting-row">
-                        <label>총 출고 예정량</label>
-
-                        <div className="simulation-input-unit">
-                            <input
-                                type="number"
-                                value={outboundSettings.total_quantity}
-                                onChange={(e) =>
-                                    handleOutboundChange(
-                                        "total_quantity",
-                                        Number(e.target.value)
-                                    )
-                                }
-                            />
-                            <span>BOX</span>
-                        </div>
-                    </div>
-
-                    <div className="simulation-setting-row">
-                        <label>주문 발생 패턴</label>
-
-                        <select
-                            value={outboundSettings.arrival_pattern}
-                            onChange={(e) =>
-                                handleOutboundChange(
-                                    "arrival_pattern",
-                                    e.target.value
-                                )
-                            }
-                        >
-                            <option value="UNIFORM">균등</option>
-                            <option value="RANDOM">랜덤</option>
-                            <option value="PEAK">집중</option>
-                        </select>
-                    </div>
-
-                    <div className="simulation-setting-row">
-                        <label>출고 처리기한</label>
-
-                        <div className="simulation-input-unit">
-                            <input
-                                type="number"
-                                value={outboundSettings.processing_deadline_minutes}
-                                onChange={(e) =>
-                                    handleOutboundChange(
-                                        "processing_deadline_minutes",
-                                        Number(e.target.value)
-                                    )
-                                }
-                            />
-                            <span>분</span>
-                        </div>
-                    </div>
-
-                    <div className="simulation-setting-row">
-                        <label>부분 출고</label>
-
-                        <select
-                            value={
-                                outboundSettings.allow_partial_shipment
-                                    ? "true"
-                                    : "false"
-                            }
-                            onChange={(e) =>
-                                handleOutboundChange(
-                                    "allow_partial_shipment",
-                                    e.target.value === "true"
-                                )
-                            }
-                        >
-                            <option value="true">허용</option>
-                            <option value="false">허용 안 함</option>
-                        </select>
-                    </div>
-
-                </section>
-
-                <section className="simulation-setting-panel">
-                    <h2 className="simulation-setting-title">
-                        명령 입력
-                    </h2>
-
-                    <div className="natural-command-content">
-                        <textarea
-                            id="natural-command"
-                            value={naturalCommand}
-                            onChange={(e) => setNaturalCommand(e.target.value)}
-                            placeholder="예: A 상품 출고 작업을 우선 처리해줘"
-                        />
-
-                        <div className="natural-command-actions">
-
-                            <button
-                                type="button"
-                                onClick={handleNaturalCommand}
-                                disabled={!naturalCommand.trim()}
-                            >
-                                명령 실행
-                            </button>
-                        </div>
-                    </div>
-                </section>
-            </aside>
+            <SimulationPanel
+                inboundSettings={inboundSettings}
+                setInboundSettings={setInboundSettings}
+                outboundSettings={outboundSettings}
+                setOutboundSettings={setOutboundSettings}
+                products={products}
+                inboundRatioTotal={inboundRatioTotal}
+                naturalCommand={naturalCommand}
+                setNaturalCommand={setNaturalCommand}
+                handleNaturalCommand={handleNaturalCommand}
+            />
 
             <SimulationTask tasks={tasks} />
 
