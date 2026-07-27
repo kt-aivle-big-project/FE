@@ -1,18 +1,66 @@
 import { useEffect, useState, useRef } from "react";
-import "../styles/simulation.css"; import WarehouseSVG from "../components/WarehouseSVG";
-import SimulationTask from "../components/SimulationTask";
+import "../styles/Simulation.css";
+import WarehouseSVG from "../Simulation/WarehouseSVG";
+import SimulationTask from "../Simulation/SimulationTask";
+import SimulationEvent from "../Simulation/SimulationEvent";
 
 
 import scenarios from "../data/scenarios.json";
 import alerts from "../data/alerts.json";
 import tasks from "../data/tasks.json";
-import robotsData from "../data/robots.json";
+import robots from "../data/robots.json";
 import products from "../data/products.json";
 import inbound from "../data/inbound.json";
 import outbound from "../data/outbound.json";
+import events from "../data/events.json";
 
+const API_URL = "http://localhost:8080/api";
 
 function Simulation() {
+
+    useEffect(() => {
+        const fetchScenarios = async () => {
+            try {
+                const accessToken =
+                    localStorage.getItem("accessToken");
+
+                const response = await fetch(
+                    `${API_URL}/simulations/scenarios`,
+                    {
+                        method: "GET",
+                        headers: {
+                            Authorization:
+                                `Bearer ${accessToken}`,
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("시나리오 조회에 실패했습니다.");
+                }
+
+                const data = await response.json();
+
+                setScenarioSettings(data);
+
+                // 첫 번째 시나리오 기본 선택
+                if (data.length > 0) {
+                    setSelectedScenario(
+                        data[0].scenario_id
+                    );
+                }
+
+            } catch (error) {
+                console.error(
+                    "시나리오 조회 실패:",
+                    error
+                );
+            }
+        };
+
+        fetchScenarios();
+    }, []);
+
     /* ===== 상단 헤더 - 시뮬레이션 실행  ===== */
 
     // 시나리오 설정
@@ -47,100 +95,241 @@ function Simulation() {
         setSelectedScenario(scenarioId);
     };
 
+
     // 시뮬레이션 시작
     const handleStart = async () => {
 
         if (simulationStatus === "일시정지") {
             isPausedRef.current = false;
-            setSimulationStatus("실행");
             return;
         }
 
-        if (!selectedScenario) {
-            alert("시나리오를 선택해주세요.");
+        if (!simulationId) {
+            alert("실행할 시뮬레이션이 없습니다.");
             return;
         }
 
         if (inboundRatioTotal !== 100) {
-            alert("입고 품목 구성 비율의 합계가 100%가 되어야 합니다.");
+            alert(
+                "입고 품목 구성 비율의 합계가 100%가 되어야 합니다."
+            );
             return;
         }
 
-        // 백엔드로 보낼 데이터
-        const simulationData = {
-            scenario_id: selectedScenario,
-            simulation_speed: simulationSpeed,
-            inbound: inboundSettings,
-            outbound: outboundSettings,
-        };
-
         try {
-            console.log("시뮬레이션 실행 데이터:", simulationData);
+            const accessToken =
+                localStorage.getItem("accessToken");
 
-            setSimulationStatus("실행");
+            const response = await fetch(
+                `${API_URL}/simulations/${simulationId}/start`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                const errorMessage =
+                    await response.text();
+
+                throw new Error(
+                    errorMessage || "시뮬레이션 실행에 실패했습니다."
+                );
+            }
+
+            const data = await response.json();
+
+            console.log("시뮬레이션 실행 응답:", data);
+
+            setSimulationId(data.simulationId);
+
+            if (data.status === "RUNNING") {
+                setSimulationStatus("실행");
+            } else {
+                setSimulationStatus(data.status);
+            }
+
+            setSimulationTime(data.simulationTime ?? 0);
+
+            // 로봇 정보 반영
+            if (Array.isArray(data.robots)) {
+                setRobots((prevRobots) =>
+                    prevRobots.map((robot) => {
+
+                        const updatedRobot =
+                            data.robots.find(
+                                (item) =>
+                                    item.robotId ===
+                                    robot.robot_id
+                            );
+
+                        if (!updatedRobot) {
+                            return robot;
+                        }
+
+                        return {
+                            ...robot,
+
+                            x: updatedRobot.x,
+                            y: updatedRobot.y,
+
+                            status:
+                                updatedRobot.status,
+                        };
+                    })
+                );
+            }
+
             isPausedRef.current = false;
             movementRunRef.current += 1;
-
-            // 현재는 프론트 테스트용
-            moveRobot(1, testPath);
         } catch (error) {
             console.error("시뮬레이션 시작 실패:", error);
-            alert(
-                "시뮬레이션을 시작하지 못했습니다."
-            );
+            alert(error.message || "시뮬레이션을 시작하지 못했습니다.");
         }
     };
 
-
-    // 시뮬레이션 일시정지 
+    // 시뮬레이션 일시정지
     const handlePause = async () => {
-        if (simulationStatus !== "실행") {
+        if (simulationStatus !== "실행" || !simulationRunId) {
             return;
         }
+
         try {
-            // 로그인 / 인증 연동 후 fetch 추가
+            const accessToken = localStorage.getItem("accessToken");
+            const response = await fetch(
+                `${API_URL}/simulation-runs/${simulationRunId}/pause`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    "시뮬레이션 일시정지에 실패했습니다."
+                );
+            }
+
             isPausedRef.current = true;
             setSimulationStatus("일시정지");
+
         } catch (error) {
             console.error("시뮬레이션 일시정지 실패:", error);
+            alert("시뮬레이션을 일시정지하지 못했습니다.");
+        }
+    };
+
+    // 시뮬레이션 재개
+    const handleResume = async () => {
+        if (simulationStatus !== "일시정지" || !simulationRunId) {
+            return;
+        }
+
+        try {
+            const accessToken = localStorage.getItem("accessToken");
+            const response = await fetch(
+                `${API_URL}/simulation-runs/${simulationRunId}/resume`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("시뮬레이션 재개에 실패했습니다.");
+            }
+
+            isPausedRef.current = false;
+            setSimulationStatus("실행");
+
+        } catch (error) {
+            console.error("시뮬레이션 재개 실패:", error);
+            alert("시뮬레이션을 재개하지 못했습니다.");
         }
     };
 
     // 시뮬레이션 초기화 
-    const handleReset = () => {
-        movementRunRef.current += 1;
-        isPausedRef.current = false;
+    const handleReset = async () => {
+        try {
+            const accessToken = localStorage.getItem("accessToken");
 
-        // 로봇 위치 초기화
-        setRobots(
-            robotsData.map((robot) => ({
-                ...robot,
-            }))
-        );
-        setSimulationStatus("대기");
-        setSimulationTime(0);
+            if (simulationRunId) {
+                const response = await fetch(
+                    `${API_URL}/simulation-runs/${simulationRunId}/stop`,
+                    {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("시뮬레이션 중지에 실패했습니다.");
+                }
+            }
+
+            movementRunRef.current += 1;
+            isPausedRef.current = false;
+
+            setRobots(
+                robotsData.map((robot) => ({
+                    ...robot,
+                }))
+            );
+
+            setSimulationStatus("대기");
+            setSimulationTime(0);
+            setSimulationRunId(null);
+
+        } catch (error) {
+            console.error("시뮬레이션 초기화 실패:", error);
+            alert("시뮬레이션을 초기화하지 못했습니다.");
+        }
     };
 
     // 시뮬레이션 재계획
     const handleReplan = async () => {
-        if (simulationStatus !== "실행") {
+        if (simulationStatus !== "실행" || !simulationRunId) {
             return;
         }
+
         try {
-            // 로그인 / 인증 연동 후 fetch 추가
+            const accessToken = localStorage.getItem("accessToken");
             setSimulationStatus("재계획");
-        } catch (error) {
-            console.error(
-                "시뮬레이션 재계획 실패:",
-                error
+            const response = await fetch(
+                `재계획 API`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                }
             );
+
+            if (!response.ok) {
+                throw new Error("시뮬레이션 재계획에 실패했습니다.");
+            }
+
+            setSimulationStatus("실행");
+
+        } catch (error) {
+            console.error("시뮬레이션 재계획 실패:", error);
+            setSimulationStatus("실행");
+            alert("시뮬레이션 재계획에 실패했습니다.");
         }
     };
 
     /* ===== 로봇 ===== */
-
-    const [robots, setRobots] = useState(robotsData);
     const isPausedRef = useRef(false);
+
     // 실행 중인 이동을 구분하기 위한 값
     // 초기화했을 때 기존 이동 루프를 중단하기 위해 사용
     const movementRunRef = useRef(0);
@@ -365,17 +554,21 @@ function Simulation() {
                         <select
                             value={selectedScenario}
                             onChange={(e) =>
-                                handleScenarioChange(e.target.value)
+                                handleScenarioChange(
+                                    e.target.value
+                                )
                             }
                         >
-                            {scenarioSettings.map((scenario) => (
-                                <option
-                                    key={scenario.scenario_id}
-                                    value={scenario.scenario_id}
-                                >
-                                    {scenario.scenario_name}
-                                </option>
-                            ))}
+                            {scenarioSettings.map(
+                                (scenario) => (
+                                    <option
+                                        key={scenario.scenario_id}
+                                        value={scenario.scenario_id}
+                                    >
+                                        {scenario.scenario_name}
+                                    </option>
+                                )
+                            )}
                         </select>
                     </div>
 
@@ -464,12 +657,10 @@ function Simulation() {
                 />
             </main>
 
-            <SimulationTask tasks={tasks} />
-
             <aside className="simulation-panel">
+
                 {/* 입고 설정 */}
                 <section className="simulation-setting-panel">
-
                     <h2 className="simulation-setting-title">
                         입고 설정
                     </h2>
@@ -551,9 +742,7 @@ function Simulation() {
 
                         {/* 추가된 품목 */}
                         <div className="inbound-product-list">
-
                             {inboundSettings.products.map((product) => (
-
                                 <div
                                     className="inbound-poducrt-row"
                                     key={product.product_code}
@@ -599,19 +788,13 @@ function Simulation() {
                                         >
                                             삭제
                                         </button>
-
                                     </div>
-
                                 </div>
-
                             ))}
-
                         </div>
-
 
                         {/* 품목 추가 */}
                         {availableProducts.length > 0 && (
-
                             <div className="inbound-product-add">
 
                                 <select
@@ -626,21 +809,16 @@ function Simulation() {
                                     </option>
 
                                     {availableProducts.map((product) => (
-
                                         <option
                                             key={product.product_code}
                                             value={product.product_code}
                                         >
                                             {product.product_code} {product.product_name}
                                         </option>
-
                                     ))}
-
                                 </select>
 
-
                                 <div className="inbound-add-ratio">
-
                                     <input
                                         type="number"
                                         min="1"
@@ -651,11 +829,8 @@ function Simulation() {
                                             setNewProductRatio(e.target.value)
                                         }
                                     />
-
                                     <span>%</span>
-
                                 </div>
-
 
                                 <button
                                     type="button"
@@ -663,18 +838,13 @@ function Simulation() {
                                 >
                                     추가
                                 </button>
-
                             </div>
-
                         )}
-
                     </div>
-
                 </section>
 
                 {/* 출고 설정 */}
                 <section className="simulation-setting-panel">
-
                     <h2 className="simulation-setting-title">
                         출고 설정
                     </h2>
@@ -775,7 +945,6 @@ function Simulation() {
                 </section>
 
                 <section className="simulation-setting-panel">
-
                     <h2 className="simulation-setting-title">
                         명령 입력
                     </h2>
@@ -784,9 +953,7 @@ function Simulation() {
                         <textarea
                             id="natural-command"
                             value={naturalCommand}
-                            onChange={(e) =>
-                                setNaturalCommand(e.target.value)
-                            }
+                            onChange={(e) => setNaturalCommand(e.target.value)}
                             placeholder="예: A 상품 출고 작업을 우선 처리해줘"
                         />
 
@@ -799,14 +966,14 @@ function Simulation() {
                             >
                                 명령 실행
                             </button>
-
                         </div>
-
                     </div>
-
                 </section>
             </aside>
 
+            <SimulationTask tasks={tasks} />
+
+            <SimulationEvent events={events} />
 
             {/* 하단 footer */}
             <footer className="footer">
