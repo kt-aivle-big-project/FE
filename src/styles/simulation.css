@@ -18,7 +18,7 @@
 
     grid-template-columns: minmax(0, 1fr) 250px;
     grid-template-rows:
-        80px auto auto auto auto 100px;
+        70px auto auto auto auto 100px;
 
     gap: 10px;
 }
@@ -32,8 +32,7 @@
 
     width: 100%;
     min-width: 0;
-    height: 70px;
-
+    
     display: grid;
     grid-template-columns: 250px minmax(500px, 1fr) auto;
     align-items: center;
