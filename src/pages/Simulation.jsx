@@ -384,8 +384,7 @@ function Simulation() {
     const inboundRatioTotal =
         inboundSettings.products.reduce(
             (total, product) =>
-                total + Number(product.ratio),
-            0
+                total + Number(product.ratio), 0
         );
 
     // 자연어 명령 처리
@@ -509,9 +508,7 @@ function Simulation() {
                         <select
                             className="simulation-header-speed"
                             value={simulationSpeed}
-                            onChange={(e) =>
-                                setSimulationSpeed(Number(e.target.value))
-                            }
+                            onChange={(e) => setSimulationSpeed(Number(e.target.value))}
                         >
                             <option value={0.5}>0.5배</option>
                             <option value={1}>1배</option>
@@ -574,7 +571,8 @@ function Simulation() {
                 handleNaturalCommand={handleNaturalCommand}
             />
 
-            <SimulationTask tasks={tasks} />
+            {/* 현재 실행 중인 시뮬레이션 작업만 가져옴 */}
+            <SimulationTask simulationRunId={simulationRunId} />
 
             <SimulationEvent events={events} />
 
