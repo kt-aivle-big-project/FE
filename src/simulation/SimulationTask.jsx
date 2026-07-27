@@ -39,11 +39,14 @@ function SimulationTask({ tasks = [] }) {
             case "IN_PROGRESS":
                 return "진행";
 
-            case "COMPLETED":
+            case "DONE":
                 return "완료";
 
             case "FAILED":
                 return "실패";
+
+            case "CANCELLED":
+                return "취소";
 
             default:
                 return status || "-";
@@ -72,7 +75,7 @@ function SimulationTask({ tasks = [] }) {
     // 작업 개수
     const pendingCount = tasks.filter((task) => task.status === "PENDING").length;
     const progressCount = tasks.filter((task) => task.status === "ASSIGNED" || task.status === "IN_PROGRESS").length;
-    const completedCount = tasks.filter((task) => task.status === "COMPLETED").length;
+    const completedCount = tasks.filter((task) => task.status === "DONE").length;
     const failedCount = tasks.filter((task) => task.status === "FAILED").length;
 
     // 카드 좌우 이동

@@ -185,9 +185,16 @@
     color: #3f78b5;
 }
 
+/* 백엔드 TaskStatus 는 COMPLETED 가 아니라 DONE 을 보낸다 */
+.status-done,
 .status-completed {
     background: #eaf5ed;
     color: #468257;
+}
+
+.status-cancelled {
+    background: #f0f0f0;
+    color: #777777;
 }
 
 .status-failed {
