@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Signup.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+const API_URL = "http://localhost:8080/api";
 
 function Signup() {
     const navigate = useNavigate();
@@ -11,10 +11,12 @@ function Signup() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [passwordConfirm, setPasswordConfirm] = useState("");
-    const [privacyAgreed, setPrivacyAgreed] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
+    // 개인정보 수집 및 이용 동의 (백엔드 필수값)
+    const [privacyAgreed, setPrivacyAgreed] = useState(false);
 
     const handleSignup = async (e) => {
         e.preventDefault();
@@ -29,17 +31,17 @@ function Signup() {
             return;
         }
 
-        // 백엔드로 전달
         if (!privacyAgreed) {
-            alert("개인정보 수집 및 이용에 동의해 주세요.");
+            alert("개인정보 수집 및 이용에 동의해주세요.");
             return;
         }
 
+        // 백엔드로 전달
         const signupData = {
             name: name.trim(),
             email: email.trim(),
             password: password,
-            privacyAgreed,
+            privacyAgreed: privacyAgreed,
         };
 
         try {
@@ -198,16 +200,21 @@ function Signup() {
                             )}
                     </div>
 
-                    <label className="privacy-agreement">
-                        <input
-                            type="checkbox"
-                            checked={privacyAgreed}
-                            onChange={(e) =>
-                                setPrivacyAgreed(e.target.checked)
-                            }
-                        />
-                        <span>개인정보 수집 및 이용에 동의합니다. (필수)</span>
-                    </label>
+                    {/* 개인정보 수집 및 이용 동의 */}
+                    <div className="signup-privacy-group">
+                        <label className="signup-privacy-label">
+                            <input
+                                type="checkbox"
+                                checked={privacyAgreed}
+                                onChange={(e) =>
+                                    setPrivacyAgreed(e.target.checked)
+                                }
+                            />
+                            <span>
+                                [필수] 개인정보 수집 및 이용에 동의합니다.
+                            </span>
+                        </label>
+                    </div>
 
                     <button
                         type="submit"

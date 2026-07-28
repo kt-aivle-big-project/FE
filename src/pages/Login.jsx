@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Login.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+const API_URL = "http://localhost:8080/api";
 
 function Login() {
     const navigate = useNavigate();
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +30,6 @@ function Login() {
                 `${API_URL}/auth/login`,
                 {
                     method: "POST",
-                    credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
                     },

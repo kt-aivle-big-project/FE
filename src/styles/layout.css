@@ -229,3 +229,15 @@ textarea:focus {
     min-width: 0;
     min-height: 100vh;
 }
+
+
+/* =========================
+   Footer
+========================= */
+
+.footer {
+    grid-area: footer;
+
+    border: var(--border);
+    background: var(--background-color);
+}
