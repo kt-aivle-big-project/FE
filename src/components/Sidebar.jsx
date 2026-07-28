@@ -1,6 +1,29 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 function Sidebar() {
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        const isLogout = window.confirm("로그아웃 하시겠습니까?");
+
+        if (!isLogout) {
+            return;
+        }
+
+        // 로그인 관련 저장 정보 삭제
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+        localStorage.removeItem("testUser");
+
+        sessionStorage.removeItem("accessToken");
+        sessionStorage.removeItem("refreshToken");
+        sessionStorage.removeItem("user");
+
+        alert("로그아웃되었습니다.");
+        navigate("/login");
+    };
+
     return (
         <aside className="sidebar">
             <div className="logo">LARO</div>
@@ -45,10 +68,14 @@ function Sidebar() {
                 </ul>
             </nav>
 
-            <div className="system-status">
-                <h3>시스템 상태</h3>
-                <p>연결 로봇</p>
-                <p>시뮬레이션 시간</p>
+            <div className="sidebar-logout">
+                <button
+                    type="button"
+                    className="logout-button"
+                    onClick={handleLogout}
+                >
+                    로그아웃
+                </button>
             </div>
         </aside>
     );
