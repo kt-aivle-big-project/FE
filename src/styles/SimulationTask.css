@@ -92,11 +92,29 @@
 
     scroll-behavior: smooth;
 
-    scrollbar-width: none;
+    /* 작업이 많을 때 가로 스크롤바로 빠르게 이동할 수 있게 노출한다 */
+    padding-bottom: 8px;
+
+    scrollbar-width: thin;
+    scrollbar-color: #b9c2cf transparent;
 }
 
 .simulation-task-list::-webkit-scrollbar {
-    display: none;
+    height: 10px;
+}
+
+.simulation-task-list::-webkit-scrollbar-track {
+    background: #f1f3f6;
+    border-radius: 5px;
+}
+
+.simulation-task-list::-webkit-scrollbar-thumb {
+    background: #b9c2cf;
+    border-radius: 5px;
+}
+
+.simulation-task-list::-webkit-scrollbar-thumb:hover {
+    background: #8f9aab;
 }
 
 /* =========================

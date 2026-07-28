@@ -16,7 +16,6 @@ import {
 } from "../api/client";
 
 import scenariosData from "../data/scenarios.json";
-import robotsData from "../data/robots.json";
 import productsData from "../data/products.json";
 import inbound from "../data/inbound.json";
 import outbound from "../data/outbound.json";
@@ -26,6 +25,25 @@ const DEFAULT_WAREHOUSE_ID = 1;
 
 // 새로고침 후에도 실행 중인 시뮬레이션을 이어서 쓰기 위한 저장 키
 const RUN_ID_KEY = "simulationRunId";
+
+// 충전소 노드 코드 (warehouse_graph.json 의 CHARGING_SLOT 노드)
+// 로봇은 여기서 출발하고, 초기화하면 여기로 돌아온다.
+const CHARGING_SLOTS = [
+    "C01", "C02", "C03", "C04", "C05",
+    "C06", "C07", "C08", "C09", "C10",
+];
+
+// 시뮬레이션 시작 전 / 초기화 후의 로봇 배치.
+// 충전소에 대기 중인 모습으로 그린다.
+const restingRobots = (count = 6) =>
+    Array.from({ length: Math.min(count, CHARGING_SLOTS.length) }, (_, index) => ({
+        robot_id: index + 1,
+        robot_code: `R${index + 1}`,
+        node_id: CHARGING_SLOTS[index],
+        battery: 100,
+        status: "IDLE",
+        transition_ms: 0,
+    }));
 
 // 백엔드 SimulationRunStatus → 화면 표시 문구
 const STATUS_LABEL = {
@@ -186,6 +204,25 @@ function Simulation() {
         setSelectedScenario(scenarioId);
     };
 
+    /**
+     * 실행 배속 변경.
+     * 진행 중인 시뮬레이션이 있으면 백엔드 시계 속도도 함께 바꾼다.
+     */
+    const handleSpeedChange = async (speed) => {
+        setSimulationSpeed(speed);
+
+        if (!simulationRunId) {
+            return;
+        }
+
+        try {
+            await simulationRunApi.changeSpeed(simulationRunId, speed);
+        } catch (error) {
+            console.error("배속 변경 실패:", error);
+            alert(error.message ?? "배속을 변경하지 못했습니다.");
+        }
+    };
+
     /* =========================================================
        시뮬레이션 제어
     ========================================================= */
@@ -212,24 +249,11 @@ function Simulation() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [simulationRunId]);
 
-    // 시뮬레이션 시작
-    const handleStart = async () => {
-        // 일시정지 상태면 재개
-        if (simulationStatus === "일시정지") {
-            await handleResume();
-            return;
-        }
-
-        if (!selectedScenario) {
-            alert("시나리오를 선택해주세요.");
-            return;
-        }
-
-        if (inboundRatioTotal !== 100) {
-            alert("입고 품목 구성 비율의 합계가 100%가 되어야 합니다.");
-            return;
-        }
-
+    /**
+     * 화면 설정값을 백엔드 요청 형태로 변환한다. (SimulationRunCreateRequest)
+     * 이 값으로 백엔드가 입고/출고 작업을 자동 생성한다.
+     */
+    const buildCreatePayload = () => {
         // 시나리오 ID는 숫자여야 한다.
         // 백엔드 조회 실패로 목업("S1")이 선택된 경우 null로 보낸다.
         const scenarioIdNumber = Number(selectedScenario);
@@ -243,8 +267,7 @@ function Simulation() {
             );
         }
 
-        // 백엔드로 보낼 데이터 (SimulationRunCreateRequest)
-        const createPayload = {
+        return {
             warehouseId: DEFAULT_WAREHOUSE_ID,
             scenarioId: scenarioId,
             simulationSpeed: Number(simulationSpeed),
@@ -262,10 +285,98 @@ function Simulation() {
                 totalQuantity: outboundSettings.total_quantity,
                 arrivalPattern: outboundSettings.arrival_pattern,
                 processingDeadlineMinutes:
-                outboundSettings.processing_deadline_minutes,
+                    outboundSettings.processing_deadline_minutes,
                 allowPartialShipment: outboundSettings.allow_partial_shipment,
             },
         };
+    };
+
+    /**
+     * 설정값이 유효한지 검사한다.
+     */
+    const validateSettings = () => {
+        if (!selectedScenario) {
+            alert("시나리오를 선택해주세요.");
+            return false;
+        }
+
+        if (inboundRatioTotal !== 100) {
+            alert("입고 품목 구성 비율의 합계가 100%가 되어야 합니다.");
+            return false;
+        }
+
+        return true;
+    };
+
+    /**
+     * 새 시뮬레이션 생성.
+     *
+     * 진행 중인 실행을 중지하고, 지금 화면의 설정값으로 새 실행을 만든다.
+     * 이전 작업은 버리고 백엔드가 작업을 새로 생성한다.
+     */
+    const handleNewRun = async () => {
+        if (!validateSettings()) {
+            return;
+        }
+
+        const confirmed = window.confirm(
+            "현재 작업을 버리고 새 시뮬레이션을 만듭니다.\n계속할까요?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            // 진행 중인 실행이 있으면 정리한다
+            if (simulationRunId) {
+                try {
+                    await simulationRunApi.stop(simulationRunId);
+                } catch (error) {
+                    console.warn("기존 시뮬레이션 중지 실패", error.message);
+                }
+            }
+
+            isPausedRef.current = false;
+            setSimulationRunId(null);
+            setTaskList([]);
+            setEventList([]);
+            setRobots(restingRobots());
+            setSimulationTime(0);
+            setSimulationStatus("대기");
+
+            const payload = buildCreatePayload();
+            console.log("새 시뮬레이션 생성 요청:", payload);
+
+            const created = await simulationRunApi.create(payload);
+            const runId = created.simulationRunId;
+
+            setSimulationRunId(runId);
+            await reloadTasks(runId);
+
+            console.log(
+                `%c새 시뮬레이션 생성 완료 - 실행 ID = ${runId}`,
+                "font-size:14px;font-weight:bold;color:#16a34a"
+            );
+        } catch (error) {
+            console.error("새 시뮬레이션 생성 실패:", error);
+            alert(error.message ?? "새 시뮬레이션을 만들지 못했습니다.");
+        }
+    };
+
+    // 시뮬레이션 시작
+    const handleStart = async () => {
+        // 일시정지 상태면 재개
+        if (simulationStatus === "일시정지") {
+            await handleResume();
+            return;
+        }
+
+        if (!validateSettings()) {
+            return;
+        }
+
+        const createPayload = buildCreatePayload();
 
         try {
             // 이미 만들어둔 실행이 있으면 재사용한다.
@@ -363,8 +474,8 @@ function Simulation() {
             }
         }
 
-        // 로봇 위치 초기화
-        setRobots(robotsData.map((robot) => ({ ...robot })));
+        // 로봇을 충전소 대기 상태로 되돌린다
+        setRobots((prevRobots) => restingRobots(prevRobots.length || 6));
 
         // simulationRunId 는 유지한다.
         // 초기화 후 다시 시작할 때 같은 실행을 재사용해야
@@ -406,7 +517,7 @@ function Simulation() {
        로봇 / 실시간 구독
     ========================================================= */
 
-    const [robots, setRobots] = useState(robotsData);
+    const [robots, setRobots] = useState(() => restingRobots());
     const isPausedRef = useRef(false);
 
     // 로봇 상태 1건 수신 → 해당 로봇만 갱신
@@ -638,7 +749,7 @@ function Simulation() {
                             className="simulation-header-speed"
                             value={simulationSpeed}
                             onChange={(e) =>
-                                setSimulationSpeed(Number(e.target.value))
+                                handleSpeedChange(Number(e.target.value))
                             }
                         >
                             <option value={0.5}>0.5배</option>
@@ -657,6 +768,14 @@ function Simulation() {
                         onClick={handleStart}
                     >
                         시작
+                    </button>
+                    <button
+                        type="button"
+                        className="simulation-header-button new-run"
+                        onClick={handleNewRun}
+                        title="현재 작업을 버리고 지금 설정으로 작업을 새로 생성합니다"
+                    >
+                        새 작업 생성
                     </button>
                     <button
                         type="button"

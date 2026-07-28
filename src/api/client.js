@@ -68,6 +68,12 @@ export const simulationRunApi = {
     pause: (runId) => api.post(`/simulation-runs/${runId}/pause`),
     resume: (runId) => api.post(`/simulation-runs/${runId}/resume`),
     reset: (runId) => api.post(`/simulation-runs/${runId}/reset`),
+
+    // 실행 배속 변경 (진행 중에도 즉시 반영)
+    changeSpeed: (runId, simulationSpeed) =>
+        api.patch(`/simulation-runs/${runId}/speed`, {
+            simulationSpeed: simulationSpeed,
+        }),
     stop: (runId) => api.post(`/simulation-runs/${runId}/stop`),
 
     getStatus: (runId) => api.get(`/simulation-runs/${runId}/status`),

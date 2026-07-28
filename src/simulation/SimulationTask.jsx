@@ -1,60 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useRef } from "react";
 import "../styles/SimulationTask.css";
 
-const API_URL = "http://localhost:8080/api";
-
-function SimulationTask({ simulationRunId = null }) {
+function SimulationTask({ tasks = [] }) {
     const taskListRef = useRef(null);
 
-    const [tasks, setTasks] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-
-    // 작업 전체 조회
-    const fetchTasks = async () => {
-        try {
-            setIsLoading(true);
-
-            const accessToken = localStorage.getItem("accessToken");
-
-            const response = await fetch(
-                `${API_URL}/tasks`,
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error("작업 조회에 실패했습니다.");
-            }
-
-            const data = await response.json();
-            const taskList = Array.isArray(data) ? data : [];
-
-            // 현재 시뮬레이션 작업만 표시
-            if (simulationRunId !== null) {
-                setTasks(taskList.filter(
-                    (task) => task.simulationRunId === simulationRunId
-                ));
-            } else {
-                setTasks(taskList);
-            }
-
-        } catch (error) {
-            console.error("작업 조회 실패:", error);
-
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // 최초 작업 조회
-    useEffect(() => {
-        fetchTasks();
-    }, [simulationRunId]);
-    
     //TaskTypeLabel
     const getTaskTypeLabel = (taskType) => {
         switch (taskType) {
@@ -121,6 +70,7 @@ function SimulationTask({ simulationRunId = null }) {
             }
         );
     };
+
 
     // 작업 개수
     const pendingCount = tasks.filter((task) => task.status === "PENDING").length;
@@ -225,8 +175,8 @@ function SimulationTask({ simulationRunId = null }) {
 
                                     <span
                                         className={`simulation-task-status ${task.status
-                                            ? `status-${task.status.toLowerCase()}`
-                                            : "status-default"
+                                                ? `status-${task.status.toLowerCase()}`
+                                                : "status-default"
                                             }`}
                                     >
                                         {getTaskStatusLabel(task.status)}
