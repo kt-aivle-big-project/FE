@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import warehouseGraph from "../data/warehouse_graph.json";
 import rackInventory from "../data/rack_inventory.json";
@@ -12,10 +12,102 @@ import robotReplenish from "../assets/robots/robot_replenish.png";
 
 import "../styles/WarehouseSVG.css";
 
-function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
-
+function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
     // 노드 표시 ON / OFF
     const [showNodeLabels, setShowNodeLabels] = useState(false);
+
+    // 처음에는 기존 JSON 지도를 보여주고,
+    // API 조회 성공 후 백엔드 데이터로 교체
+    const [graphData, setGraphData] = useState(warehouseGraph);
+
+    useEffect(() => {
+        const fetchWarehouseLayout = async () => {
+            try {
+                const accessToken = localStorage.getItem("accessToken");
+
+                const response = await fetch(
+                    "http://localhost:8080/api/warehouses/1/layout",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`레이아웃 조회 실패: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                const nodeCodeMap = new Map(
+                    data.nodes
+                        .filter((node) => node.nodeCode)
+                        .map((node) => [node.id, node.nodeCode])
+                );
+
+                const convertedNodes = data.nodes
+                    .filter((node) => node.nodeCode && node.nodeType)
+                    .map((node) => {
+                        const routeMatch =
+                            node.nodeCode.match(/^R(\d+)_(\d+)$/);
+
+                        const chargingMatch =
+                            node.nodeCode.match(/^C(\d+)$/);
+
+                        return {
+                            databaseId: node.id,
+                            id: node.nodeCode,
+                            type: node.nodeType.toLowerCase(),
+                            x: node.x,
+                            y: node.y,
+
+                            row: routeMatch
+                                ? Number(routeMatch[1])
+                                : undefined,
+
+                            col: routeMatch
+                                ? Number(routeMatch[2])
+                                : undefined,
+
+                            label:
+                                node.nodeType === "INBOUND"
+                                    ? node.nodeCode.replace("I_", "")
+                                    : node.nodeType === "OUTBOUND"
+                                        ? node.nodeCode.replace("O_", "")
+                                        : undefined,
+
+                            index: chargingMatch
+                                ? Number(chargingMatch[1])
+                                : undefined,
+                        };
+                    });
+
+                const convertedEdges = data.edges
+                    .map((edge) => ({
+                        id: edge.id,
+                        source: nodeCodeMap.get(edge.fromNodeId),
+                        target: nodeCodeMap.get(edge.toNodeId),
+                        type: "lane",
+                    }))
+                    .filter((edge) => edge.source && edge.target);
+
+                setGraphData({
+                    nodes: convertedNodes,
+                    edges: convertedEdges,
+                });
+
+                console.log("변환된 창고 지도:", {
+                    nodes: convertedNodes.length,
+                    edges: convertedEdges.length,
+                });
+            } catch (error) {
+                console.error("창고 레이아웃 조회 오류:", error);
+            }
+        };
+
+        fetchWarehouseLayout();
+    }, []);
 
     // SVG 크기
     const SVG_WIDTH = 1200;
@@ -26,8 +118,8 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
 
     // warehouse_graph.json 좌표 범위 계산
     // JSON의 x, y 좌표를 SVG 좌표로 자동 변환하기 위해 최소/최대 좌표를 구함
-    const xValues = warehouseGraph.nodes.map((node) => node.x);
-    const yValues = warehouseGraph.nodes.map((node) => node.y);
+    const xValues = graphData.nodes.map((node) => node.x);
+    const yValues = graphData.nodes.map((node) => node.y);
 
     const minX = Math.min(...xValues);
     const maxX = Math.max(...xValues);
@@ -57,7 +149,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
     // 노드 ID → 노드 정보
     // edge.source / edge.target를 좌표로 변환할 때 사용
     const nodeMap = new Map(
-        warehouseGraph.nodes.map((node) => [node.id, node])
+        graphData.nodes.map((node) => [node.id, node])
     );
 
     // 랙 ID → 랙 재고 정보
@@ -161,7 +253,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
                 {/* EDGE
                     항상 노드보다 먼저 그려야 선 위에 노드가 올라옴 */}
                 <g className="warehouse-edges">
-                    {warehouseGraph.edges.map(
+                    {graphData.edges.map(
                         (edge) => {
                             const source = nodeMap.get(edge.source);
                             const target = nodeMap.get(edge.target);
@@ -186,7 +278,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
 
                 {/* 통로 번호 */}
                 <g className="warehouse-aisle-labels">
-                    {warehouseGraph.nodes
+                    {graphData.nodes
                         .filter(
                             (node) =>
                                 node.type === "route" &&
@@ -208,7 +300,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
 
                 {/* 로봇이 실제로 이동하는 route 노드 */}
                 <g className="warehouse-route-nodes">
-                    {warehouseGraph.nodes
+                    {graphData.nodes
                         .filter((node) => node.type === "route")
                         .map((node) => (
                             <g key={node.id}>
@@ -241,7 +333,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
                 {/* 충전소 연결 Junction
                     route ↔ charging slot 연결 지점 */}
                 <g className="warehouse-charge-junctions">
-                    {warehouseGraph.nodes
+                    {graphData.nodes
                         .filter(
                             (node) =>
                                 node.type ===
@@ -265,7 +357,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
                 {/* 선반
                     rack_inventory.json의 3단 재고 상태까지 표시 */}
                 <g className="warehouse-racks">
-                    {warehouseGraph.nodes
+                    {graphData.nodes
                         .filter(
                             (node) =>
                                 node.type ===
@@ -342,7 +434,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
 
                 {/* 입고 엘리베이터 IA ~ IG  */}
                 <g className="warehouse-inbound">
-                    {warehouseGraph.nodes
+                    {graphData.nodes
                         .filter(
                             (node) =>
                                 node.type ===
@@ -386,7 +478,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
 
                 {/* 출고 엘리베이터 OA ~ OG */}
                 <g className="warehouse-outbound">
-                    {warehouseGraph.nodes
+                    {graphData.nodes
                         .filter(
                             (node) =>
                                 node.type ===
@@ -429,7 +521,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
 
                 {/* 충전소 C01 ~ C10 */}
                 <g className="warehouse-charging">
-                    {warehouseGraph.nodes
+                    {graphData.nodes
                         .filter(
                             (node) =>
                                 node.type ===
