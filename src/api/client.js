@@ -163,3 +163,29 @@ export const optimizationApi = {
             payload
         ),
 };
+
+export const robotApi = {
+    getAll: (warehouseId) =>
+        api.get(
+            warehouseId
+                ? `/robots?warehouseId=${warehouseId}`
+                : "/robots"
+    ),
+    get: (robotId) => api.get(`/robots/${robotId}`),
+    create: (payload) => api.post("/robots", payload),
+};
+
+export const taskApi = {
+    getAll: () => api.get("/tasks"),
+    get: (taskId) => api.get(`/tasks/${taskId}`),
+};
+
+export const robotSpecApi = {
+    getAll: () => api.get("/robot-specs"),
+};
+
+export const warehouseApi = {
+    getAll: () => api.get("/warehouses"),
+    getLayout: (warehouseId) =>
+        api.get(`/warehouses/${warehouseId}/layout`),
+};

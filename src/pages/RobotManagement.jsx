@@ -1,16 +1,86 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "../styles/RobotManagement.css";
+import {
+    robotApi,
+    robotSpecApi,
+    simulationRunApi,
+    taskApi,
+    warehouseApi,
+} from "../api/client";
+import { TOPICS } from "../api/config";
+import useStompSubscriptions from "../hooks/useStompSubscriptions";
 
-import robotsData from "../data/robots.json";
-import tasksData from "../data/tasks.json";
+const SUMMARY_GROUPS = [
+    { key: "AVAILABLE", label: "사용 가능", statuses: ["AVAILABLE"] },
+    { key: "UNAVAILABLE", label: "사용 불가", statuses: ["UNAVAILABLE"] },
+    { key: "IDLE", label: "대기", statuses: ["IDLE"] },
+    { key: "MOVING", label: "이동 중", statuses: ["MOVING"] },
+    {
+        key: "WORKING",
+        label: "작업 중",
+        statuses: [
+            "ASSIGNED",
+            "WORKING",
+            "BUSY",
+            "PICKING",
+            "PUTAWAY",
+            "REPLENISH",
+            "RELOCATION",
+        ],
+    },
+    { key: "CHARGING", label: "충전 중", statuses: ["CHARGING"] },
+    { key: "ERROR", label: "오류", statuses: ["ERROR", "FAULT"] },
+    { key: "OFFLINE", label: "오프라인", statuses: ["OFFLINE"] },
+];
 
-const API_URL = "http://localhost:8080/api";
+const mergeRobotState = (robot, runtimeStates, nodeCodes) => {
+    const runtime = runtimeStates[robot.id];
+    const nodeId = runtime?.currentNodeId ?? robot.nodeId;
+
+    return {
+        ...robot,
+        nodeId,
+        nodeCode:
+            runtime?.currentNodeCode
+            ?? nodeCodes[nodeId]
+            ?? null,
+        battery: runtime?.batteryLevel ?? robot.battery,
+        status: runtime?.status ?? robot.status,
+        currentTaskId: runtime?.currentTaskId ?? null,
+        hasRuntimeState: Boolean(runtime),
+    };
+};
+
+const findCurrentTask = (robot, taskList) => {
+    if (!robot) {
+        return null;
+    }
+
+    if (robot.hasRuntimeState) {
+        return taskList.find(
+            (task) => task.id === robot.currentTaskId
+        ) ?? null;
+    }
+
+    const robotTasks = taskList.filter((task) => task.robotId === robot.id);
+    return robotTasks.find((task) => task.status === "IN_PROGRESS")
+        ?? robotTasks.find((task) => task.status === "ASSIGNED")
+        ?? null;
+};
 
 function RobotManagement() {
 
     // 로봇 / 작업
     const [robots, setRobots] = useState([]);
     const [tasks, setTasks] = useState([]);
+    const [robotSpecs, setRobotSpecs] = useState([]);
+    const [warehouses, setWarehouses] = useState([]);
+    const [warehouseNodes, setWarehouseNodes] = useState([]);
+    const [nodeCodes, setNodeCodes] = useState({});
+    const [runtimeStates, setRuntimeStates] = useState({});
+    const simulationRunId = Number(
+        localStorage.getItem("simulationRunId")
+    ) || null;
 
     const [selectedRobot, setSelectedRobot] = useState(null);
     const [selectedTask, setSelectedTask] = useState(null);
@@ -27,12 +97,47 @@ function RobotManagement() {
     // 로봇 등록 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newRobot, setNewRobot] = useState({
-        robotId: "",
-        name: "",
+        robotSpecId: "",
+        warehouseId: "",
+        nodeId: "",
         battery: 100,
-        x: 0,
-        y: 0,
+        status: "AVAILABLE",
     });
+
+    const robotSpecCodes = useMemo(
+        () => Object.fromEntries(
+            robotSpecs.map((spec) => [spec.id, spec.robotCode])
+        ),
+        [robotSpecs]
+    );
+
+    const applyRuntimeState = useCallback((state) => {
+        setRuntimeStates((prev) => ({
+            ...prev,
+            [state.robotId]: state,
+        }));
+    }, []);
+
+    const applyTask = useCallback((task) => {
+        if (task.simulationRunId !== simulationRunId) {
+            return;
+        }
+
+        setTasks((prev) => {
+            const exists = prev.some((item) => item.id === task.id);
+
+            return exists
+                ? prev.map((item) => item.id === task.id ? task : item)
+                : [task, ...prev];
+        });
+    }, [simulationRunId]);
+
+    const robotViews = useMemo(
+        () => robots.map((robot) =>
+            mergeRobotState(robot, runtimeStates, nodeCodes)
+        ),
+        [robots, runtimeStates, nodeCodes]
+    );
 
     // 로봇 상태
     const getRobotStatus = (status) => {
@@ -55,8 +160,18 @@ function RobotManagement() {
                     className: "status-working",
                 };
 
+            case "ASSIGNED":
+                return {
+                    label: "작업 배정",
+                    className: "status-working",
+                };
+
             case "WORKING":
             case "BUSY":
+            case "PICKING":
+            case "PUTAWAY":
+            case "REPLENISH":
+            case "RELOCATION":
                 return {
                     label: "작업 중",
                     className: "status-working",
@@ -123,7 +238,11 @@ function RobotManagement() {
                 return "출고";
 
             case "CHARGING":
+            case "CHARGE":
                 return "충전";
+
+            case "MOVE":
+                return "이동";
 
             case "RELOCATION":
                 return "재배치";
@@ -136,51 +255,24 @@ function RobotManagement() {
         }
     };
 
-    // 로봇의 현재 작업 찾기
-    // 진행 중 작업 우선 없으면 배정된 작업
-    const getCurrentTask = (robotId, taskList = tasks) => {
-        const robotTasks = taskList.filter((task) => task.robotId === robotId);
-        const inProgressTask = robotTasks.find((task) => task.status === "IN_PROGRESS");
-
-        if (inProgressTask) {
-            return inProgressTask;
-        }
-
-        const assignedTask = robotTasks.find((task) => task.status === "ASSIGNED");
-
-        return assignedTask || null;
-    };
-
     // 전체 로봇 조회 (/api/robots 붙여야 함)
     const fetchRobots = async () => {
-        return robotsData;
+        return robotApi.getAll();
     };
 
     // 전체 작업 조회 (/api/tasks 붙여야 함)
     const fetchTasks = async () => {
-        return tasksData;
+        return taskApi.getAll();
     };
 
     // 로봇 상세 조회 (/api/robots/{robotId} 붙여야 함)
     const fetchRobotDetail = async (robotId) => {
-        const robot = robotsData.find((robot) => robot.robotId === robotId);
-
-        if (!robot) {
-            throw new Error("로봇을 찾을 수 없습니다.");
-        }
-
-        return robot;
+        return robotApi.get(robotId);
     };
 
     // 작업 상세 조회 (/api/tasks/{taskId} 붙여야 됨)
     const fetchTaskDetail = async (taskId) => {
-        const task = tasksData.find((task) => task.id === taskId);
-
-        if (!task) {
-            throw new Error("작업을 찾을 수 없습니다.");
-        }
-
-        return task;
+        return taskApi.get(taskId);
     };
 
     // 선택한 로봇 상세 조회
@@ -191,7 +283,12 @@ function RobotManagement() {
             const robotData = await fetchRobotDetail(robotId);
             setSelectedRobot(robotData);
 
-            const currentTask = getCurrentTask(robotId, taskList);
+            const robotView = mergeRobotState(
+                robotData,
+                runtimeStates,
+                nodeCodes
+            );
+            const currentTask = findCurrentTask(robotView, taskList);
 
             if (!currentTask) {
                 setSelectedTask(null);
@@ -224,13 +321,33 @@ function RobotManagement() {
         try {
             setIsLoading(true);
 
-            const [robotList, taskList,] = await Promise.all([
+            const [robotList, taskList, specList, warehouseList] = await Promise.all([
                 fetchRobots(),
                 fetchTasks(),
+                robotSpecApi.getAll(),
+                warehouseApi.getAll(),
             ]);
 
             setRobots(robotList);
             setTasks(taskList);
+            setRobotSpecs(specList);
+            setWarehouses(warehouseList);
+
+            const layoutResults = await Promise.allSettled(
+                warehouseList.map((warehouse) =>
+                    warehouseApi.getLayout(warehouse.id)
+                )
+            );
+            const allNodes = layoutResults.flatMap((result) =>
+                result.status === "fulfilled"
+                    ? result.value.nodes ?? []
+                    : []
+            );
+            setNodeCodes(
+                Object.fromEntries(
+                    allNodes.map((node) => [node.id, node.nodeCode])
+                )
+            );
 
             if (robotList.length === 0) {
                 setSelectedRobot(null);
@@ -242,17 +359,17 @@ function RobotManagement() {
             let targetRobotId = preferredRobotId;
 
             const preferredExists = targetRobotId && robotList.some(
-                (robot) => robot.robotId === Number(targetRobotId)
+                (robot) => robot.id === Number(targetRobotId)
             );
 
             if (!preferredExists) {
                 const currentSelectedExists = selectedRobot && robotList.some(
-                    (robot) => robot.robotId === selectedRobot.robotId
+                    (robot) => robot.id === selectedRobot.id
                 );
 
                 targetRobotId = currentSelectedExists
-                    ? selectedRobot.robotId
-                    : robotList[0].robotId;
+                    ? selectedRobot.id
+                    : robotList[0].id;
             }
 
             await loadRobotDetail(Number(targetRobotId), taskList);
@@ -269,7 +386,48 @@ function RobotManagement() {
     // 최초 조회
     useEffect(() => {
         fetchPageData();
+        // 최초 마운트에서만 전체 데이터를 조회한다.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        if (!simulationRunId) {
+            setRuntimeStates({});
+            return;
+        }
+
+        const fetchRuntimeStates = async () => {
+            try {
+                const snapshot =
+                    await simulationRunApi.getRobotStates(simulationRunId);
+
+                setRuntimeStates(
+                    Object.fromEntries(
+                        (snapshot.robots ?? []).map((state) => [
+                            state.robotId,
+                            state,
+                        ])
+                    )
+                );
+            } catch (error) {
+                console.error("로봇 실시간 상태 조회 실패:", error);
+            }
+        };
+
+        fetchRuntimeStates();
+    }, [simulationRunId]);
+
+    const runtimeSubscriptions = simulationRunId
+        ? {
+            [TOPICS.runRobots(simulationRunId)]: applyRuntimeState,
+            [TOPICS.TASKS]: applyTask,
+        }
+        : {};
+
+    useStompSubscriptions(
+        runtimeSubscriptions,
+        Boolean(simulationRunId)
+    );
 
     // 로봇 선택
     const handleSelectRobot = (robotId) => {
@@ -277,47 +435,74 @@ function RobotManagement() {
     };
 
 
-    // 로봇 상태 필터 목록
-    const statusOptions = useMemo(() => {
-        return [
-            ...new Set(
-                robots.map((robot) => robot.status).filter(Boolean)
-            ),
-        ];
-    }, [robots]);
-
     // 로봇 필터링
     const filteredRobots = useMemo(() => {
         const keyword = searchText.trim().toLowerCase();
 
-        return robots.filter((robot) => {
+        return robotViews.filter((robot) => {
             const matchesSearch =
                 !keyword ||
-                robot.name
+                (robotSpecCodes[robot.robotSpecId]
+                    ?? `Spec #${robot.robotSpecId}`)
                     ?.toLowerCase()
                     .includes(keyword) ||
-                String(robot.robotId).includes(keyword);
+                String(robot.id).includes(keyword);
 
+            const selectedStatusGroup = SUMMARY_GROUPS.find(
+                (group) => group.key === statusFilter
+            );
             const matchesStatus =
                 statusFilter === "ALL" ||
-                robot.status === statusFilter;
+                selectedStatusGroup?.statuses.includes(robot.status);
 
             return (matchesSearch && matchesStatus);
         });
-    }, [robots, searchText, statusFilter,]);
+    }, [robotViews, robotSpecCodes, searchText, statusFilter]);
 
     // 상태별 요약
     const statusSummary = useMemo(() => {
-        const counts = {};
+        return SUMMARY_GROUPS.map((group) => ({
+            ...group,
+            count: robotViews.filter((robot) =>
+                group.statuses.includes(robot.status)
+            ).length,
+        }));
+    }, [robotViews]);
 
-        robots.forEach((robot) => {
-            const status = robot.status || "UNKNOWN";
-            counts[status] = (counts[status] || 0) + 1;
+    const selectedRobotView = useMemo(
+        () => selectedRobot
+            ? mergeRobotState(selectedRobot, runtimeStates, nodeCodes)
+            : null,
+        [selectedRobot, runtimeStates, nodeCodes]
+    );
+
+    useEffect(() => {
+        const currentTask = findCurrentTask(selectedRobotView, tasks);
+
+        if (currentTask || !selectedRobotView?.currentTaskId) {
+            setSelectedTask(currentTask);
+            return;
         }
-        );
 
-        return counts;
-    }, [robots]);
+        let cancelled = false;
+
+        taskApi.get(selectedRobotView.currentTaskId)
+            .then((task) => {
+                if (!cancelled) {
+                    setSelectedTask(task);
+                }
+            })
+            .catch((error) => {
+                if (!cancelled) {
+                    console.error("현재 작업 조회 실패:", error);
+                    setSelectedTask(null);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedRobotView, tasks]);
 
     // 필터 초기화
     const handleResetFilter = () => {
@@ -337,24 +522,49 @@ function RobotManagement() {
         setIsAddModalOpen(false);
 
         setNewRobot({
-            robotId: "",
-            name: "",
+            robotSpecId: "",
+            warehouseId: "",
+            nodeId: "",
             battery: 100,
-            x: 0,
-            y: 0,
+            status: "AVAILABLE",
         });
+        setWarehouseNodes([]);
     };
 
-    // 로봇 등록 (/api/robots/{robotId} 붙여야 함)
-    const handleAddRobot = () => {
+    const handleWarehouseChange = async (warehouseId) => {
+        handleNewRobotChange("warehouseId", warehouseId);
+        handleNewRobotChange("nodeId", "");
 
-        if (!newRobot.robotId) {
-            alert("로봇 ID를 입력해주세요.");
+        if (!warehouseId) {
+            setWarehouseNodes([]);
             return;
         }
 
-        if (!newRobot.name.trim()) {
-            alert("로봇 이름을 입력해주세요.");
+        try {
+            const layout = await warehouseApi.getLayout(Number(warehouseId));
+            setWarehouseNodes(layout.nodes ?? []);
+        } catch (error) {
+            console.error("창고 노드 조회 실패:", error);
+            setWarehouseNodes([]);
+            alert(error.message || "창고 노드를 불러오지 못했습니다.");
+        }
+    };
+
+    // 로봇 등록 (POST /api/robots)
+    const handleAddRobot = async () => {
+
+        if (!newRobot.robotSpecId) {
+            alert("로봇 스펙을 선택해주세요.");
+            return;
+        }
+
+        if (!newRobot.warehouseId) {
+            alert("창고를 선택해주세요.");
+            return;
+        }
+
+        if (!newRobot.nodeId) {
+            alert("초기 노드를 선택해주세요.");
             return;
         }
 
@@ -363,40 +573,26 @@ function RobotManagement() {
             return;
         }
 
-        const robotId = Number(newRobot.robotId);
-        const duplicatedRobot = robots.some((robot) => robot.robotId === robotId);
-
-        if (duplicatedRobot) {
-            alert("이미 존재하는 로봇 ID입니다.");
-            return;
-        }
-
         const robotData = {
-            robotId,
-            name: newRobot.name.trim(),
-            status: "IDLE",
+            robotSpecId: Number(newRobot.robotSpecId),
+            warehouseId: Number(newRobot.warehouseId),
+            nodeId: Number(newRobot.nodeId),
             battery: Number(newRobot.battery),
-            x: Number(newRobot.x),
-            y: Number(newRobot.y),
+            status: newRobot.status,
         };
 
-        setRobots((prev) => [
-            ...prev,
-            robotData,
-        ]);
+        try {
+            setIsLoading(true);
 
-        setSelectedRobot(robotData);
-        setSelectedTask(null);
-
-        setNewRobot({
-            robotId: "",
-            name: "",
-            battery: 100,
-            x: 0,
-            y: 0,
-        });
-
-        setIsAddModalOpen(false);
+            const createdRobot = await robotApi.create(robotData);
+            await fetchPageData(createdRobot.id);
+            handleCloseModal();
+        } catch (error) {
+            console.error("로봇 등록 실패:", error);
+            alert(error.message || "로봇을 등록하지 못했습니다.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -448,13 +644,13 @@ function RobotManagement() {
 
                 </div>
 
-                {Object.entries(statusSummary).map(([status, count]) => (
+                {statusSummary.map(({ key, label, count }) => (
                     <div
-                        key={status}
+                        key={key}
                         className="robot-summary-card"
                     >
                         <span className="robot-summary-label">
-                            {getRobotStatus(status).label}
+                            {label}
                         </span>
 
                         <strong className="robot-summary-value">
@@ -483,12 +679,12 @@ function RobotManagement() {
                     >
 
                         <option value="ALL">전체 상태</option>
-                        {statusOptions.map((status) => (
+                        {SUMMARY_GROUPS.map(({ key, label }) => (
                             <option
-                                key={status}
-                                value={status}
+                                key={key}
+                                value={key}
                             >
-                                {getRobotStatus(status).label}
+                                {label}
                             </option>
                         ))}
                     </select>
@@ -534,7 +730,7 @@ function RobotManagement() {
                             {isLoading ? (
                                 <tr>
                                     <td
-                                        colSpan="6"
+                                        colSpan="7"
                                         className="robot-table-message"
                                     >
                                         로봇 정보를 불러오는 중입니다.
@@ -544,7 +740,7 @@ function RobotManagement() {
                             ) : filteredRobots.length === 0 ? (
                                 <tr>
                                     <td
-                                        colSpan="6"
+                                        colSpan="7"
                                         className="robot-table-message"
                                     >
                                         조건에 맞는 로봇이 없습니다.
@@ -553,21 +749,24 @@ function RobotManagement() {
 
                             ) : (
                                 filteredRobots.map((robot) => {
-                                    const currentTask = getCurrentTask(robot.robotId);
+                                    const currentTask = findCurrentTask(robot, tasks);
 
                                     return (
                                         <tr
-                                            key={robot.robotId}
+                                            key={robot.id}
                                             className={selectedRobot
-                                                ?.robotId === robot.robotId
+                                                ?.id === robot.id
                                                 ? "selected"
                                                 : ""
                                             }
-                                            onClick={() => handleSelectRobot(robot.robotId)}
+                                            onClick={() => handleSelectRobot(robot.id)}
                                         >
-                                            <td>{robot.robotId}</td>
+                                            <td>{robot.id}</td>
 
-                                            <td className="robot-name">{robot.name}</td>
+                                            <td className="robot-name">
+                                                {robotSpecCodes[robot.robotSpecId]
+                                                    ?? `Spec #${robot.robotSpecId}`}
+                                            </td>
 
                                             <td>
                                                 <span
@@ -594,7 +793,10 @@ function RobotManagement() {
                                                 </div>
                                             </td>
 
-                                            <td>({robot.x}, {robot.y})</td>
+                                            <td>
+                                                {robot.nodeCode
+                                                    ?? `Node #${robot.nodeId}`}
+                                            </td>
 
                                             <td>
                                                 {currentTask ? (
@@ -613,6 +815,7 @@ function RobotManagement() {
                                                     "-"
                                                 )}
                                             </td>
+
                                         </tr>
                                     );
                                 }
@@ -647,18 +850,19 @@ function RobotManagement() {
                         <div className="robot-detail-main">
                             <div>
                                 <span className="robot-detail-id">
-                                    Robot ID {selectedRobot.robotId}
+                                    Robot ID {selectedRobotView.id}
                                 </span>
 
                                 <div className="robot-detail-name">
-                                    {selectedRobot.name}
+                                    {robotSpecCodes[selectedRobotView.robotSpecId]
+                                        ?? `Spec #${selectedRobotView.robotSpecId}`}
                                 </div>
                             </div>
 
                             <span
-                                className={`robot-status ${getRobotStatus(selectedRobot.status).className}`}
+                                className={`robot-status ${getRobotStatus(selectedRobotView.status).className}`}
                             >
-                                {getRobotStatus(selectedRobot.status).label}
+                                {getRobotStatus(selectedRobotView.status).label}
                             </span>
                         </div>
 
@@ -668,12 +872,12 @@ function RobotManagement() {
 
                             <div className="robot-detail-item">
                                 <span>상태</span>
-                                <strong>{getRobotStatus(selectedRobot.status).label}</strong>
+                                <strong>{getRobotStatus(selectedRobotView.status).label}</strong>
                             </div>
 
                             <div className="robot-detail-item">
                                 <span>배터리</span>
-                                <strong>{selectedRobot.battery}%</strong>
+                                <strong>{selectedRobotView.battery}%</strong>
                             </div>
 
                             <div className="robot-detail-battery-track">
@@ -682,15 +886,18 @@ function RobotManagement() {
                                     style={{
                                         width: `${Math.max(0,
                                             Math.min(100,
-                                                Number(selectedRobot.battery ?? 0)
+                                                Number(selectedRobotView.battery ?? 0)
                                             ))}%`,
                                     }}
                                 />
                             </div>
 
                             <div className="robot-detail-item">
-                                <span>현재 위치</span>
-                                <strong>({selectedRobot.x}, {selectedRobot.y})</strong>
+                                <span>현재 노드</span>
+                                <strong>
+                                    {selectedRobotView.nodeCode
+                                        ?? `Node #${selectedRobotView.nodeId}`}
+                                </strong>
                             </div>
                         </div>
 
@@ -746,12 +953,15 @@ function RobotManagement() {
 
                             <div className="robot-detail-item">
                                 <span>로봇 ID</span>
-                                <strong>{selectedRobot.robotId}</strong>
+                                <strong>{selectedRobotView.id}</strong>
                             </div>
 
                             <div className="robot-detail-item">
                                 <span>로봇 이름</span>
-                                <strong>{selectedRobot.name}</strong>
+                                <strong>
+                                    {robotSpecCodes[selectedRobotView.robotSpecId]
+                                        ?? `Spec #${selectedRobotView.robotSpecId}`}
+                                </strong>
                             </div>
                         </div>
                     </div>
@@ -776,32 +986,38 @@ function RobotManagement() {
                         </div>
                         <div className="robot-modal-content">
                             <label className="robot-modal-field">
-                                <span>로봇 ID</span>
+                                <span>로봇 스펙</span>
 
-                                <input
-                                    type="number"
-                                    min="1"
-                                    placeholder="예: 1"
-                                    value={newRobot.robotId}
+                                <select
+                                    value={newRobot.robotSpecId}
                                     onChange={(e) => handleNewRobotChange(
-                                        "robotId",
+                                        "robotSpecId",
                                         e.target.value
                                     )}
-                                />
+                                >
+                                    <option value="">로봇 스펙 선택</option>
+                                    {robotSpecs.map((spec) => (
+                                        <option key={spec.id} value={spec.id}>
+                                            {spec.robotCode}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
 
                             <label className="robot-modal-field">
-                                <span>로봇 이름</span>
+                                <span>창고</span>
 
-                                <input
-                                    type="text"
-                                    placeholder="예: R1"
-                                    value={newRobot.name}
-                                    onChange={(e) => handleNewRobotChange(
-                                        "name",
-                                        e.target.value
-                                    )}
-                                />
+                                <select
+                                    value={newRobot.warehouseId}
+                                    onChange={(e) => handleWarehouseChange(e.target.value)}
+                                >
+                                    <option value="">창고 선택</option>
+                                    {warehouses.map((warehouse) => (
+                                        <option key={warehouse.id} value={warehouse.id}>
+                                            {warehouse.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
 
                             <label className="robot-modal-field">
@@ -822,32 +1038,40 @@ function RobotManagement() {
                                 </div>
                             </label>
 
-                            <div className="robot-modal-position">
-                                <label className="robot-modal-field">
-                                    <span>초기 X 좌표</span>
+                            <label className="robot-modal-field">
+                                <span>초기 노드</span>
 
-                                    <input
-                                        type="number"
-                                        value={newRobot.x}
-                                        onChange={(e) => handleNewRobotChange(
-                                            "x",
-                                            e.target.value
-                                        )}
-                                    />
-                                </label>
+                                <select
+                                    value={newRobot.nodeId}
+                                    disabled={!newRobot.warehouseId}
+                                    onChange={(e) => handleNewRobotChange(
+                                        "nodeId",
+                                        e.target.value
+                                    )}
+                                >
+                                    <option value="">노드 선택</option>
+                                    {warehouseNodes.map((node) => (
+                                        <option key={node.id} value={node.id}>
+                                            {node.nodeCode} (ID: {node.id})
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
 
-                                <label className="robot-modal-field">
-                                    <span>초기 Y 좌표</span>
-                                    <input
-                                        type="number"
-                                        value={newRobot.y}
-                                        onChange={(e) => handleNewRobotChange(
-                                            "y",
-                                            e.target.value
-                                        )}
-                                    />
-                                </label>
-                            </div>
+                            <label className="robot-modal-field">
+                                <span>초기 상태</span>
+
+                                <select
+                                    value={newRobot.status}
+                                    onChange={(e) => handleNewRobotChange(
+                                        "status",
+                                        e.target.value
+                                    )}
+                                >
+                                    <option value="AVAILABLE">사용 가능</option>
+                                    <option value="UNAVAILABLE">사용 불가</option>
+                                </select>
+                            </label>
                         </div>
                         <div className="robot-modal-actions">
                             <button
