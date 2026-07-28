@@ -15,6 +15,9 @@ function Signup() {
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
+    // 개인정보 수집 및 이용 동의 (백엔드 필수값)
+    const [privacyAgreed, setPrivacyAgreed] = useState(false);
+
     const handleSignup = async (e) => {
         e.preventDefault();
 
@@ -28,11 +31,17 @@ function Signup() {
             return;
         }
 
+        if (!privacyAgreed) {
+            alert("개인정보 수집 및 이용에 동의해주세요.");
+            return;
+        }
+
         // 백엔드로 전달
         const signupData = {
             name: name.trim(),
             email: email.trim(),
             password: password,
+            privacyAgreed: privacyAgreed,
         };
 
         try {
@@ -189,6 +198,22 @@ function Signup() {
                                     비밀번호가 일치하지 않습니다.
                                 </p>
                             )}
+                    </div>
+
+                    {/* 개인정보 수집 및 이용 동의 */}
+                    <div className="signup-privacy-group">
+                        <label className="signup-privacy-label">
+                            <input
+                                type="checkbox"
+                                checked={privacyAgreed}
+                                onChange={(e) =>
+                                    setPrivacyAgreed(e.target.checked)
+                                }
+                            />
+                            <span>
+                                [필수] 개인정보 수집 및 이용에 동의합니다.
+                            </span>
+                        </label>
                     </div>
 
                     <button
