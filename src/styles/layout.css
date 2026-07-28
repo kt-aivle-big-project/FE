@@ -195,29 +195,23 @@ textarea:focus {
 
 
 /* =========================
-   System Status
+   로그아웃
 ========================= */
 
-.system-status {
-    margin: 200px 10px 10px;
-
-    padding: 5px;
-
-    border: var(--border);
-
-    text-align: center;
-    line-height: 2;
+.sidebar-logout {
+    margin-top: auto;
+    padding: 20px;
 }
 
-.system-status h3 {
-    font-size: 18px;
-}
-
-.system-status p {
+.logout-button {
+    width: 100%;
+    padding: 12px 10px;
+    border: none;
     font-size: 14px;
-    white-space: nowrap;
+    font-weight: 600;
+    cursor: pointer;
+    border: var(--border);
 }
-
 
 /* =========================
    Page Content
