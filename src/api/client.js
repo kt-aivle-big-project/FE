@@ -76,6 +76,10 @@ export const simulationRunApi = {
         }),
     stop: (runId) => api.post(`/simulation-runs/${runId}/stop`),
 
+    // 창고에서 진행 중인 시뮬레이션 전체 중지
+    stopActive: (warehouseId) =>
+        api.post(`/simulation-runs/stop-active?warehouseId=${warehouseId}`),
+
     getStatus: (runId) => api.get(`/simulation-runs/${runId}/status`),
     getTasks: (runId) => api.get(`/simulation-runs/${runId}/tasks`),
     getRobotStates: (runId) =>
