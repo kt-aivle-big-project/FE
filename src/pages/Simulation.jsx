@@ -329,13 +329,13 @@ function Simulation() {
         }
 
         try {
-            // 진행 중인 실행이 있으면 정리한다
-            if (simulationRunId) {
-                try {
-                    await simulationRunApi.stop(simulationRunId);
-                } catch (error) {
-                    console.warn("기존 시뮬레이션 중지 실패", error.message);
-                }
+            // 이 창고에서 돌고 있는 시뮬레이션을 모두 중지한다.
+            // (다른 탭이나 이전 세션에서 실행 중인 것까지 정리해야
+            //  새 실행을 시작할 수 있다 - 창고당 1개만 활성 가능)
+            try {
+                await simulationRunApi.stopActive(DEFAULT_WAREHOUSE_ID);
+            } catch (error) {
+                console.warn("기존 시뮬레이션 중지 실패", error.message);
             }
 
             isPausedRef.current = false;
