@@ -34,6 +34,7 @@ function Login() {
                 `${API_URL}/auth/login`,
                 {
                     method: "POST",
+                    credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
                     },
