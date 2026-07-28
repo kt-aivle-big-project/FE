@@ -158,6 +158,12 @@
     color: red;
 }
 
+/* 현재 작업을 버리고 설정값으로 작업을 새로 만드는 버튼 */
+.simulation-header-button.new-run {
+    color: #16a34a;
+    white-space: nowrap;
+}
+
 /* =========================
    시뮬레이션 창고 화면
 ========================= */

@@ -5,6 +5,12 @@ import "../styles/Login.css";
 const API_URL = "http://localhost:8080/api";
 
 function Login() {
+    const navigate = useNavigate();
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+
     const handleLogin = async (e) => {
         e.preventDefault();
 

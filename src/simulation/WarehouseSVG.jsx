@@ -527,9 +527,12 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1, }) {
                                 style={{
                                     transform: `translate(${robotX}px, ${robotY}px)`,
 
-                                    // moveRobot의 노드 이동 시간과 동일하게 맞춤
+                                    // 백엔드가 알려준 도착 예정 시간에 맞춰 보간한다.
+                                    // 값이 없으면(목업/정지) 기존 배속 기반 시간을 사용.
                                     transitionDuration:
-                                        `${getRobotTransitionDuration(simulationSpeed)}ms`,
+                                        robot.transition_ms !== undefined
+                                            ? `${robot.transition_ms}ms`
+                                            : `${getRobotTransitionDuration(simulationSpeed)}ms`,
                                 }}
                             >
                                 <defs>

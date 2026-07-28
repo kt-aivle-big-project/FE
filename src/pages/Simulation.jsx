@@ -1,87 +1,186 @@
-import { useEffect, useState, useRef } from "react";
-import "../styles/Simulation.css";
-import WarehouseSVG from "../Simulation/WarehouseSVG";
-import SimulationTask from "../Simulation/SimulationTask";
-import SimulationEvent from "../Simulation/SimulationEvent";
-import SimulationPanel from "../simulation/SimulationPanel";
+import { useEffect, useRef, useState } from "react";
+import "../styles/simulation.css";
 
-import scenarios from "../data/scenarios.json";
-import alerts from "../data/alerts.json";
-import tasks from "../data/tasks.json";
-import robots from "../data/robots.json";
-import products from "../data/products.json";
+import WarehouseSVG from "../simulation/WarehouseSVG";
+import SimulationPanel from "../simulation/SimulationPanel";
+import SimulationTask from "../simulation/SimulationTask";
+import SimulationEvent from "../simulation/SimulationEvent";
+
+import useStompSubscriptions from "../hooks/useStompSubscriptions";
+import { API_URL, TOPICS } from "../api/config";
+import {
+    simulationRunApi,
+    scenarioApi,
+    productApi,
+    optimizationApi,
+} from "../api/client";
+
+import scenariosData from "../data/scenarios.json";
+import productsData from "../data/products.json";
 import inbound from "../data/inbound.json";
 import outbound from "../data/outbound.json";
-import events from "../data/events.json";
 
-const API_URL = "http://localhost:8080/api";
+// 데모용 창고 ID (창고 선택 기능 붙이기 전까지 고정)
+const DEFAULT_WAREHOUSE_ID = 1;
+
+// 새로고침 후에도 실행 중인 시뮬레이션을 이어서 쓰기 위한 저장 키
+const RUN_ID_KEY = "simulationRunId";
+
+// 충전소 노드 코드 (warehouse_graph.json 의 CHARGING_SLOT 노드)
+// 로봇은 여기서 출발하고, 초기화하면 여기로 돌아온다.
+const CHARGING_SLOTS = [
+    "C01", "C02", "C03", "C04", "C05",
+    "C06", "C07", "C08", "C09", "C10",
+];
+
+// 시뮬레이션 시작 전 / 초기화 후의 로봇 배치.
+// 충전소에 대기 중인 모습으로 그린다.
+const restingRobots = (count = 6) =>
+    Array.from({ length: Math.min(count, CHARGING_SLOTS.length) }, (_, index) => ({
+        robot_id: index + 1,
+        robot_code: `R${index + 1}`,
+        node_id: CHARGING_SLOTS[index],
+        battery: 100,
+        status: "IDLE",
+        transition_ms: 0,
+    }));
+
+// 백엔드 SimulationRunStatus → 화면 표시 문구
+const STATUS_LABEL = {
+    CREATED: "대기",
+    RUNNING: "실행",
+    PAUSED: "일시정지",
+    REPLANNING: "재계획",
+    COMPLETED: "완료",
+    STOPPED: "중지",
+    FAILED: "실패",
+};
+
+// 백엔드 RobotStateResponse → 화면 로봇 객체
+//
+// 이동 중이면 백엔드가 다음 노드(nextNodeCode)와 도착까지 남은 시간을 함께 보낸다.
+// 로봇을 "도착 지점"에 배치하고 그 시간만큼 CSS transition 을 주면
+// 브라우저가 직전 위치에서 목적지까지 부드럽게 이어서 그려준다.
+const toRobotView = (state) => {
+    const isMoving = Boolean(state.nextNodeCode);
+
+    return {
+        robot_id: state.robotId,
+        robot_code: `R${state.robotId}`,
+
+        // 이동 중이면 목적지 노드, 정지 중이면 현재 노드
+        node_id: isMoving ? state.nextNodeCode : state.currentNodeCode,
+
+        battery: state.batteryLevel,
+        status: state.status,
+
+        // 보간 시간(ms). 정지 상태면 즉시 반영
+        transition_ms:
+            isMoving && state.arrivalInSeconds
+                ? Math.max(0, state.arrivalInSeconds * 1000)
+                : 0,
+    };
+};
 
 function Simulation() {
+    /* =========================================================
+       상단 헤더 - 시뮬레이션 실행
+    ========================================================= */
 
-    // 시나리오
-    const [scenarioSettings, setScenarioSettings] = useState([]);
-    const [selectedScenario, setSelectedScenario] = useState("");
+    // 시나리오 설정 (백엔드 조회 실패 시 목업 데이터로 폴백)
+    const [scenarioSettings, setScenarioSettings] = useState(scenariosData);
+    const [selectedScenario, setSelectedScenario] = useState(
+        scenariosData[0]?.scenario_id ?? ""
+    );
     const [simulationSpeed, setSimulationSpeed] = useState(1);
     const [simulationStatus, setSimulationStatus] = useState("대기");
     const [simulationTime, setSimulationTime] = useState(0);
 
-    // 입출고
-    const [inboundSettings, setInboundSettings] = useState(inbound);
-    const [outboundSettings, setOutboundSettings] = useState(outbound);
+    // 실행 중인 시뮬레이션 ID
+    // 새로고침해도 같은 실행을 이어서 쓰도록 localStorage 에 보관한다.
+    // (새 실행이 생기면 그 실행에 등록해둔 작업들이 누락되기 때문)
+    const [simulationRunId, setSimulationRunIdState] = useState(() => {
+        const saved = localStorage.getItem(RUN_ID_KEY);
+        return saved ? Number(saved) : null;
+    });
 
-    // 로봇
-    const [robotList, setRobots] = useState(robots);
+    const setSimulationRunId = (runId) => {
+        if (runId) {
+            localStorage.setItem(RUN_ID_KEY, String(runId));
+        } else {
+            localStorage.removeItem(RUN_ID_KEY);
+        }
+        setSimulationRunIdState(runId);
+    };
 
-    // 시나리오 실행
-    const [simulationId, setSimulationId] = useState(null);
-    const [simulationRunId, setSimulationRunId] = useState(null);
+    // 작업 / 이벤트 / 품목 목록
+    // 목업이 아니라 백엔드에서 받은 것만 보여준다.
+    // 시작하면 그 실행의 작업으로 채워지고, 이후 WebSocket 으로 갱신된다.
+    const [taskList, setTaskList] = useState([]);
+    const [eventList, setEventList] = useState([]);
+    const [products, setProducts] = useState(productsData);
 
-    // 시나리오 설정값 불러오기
+    /* =========================================================
+       백엔드 초기 데이터 로딩
+    ========================================================= */
+
     useEffect(() => {
-        const fetchScenarios = async () => {
+        const loadInitialData = async () => {
             try {
-                const accessToken = localStorage.getItem("accessToken");
-                const response = await fetch(
-                    `${API_URL}/simulations/scenarios`,
-                    {
-                        method: "GET",
-                        headers: {
-                            Authorization:
-                                `Bearer ${accessToken}`,
-                        },
-                    }
+                const scenarioList = await scenarioApi.getAll(
+                    DEFAULT_WAREHOUSE_ID
                 );
 
-                if (!response.ok) {
-                    throw new Error("시나리오 조회에 실패했습니다.");
+                if (Array.isArray(scenarioList) && scenarioList.length > 0) {
+                    // 백엔드 응답을 화면에서 쓰던 형태로 변환
+                    const mapped = scenarioList.map((scenario) => ({
+                        scenario_id: scenario.id,
+                        scenario_name: scenario.scenarioName,
+                        robot_count: scenario.robotCount,
+                        simulation_speed: scenario.simulationSpeed,
+                        initial_battery: scenario.initialBattery,
+                        charging_threshold: scenario.chargingThreshold,
+                        auto_replan: scenario.autoReplan,
+                        obstacle_enabled: scenario.obstacleEnabled,
+                    }));
+
+                    setScenarioSettings(mapped);
+                    setSelectedScenario(mapped[0].scenario_id);
                 }
-
-                const data = await response.json();
-                setScenarioSettings(data);
-
-                // 첫 번째 시나리오 기본 선택
-                if (data.length > 0) {
-                    setSelectedScenario(data[0].scenario_id);
-                }
-
             } catch (error) {
-                console.error("시나리오 조회 실패:", error);
+                console.warn(
+                    "시나리오 조회 실패 - 목업 데이터를 사용합니다.",
+                    error.message
+                );
+            }
+
+            try {
+                const productList = await productApi.getAll();
+
+                if (Array.isArray(productList) && productList.length > 0) {
+                    setProducts(
+                        productList.map((product) => ({
+                            product_code: product.productCode,
+                            product_name: product.productName,
+                        }))
+                    );
+                }
+            } catch (error) {
+                console.warn(
+                    "품목 조회 실패 - 목업 데이터를 사용합니다.",
+                    error.message
+                );
             }
         };
 
-        fetchScenarios();
+        loadInitialData();
     }, []);
 
-    // 불러온 설정값에서 시나리오 선택하기
-    const handleScenarioChange = (scenarioId) => {
-        setSelectedScenario(scenarioId);
-    };
-
-
-    /* ==================== 상단 헤더 - 시뮬레이션 실행  ==================== */
     // 시뮬레이션 타이머
     useEffect(() => {
-        if (simulationStatus !== "실행" && simulationStatus !== "재계획") { return; }
+        if (simulationStatus !== "실행" && simulationStatus !== "재계획") {
+            return;
+        }
 
         const timer = setInterval(() => {
             setSimulationTime((time) => time + simulationSpeed);
@@ -100,295 +199,429 @@ function Simulation() {
             .join(":");
     };
 
+    // 시뮬레이션 시나리오 선택
+    const handleScenarioChange = (scenarioId) => {
+        setSelectedScenario(scenarioId);
+    };
+
+    /**
+     * 실행 배속 변경.
+     * 진행 중인 시뮬레이션이 있으면 백엔드 시계 속도도 함께 바꾼다.
+     */
+    const handleSpeedChange = async (speed) => {
+        setSimulationSpeed(speed);
+
+        if (!simulationRunId) {
+            return;
+        }
+
+        try {
+            await simulationRunApi.changeSpeed(simulationRunId, speed);
+        } catch (error) {
+            console.error("배속 변경 실패:", error);
+            alert(error.message ?? "배속을 변경하지 못했습니다.");
+        }
+    };
+
+    /* =========================================================
+       시뮬레이션 제어
+    ========================================================= */
+
+    /**
+     * 해당 실행의 작업 목록을 백엔드에서 다시 읽어온다.
+     * 시작/초기화 시점에 화면을 그 실행의 작업만으로 맞춘다.
+     */
+    const reloadTasks = async (runId) => {
+        try {
+            const runTasks = await simulationRunApi.getTasks(runId);
+            setTaskList(Array.isArray(runTasks) ? runTasks : []);
+        } catch (error) {
+            console.warn("작업 목록 조회 실패", error.message);
+            setTaskList([]);
+        }
+    };
+
+    // 새로고침해도 진행 중이던 실행의 작업 목록을 되살린다
+    useEffect(() => {
+        if (simulationRunId) {
+            reloadTasks(simulationRunId);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [simulationRunId]);
+
+    /**
+     * 화면 설정값을 백엔드 요청 형태로 변환한다. (SimulationRunCreateRequest)
+     * 이 값으로 백엔드가 입고/출고 작업을 자동 생성한다.
+     */
+    const buildCreatePayload = () => {
+        // 시나리오 ID는 숫자여야 한다.
+        // 백엔드 조회 실패로 목업("S1")이 선택된 경우 null로 보낸다.
+        const scenarioIdNumber = Number(selectedScenario);
+        const scenarioId = Number.isFinite(scenarioIdNumber)
+            ? scenarioIdNumber
+            : null;
+
+        if (scenarioId === null) {
+            console.warn(
+                "시나리오가 백엔드에서 조회되지 않아 프리셋 없이 실행합니다."
+            );
+        }
+
+        return {
+            warehouseId: DEFAULT_WAREHOUSE_ID,
+            scenarioId: scenarioId,
+            simulationSpeed: Number(simulationSpeed),
+            inbound: {
+                inboundCount: inboundSettings.inbound_count,
+                totalQuantity: inboundSettings.total_quantity,
+                arrivalPattern: inboundSettings.arrival_pattern,
+                products: inboundSettings.products.map((product) => ({
+                    productCode: product.product_code,
+                    ratio: product.ratio,
+                })),
+            },
+            outbound: {
+                orderCount: outboundSettings.order_count,
+                totalQuantity: outboundSettings.total_quantity,
+                arrivalPattern: outboundSettings.arrival_pattern,
+                processingDeadlineMinutes:
+                    outboundSettings.processing_deadline_minutes,
+                allowPartialShipment: outboundSettings.allow_partial_shipment,
+            },
+        };
+    };
+
+    /**
+     * 설정값이 유효한지 검사한다.
+     */
+    const validateSettings = () => {
+        if (!selectedScenario) {
+            alert("시나리오를 선택해주세요.");
+            return false;
+        }
+
+        if (inboundRatioTotal !== 100) {
+            alert("입고 품목 구성 비율의 합계가 100%가 되어야 합니다.");
+            return false;
+        }
+
+        return true;
+    };
+
+    /**
+     * 새 시뮬레이션 생성.
+     *
+     * 진행 중인 실행을 중지하고, 지금 화면의 설정값으로 새 실행을 만든다.
+     * 이전 작업은 버리고 백엔드가 작업을 새로 생성한다.
+     */
+    const handleNewRun = async () => {
+        if (!validateSettings()) {
+            return;
+        }
+
+        const confirmed = window.confirm(
+            "현재 작업을 버리고 새 시뮬레이션을 만듭니다.\n계속할까요?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            // 진행 중인 실행이 있으면 정리한다
+            if (simulationRunId) {
+                try {
+                    await simulationRunApi.stop(simulationRunId);
+                } catch (error) {
+                    console.warn("기존 시뮬레이션 중지 실패", error.message);
+                }
+            }
+
+            isPausedRef.current = false;
+            setSimulationRunId(null);
+            setTaskList([]);
+            setEventList([]);
+            setRobots(restingRobots());
+            setSimulationTime(0);
+            setSimulationStatus("대기");
+
+            const payload = buildCreatePayload();
+            console.log("새 시뮬레이션 생성 요청:", payload);
+
+            const created = await simulationRunApi.create(payload);
+            const runId = created.simulationRunId;
+
+            setSimulationRunId(runId);
+            await reloadTasks(runId);
+
+            console.log(
+                `%c새 시뮬레이션 생성 완료 - 실행 ID = ${runId}`,
+                "font-size:14px;font-weight:bold;color:#16a34a"
+            );
+        } catch (error) {
+            console.error("새 시뮬레이션 생성 실패:", error);
+            alert(error.message ?? "새 시뮬레이션을 만들지 못했습니다.");
+        }
+    };
+
     // 시뮬레이션 시작
     const handleStart = async () => {
-
+        // 일시정지 상태면 재개
         if (simulationStatus === "일시정지") {
             await handleResume();
             return;
         }
 
-        if (!simulationId) {
-            alert("실행할 시뮬레이션이 없습니다.");
+        if (!validateSettings()) {
             return;
         }
 
-        if (inboundRatioTotal !== 100) {
-            alert("입고 품목 구성 비율의 합계가 100%가 되어야 합니다.");
-            return;
-        }
+        const createPayload = buildCreatePayload();
 
         try {
-            const accessToken = localStorage.getItem("accessToken");
+            // 이미 만들어둔 실행이 있으면 재사용한다.
+            // (초기화 후 다시 시작할 때 새 실행이 생겨 기존 작업이 누락되는 것을 막는다)
+            let runId = simulationRunId;
 
-            const response = await fetch(
-                `${API_URL}/simulations/${simulationId}/start`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                }
+            if (runId) {
+                console.log(`기존 시뮬레이션 재사용: runId=${runId}`);
+            } else {
+                console.log("시뮬레이션 생성 요청:", createPayload);
+                const created = await simulationRunApi.create(createPayload);
+                runId = created.simulationRunId;
+            }
+
+            const started = await simulationRunApi.start(runId);
+
+            setSimulationRunId(runId);
+            setSimulationStatus(STATUS_LABEL[started.status] ?? "실행");
+            isPausedRef.current = false;
+
+            console.log(
+                `%c시뮬레이션 실행 ID = ${runId}`,
+                "font-size:14px;font-weight:bold;color:#2563eb"
             );
 
-            if (!response.ok) {
-                const errorMessage = await response.text();
+            // 시작 직후 현재 로봇 상태 스냅샷 조회
+            const snapshot = await simulationRunApi.getRobotStates(runId);
 
-                throw new Error(errorMessage || "시뮬레이션 실행에 실패했습니다.");
+            if (snapshot?.robots?.length) {
+                setRobots(snapshot.robots.map(toRobotView));
             }
 
-            const data = await response.json();
-
-            console.log("시뮬레이션 실행 응답:", data);
-            setSimulationId(data.simulationId);
-
-            if (data.status === "RUNNING") {
-                setSimulationStatus("실행");
-            } else {
-                setSimulationStatus(data.status);
-            }
-
-            setSimulationTime(data.simulationTime ?? 0);
-
-            // 로봇 정보 반영
-            if (Array.isArray(data.robots)) {
-
-                setRobots((prevRobots) =>
-                    prevRobots.map((robot) => {
-
-                        const updatedRobot =
-                            data.robots.find(
-                                (item) =>
-                                    item.robotId ===
-                                    robot.robot_id
-                            );
-
-                        if (!updatedRobot) {
-                            return robot;
-                        }
-
-                        return {
-                            ...robot,
-
-                            x: updatedRobot.x,
-                            y: updatedRobot.y,
-
-                            status:
-                                updatedRobot.status,
-                        };
-                    })
-                );
-            }
-
-            isPausedRef.current = false;
-            movementRunRef.current += 1;
-
+            // 이 실행의 작업 목록으로 교체한다.
+            // (이전 실행의 작업이나 목업 데이터가 남지 않도록)
+            await reloadTasks(runId);
         } catch (error) {
             console.error("시뮬레이션 시작 실패:", error);
-            alert(error.message || "시뮬레이션을 시작하지 못했습니다.");
+            alert(error.message ?? "시뮬레이션을 시작하지 못했습니다.");
         }
     };
 
     // 시뮬레이션 일시정지
     const handlePause = async () => {
-        if (simulationStatus !== "실행" || !simulationRunId) {
+        if (simulationStatus !== "실행") {
+            return;
+        }
+
+        if (!simulationRunId) {
+            isPausedRef.current = true;
+            setSimulationStatus("일시정지");
             return;
         }
 
         try {
-            const accessToken = localStorage.getItem("accessToken");
-
-            const response = await fetch(
-                `${API_URL}/simulation-runs/${simulationRunId}/pause`,
-                {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error("시뮬레이션 일시정지에 실패했습니다.");
-            }
+            const paused = await simulationRunApi.pause(simulationRunId);
 
             isPausedRef.current = true;
-            setSimulationStatus("일시정지");
-
+            setSimulationStatus(STATUS_LABEL[paused.status] ?? "일시정지");
         } catch (error) {
             console.error("시뮬레이션 일시정지 실패:", error);
-            alert("시뮬레이션을 일시정지하지 못했습니다.");
+            alert(error.message ?? "일시정지에 실패했습니다.");
         }
     };
 
     // 시뮬레이션 재개
     const handleResume = async () => {
-        if (simulationStatus !== "일시정지" || !simulationRunId) {
+        if (!simulationRunId) {
+            isPausedRef.current = false;
+            setSimulationStatus("실행");
             return;
         }
 
         try {
-            const accessToken = localStorage.getItem("accessToken");
-
-            const response = await fetch(
-                `${API_URL}/simulation-runs/${simulationRunId}/resume`,
-                {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error("시뮬레이션 재개에 실패했습니다.");
-            }
+            const resumed = await simulationRunApi.resume(simulationRunId);
 
             isPausedRef.current = false;
-            setSimulationStatus("실행");
-
+            setSimulationStatus(STATUS_LABEL[resumed.status] ?? "실행");
         } catch (error) {
             console.error("시뮬레이션 재개 실패:", error);
-            alert("시뮬레이션을 재개하지 못했습니다.");
+            alert(error.message ?? "시뮬레이션을 재개하지 못했습니다.");
         }
     };
 
-    // 시뮬레이션 초기화 
+    // 시뮬레이션 초기화
     const handleReset = async () => {
-        try {
-            const accessToken = localStorage.getItem("accessToken");
+        isPausedRef.current = false;
 
-            if (simulationRunId) {
-                const response = await fetch(
-                    `${API_URL}/simulation-runs/${simulationRunId}/stop`,
-                    {
-                        method: "POST",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                    }
-                );
-
-                if (!response.ok) {
-                    throw new Error("시뮬레이션 중지에 실패했습니다.");
-                }
+        if (simulationRunId) {
+            try {
+                await simulationRunApi.reset(simulationRunId);
+                // 작업이 전부 대기 상태로 돌아간 목록을 다시 읽어온다
+                await reloadTasks(simulationRunId);
+            } catch (error) {
+                console.error("시뮬레이션 초기화 실패:", error);
             }
-
-            movementRunRef.current += 1;
-            isPausedRef.current = false;
-
-            setRobots(
-                robots.map((robot) => ({
-                    ...robot,
-                }))
-            );
-
-            setSimulationStatus("대기");
-            setSimulationTime(0);
-            setSimulationRunId(null);
-
-        } catch (error) {
-            console.error("시뮬레이션 초기화 실패:", error);
-            alert("시뮬레이션을 초기화하지 못했습니다.");
         }
+
+        // 로봇을 충전소 대기 상태로 되돌린다
+        setRobots((prevRobots) => restingRobots(prevRobots.length || 6));
+
+        // simulationRunId 는 유지한다.
+        // 초기화 후 다시 시작할 때 같은 실행을 재사용해야
+        // 그 실행에 등록한 작업들이 계획에 포함된다.
+        setSimulationStatus("대기");
+        setSimulationTime(0);
     };
 
     // 시뮬레이션 재계획
     const handleReplan = async () => {
-        if (simulationStatus !== "실행" || !simulationRunId) {
+        if (simulationStatus !== "실행") {
+            return;
+        }
+
+        if (!simulationRunId) {
+            alert("실행 중인 시뮬레이션이 없습니다.");
             return;
         }
 
         try {
-            const accessToken = localStorage.getItem("accessToken");
             setSimulationStatus("재계획");
 
-            const response = await fetch(
-                `재계획 API`,
-                {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error("시뮬레이션 재계획에 실패했습니다.");
-            }
+            await optimizationApi.reoptimize(simulationRunId, {
+                reason: "MANUAL_REQUEST",
+                triggerRobotId: null,
+                blockedEdgeIds: [],
+                description: "사용자 수동 재계획 요청",
+            });
 
             setSimulationStatus("실행");
-
         } catch (error) {
             console.error("시뮬레이션 재계획 실패:", error);
+            alert(error.message ?? "재계획에 실패했습니다.");
             setSimulationStatus("실행");
-            alert("시뮬레이션 재계획에 실패했습니다.");
         }
     };
 
+    /* =========================================================
+       로봇 / 실시간 구독
+    ========================================================= */
 
-    /* ==================== 로봇 ==================== */
-    // 실행 중인 이동을 구분하기 위한 값
-    // 초기화했을 때 기존 이동 루프를 중단하기 위해 사용
+    const [robots, setRobots] = useState(() => restingRobots());
     const isPausedRef = useRef(false);
-    const movementRunRef = useRef(0);
 
-    const sleep = (ms) => {
-        return new Promise((resolve) => {
-            setTimeout(resolve, ms);
+    // 로봇 상태 1건 수신 → 해당 로봇만 갱신
+    const applyRobotState = (state) => {
+        const incoming = toRobotView(state);
+
+        setRobots((prevRobots) => {
+            const exists = prevRobots.some(
+                (robot) => robot.robot_id === incoming.robot_id
+            );
+
+            if (!exists) {
+                return [...prevRobots, incoming];
+            }
+
+            return prevRobots.map((robot) =>
+                robot.robot_id === incoming.robot_id
+                    ? { ...robot, ...incoming }
+                    : robot
+            );
         });
     };
 
-    // 로봇 이동
-    const moveRobot = async (robotId, path) => {
-        const currentRun = movementRunRef.current;
+    // 작업 변경 수신 → 목록 갱신
+    // 백엔드 TaskResponse 형태를 그대로 보관한다. (SimulationTask 가 같은 형태를 읽는다)
+    const applyTask = (task) => {
+        // /topic/tasks 는 모든 실행의 작업을 뿌리므로
+        // 지금 보고 있는 실행의 작업만 화면에 반영한다.
+        if (task.simulationRunId !== simulationRunId) {
+            return;
+        }
 
-        for (const nodeId of path) {
-            if (currentRun !== movementRunRef.current) {
-                return;
-            }
-            while (isPausedRef.current) {
-                if (currentRun !== movementRunRef.current) {
-                    return;
-                }
-                await sleep(100);
+        setTaskList((prevTasks) => {
+            const exists = prevTasks.some((item) => item.id === task.id);
+
+            if (!exists) {
+                return [task, ...prevTasks];
             }
 
-            // 해당 로봇의 현재 node_id 변경
-            setRobots((prevRobots) =>
-                prevRobots.map((robot) =>
-                    robot.robot_id === robotId
-                        ? {
-                            ...robot,
-                            node_id: nodeId,
-                        }
-                        : robot
-                )
+            return prevTasks.map((item) =>
+                item.id === task.id ? { ...item, ...task } : item
             );
-
-            // 시뮬레이션 속도 적용
-            // 0.5배속 → 1000ms / 1배속 → 500ms / 2배속 → 250ms
-            const delay = 500 / Number(simulationSpeed);
-            await sleep(delay);
-        }
-
-        if (currentRun === movementRunRef.current) {
-            setSimulationStatus("완료");
-        }
+        });
     };
 
+    // 이벤트 발생/해결 수신 → 목록 갱신
+    const applyEvent = (event) => {
+        setEventList((prevEvents) => {
+            const exists = prevEvents.some((item) => item.id === event.id);
 
-    /* ==================== 입출고 ==================== */
+            if (!exists) {
+                return [event, ...prevEvents];
+            }
+
+            return prevEvents.map((item) =>
+                item.id === event.id ? { ...item, ...event } : item
+            );
+        });
+    };
+
+    // 실행 중인 시뮬레이션이 있을 때만 구독
+    const subscriptions = simulationRunId
+        ? {
+            [TOPICS.runRobots(simulationRunId)]: applyRobotState,
+            [TOPICS.TASKS]: applyTask,
+            [TOPICS.EVENTS]: applyEvent,
+            [TOPICS.SIMULATION_RUNS]: (run) => {
+                if (run.simulationRunId !== simulationRunId) {
+                    return;
+                }
+
+                setSimulationStatus(STATUS_LABEL[run.status] ?? run.status);
+
+                // 완료되어도 실행 ID는 유지한다.
+                // 초기화 후 다시 시작하면 같은 시나리오를 처음부터 재생할 수 있다.
+                // (STOPPED 는 사용자가 명시적으로 끝낸 것이므로 새 실행을 만든다)
+                if (run.status === "STOPPED") {
+                    setSimulationRunId(null);
+                }
+            },
+        }
+        : {};
+
+    const { connected } = useStompSubscriptions(
+        subscriptions,
+        Boolean(simulationRunId)
+    );
+
+    /* =========================================================
+       입출고 설정 패널
+    ========================================================= */
+
+    const [inboundSettings, setInboundSettings] = useState(inbound);
+    const [outboundSettings, setOutboundSettings] = useState(outbound);
+
     // 입고 품목 비율 합계
-    const inboundRatioTotal =
-        inboundSettings.products.reduce(
-            (total, product) =>
-                total + Number(product.ratio), 0
-        );
+    const inboundRatioTotal = inboundSettings.products.reduce(
+        (total, product) => total + Number(product.ratio),
+        0
+    );
 
     // 자연어 명령 처리
     const [naturalCommand, setNaturalCommand] = useState("");
+
     const handleNaturalCommand = async () => {
         const command = naturalCommand.trim();
 
@@ -402,14 +635,10 @@ function Simulation() {
             return;
         }
 
-        const commandRequest = {
-            command: command,
-        };
-
         try {
             const accessToken = localStorage.getItem("accessToken");
 
-            console.log("자연어 명령:", commandRequest);
+            console.log("자연어 명령:", { command: command });
 
             const response = await fetch(
                 `${API_URL}/simulation-runs/${simulationRunId}/commands`,
@@ -419,26 +648,31 @@ function Simulation() {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${accessToken}`,
                     },
-                    body: JSON.stringify(commandRequest),
+                    body: JSON.stringify({ command: command }),
                 }
             );
 
             if (!response.ok) {
                 const errorMessage = await response.text();
 
-                throw new Error(errorMessage || "자연어 명령 처리에 실패했습니다.");
+                throw new Error(
+                    errorMessage || "자연어 명령 처리에 실패했습니다."
+                );
             }
 
             const data = await response.json();
 
             console.log("자연어 명령 응답:", data);
             setNaturalCommand("");
-
         } catch (error) {
             console.error("자연어 명령 처리 실패:", error);
-            alert(error.message || "명령을 처리하지 못했습니다.");
+            alert(error.message ?? "명령을 처리하지 못했습니다.");
         }
     };
+
+    /* =========================================================
+       화면
+    ========================================================= */
 
     return (
         <div className="simulation-wrapper">
@@ -459,34 +693,40 @@ function Simulation() {
                         <select
                             value={selectedScenario}
                             onChange={(e) =>
-                                handleScenarioChange(
-                                    e.target.value
-                                )
+                                handleScenarioChange(e.target.value)
                             }
                         >
-                            {scenarioSettings.map(
-                                (scenario) => (
-                                    <option
-                                        key={scenario.scenario_id}
-                                        value={scenario.scenario_id}
-                                    >
-                                        {scenario.scenario_name}
-                                    </option>
-                                )
-                            )}
+                            {scenarioSettings.map((scenario) => (
+                                <option
+                                    key={scenario.scenario_id}
+                                    value={scenario.scenario_id}
+                                >
+                                    {scenario.scenario_name}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
-
                     {/* 현재 시뮬레이션 상태 */}
                     <div className="simulation-header-info-item">
-                        <span className="simulation-header-label">
-                            상태
-                        </span>
+                        <span className="simulation-header-label">상태</span>
                         <span className="simulation-header-status">
                             {simulationStatus}
                         </span>
 
+                        {/* 실시간 연결 표시 */}
+                        {simulationRunId && (
+                            <span
+                                className="simulation-header-socket"
+                                title={
+                                    connected
+                                        ? "실시간 연결됨"
+                                        : "실시간 연결 대기 중"
+                                }
+                            >
+                                {connected ? "● 실시간" : "○ 연결 중"}
+                            </span>
+                        )}
                     </div>
 
                     {/* 시뮬레이션 타이머 */}
@@ -508,7 +748,9 @@ function Simulation() {
                         <select
                             className="simulation-header-speed"
                             value={simulationSpeed}
-                            onChange={(e) => setSimulationSpeed(Number(e.target.value))}
+                            onChange={(e) =>
+                                handleSpeedChange(Number(e.target.value))
+                            }
                         >
                             <option value={0.5}>0.5배</option>
                             <option value={1}>1배</option>
@@ -526,6 +768,14 @@ function Simulation() {
                         onClick={handleStart}
                     >
                         시작
+                    </button>
+                    <button
+                        type="button"
+                        className="simulation-header-button new-run"
+                        onClick={handleNewRun}
+                        title="현재 작업을 버리고 지금 설정으로 작업을 새로 생성합니다"
+                    >
+                        새 작업 생성
                     </button>
                     <button
                         type="button"
@@ -554,11 +804,12 @@ function Simulation() {
             {/* 시뮬레이션 화면 */}
             <main className="simulation-view">
                 <WarehouseSVG
-                    robots={robotList}
+                    robots={robots}
                     simulationSpeed={simulationSpeed}
                 />
             </main>
 
+            {/* 입출고 설정 / 자연어 명령 패널 */}
             <SimulationPanel
                 inboundSettings={inboundSettings}
                 setInboundSettings={setInboundSettings}
@@ -571,10 +822,11 @@ function Simulation() {
                 handleNaturalCommand={handleNaturalCommand}
             />
 
-            {/* 현재 실행 중인 시뮬레이션 작업만 가져옴 */}
-            <SimulationTask simulationRunId={simulationRunId} />
+            {/* 작업 목록 (WebSocket 실시간 갱신) */}
+            <SimulationTask tasks={taskList} />
 
-            <SimulationEvent events={events} />
+            {/* 이벤트 목록 (WebSocket 실시간 갱신) */}
+            <SimulationEvent events={eventList} />
 
             {/* 하단 footer */}
             <footer className="footer">
