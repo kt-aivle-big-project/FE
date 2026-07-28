@@ -1,33 +1,95 @@
 import { API_URL } from "./config";
-import { authHeaders } from "./auth";
+import {
+    authHeaders,
+    redirectToLogin,
+    setAccessToken,
+} from "./auth";
 
-/**
- * 공통 REST 호출 함수.
- * - 인증 토큰을 자동으로 헤더에 싣는다.
- * - 백엔드 에러 응답({ code, message })을 파싱해 Error로 던진다.
- */
-const request = async (path, options = {}) => {
-    const response = await fetch(`${API_URL}${path}`, {
-        ...options,
-        headers: {
-            "Content-Type": "application/json",
-            ...authHeaders(),
-            ...(options.headers ?? {}),
-        },
-    });
+let refreshPromise = null;
 
-    // 204 No Content
+const parseResponseData = async (response) => {
     if (response.status === 204) {
         return null;
     }
 
     const text = await response.text();
-    const data = text ? JSON.parse(text) : null;
+
+    if (!text) {
+        return null;
+    }
+
+    return JSON.parse(text);
+};
+
+const buildHeaders = (options = {}) => ({
+    "Content-Type": "application/json",
+    ...authHeaders(),
+    ...(options.headers ?? {}),
+});
+
+const refreshAccessToken = async () => {
+    console.log("[auth] refresh request");
+
+    const response = await fetch(`${API_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+    });
+
+    const data = await parseResponseData(response);
+
+    if (!response.ok || !data?.accessToken) {
+        const error = new Error(
+            data?.message ?? "Access token refresh failed."
+        );
+        error.status = response.status;
+        throw error;
+    }
+
+    setAccessToken(data.accessToken);
+    console.log("[auth] refresh success");
+    return data.accessToken;
+};
+
+const getRefreshedAccessToken = () => {
+    if (!refreshPromise) {
+        refreshPromise = refreshAccessToken().finally(() => {
+            refreshPromise = null;
+        });
+    }
+
+    return refreshPromise;
+};
+
+const request = async (path, options = {}) => {
+    let response = await fetch(`${API_URL}${path}`, {
+        ...options,
+        credentials: "include",
+        headers: buildHeaders(options),
+    });
+
+    if (response.status === 401) {
+        try {
+            console.log(`[auth] 401 received for ${path}`);
+            await getRefreshedAccessToken();
+            console.log(`[auth] retry request for ${path}`);
+            response = await fetch(`${API_URL}${path}`, {
+                ...options,
+                credentials: "include",
+                headers: buildHeaders(options),
+            });
+        } catch (error) {
+            console.log("[auth] refresh failed, redirect to login");
+            redirectToLogin();
+            throw error;
+        }
+    }
+
+    const data = await parseResponseData(response);
 
     if (!response.ok) {
         const message =
             data?.message ??
-            `요청에 실패했습니다. (HTTP ${response.status})`;
+            `Request failed. (HTTP ${response.status})`;
 
         const error = new Error(message);
         error.status = response.status;
@@ -56,26 +118,17 @@ export const api = {
     delete: (path) => request(path, { method: "DELETE" }),
 };
 
-/* =========================================================
-   시뮬레이션 관련 API
-========================================================= */
-
 export const simulationRunApi = {
-    // 시뮬레이션 실행 생성
     create: (payload) => api.post("/simulation-runs", payload),
-
     start: (runId) => api.post(`/simulation-runs/${runId}/start`),
     pause: (runId) => api.post(`/simulation-runs/${runId}/pause`),
     resume: (runId) => api.post(`/simulation-runs/${runId}/resume`),
     reset: (runId) => api.post(`/simulation-runs/${runId}/reset`),
-
-    // 실행 배속 변경 (진행 중에도 즉시 반영)
     changeSpeed: (runId, simulationSpeed) =>
         api.patch(`/simulation-runs/${runId}/speed`, {
             simulationSpeed: simulationSpeed,
         }),
     stop: (runId) => api.post(`/simulation-runs/${runId}/stop`),
-
     getStatus: (runId) => api.get(`/simulation-runs/${runId}/status`),
     getTasks: (runId) => api.get(`/simulation-runs/${runId}/tasks`),
     getRobotStates: (runId) =>
@@ -99,7 +152,6 @@ export const productApi = {
 };
 
 export const optimizationApi = {
-    // 재계획 요청
     reoptimize: (runId, payload) =>
         api.post(
             `/optimizations/simulation-runs/${runId}/reoptimize`,
