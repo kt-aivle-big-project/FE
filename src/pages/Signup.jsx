@@ -76,6 +76,8 @@ function Signup() {
             name: name.trim(),
             email: email.trim(),
             password: password,
+            // 백엔드 필수값 (@NotNull @AssertTrue)
+            privacyAgreed: privacyAgree === "agree",
         };
 
         try {
