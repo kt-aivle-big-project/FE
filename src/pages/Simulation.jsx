@@ -364,6 +364,62 @@ function Simulation() {
         }
     };
 
+    /**
+     * 저장된 실행 ID 를 "시작 가능한 상태"로 정리해서 돌려준다.
+     *
+     * - 대기(CREATED)        그대로 사용
+     * - 완료/실패            초기화해서 같은 작업을 다시 재생
+     * - 중지                 버리고 새로 만들도록 null
+     * - 실행 중/일시정지      화면 상태만 맞추고 "ALREADY_RUNNING"
+     *
+     * localStorage 에 어제 실행이 남아 있어도 에러 없이 이어갈 수 있게 한다.
+     */
+    const resolveStartableRunId = async () => {
+        if (!simulationRunId) {
+            return null;
+        }
+
+        let current;
+
+        try {
+            current = await simulationRunApi.getStatus(simulationRunId);
+        } catch (error) {
+            // 실행이 삭제됐거나 조회 실패 - 새로 만든다
+            console.warn("기존 시뮬레이션 조회 실패 - 새로 만듭니다.", error.message);
+            setSimulationRunId(null);
+            return null;
+        }
+
+        switch (current.status) {
+            case "CREATED":
+                return simulationRunId;
+
+            case "COMPLETED":
+            case "FAILED":
+                // 같은 작업을 처음부터 다시 재생할 수 있게 되돌린다
+                console.log("이전 실행이 종료돼 있어 초기화 후 재생합니다.");
+                await simulationRunApi.reset(simulationRunId);
+                await reloadTasks(simulationRunId);
+                return simulationRunId;
+
+            case "RUNNING":
+                setSimulationStatus("실행");
+                isPausedRef.current = false;
+                return "ALREADY_RUNNING";
+
+            case "PAUSED":
+            case "REPLANNING":
+                await handleResume();
+                return "ALREADY_RUNNING";
+
+            default:
+                // STOPPED 등 - 사용자가 끝낸 실행이므로 새로 만든다
+                setSimulationRunId(null);
+                setTaskList([]);
+                return null;
+        }
+    };
+
     // 시뮬레이션 시작
     const handleStart = async () => {
         // 일시정지 상태면 재개
@@ -381,7 +437,15 @@ function Simulation() {
         try {
             // 이미 만들어둔 실행이 있으면 재사용한다.
             // (초기화 후 다시 시작할 때 새 실행이 생겨 기존 작업이 누락되는 것을 막는다)
-            let runId = simulationRunId;
+            //
+            // 다만 저장된 실행이 이미 끝났거나 중지된 상태일 수 있으므로
+            // (예: 어제 실행을 localStorage 가 기억하고 있는 경우)
+            // 상태를 확인해서 시작 가능한 형태로 맞춘다.
+            let runId = await resolveStartableRunId();
+
+            if (runId === "ALREADY_RUNNING") {
+                return;
+            }
 
             if (runId) {
                 console.log(`기존 시뮬레이션 재사용: runId=${runId}`);
