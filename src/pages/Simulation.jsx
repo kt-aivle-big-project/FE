@@ -242,10 +242,49 @@ function Simulation() {
         }
     };
 
-    // 새로고침해도 진행 중이던 실행의 작업 목록을 되살린다
+    /**
+     * 진행 중인 시뮬레이션의 현재 모습을 그대로 복구한다.
+     *
+     * 다른 페이지에 갔다 오면 화면은 초기 상태로 돌아가지만
+     * 백엔드 재생은 계속 진행된다. 그래서 돌아온 직후 첫 WebSocket 메시지가 오면
+     * 로봇이 충전소에서 현재 위치까지 화면을 가로질러 날아가는 것처럼 보인다.
+     *
+     * 돌아오자마자 현재 위치를 받아 "애니메이션 없이" 배치하면 이 점프가 사라진다.
+     */
+    const restoreRuntime = async (runId) => {
+        try {
+            const snapshot = await simulationRunApi.getRobotStates(runId);
+
+            if (snapshot?.robots?.length) {
+                setRobots(
+                    snapshot.robots.map((state) => ({
+                        ...toRobotView(state),
+                        // 복구 시점에는 보간하지 않고 즉시 현재 위치에 놓는다
+                        transition_ms: 0,
+                    }))
+                );
+            }
+
+            if (snapshot?.status) {
+                setSimulationStatus(
+                    STATUS_LABEL[snapshot.status] ?? snapshot.status
+                );
+            }
+
+            // 백엔드 시뮬 시각으로 실행 시간을 맞춘다 (0초부터 다시 세지 않도록)
+            if (typeof snapshot?.elapsedMillis === "number") {
+                setSimulationTime(Math.floor(snapshot.elapsedMillis / 1000));
+            }
+        } catch (error) {
+            console.warn("시뮬레이션 상태 복구 실패", error.message);
+        }
+    };
+
+    // 페이지에 들어오거나 새로고침했을 때 진행 중이던 실행을 이어서 보여준다
     useEffect(() => {
         if (simulationRunId) {
             reloadTasks(simulationRunId);
+            restoreRuntime(simulationRunId);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [simulationRunId]);
