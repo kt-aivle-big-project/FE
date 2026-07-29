@@ -9,6 +9,7 @@ import SimulationEvent from "../simulation/SimulationEvent";
 import useStompSubscriptions from "../hooks/useStompSubscriptions";
 import { API_URL, TOPICS } from "../api/config";
 import {
+    api,
     simulationRunApi,
     scenarioApi,
     productApi,
@@ -700,31 +701,12 @@ function Simulation() {
         }
 
         try {
-            const accessToken = localStorage.getItem("accessToken");
-
             console.log("자연어 명령:", { command: command });
 
-            const response = await fetch(
-                `${API_URL}/simulation-runs/${simulationRunId}/commands`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                    body: JSON.stringify({ command: command }),
-                }
+            const data = await api.post(
+                `/simulation-runs/${simulationRunId}/commands`,
+                { command: command }
             );
-
-            if (!response.ok) {
-                const errorMessage = await response.text();
-
-                throw new Error(
-                    errorMessage || "자연어 명령 처리에 실패했습니다."
-                );
-            }
-
-            const data = await response.json();
 
             console.log("자연어 명령 응답:", data);
             setNaturalCommand("");

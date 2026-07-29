@@ -20,6 +20,14 @@ export const clearAuth = () => {
     localStorage.removeItem("email");
 };
 
+export const redirectToLogin = () => {
+    clearAuth();
+
+    if (window.location.pathname !== "/login") {
+        window.location.replace("/login");
+    }
+};
+
 export const isLoggedIn = () => {
     return Boolean(getAccessToken());
 };
