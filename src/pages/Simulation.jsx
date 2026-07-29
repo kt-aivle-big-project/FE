@@ -549,6 +549,50 @@ function Simulation() {
         setSimulationTime(0);
     };
 
+    /**
+     * 시뮬레이션 중지.
+     *
+     * 초기화와 달리 이 실행은 완전히 끝낸다.
+     * 실행 ID 를 버리므로 다시 시작할 수 없고, 새 작업을 만들어야 한다.
+     * (백엔드에서도 STOPPED 로 바뀌어 재생 엔진과 로봇 상태가 정리된다)
+     */
+    const handleStop = async () => {
+        if (!simulationRunId) {
+            return;
+        }
+
+        const confirmed = window.confirm(
+            "시뮬레이션을 중지합니다.\n" +
+            "중지한 실행은 다시 시작할 수 없고, 새 작업을 만들어야 합니다.\n\n" +
+            "계속할까요?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            await simulationRunApi.stop(simulationRunId);
+        } catch (error) {
+            console.error("시뮬레이션 중지 실패:", error);
+            // 이미 종료된 실행일 수 있으므로 화면 정리는 계속 진행한다
+        }
+
+        isPausedRef.current = false;
+
+        // 실행 ID 를 버려야 다음에 새 실행이 만들어진다.
+        // (localStorage 에서도 제거된다)
+        setSimulationRunId(null);
+
+        setTaskList([]);
+        setEventList([]);
+        setRobots(restingRobots());
+        setSimulationTime(0);
+        setSimulationStatus("중지");
+
+        console.log("시뮬레이션 중지 완료 - 새 작업을 생성해주세요.");
+    };
+
     // 시뮬레이션 재계획
     const handleReplan = async () => {
         if (simulationStatus !== "실행") {
@@ -836,6 +880,15 @@ function Simulation() {
                         onClick={handleReset}
                     >
                         초기화
+                    </button>
+                    <button
+                        type="button"
+                        className="simulation-header-button stop"
+                        onClick={handleStop}
+                        disabled={!simulationRunId}
+                        title="이 실행을 완전히 종료합니다. 다시 시작하려면 새 작업을 만들어야 합니다."
+                    >
+                        중지
                     </button>
                     <button
                         type="button"
