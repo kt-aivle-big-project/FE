@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import "../../styles/SimulationEvent.css";
+import "../../styles/simulation/SimulationEvent.css";
 
 function SimulationEvent({ events = [] }) {
 
