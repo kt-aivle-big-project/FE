@@ -1,25 +1,25 @@
 import { useEffect, useRef, useState } from "react";
-import "../styles/simulation.css";
+import "../styles/Simulation.css";
 
 import WarehouseSVG from "../simulation/WarehouseSVG";
 import SimulationPanel from "../simulation/SimulationPanel";
 import SimulationTask from "../simulation/SimulationTask";
 import SimulationEvent from "../simulation/SimulationEvent";
 
-import useStompSubscriptions from "../hooks/useStompSubscriptions";
-import { API_URL, TOPICS } from "../api/config";
+import useStompSubscriptions from "../../hooks/useStompSubscriptions";
+import { API_URL, TOPICS } from "../../api/config";
 import {
     api,
     simulationRunApi,
     scenarioApi,
     productApi,
     optimizationApi,
-} from "../api/client";
+} from "../../api/client";
 
-import scenariosData from "../data/scenarios.json";
-import productsData from "../data/products.json";
-import inbound from "../data/inbound.json";
-import outbound from "../data/outbound.json";
+import scenariosData from "../../data/scenarios.json";
+import productsData from "../../data/products.json";
+import inbound from "../../data/inbound.json";
+import outbound from "../../data/outbound.json";
 
 // 데모용 창고 ID (창고 선택 기능 붙이기 전까지 고정)
 const DEFAULT_WAREHOUSE_ID = 1;

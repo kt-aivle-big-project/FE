@@ -190,3 +190,29 @@
 .signup-button:hover {
     background: var(--hover-color);
 }
+
+
+.social-login-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: #8b8b8b;
+    font-size: 14px;
+}
+
+.social-login-divider::before,
+.social-login-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #e1e1e1;
+}
+
+.google-login-button {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+    margin-bottom: 12px;
+}
