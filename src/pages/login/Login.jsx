@@ -1,8 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../styles/Login.css";
+import laroLogo from "../../assets/logo/laro_logo.png";
+import "../../styles/login/LoginCommon.css";
+import "../../styles/login/Login.css";
 
 const API_URL = "http://localhost:8080/api";
+
+function EmailIcon() {
+    return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="M4 7L12 13L20 7" />
+        </svg>
+    );
+}
+
+function LockIcon() {
+    return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="10" width="16" height="11" rx="2" />
+            <path d="M8 10V7C8 4.79 9.79 3 12 3C14.21 3 16 4.79 16 7V10" />
+        </svg>
+    );
+}
 
 function Login() {
     const navigate = useNavigate();
@@ -59,7 +79,7 @@ function Login() {
 
         } catch (error) {
             console.error("로그인 실패:", error);
-            
+
             alert(error.message || "로그인 중 오류가 발생했습니다.");
         }
     };
@@ -68,97 +88,116 @@ function Login() {
         navigate("/signup");
     };
 
+    const handleBack = () => {
+        navigate("/");
+    };
+
     return (
         <div className="login-page">
-            <div className="login-box">
-                <div className="login-logo">
-                    <h1>LARO</h1>
-                    <p>창고 시뮬레이션 운영 플랫폼</p>
-                </div>
-
-                <form className="login-form" onSubmit={handleLogin}>
-                    <div className="login-input-group">
-                        <label htmlFor="email">이메일</label>
-
-                        <div className="login-input-wrapper">
-                            <span className="login-input-icon">✉️</span>
-
-                            <input
-                                id="email"
-                                type="email"
-                                value={email}
-                                placeholder="이메일을 입력하세요"
-                                onChange={(e) =>
-                                    setEmail(e.target.value)
-                                }
-                                autoComplete="off"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="login-input-group">
-                        <label htmlFor="password">비밀번호</label>
-
-                        <div className="login-input-wrapper">
-                            <span className="login-input-icon">🔢</span>
-
-                            <input
-                                id="password"
-                                type={
-                                    showPassword
-                                        ? "text"
-                                        : "password"
-                                }
-                                value={password}
-                                placeholder="비밀번호를 입력하세요"
-                                onChange={(e) =>
-                                    setPassword(e.target.value)
-                                }
-                                autoComplete="new-password"
-                            />
-
-                            <button
-                                type="button"
-                                className="password-view-button"
-                                onClick={() =>
-                                    setShowPassword(
-                                        !showPassword
-                                    )
-                                }
-                            >
-                                {showPassword ? "숨김" : "보기"}
-                            </button>
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="login-button"
-                    >
-                        로그인
-                    </button>
-                </form>
-
+            <main className="login-card">
                 <button
                     type="button"
-                    className="password-find-button"
+                    className="login-back-button"
+                    onClick={handleBack}
                 >
-                    비밀번호 찾기
+                    <span aria-hidden="true">←</span>
+                    로그인 방식 선택
                 </button>
 
-                <div className="login-divider">
-                    <div className="signup-area">
-                        <p>아직 계정이 없으신가요?</p>
-                    </div>
+                <header className="login-header">
+                    <img
+                        src={laroLogo}
+                        alt="LARO 창고 시뮬레이션 플랫폼"
+                        className="login-logo"
+                    />
+                </header>
+
+                <section className="login-content">
+                    <form
+                        className="email-login-form"
+                        onSubmit={handleLogin}
+                    >
+                        <div className="email-login-field">
+                            <label htmlFor="email">
+                                이메일
+                            </label>
+
+                            <div className="email-login-input-wrapper">
+                                <span className="email-login-input-icon">
+                                    <EmailIcon />
+                                </span>
+
+                                <input
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    placeholder="이메일을 입력하세요"
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    autoComplete="off"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="email-login-field">
+                            <div className="email-login-label-row">
+                                <label htmlFor="password">
+                                    비밀번호
+                                </label>
+
+                                <button
+                                    type="button"
+                                    className="email-login-find-password"
+                                >
+                                    비밀번호 찾기
+                                </button>
+                            </div>
+
+                            <div className="email-login-input-wrapper">
+                                <span className="email-login-input-icon">
+                                    <LockIcon />
+                                </span>
+
+                                <input
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    className="email-login-password-input"
+                                    value={password}
+                                    placeholder="비밀번호를 입력하세요"
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    autoComplete="new-password"
+                                />
+
+                                <button
+                                    type="button"
+                                    className="email-login-password-toggle"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                                >
+                                    {showPassword ? "숨김" : "보기"}
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="login-button login-button-primary"
+                        >
+                            로그인
+                        </button>
+                    </form>
+                </section>
+
+                <footer className="login-footer">
+                    <span>아직 계정이 없으신가요?</span>
+
                     <button
                         type="button"
-                        className="signup-button"
                         onClick={handleSignup}
                     >
                         회원가입
                     </button>
-                </div>
-            </div>
+                </footer>
+            </main>
         </div>
     );
 }

@@ -1,0 +1,39 @@
+/* 로그인 버튼 */
+.login-select-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.login-select-email-icon svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.login-select-google-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* 게스트로 둘러보기 */
+.login-select-guest {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 20px auto 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* 개인정보 처리방침 */
+.login-select-policy {
+    margin: 22px 0 0;
+    color: var(--laro-subtext);
+    font-size: 11px;
+    line-height: 1.6;
+    text-align: center;
+}
