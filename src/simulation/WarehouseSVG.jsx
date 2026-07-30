@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import warehouseGraph from "../data/warehouse_graph.json";
+import warehouseGraph from "../data/Warehouse_graph.json";
 import rackInventory from "../data/rack_inventory.json";
 
 import robotCharging from "../assets/robots/robot_charging.png";
@@ -49,11 +49,8 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
                 const convertedNodes = data.nodes
                     .filter((node) => node.nodeCode && node.nodeType)
                     .map((node) => {
-                        const routeMatch =
-                            node.nodeCode.match(/^R(\d+)_(\d+)$/);
-
-                        const chargingMatch =
-                            node.nodeCode.match(/^C(\d+)$/);
+                        const routeMatch = node.nodeCode.match(/^R(\d+)_(\d+)$/);
+                        const chargingMatch = node.nodeCode.match(/^C(\d+)$/);
 
                         return {
                             databaseId: node.id,
@@ -83,6 +80,37 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
                         };
                     });
 
+                // =========================================================
+                // 창고 조회 API 가져오기 전에 그래프 수정한 거 보느라 추가한 코드입니다.
+                // 창고 맵 수정 때 필요할 수도 있을 것 같아서 삭제 하지 말아주세요. 제가 나중에 삭제할게요!
+                // 로봇 경로 이동에 문제되진 않을 겁니다!
+                // 
+                // JSON에 새로 추가한 입출고 경로 노드 추가
+                //
+                // 입고 경로: I_0 ~ I_5
+                // 출고 경로: O_0 ~ O_5
+                //
+                // API 응답에 아직 없는 노드만 warehouse_graph.json에서 가져온다.
+                // 좌표/type 등은 JSON에 작성한 값을 그대로 사용한다.
+                // =========================================================
+                const additionalRouteNodes = warehouseGraph.nodes.filter(
+                    (node) =>
+                        /^I_[0-5]$/.test(node.id) ||
+                        /^O_[0-3]$/.test(node.id)
+                );
+
+                // API에서 이미 받은 노드는 중복으로 추가하지 않음
+                const apiNodeIds = new Set(
+                    convertedNodes.map((node) => node.id)
+                );
+
+                const mergedNodes = [
+                    ...convertedNodes,
+                    ...additionalRouteNodes.filter(
+                        (node) => !apiNodeIds.has(node.id)
+                    ),
+                ];
+
                 const convertedEdges = data.edges
                     .map((edge) => ({
                         id: edge.id,
@@ -92,9 +120,51 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
                     }))
                     .filter((edge) => edge.source && edge.target);
 
+                // =========================================================
+                // 창고 조회 API 가져오기 전에 그래프 수정한 거 보느라 추가한 코드입니다.
+                // 창고 맵 수정 때 필요할 수도 있을 것 같아서 삭제 하지 말아주세요. 제가 나중에 삭제할게요!
+                // 로봇 경로 이동에 문제되진 않을 겁니다!
+                //
+                // JSON에 추가한 입출고 경로 Edge 추가
+                //
+                // I_9 ~ I_5 또는 O_0 ~ O_2가 포함된 edge를
+                // warehouse_graph.json에서 자동으로 가져온다.
+                //
+                // 따라서 입출고 연결 관계는 JSX에 하드코딩하지 않고
+                // JSON의 source / target을 그대로 사용한다.
+                // =========================================================
+                const additionalRouteNodeIds = new Set(
+                    additionalRouteNodes.map((node) => node.id)
+                );
+
+                // API에서 이미 받은 동일한 연결은 중복 추가하지 않음
+                const apiEdgeKeys = new Set(
+                    convertedEdges.map(
+                        (edge) => `${edge.source}->${edge.target}`
+                    )
+                );
+
+                const additionalRouteEdges = warehouseGraph.edges
+                    .filter(
+                        (edge) =>
+                            additionalRouteNodeIds.has(edge.source) ||
+                            additionalRouteNodeIds.has(edge.target)
+                    )
+                    .filter(
+                        (edge) =>
+                            !apiEdgeKeys.has(
+                                `${edge.source}->${edge.target}`
+                            )
+                    );
+
+                const mergedEdges = [
+                    ...convertedEdges,
+                    ...additionalRouteEdges,
+                ];
+
                 setGraphData({
-                    nodes: convertedNodes,
-                    edges: convertedEdges,
+                    nodes: mergedNodes,
+                    edges: mergedNodes,
                 });
 
                 console.log("변환된 창고 지도:", {
@@ -272,17 +342,14 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
                                     className={`warehouse-edge edge-${edge.type}`}
                                 />
                             );
-                        }
-                    )}
+                        })}
                 </g>
 
                 {/* 통로 번호 */}
                 <g className="warehouse-aisle-labels">
                     {graphData.nodes
-                        .filter(
-                            (node) =>
-                                node.type === "route" &&
-                                node.col === 0
+                        .filter((node) =>
+                            node.type === "route" && node.col === 0
                         )
                         .map((node) => (
 
@@ -301,7 +368,8 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
                 {/* 로봇이 실제로 이동하는 route 노드 */}
                 <g className="warehouse-route-nodes">
                     {graphData.nodes
-                        .filter((node) => node.type === "route")
+                        .filter((node) => node.type === "route"
+                        )
                         .map((node) => (
                             <g key={node.id}>
 
@@ -330,150 +398,201 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
                         ))}
                 </g>
 
+                {/* 입고지 연결 inbound-access */}
+                <g className="warehouse-inbound-access">
+                    {graphData.nodes
+                        .filter((node) =>
+                            node.type === "inbound_access"
+                        )
+                        .map((node) => (
+                            <g key={node.id}>
+
+                                <circle
+                                    cx={convertX(node.x)}
+                                    cy={convertY(node.y)}
+                                    r="4"
+                                    className="warehouse-inbound-access"
+                                >
+                                    <title>{node.id}</title>
+                                </circle>
+
+                                {/* 노드 번호 */}
+                                {showNodeLabels && (
+                                    <text
+                                        x={convertX(node.x)}
+                                        y={convertY(node.y) + 12}
+                                        textAnchor="middle"
+                                        className="warehouse-route-label"
+                                    >
+                                        {node.id}
+                                    </text>
+                                )}
+                            </g>
+                        ))}
+                </g>
+
+                {/* 출고지 연결 inbound-access */}
+                <g className="warehouse-outbound-access">
+                    {graphData.nodes
+                        .filter((node) =>
+                            node.type === "outbound_access"
+                        )
+                        .map((node) => (
+                            <g key={node.id}>
+                                <circle
+                                    cx={convertX(node.x)}
+                                    cy={convertY(node.y)}
+                                    r="4"
+                                    className="warehouse-outbound-access"
+                                >
+                                    <title>{node.id}</title>
+                                </circle>
+
+                                {/* 노드 번호 */}
+                                {showNodeLabels && (
+                                    <text
+                                        x={convertX(node.x)}
+                                        y={convertY(node.y) + 12}
+                                        textAnchor="middle"
+                                        className="warehouse-route-label"
+                                    >
+                                        {node.id}
+                                    </text>
+                                )}
+                            </g>
+                        ))}
+                </g>
+
                 {/* 충전소 연결 Junction
                     route ↔ charging slot 연결 지점 */}
                 <g className="warehouse-charge-junctions">
                     {graphData.nodes
-                        .filter(
-                            (node) =>
-                                node.type ===
-                                "route_charge_junction"
+                        .filter((node) =>
+                            node.type === "route_charge_junction"
                         )
-                        .map(
-                            (node) => (
-                                <circle
-                                    key={node.id}
-                                    cx={convertX(node.x)}
-                                    cy={convertY(node.y)}
-                                    r="4"
-                                    className="warehouse-charge-junction"
-                                >
-                                    <title>{node.id}</title>
-                                </circle>
-                            )
-                        )}
+                        .map((node) => (
+                            <circle
+                                key={node.id}
+                                cx={convertX(node.x)}
+                                cy={convertY(node.y)}
+                                r="4"
+                                className="warehouse-charge-junction"
+                            >
+                                <title>{node.id}</title>
+                            </circle>
+                        ))}
                 </g>
 
                 {/* 선반
                     rack_inventory.json의 3단 재고 상태까지 표시 */}
                 <g className="warehouse-racks">
                     {graphData.nodes
-                        .filter(
-                            (node) =>
-                                node.type ===
-                                "rack_storage"
+                        .filter((node) =>
+                            node.type === "rack_storage"
                         )
-                        .map(
-                            (node) => {
-                                const inventory = rackInventoryMap.get(node.id);
-                                /*
-                                 * 화면에서는 상단 → 중단 → 하단 순서로 보여주기 위해
-                                 * level을 역순으로 정렬
-                                 */
-                                const levels =
-                                    inventory?.levels
-                                        ? [...inventory.levels]
-                                            .sort(
-                                                (a, b) =>
-                                                    b.level -
-                                                    a.level
-                                            )
-                                        : [];
+                        .map((node) => {
+                            const inventory = rackInventoryMap.get(node.id);
+                            /*
+                             * 화면에서는 상단 → 중단 → 하단 순서로 보여주기 위해
+                             * level을 역순으로 정렬
+                             */
+                            const levels =
+                                inventory?.levels
+                                    ? [...inventory.levels]
+                                        .sort((a, b) =>
+                                            b.level -
+                                            a.level
+                                        ) : [];
 
-                                return (
-                                    <g
-                                        key={node.id}
-                                        transform={
-                                            `translate(
+                            return (
+                                <g
+                                    key={node.id}
+                                    transform={
+                                        `translate(
                                                 ${convertX(node.x)},
                                                 ${convertY(node.y)}
                                             )`
-                                        }
+                                    }
+                                >
+                                    {/* 선반 외곽 */}
+                                    <rect
+                                        x="-22"
+                                        y="-17"
+                                        width="44"
+                                        height="34"
+                                        className="warehouse-rack"
+                                    />
+
+                                    {/* 선반 3단 */}
+                                    {levels.map(
+                                        (level, index) => (
+                                            <rect
+                                                key={level.level}
+                                                x="-20"
+                                                y={-15 + index * 10}
+                                                width="40"
+                                                height="9"
+                                                className={`warehouse-rack-level ${getRackLevelClass(level.status)}`}
+                                            >
+                                                <title>
+                                                    {`${node.id} / ${level.level}단 / ${level.status}`}
+                                                </title>
+                                            </rect>
+                                        )
+                                    )}
+
+                                    {/* 랙 ID */}
+                                    <text
+                                        x="0"
+                                        y="27"
+                                        textAnchor="middle"
+                                        className="warehouse-rack-label"
                                     >
-                                        {/* 선반 외곽 */}
-                                        <rect
-                                            x="-22"
-                                            y="-17"
-                                            width="44"
-                                            height="34"
-                                            className="warehouse-rack"
-                                        />
-
-                                        {/* 선반 3단 */}
-                                        {levels.map(
-                                            (level, index) => (
-                                                <rect
-                                                    key={level.level}
-                                                    x="-20"
-                                                    y={-15 + index * 10}
-                                                    width="40"
-                                                    height="9"
-                                                    className={`warehouse-rack-level ${getRackLevelClass(level.status)}`}
-                                                >
-                                                    <title>
-                                                        {`${node.id} / ${level.level}단 / ${level.status}`}
-                                                    </title>
-                                                </rect>
-                                            )
-                                        )}
-
-                                        {/* 랙 ID */}
-                                        <text
-                                            x="0"
-                                            y="27"
-                                            textAnchor="middle"
-                                            className="warehouse-rack-label"
-                                        >
-                                            {node.id}
-                                        </text>
-                                    </g>
-                                );
-                            }
-                        )}
+                                        {node.id}
+                                    </text>
+                                </g>
+                            );
+                        })}
                 </g>
 
                 {/* 입고 엘리베이터 IA ~ IG  */}
                 <g className="warehouse-inbound">
                     {graphData.nodes
-                        .filter(
-                            (node) =>
-                                node.type ===
-                                "inbound"
+                        .filter((node) =>
+                            node.type === "inbound"
                         )
-                        .map(
-                            (node) => (
-                                <g key={node.id}>
-                                    <rect
-                                        x={convertX(node.x) - 14}
-                                        y={convertY(node.y) - 10}
-                                        width="28"
-                                        height="20"
-                                        className="warehouse-inbound-node"
-                                    />
+                        .map((node) => (
+                            <g key={node.id}>
+                                <rect
+                                    x={convertX(node.x) - 14}
+                                    y={convertY(node.y) - 10}
+                                    width="28"
+                                    height="20"
+                                    className="warehouse-inbound-node"
+                                />
 
+                                <text
+                                    x={convertX(node.x)}
+                                    y={convertY(node.y) + 4}
+                                    textAnchor="middle"
+                                    className="warehouse-station-label"
+                                >
+                                    {node.label}
+                                </text>
+
+                                {/* 입고 엘리베이터 노드 번호 */}
+                                {showNodeLabels && (
                                     <text
                                         x={convertX(node.x)}
-                                        y={convertY(node.y) + 4}
+                                        y={convertY(node.y) + 22}
                                         textAnchor="middle"
-                                        className="warehouse-station-label"
+                                        className="warehouse-station-id"
                                     >
-                                        {node.label}
+                                        {node.id}
                                     </text>
-
-                                    {/* 입고 엘리베이터 노드 번호 */}
-                                    {showNodeLabels && (
-                                        <text
-                                            x={convertX(node.x)}
-                                            y={convertY(node.y) + 22}
-                                            textAnchor="middle"
-                                            className="warehouse-station-id"
-                                        >
-                                            {node.id}
-                                        </text>
-                                    )}
-                                </g>
-                            )
-                        )}
+                                )}
+                            </g>
+                        ))}
                 </g>
 
                 {/* 출고 엘리베이터 OA ~ OG */}
@@ -503,6 +622,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
                                     >
                                         {node.label}
                                     </text>
+
                                     {/* 출고 엘리베이터 노드 번호 */}
                                     {showNodeLabels && (
                                         <text
@@ -515,75 +635,68 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
                                         </text>
                                     )}
                                 </g>
-                            )
-                        )}
+                            ))}
                 </g>
 
                 {/* 충전소 C01 ~ C10 */}
                 <g className="warehouse-charging">
                     {graphData.nodes
-                        .filter(
-                            (node) =>
-                                node.type ===
-                                "charging_slot"
+                        .filter((node) =>
+                            node.type === "charging_slot"
                         )
-                        .map(
-                            (node) => (
-                                <g key={node.id}>
-                                    <rect
-                                        x={convertX(node.x) - 18}
-                                        y={convertY(node.y) - 10}
-                                        width="36"
-                                        height="20"
-                                        className="warehouse-charging-slot"
-                                    >
-                                        <title>{node.id}</title>
-                                    </rect>
+                        .map((node) => (
+                            <g key={node.id}>
+                                <rect
+                                    x={convertX(node.x) - 18}
+                                    y={convertY(node.y) - 10}
+                                    width="36"
+                                    height="20"
+                                    className="warehouse-charging-slot"
+                                >
+                                    <title>{node.id}</title>
+                                </rect>
 
+                                <text
+                                    x={convertX(node.x)}
+                                    y={convertY(node.y) + 4}
+                                    textAnchor="middle"
+                                    className="warehouse-charging-label"
+                                >
+                                    {node.index}
+                                </text>
+
+                                {/* 충전소 노드 번호 */}
+                                {showNodeLabels && (
                                     <text
                                         x={convertX(node.x)}
-                                        y={convertY(node.y) + 4}
+                                        y={convertY(node.y) + 22}
                                         textAnchor="middle"
-                                        className="warehouse-charging-label"
+                                        className="warehouse-station-id"
                                     >
-                                        {node.index}
+                                        {node.id}
                                     </text>
-
-                                    {/* 충전소 노드 번호 */}
-                                    {showNodeLabels && (
-                                        <text
-                                            x={convertX(node.x)}
-                                            y={convertY(node.y) + 22}
-                                            textAnchor="middle"
-                                            className="warehouse-station-id"
-                                        >
-                                            {node.id}
-                                        </text>
-                                    )}
-                                </g>
-                            )
-                        )}
+                                )}
+                            </g>
+                        ))}
                 </g>
 
                 {/* 영역 이름 */}
                 <text
-                    x="30"
-                    y="300"
+                    x="40"
+                    y="100"
                     className="warehouse-area-title"
-                    transform="rotate(-90 30 300)"
                     textAnchor="middle"
                 >
-                    입고 엘리베이터
+                    입고지
                 </text>
 
                 <text
-                    x={SVG_WIDTH - 30}
-                    y="300"
+                    x={SVG_WIDTH - 40}
+                    y="100"
                     className="warehouse-area-title"
-                    transform={`rotate(90 ${SVG_WIDTH - 30} 300)`}
                     textAnchor="middle"
                 >
-                    출고 엘리베이터
+                    출고지
                 </text>
 
                 <text
