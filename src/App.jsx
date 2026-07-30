@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import Login from "./pages/login/Login";
+import Signup from "./pages/login/Signup";
 import MainLayout from "./pages/MainLayout";
-import Simulation from "./pages/Simulation";
+import Simulation from "./pages/simulation/Simulation";
 import SimulationSetting from "./pages/SimulationSetting";
 import RobotManagement from "./pages/RobotManagement";
 import WarehouseManagement from "./pages/WarehouseManagement";

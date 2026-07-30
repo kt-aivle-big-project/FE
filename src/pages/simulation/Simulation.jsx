@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import "../styles/Simulation.css";
+import "../../styles/Simulation.css";
 
-import WarehouseSVG from "../simulation/WarehouseSVG";
-import SimulationPanel from "../simulation/SimulationPanel";
-import SimulationTask from "../simulation/SimulationTask";
-import SimulationEvent from "../simulation/SimulationEvent";
+import WarehouseSVG from "./WarehouseSVG";
+import SimulationPanel from "./SimulationPanel";
+import SimulationTask from "./SimulationTask";
+import SimulationEvent from "./SimulationEvent";
 
 import useStompSubscriptions from "../../hooks/useStompSubscriptions";
 import { API_URL, TOPICS } from "../../api/config";
