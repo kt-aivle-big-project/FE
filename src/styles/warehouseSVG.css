@@ -102,8 +102,12 @@
 
 /* =========================
    Route ↔ Charging Junction
+   Route ↔ inbound
+   Route ↔ outbound
 ========================= */
-.warehouse-charge-junction {
+.warehouse-charge-junction,
+.warehouse-inbound-access,
+.warehouse-outbound-access {
     fill: #ffffff;
 
     stroke: #333333;
