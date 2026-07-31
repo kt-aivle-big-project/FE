@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import LoginSelect from "./pages/login/LoginSelect";
 import Login from "./pages/login/Login";
+import ForgotPassword from "./pages/login/ForgotPassword";
 import Signup from "./pages/login/Signup";
 import MainLayout from "./pages/MainLayout";
 import Simulation from "./pages/simulation/Simulation";
@@ -16,6 +17,7 @@ function App() {
             <Routes>
                 <Route path="/" element={<LoginSelect />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/password" element={<ForgotPassword />} />
                 <Route path="/signup" element={<Signup />} />
 
                 <Route element={<MainLayout />}>

@@ -35,7 +35,7 @@ function LoginSelect() {
                     />
 
                     <p className="login-description">
-                        LARO 소개글
+                        안녕하세요 LARO 입니다
                     </p>
                 </header>
 
@@ -76,8 +76,7 @@ function LoginSelect() {
                     </button>
 
                     <p className="login-select-policy">
-                        계속 진행하면 이용약관 및 개인정보 처리방침에
-                        동의하는 것으로 간주됩니다.
+                        계속 진행하면 이용약관 및 개인정보 처리방침에 동의하는 것으로 간주됩니다.
                     </p>
                 </section>
 

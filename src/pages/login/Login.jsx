@@ -10,21 +10,21 @@ const API_URL = "http://localhost:8080/api";
 function Login() {
     const navigate = useNavigate();
 
-    const [email, setEmail] = useState("");
+    const [userid, setUserid] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
 
-        if (!email.trim() || !password.trim()) {
-            alert("이메일과 비밀번호를 입력해주세요.");
+        if (!userid.trim() || !password.trim()) {
+            alert("아이디와 비밀번호를 입력해주세요.");
             return;
         }
 
         // 백엔드로 전달
         const loginData = {
-            email: email.trim(),
+            userid: userid.trim(),
             password: password,
         };
 
@@ -43,7 +43,7 @@ function Login() {
 
             if (!response.ok) {
                 const errorMessage = await response.text();
-                throw new Error(errorMessage || "이메일 또는 비밀번호가 올바르지 않습니다.");
+                throw new Error(errorMessage || "아이디 또는 비밀번호가 올바르지 않습니다.");
             }
 
             // 백엔드 응답 JSON
@@ -51,9 +51,9 @@ function Login() {
 
             // 저장
             localStorage.setItem("accessToken", data.accessToken);
-            localStorage.setItem("userId", String(data.userId));
+            localStorage.setItem("userid", String(data.userid));
             localStorage.setItem("name", data.name);
-            localStorage.setItem("email", data.email);
+            localStorage.setItem("userid", data.userid);
 
             console.log("로그인 사용자:", data);
 
@@ -101,8 +101,8 @@ function Login() {
                         onSubmit={handleLogin}
                     >
                         <div className="login-field">
-                            <label htmlFor="email">
-                                이메일
+                            <label htmlFor="userid">
+                                아이디
                             </label>
 
                             <div className="login-input-wrapper">
@@ -111,11 +111,11 @@ function Login() {
                                 </span>
 
                                 <input
-                                    id="email"
-                                    type="email"
-                                    value={email}
-                                    placeholder="이메일을 입력하세요"
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    id="userid"
+                                    type="userid"
+                                    value={userid}
+                                    placeholder="아이디를 입력하세요"
+                                    onChange={(e) => setUserid(e.target.value)}
                                     autoComplete="off"
                                 />
                             </div>
@@ -130,6 +130,7 @@ function Login() {
                                 <button
                                     type="button"
                                     className="login-find-password"
+                                    onClick={() => navigate("/password")}
                                 >
                                     비밀번호 찾기
                                 </button>

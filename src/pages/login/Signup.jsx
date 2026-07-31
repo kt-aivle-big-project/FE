@@ -16,13 +16,13 @@ const API_URL = "http://localhost:8080/api";
  * { "verificationToken": "..." }
  */
 const AUTH_ENDPOINTS = {
-    checkUsername: `${API_URL}/auth/username/check`,
+    checkUserid: `${API_URL}/auth/userid/check`,
     sendEmailCode: `${API_URL}/auth/email-verifications/send`,
     verifyEmailCode: `${API_URL}/auth/email-verifications/verify`,
     signup: `${API_URL}/auth/signup`,
 };
 
-const USERNAME_PATTERN = /^[a-zA-Z0-9]+$/;
+const USERID_PATTERN = /^[a-zA-Z0-9]+$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SPECIAL_CHARACTERS = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?";
 
@@ -54,17 +54,17 @@ function Signup() {
 
     // 회원 기본 정보  
     const [name, setName] = useState("");
-    const [username, setUsername] = useState("");
+    const [userid, setUserid] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [passwordConfirm, setPasswordConfirm] = useState("");
 
     // 아이디 중복 확인  
-    const [usernameCheck, setUsernameCheck] = useState({
+    const [useridCheck, setUseridCheck] = useState({
         status: "idle",
         message: "",
     });
-    const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+    const [isCheckingUserid, setIsCheckingUserid] = useState(false);
 
     // 이메일 인증  
     const [verificationCode, setVerificationCode] = useState("");
@@ -93,10 +93,10 @@ function Signup() {
     // 입력값 검사 결과  
     const isAllAgreed = privacyAgree && serviceAgree;
     const isEmailVerified = Boolean(verificationToken);
-    const isPasswordLengthValid = password.length >= 8 && password.length <= 16;
-    const hasSpecialCharacter = [...password].some((character) =>
+    const isPasswordLengthValid = password.length >= 8 && password.length <= 24;
+    const hasSpecialCharacters = [...password].filter((character) =>
         SPECIAL_CHARACTERS.includes(character)
-    );
+    ).length >= 2;
     const isPasswordMatch = password === passwordConfirm;
 
     // 인증번호와 재전송 시간을 1초마다 감소  
@@ -125,43 +125,43 @@ function Signup() {
     };
 
     // 아이디를 수정하면 기존 중복 확인 결과 초기화  
-    const handleUsernameChange = (e) => {
-        setUsername(e.target.value);
-        setUsernameCheck({ status: "idle", message: "" });
-        setErrors((prev) => ({ ...prev, username: "" }));
+    const handleUseridChange = (e) => {
+        setUserid(e.target.value);
+        setUseridCheck({ status: "idle", message: "" });
+        setErrors((prev) => ({ ...prev, userid: "" }));
     };
 
     // 아이디 중복 확인  
-    const handleCheckUsername = async () => {
-        const normalizedUsername = username.trim();
+    const handleCheckUserid = async () => {
+        const normalizedUserid = userid.trim();
 
-        if (!normalizedUsername) {
-            setErrors((prev) => ({ ...prev, username: "아이디를 입력해주세요." }));
+        if (!normalizedUserid) {
+            setErrors((prev) => ({ ...prev, userid: "아이디를 입력해주세요." }));
             return;
         }
 
-        if (!USERNAME_PATTERN.test(normalizedUsername)) {
+        if (!USERID_PATTERN.test(normalizedUserid)) {
             setErrors((prev) => ({
                 ...prev,
-                username: "아이디는 영문, 숫자만 사용할 수 있습니다.",
+                userid: "아이디는 영문, 숫자만 사용할 수 있습니다.",
             }));
             return;
         }
 
-        setErrors((prev) => ({ ...prev, username: "" }));
+        setErrors((prev) => ({ ...prev, userid: "" }));
 
         try {
-            setIsCheckingUsername(true);
-            clearError("username");
-            setUsernameCheck({ status: "idle", message: "" });
+            setIsCheckingUserid(true);
+            clearError("userid");
+            setUseridCheck({ status: "idle", message: "" });
 
             const response = await fetch(
-                AUTH_ENDPOINTS.checkUsername,
+                AUTH_ENDPOINTS.checkUserid,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        username: normalizedUsername
+                        userid: normalizedUserid
                     }),
                 });
 
@@ -176,12 +176,12 @@ function Signup() {
             }
 
             if (data.available) {
-                setUsernameCheck({
+                setUseridCheck({
                     status: "available",
                     message: "사용 가능한 아이디입니다.",
                 });
             } else {
-                setUsernameCheck({
+                setUseridCheck({
                     status: "duplicate",
                     message: "이미 사용 중인 아이디입니다.",
                 });
@@ -189,12 +189,8 @@ function Signup() {
         } catch (error) {
             console.error("아이디 중복 확인 실패:", error);
 
-            setUsernameCheck({
-                status: "error",
-                message: error.message || "아이디 중복 확인 중 오류가 발생했습니다.",
-            });
         } finally {
-            setIsCheckingUsername(false);
+            setIsCheckingUserid(false);
         }
     };
 
@@ -275,10 +271,6 @@ function Signup() {
         } catch (error) {
             console.error("인증번호 발송 실패:", error);
 
-            setErrors((prev) => ({
-                ...prev,
-                email: error.message || "인증번호 발송 중 오류가 발생했습니다.",
-            }));
         } finally {
             setIsSendingCode(false);
         }
@@ -344,13 +336,8 @@ function Signup() {
 
         } catch (error) {
             console.error("이메일 인증 실패:", error);
-
             setVerificationToken("");
 
-            setErrors((prev) => ({
-                ...prev,
-                verificationCode: error.message || "이메일 인증 중 오류가 발생했습니다.",
-            }));
         } finally {
             setIsVerifyingCode(false);
         }
@@ -373,12 +360,12 @@ function Signup() {
             nextErrors.name = "이름을 입력해주세요.";
         }
 
-        if (!username.trim()) {
-            nextErrors.username = "아이디를 입력해주세요.";
-        } else if (!USERNAME_PATTERN.test(username.trim())) {
-            nextErrors.username = "아이디는 영문, 숫자만 사용할 수 있습니다.";
-        } else if (usernameCheck.status !== "available") {
-            nextErrors.username = "아이디 중복 확인을 완료해주세요.";
+        if (!userid.trim()) {
+            nextErrors.userid = "아이디를 입력해주세요.";
+        } else if (!USERID_PATTERN.test(userid.trim())) {
+            nextErrors.userid = "아이디는 영문, 숫자만 사용할 수 있습니다.";
+        } else if (useridCheck.status !== "available") {
+            nextErrors.userid = "아이디 중복 확인을 완료해주세요.";
         }
 
         if (!email.trim()) {
@@ -392,9 +379,9 @@ function Signup() {
         if (!password) {
             nextErrors.password = "비밀번호를 입력해주세요.";
         } else if (!isPasswordLengthValid) {
-            nextErrors.password = "비밀번호는 8자 이상 16자 이하로 입력해주세요.";
-        } else if (!hasSpecialCharacter) {
-            nextErrors.password = "비밀번호에 특수문자를 1개 이상 포함해주세요.";
+            nextErrors.password = "비밀번호는 8자 이상 24자 이하로 입력해주세요.";
+        } else if (!hasSpecialCharacters) {
+            nextErrors.password = "비밀번호에 특수문자를 2개 이상 포함해주세요.";
         }
 
         if (!passwordConfirm) {
@@ -419,7 +406,7 @@ function Signup() {
 
         const signupData = {
             name: name.trim(),
-            username: username.trim(),
+            userid: userid.trim(),
             email: email.trim().toLowerCase(),
             password,
             privacyAgreed: privacyAgree,
@@ -443,7 +430,7 @@ function Signup() {
             if (!response.ok) {
                 const allowedFields = [
                     "name",
-                    "username",
+                    "userid",
                     "email",
                     "password",
                     "passwordConfirm",
@@ -470,10 +457,6 @@ function Signup() {
         } catch (error) {
             console.error("회원가입 실패:", error);
 
-            setErrors((prev) => ({
-                ...prev,
-                form: error.message || "회원가입 중 오류가 발생했습니다.",
-            }));
         } finally {
             setIsSubmitting(false);
         }
@@ -621,7 +604,7 @@ function Signup() {
 
                         {/* 아이디 및 중복 확인 */}
                         <div className="signup-field">
-                            <label htmlFor="username">아이디</label>
+                            <label htmlFor="userid">아이디</label>
 
                             <div className="signup-verification-row">
                                 <div className="signup-input-wrapper signup-verification-input">
@@ -630,47 +613,47 @@ function Signup() {
                                     </span>
 
                                     <input
-                                        id="username"
+                                        id="userid"
                                         type="text"
-                                        value={username}
+                                        value={userid}
                                         placeholder="아이디를 입력하세요"
-                                        autoComplete="username"
-                                        disabled={usernameCheck.status === "available"}
-                                        onChange={handleUsernameChange}
+                                        autoComplete="userid"
+                                        disabled={useridCheck.status === "available"}
+                                        onChange={handleUseridChange}
                                     />
                                 </div>
 
                                 <button
                                     type="button"
                                     className="signup-verification-button"
-                                    onClick={handleCheckUsername}
+                                    onClick={handleCheckUserid}
                                     disabled={
-                                        isCheckingUsername ||
-                                        usernameCheck.status === "available"
+                                        isCheckingUserid ||
+                                        useridCheck.status === "available"
                                     }
                                 >
-                                    {isCheckingUsername
+                                    {isCheckingUserid
                                         ? "확인 중..."
-                                        : usernameCheck.status === "available"
+                                        : useridCheck.status === "available"
                                             ? "확인 완료"
                                             : "중복 확인"}
                                 </button>
                             </div>
 
-                            {usernameCheck.message && (
+                            {useridCheck.message && (
                                 <p
-                                    className={`signup-verification-message ${usernameCheck.status === "available"
+                                    className={`signup-verification-message ${useridCheck.status === "available"
                                         ? "signup-verification-message-success"
                                         : "signup-verification-message-error"
                                         }`}
                                     aria-live="polite"
                                 >
-                                    {usernameCheck.message}
+                                    {useridCheck.message}
                                 </p>
                             )}
 
-                            {errors.username && (
-                                <p className="signup-password-error">{errors.username}</p>
+                            {errors.userid && (
+                                <p className="signup-password-error">{errors.userid}</p>
                             )}
                         </div>
 
@@ -825,16 +808,16 @@ function Signup() {
                                     : ""
                                     }`}
                             >
-                                {isPasswordLengthValid ? "✓" : "○"} 8~16자
+                                {isPasswordLengthValid ? "✓" : "○"} 8~24자
                             </p>
 
                             <p
-                                className={`signup-verification-message ${hasSpecialCharacter
+                                className={`signup-verification-message ${hasSpecialCharacters
                                     ? "signup-verification-message-sent"
                                     : ""
                                     }`}
                             >
-                                {hasSpecialCharacter ? "✓" : "○"} 특수문자 1개 이상
+                                {hasSpecialCharacters ? "✓" : "○"} 특수문자 2개 이상
                             </p>
 
                             {errors.password && (
