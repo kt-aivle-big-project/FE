@@ -12,7 +12,7 @@ import robotReplenish from "../../assets/robots/robot_replenish.png";
 
 import "../../styles/WarehouseSVG.css";
 
-function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
+function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
     // 노드 표시 ON / OFF
     const [showNodeLabels, setShowNodeLabels] = useState(false);
 
@@ -26,7 +26,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
                 const accessToken = localStorage.getItem("accessToken");
 
                 const response = await fetch(
-                    "http://localhost:8080/api/warehouses/1/layout",
+                    `http://localhost:8080/api/warehouses/${warehouseId}/layout`,
                     {
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -164,12 +164,13 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
 
                 setGraphData({
                     nodes: mergedNodes,
-                    edges: mergedNodes,
+                    edges: mergedEdges,
                 });
 
                 console.log("변환된 창고 지도:", {
-                    nodes: convertedNodes.length,
-                    edges: convertedEdges.length,
+                    warehouseId,
+                    nodes: mergedNodes.length,
+                    edges: mergedEdges.length,
                 });
             } catch (error) {
                 console.error("창고 레이아웃 조회 오류:", error);
@@ -177,7 +178,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
         };
 
         fetchWarehouseLayout();
-    }, []);
+    }, [warehouseId]);
 
     // SVG 크기
     const SVG_WIDTH = 1200;

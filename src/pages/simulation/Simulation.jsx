@@ -14,6 +14,7 @@ import {
     scenarioApi,
     productApi,
     optimizationApi,
+    warehouseApi,
 } from "../../api/client";
 
 import scenariosData from "../../data/scenarios.json";
@@ -21,8 +22,11 @@ import productsData from "../../data/products.json";
 import inbound from "../../data/inbound.json";
 import outbound from "../../data/outbound.json";
 
-// 데모용 창고 ID (창고 선택 기능 붙이기 전까지 고정)
+// 창고 목록을 못 불러왔을 때 쓸 기본 창고
 const DEFAULT_WAREHOUSE_ID = 1;
+
+// 선택한 창고를 새로고침 후에도 유지하기 위한 저장 키
+const WAREHOUSE_ID_KEY = "selectedWarehouseId";
 
 // 새로고침 후에도 실행 중인 시뮬레이션을 이어서 쓰기 위한 저장 키
 const RUN_ID_KEY = "simulationRunId";
@@ -88,6 +92,19 @@ function Simulation() {
        상단 헤더 - 시뮬레이션 실행
     ========================================================= */
 
+    // 창고 선택
+    // 창고마다 지도·로봇·재고가 다르므로, 바꾸면 화면과 시뮬레이션 대상이 함께 바뀐다.
+    const [warehouses, setWarehouses] = useState([]);
+    const [selectedWarehouseId, setSelectedWarehouseIdState] = useState(() => {
+        const saved = localStorage.getItem(WAREHOUSE_ID_KEY);
+        return saved ? Number(saved) : DEFAULT_WAREHOUSE_ID;
+    });
+
+    const setSelectedWarehouseId = (warehouseId) => {
+        localStorage.setItem(WAREHOUSE_ID_KEY, String(warehouseId));
+        setSelectedWarehouseIdState(warehouseId);
+    };
+
     // 시나리오 설정 (백엔드 조회 실패 시 목업 데이터로 폴백)
     const [scenarioSettings, setScenarioSettings] = useState(scenariosData);
     const [selectedScenario, setSelectedScenario] = useState(
@@ -125,11 +142,40 @@ function Simulation() {
        백엔드 초기 데이터 로딩
     ========================================================= */
 
+    // 창고 목록은 한 번만 불러온다
+    useEffect(() => {
+        const loadWarehouses = async () => {
+            try {
+                const list = await warehouseApi.getAll();
+
+                if (!Array.isArray(list) || list.length === 0) {
+                    return;
+                }
+
+                setWarehouses(list);
+
+                // 저장해둔 창고가 목록에 없으면 첫 번째로 되돌린다
+                const exists = list.some(
+                    (warehouse) => warehouse.id === selectedWarehouseId
+                );
+
+                if (!exists) {
+                    setSelectedWarehouseId(list[0].id);
+                }
+            } catch (error) {
+                console.warn("창고 목록 조회 실패", error.message);
+            }
+        };
+
+        loadWarehouses();
+    }, []);
+
+    // 창고를 바꾸면 그 창고의 시나리오를 다시 불러온다
     useEffect(() => {
         const loadInitialData = async () => {
             try {
                 const scenarioList = await scenarioApi.getAll(
-                    DEFAULT_WAREHOUSE_ID
+                    selectedWarehouseId
                 );
 
                 if (Array.isArray(scenarioList) && scenarioList.length > 0) {
@@ -175,7 +221,7 @@ function Simulation() {
         };
 
         loadInitialData();
-    }, []);
+    }, [selectedWarehouseId]);
 
     // 시뮬레이션 타이머
     useEffect(() => {
@@ -200,9 +246,36 @@ function Simulation() {
             .join(":");
     };
 
-    // 시뮬레이션 시나리오 선택
-    const handleScenarioChange = (scenarioId) => {
-        setSelectedScenario(scenarioId);
+    /**
+     * 창고 변경.
+     *
+     * 창고마다 지도도 로봇도 다르므로 진행 중인 시뮬레이션을 이어갈 수 없다.
+     * 실행 중이면 먼저 확인을 받고, 화면을 처음 상태로 되돌린다.
+     */
+    const handleWarehouseChange = (warehouseId) => {
+        const nextId = Number(warehouseId);
+
+        if (nextId === selectedWarehouseId) {
+            return;
+        }
+
+        if (simulationRunId) {
+            const confirmed = window.confirm(
+                "창고를 바꾸면 진행 중인 시뮬레이션이 해제됩니다.\n계속할까요?"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+        }
+
+        setSimulationRunId(null);
+        setSimulationStatus("대기");
+        setSimulationTime(0);
+        setTaskList([]);
+        setEventList([]);
+        setRobots(restingRobots());
+        setSelectedWarehouseId(nextId);
     };
 
     /**
@@ -308,7 +381,7 @@ function Simulation() {
         }
 
         return {
-            warehouseId: DEFAULT_WAREHOUSE_ID,
+            warehouseId: selectedWarehouseId,
             scenarioId: scenarioId,
             simulationSpeed: Number(simulationSpeed),
             inbound: {
@@ -372,7 +445,7 @@ function Simulation() {
             // (다른 탭이나 이전 세션에서 실행 중인 것까지 정리해야
             //  새 실행을 시작할 수 있다 - 창고당 1개만 활성 가능)
             try {
-                await simulationRunApi.stopActive(DEFAULT_WAREHOUSE_ID);
+                await simulationRunApi.stopActive(selectedWarehouseId);
             } catch (error) {
                 console.warn("기존 시뮬레이션 중지 실패", error.message);
             }
@@ -813,26 +886,31 @@ function Simulation() {
                 </div>
 
                 <div className="simulation-header-info">
-                    {/* 시나리오 선택 */}
+                    {/* 창고 선택 */}
                     <div className="simulation-header-info-item simulation-scenario">
-                        <span className="simulation-header-label">
-                            시나리오
-                        </span>
+                        <span className="simulation-header-label">창고</span>
 
                         <select
-                            value={selectedScenario}
+                            value={selectedWarehouseId}
                             onChange={(e) =>
-                                handleScenarioChange(e.target.value)
+                                handleWarehouseChange(e.target.value)
                             }
+                            disabled={warehouses.length === 0}
                         >
-                            {scenarioSettings.map((scenario) => (
-                                <option
-                                    key={scenario.scenario_id}
-                                    value={scenario.scenario_id}
-                                >
-                                    {scenario.scenario_name}
+                            {warehouses.length === 0 ? (
+                                <option value={selectedWarehouseId}>
+                                    불러오는 중...
                                 </option>
-                            ))}
+                            ) : (
+                                warehouses.map((warehouse) => (
+                                    <option
+                                        key={warehouse.id}
+                                        value={warehouse.id}
+                                    >
+                                        {warehouse.name}
+                                    </option>
+                                ))
+                            )}
                         </select>
                     </div>
 
@@ -942,6 +1020,7 @@ function Simulation() {
             {/* 시뮬레이션 화면 */}
             <main className="simulation-view">
                 <WarehouseSVG
+                    warehouseId={selectedWarehouseId}
                     robots={robots}
                     simulationSpeed={simulationSpeed}
                 />
