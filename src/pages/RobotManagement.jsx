@@ -622,14 +622,6 @@ function RobotManagement() {
     const startNodeLabel = startNodeCode
         ?? (startNodeId ? `Node #${startNodeId}` : "-");
 
-    const chargerOutput =
-        selectedNode.chargerOutput
-        ?? selectedNode.chargingPower
-        ?? selectedNode.outputPower
-        ?? selectedSpec.chargerOutput
-        ?? selectedRobotView?.chargerOutput
-        ?? 50.0;
-
     useEffect(() => {
         const currentTask = findCurrentTask(selectedRobotView, tasks);
 
@@ -1122,10 +1114,6 @@ function RobotManagement() {
                                     <strong>{startNodeLabel}</strong>
                                 </div>
 
-                                <div className="robot-detail-item">
-                                    <span>충전소 출력</span>
-                                    <strong>{Number(chargerOutput).toFixed(1)}</strong>
-                                </div>
                             </div>
                         </div>
                     )}
