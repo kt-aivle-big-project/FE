@@ -15,6 +15,7 @@ import {
     productApi,
     optimizationApi,
     warehouseApi,
+    robotApi,
 } from "../../api/client";
 
 import scenariosData from "../../data/scenarios.json";
@@ -38,8 +39,8 @@ const CHARGING_SLOTS = [
     "C06", "C07", "C08", "C09", "C10",
 ];
 
-// 시뮬레이션 시작 전 / 초기화 후의 로봇 배치.
-// 충전소에 대기 중인 모습으로 그린다.
+// 로봇을 못 불러왔을 때 쓰는 임시 배치.
+// 창고에 등록된 로봇을 조회하지 못한 경우에만 쓴다.
 const restingRobots = (count = 6) =>
     Array.from({ length: Math.min(count, CHARGING_SLOTS.length) }, (_, index) => ({
         robot_id: index + 1,
@@ -223,6 +224,18 @@ function Simulation() {
         loadInitialData();
     }, [selectedWarehouseId]);
 
+    // 시작 전에도 창고에 등록된 로봇을 지도에 보여준다.
+    // 실행 중이면 실시간 상태가 우선이므로 건드리지 않는다.
+    useEffect(() => {
+        if (simulationRunId) {
+            return;
+        }
+
+        loadRestingRobots(selectedWarehouseId);
+        // 창고가 바뀔 때만 다시 배치한다.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedWarehouseId]);
+
     // 시뮬레이션 타이머
     useEffect(() => {
         if (simulationStatus !== "실행" && simulationStatus !== "재계획") {
@@ -274,8 +287,48 @@ function Simulation() {
         setSimulationTime(0);
         setTaskList([]);
         setEventList([]);
-        setRobots(restingRobots());
         setSelectedWarehouseId(nextId);
+        loadRestingRobots(nextId);
+    };
+
+    /**
+     * 시작 전 화면에 보여줄 로봇 배치를 불러온다.
+     *
+     * 예전에는 충전소 6칸에 가짜 로봇을 그렸는데,
+     * 창고마다 로봇 수와 위치가 다르므로 실제 등록된 로봇을 쓴다.
+     * 로봇의 node_id 는 숫자이고 지도는 노드 코드로 그리므로 레이아웃으로 변환한다.
+     */
+    const loadRestingRobots = async (warehouseId) => {
+        if (!warehouseId) {
+            return;
+        }
+
+        try {
+            const [robotList, layout] = await Promise.all([
+                robotApi.getAll(warehouseId),
+                warehouseApi.getLayout(warehouseId),
+            ]);
+
+            const nodeCodeById = new Map(
+                (layout.nodes ?? []).map((node) => [node.id, node.nodeCode])
+            );
+
+            const placed = (robotList ?? [])
+                .map((robot) => ({
+                    robot_id: robot.id,
+                    robot_code: `R${robot.id}`,
+                    node_id: nodeCodeById.get(robot.nodeId),
+                    battery: robot.battery,
+                    status: "IDLE",
+                    transition_ms: 0,
+                }))
+                .filter((robot) => robot.node_id);
+
+            setRobots(placed.length > 0 ? placed : restingRobots());
+        } catch (error) {
+            console.warn("로봇 초기 배치 조회 실패", error.message);
+            setRobots(restingRobots());
+        }
     };
 
     /**
@@ -454,9 +507,9 @@ function Simulation() {
             setSimulationRunId(null);
             setTaskList([]);
             setEventList([]);
-            setRobots(restingRobots());
             setSimulationTime(0);
             setSimulationStatus("대기");
+            await loadRestingRobots(selectedWarehouseId);
 
             const payload = buildCreatePayload();
             console.log("새 시뮬레이션 생성 요청:", payload);
@@ -651,8 +704,8 @@ function Simulation() {
             }
         }
 
-        // 로봇을 충전소 대기 상태로 되돌린다
-        setRobots((prevRobots) => restingRobots(prevRobots.length || 6));
+        // 로봇을 DB 에 저장된 시작 위치로 되돌린다
+        await loadRestingRobots(selectedWarehouseId);
 
         // simulationRunId 는 유지한다.
         // 초기화 후 다시 시작할 때 같은 실행을 재사용해야
@@ -698,9 +751,9 @@ function Simulation() {
 
         setTaskList([]);
         setEventList([]);
-        setRobots(restingRobots());
         setSimulationTime(0);
         setSimulationStatus("중지");
+        loadRestingRobots(selectedWarehouseId);
 
         console.log("시뮬레이션 중지 완료 - 새 작업을 생성해주세요.");
     };
