@@ -25,7 +25,7 @@ function Sidebar() {
     };
 
     return (
-        <aside className="sidebar">
+        <header className="header">
             <div className="logo">LARO</div>
 
             <nav className="navigation">
@@ -37,7 +37,7 @@ function Sidebar() {
                     </li>
 
                     <li>
-                        <NavLink to="/setting">
+                        <NavLink to="/scenarios">
                             설정
                         </NavLink>
                     </li>
@@ -77,7 +77,7 @@ function Sidebar() {
                     로그아웃
                 </button>
             </div>
-        </aside>
+        </header>
     );
 }
 

@@ -27,9 +27,14 @@
 
     --laro-danger: #E5484D;
     --laro-danger-light: #FFF1F2;
+
+    --laro-success: #2E9D61;
+    --laro-success-light: #EAF8F0;
+    --laro-warning: #D88700;
+    --laro-warning-light: #FFF6DF;
+    --laro-muted-light: #F1F4F8;
     --laro-overlay: rgba(22, 50, 79, 0.45);
 }
-
 /* =========================
    전체 기본 설정
 ========================= */
@@ -44,14 +49,22 @@ html,
 body,
 #root {
     width: 100%;
+    min-width: 0;
     min-height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#root {
+    max-width: none;
 }
 
 body {
+    min-height: 100vh;
+    overflow-x: hidden;
     font-family: Arial, "Noto Sans KR", sans-serif;
-
-    background: var(--background-color);
-    color: var(--font-color);
+    background: var(--laro-background);
+    color: var(--laro-text);
 }
 
 
@@ -143,29 +156,57 @@ textarea:focus {
 
     border-color: var(--border-color);
 }
-
-
 /* =========================
    전체 레이아웃
 ========================= */
 
 .main-layout {
     width: 100%;
+    min-width: 0;
     min-height: 100vh;
-
-    display: flex;
-}
-
-.sidebar {
-    width: 140px;
-    min-height: 100vh;
-
     display: flex;
     flex-direction: column;
+    background: var(--laro-background);
+}
 
+
+/* =========================
+   Header
+========================= */
+
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    height: 68px;
+    display: flex;
+    align-items: center;
     flex-shrink: 0;
+    padding: 0 32px;
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-white);
+}
 
-    border-right: var(--border);
+
+/* =========================
+   Page Content
+========================= */
+
+.page-content {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: calc(100vh - 68px);
+    flex: 1;
+    padding: 20px 20px;
+}
+
+/* 각 페이지의 최상위 요소가 전체 너비를 사용하도록 설정 */
+.page-content > * {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
 }
 
 
@@ -174,16 +215,14 @@ textarea:focus {
 ========================= */
 
 .logo {
-    height: 100px;
-
     display: flex;
     align-items: center;
-
-    padding-left: 12px;
-
-    font-size: 40px;
-    font-weight: 600;
-
+    flex-shrink: 0;
+    color: var(--laro-navy);
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
 }
 
 
@@ -192,24 +231,46 @@ textarea:focus {
 ========================= */
 
 .navigation {
-    padding: 5px 25px;
+    margin-left: 36px;
+}
+
+.navigation ul {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
 .navigation li {
-    margin-bottom: 20px;
-    font-size: 18px;
+    margin: 0;
 }
 
 .navigation a {
-    display: block;
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 10px;
+    color: var(--laro-subtext);
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
 }
 
 .navigation a:hover {
-    color: var(--hover-color);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
 }
 
 .navigation a.active {
-    font-weight: 600;
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+    font-weight: 700;
 }
 
 
@@ -218,39 +279,71 @@ textarea:focus {
 ========================= */
 
 .sidebar-logout {
-    margin-top: auto;
-    padding: 20px;
+    margin-left: auto;
 }
 
 .logout-button {
-    width: 100%;
-    padding: 12px 10px;
-    border: none;
+    height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--laro-border);
+    border-radius: 10px;
+    background: var(--laro-white);
+    color: var(--laro-text);
+    font-family: inherit;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    border: var(--border);
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
 }
+
+.logout-button:hover {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+}
+
+.logout-button:focus-visible {
+    outline: 3px solid var(--laro-focus-ring);
+    outline-offset: 2px;
+}
+
+
 
 /* =========================
-   Page Content
+   반응형
 ========================= */
 
-.page-content {
-    flex: 1;
+@media (max-width: 768px) {
+    .sidebar {
+        height: auto;
+        min-height: 68px;
+        flex-wrap: wrap;
+        padding: 0 20px;
+    }
 
-    min-width: 0;
-    min-height: 100vh;
+    .logo {
+        height: 68px;
+        font-size: 25px;
+    }
+
+    .navigation {
+        order: 3;
+        width: 100%;
+        margin: 0;
+        overflow-x: auto;
+    }
+
+    .navigation ul {
+        width: max-content;
+        padding-bottom: 10px;
+    }
+
+    .page-content {
+        min-height: calc(100vh - 118px);
+        padding: 20px;
+    }
 }
 
-
-/* =========================
-   Footer
-========================= */
-
-.footer {
-    grid-area: footer;
-
-    border: var(--border);
-    background: var(--background-color);
-}
