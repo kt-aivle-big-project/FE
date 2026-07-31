@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "../styles/WarehouseSVG.css";
 
-import warehouseGraph from "../data/Warehouse_graph.json";
+import warehouseGraph from "../data/warehouse_graph.json";
 import rackInventory from "../data/rack_inventory.json";
 
 import robotCharging from "../assets/robots/robot_charging.png";
