@@ -1,0 +1,396 @@
+/* 로그인/회원가입 공통 레이아웃 */
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background: var(--laro-background);
+    color: var(--laro-text);
+}
+
+.login-card {
+    width: min(100%, 480px);
+    padding: 32px 40px;
+    border: 1px solid var(--laro-border);
+    border-radius: 20px;
+    background: var(--laro-white);
+    box-shadow: 0 18px 50px var(--laro-shadow);
+}
+
+.login-back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--laro-subtext);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.login-back-button:hover {
+    color: var(--laro-primary);
+}
+
+.login-header {
+    text-align: center;
+}
+
+.login-logo {
+    display: block;
+    width: min(100%, 300px);
+    height: 200px;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+.login-title {
+    margin: 20px 0 0;
+    color: var(--laro-navy);
+    font-size: 25px;
+    font-weight: 700;
+}
+
+.login-description {
+    margin: 20px auto 0;
+    color: var(--laro-subtext);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.login-content {
+    margin-top: 24px;
+}
+
+/* 로그인/회원가입 공통 폼 */
+.login-form,
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.login-field,
+.signup-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.login-field label,
+.signup-field label {
+    color: var(--laro-text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.login-input-wrapper,
+.signup-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.login-input-wrapper input,
+.signup-input-wrapper input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 52px;
+    padding: 0 16px 0 48px;
+    border: 1px solid var(--laro-border);
+    border-radius: 12px;
+    outline: none;
+    background: var(--laro-white);
+    color: var(--laro-text);
+    font-family: inherit;
+    font-size: 14px;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.login-input-wrapper input::placeholder,
+.signup-input-wrapper input::placeholder {
+    color: var(--laro-subtext);
+}
+
+.login-input-wrapper input:focus,
+.signup-input-wrapper input:focus {
+    border-color: var(--laro-primary);
+    box-shadow: 0 0 0 3px var(--laro-focus-ring);
+}
+
+.login-input-icon,
+.signup-input-icon {
+    position: absolute;
+    left: 16px;
+    z-index: 1;
+    width: 20px;
+    height: 20px;
+    color: var(--laro-subtext);
+    pointer-events: none;
+}
+
+.login-input-icon svg,
+.signup-input-icon svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.login-input-wrapper:focus-within .login-input-icon,
+.signup-input-wrapper:focus-within .signup-input-icon {
+    color: var(--laro-primary);
+}
+
+/* 비밀번호 숨김/보기 */
+.login-password-toggle,
+.signup-password-toggle {
+    position: absolute;
+    right: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--laro-subtext);
+    cursor: pointer;
+}
+
+.login-password-toggle svg,
+.signup-password-toggle svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.login-find-password:hover,
+.login-password-toggle:hover,
+.signup-password-toggle:hover {
+    color: var(--laro-primary-hover);
+    text-decoration: underline;
+}
+
+.login-password-toggle:focus-visible,
+.signup-password-toggle:focus-visible {
+    outline: 3px solid var(--laro-focus-ring);
+    outline-offset: 2px;
+}
+
+/* 공통 버튼 */
+.login-button {
+    position: relative;
+    width: 100%;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 54px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.login-button:hover {
+    transform: translateY(-1px);
+}
+
+.login-button-primary {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary);
+    color: var(--laro-white);
+}
+
+.login-button-primary:hover {
+    border-color: var(--laro-primary-hover);
+    background: var(--laro-primary-hover);
+}
+
+.login-button-secondary {
+    border-color: var(--laro-border);
+    background: var(--laro-white);
+    color: var(--laro-text);
+}
+
+.login-button-secondary:hover {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+}
+
+.login-button-icon {
+    position: absolute;
+    left: 20px;
+    width: 21px;
+    height: 21px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-button-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.login-text-button {
+    padding: 4px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--laro-subtext);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.login-text-button:hover {
+    color: var(--laro-primary);
+}
+
+.login-form .login-button,
+.signup-form .login-button {
+    margin-top: 4px;
+}
+
+.login-form .login-button:disabled,
+.signup-form .login-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* 공통 하단 영역 */
+.login-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--laro-border);
+    color: var(--laro-subtext);
+    font-size: 14px;
+}
+
+.login-footer button {
+    padding: 3px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--laro-primary);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.login-footer button:hover {
+    color: var(--laro-primary-hover);
+    text-decoration: underline;
+}
+
+.login-button:focus-visible,
+.login-back-button:focus-visible,
+.login-text-button:focus-visible,
+.login-footer button:focus-visible {
+    outline: 3px solid var(--laro-focus-ring);
+    outline-offset: 3px;
+}
+
+/* 입력창 옆 기능 버튼 */
+.login-action-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.login-action-row .login-input-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+.login-action-button {
+    flex-shrink: 0;
+    width: auto;
+    min-width: 120px;
+    padding: 0 16px;
+    font-size: 13px;
+}
+
+/* 입력 항목 안내 및 오류 문구 */
+.login-field-message {
+    margin: 0;
+    color: var(--laro-subtext);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.login-field-message-info {
+    color: var(--laro-primary);
+}
+
+.login-field-message-error {
+    color: var(--laro-danger);
+}
+
+.login-field-message-success {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+    font-weight: 600;
+}
+
+
+/* 반응형 */
+@media (max-width: 520px) {
+    .login-page {
+        align-items: flex-start;
+        padding: 20px 16px;
+        background: var(--laro-white);
+    }
+
+    .login-card {
+        padding: 20px 8px 24px;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .login-logo {
+        width: 300px;
+        height: 200px;
+    }
+
+    .login-title {
+        font-size: 23px;
+    }
+
+    .login-action-button {
+        min-width: 104px;
+        padding: 0 12px;
+        font-size: 12px;
+    }
+}

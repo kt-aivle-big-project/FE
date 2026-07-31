@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../../styles/SimulationPanel.css";
+import "../../styles/simulation/SimulationPanel.css";
 
 function SimulationPanel({
     inboundSettings,

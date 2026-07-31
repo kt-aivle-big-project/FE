@@ -1,0 +1,27 @@
+.login-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.login-input-wrapper .login-password-input {
+    padding-right: 68px;
+}
+
+/* 비밀번호 찾기 */
+.login-find-password {
+    padding: 2px 0;
+    border: 0;
+    background: transparent;
+    color: var(--laro-primary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.login-find-password:focus-visible {
+    outline: 3px solid var(--laro-focus-ring);
+    outline-offset: 2px;
+}
