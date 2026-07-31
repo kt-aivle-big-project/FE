@@ -3,26 +3,9 @@ import { useNavigate } from "react-router-dom";
 import laroLogo from "../../assets/logo/laro_logo.png";
 import "../../styles/login/LoginCommon.css";
 import "../../styles/login/Login.css";
+import { EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/icon";
 
 const API_URL = "http://localhost:8080/api";
-
-function EmailIcon() {
-    return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="3" y="5" width="18" height="14" rx="2" />
-            <path d="M4 7L12 13L20 7" />
-        </svg>
-    );
-}
-
-function LockIcon() {
-    return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="4" y="10" width="16" height="11" rx="2" />
-            <path d="M8 10V7C8 4.79 9.79 3 12 3C14.21 3 16 4.79 16 7V10" />
-        </svg>
-    );
-}
 
 function Login() {
     const navigate = useNavigate();
@@ -114,16 +97,16 @@ function Login() {
 
                 <section className="login-content">
                     <form
-                        className="email-login-form"
+                        className="login-form"
                         onSubmit={handleLogin}
                     >
-                        <div className="email-login-field">
+                        <div className="login-field">
                             <label htmlFor="email">
                                 이메일
                             </label>
 
-                            <div className="email-login-input-wrapper">
-                                <span className="email-login-input-icon">
+                            <div className="login-input-wrapper">
+                                <span className="login-input-icon">
                                     <EmailIcon />
                                 </span>
 
@@ -138,29 +121,29 @@ function Login() {
                             </div>
                         </div>
 
-                        <div className="email-login-field">
-                            <div className="email-login-label-row">
+                        <div className="login-field">
+                            <div className="login-label-row">
                                 <label htmlFor="password">
                                     비밀번호
                                 </label>
 
                                 <button
                                     type="button"
-                                    className="email-login-find-password"
+                                    className="login-find-password"
                                 >
                                     비밀번호 찾기
                                 </button>
                             </div>
 
-                            <div className="email-login-input-wrapper">
-                                <span className="email-login-input-icon">
+                            <div className="login-input-wrapper">
+                                <span className="login-input-icon">
                                     <LockIcon />
                                 </span>
 
                                 <input
                                     id="password"
                                     type={showPassword ? "text" : "password"}
-                                    className="email-login-password-input"
+                                    className="login-password-input"
                                     value={password}
                                     placeholder="비밀번호를 입력하세요"
                                     onChange={(e) => setPassword(e.target.value)}
@@ -169,11 +152,12 @@ function Login() {
 
                                 <button
                                     type="button"
-                                    className="email-login-password-toggle"
+                                    className="login-password-toggle"
                                     onClick={() => setShowPassword((prev) => !prev)}
                                     aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                                    aria-pressed={showPassword}
                                 >
-                                    {showPassword ? "숨김" : "보기"}
+                                    <PasswordToggleIcon visible={showPassword} />
                                 </button>
                             </div>
                         </div>
