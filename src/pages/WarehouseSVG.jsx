@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "../styles/WarehouseSVG.css";
 
-import warehouseGraph from "../data/Warehouse_graph.json";
+import warehouseGraph from "../data/warehouse_graph.json";
 import rackInventory from "../data/rack_inventory.json";
 
 import robotCharging from "../assets/robots/robot_charging.png";
@@ -11,7 +11,7 @@ import robotPutaway from "../assets/robots/robot_putaway.png";
 import robotRelocation from "../assets/robots/robot_relocation.png";
 import robotReplenish from "../assets/robots/robot_replenish.png";
 
-function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
+function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
     // 노드 표시 ON / OFF
     const [showNodeLabels, setShowNodeLabels] = useState(false);
 
@@ -25,7 +25,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
                 const accessToken = localStorage.getItem("accessToken");
 
                 const response = await fetch(
-                    "http://localhost:8080/api/warehouses/1/layout",
+                    `http://localhost:8080/api/warehouses/${warehouseId}/layout`,
                     {
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -163,12 +163,13 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
 
                 setGraphData({
                     nodes: mergedNodes,
-                    edges: mergedNodes,
+                    edges: mergedEdges,
                 });
 
                 console.log("변환된 창고 지도:", {
-                    nodes: convertedNodes.length,
-                    edges: convertedEdges.length,
+                    warehouseId,
+                    nodes: mergedNodes.length,
+                    edges: mergedEdges.length,
                 });
             } catch (error) {
                 console.error("창고 레이아웃 조회 오류:", error);
@@ -176,7 +177,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
         };
 
         fetchWarehouseLayout();
-    }, []);
+    }, [warehouseId]);
 
     // SVG 크기
     const SVG_WIDTH = 1200;

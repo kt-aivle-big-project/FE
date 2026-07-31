@@ -1,9 +1,49 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../styles/WarehouseManagement.css";
+
+import { warehouseApi } from "../api/client";
 
 import warehouseGraph1 from "../assets/warehouse-maps/warehouse_graph_1.json";
 import warehouseGraph2 from "../assets/warehouse-maps/warehouse_graph_2.json";
 import warehouseGraph3 from "../assets/warehouse-maps/warehouse_graph_3.json";
+
+// 백엔드 상태값 <-> 화면 표기
+const STATUS_TO_LABEL = {
+    ACTIVE: "운영 중",
+    MAINTENANCE: "점검 중",
+    INACTIVE: "비활성",
+};
+
+const LABEL_TO_STATUS = {
+    "운영 중": "ACTIVE",
+    "점검 중": "MAINTENANCE",
+    비활성: "INACTIVE",
+};
+
+// 백엔드 응답 -> 화면에서 쓰던 형태
+const toWarehouseView = (warehouse) => ({
+    warehouse_id: warehouse.id,
+    shared: Boolean(warehouse.shared),
+    name: warehouse.name,
+    location: warehouse.location ?? "미지정",
+    status: STATUS_TO_LABEL[warehouse.status] ?? "운영 중",
+    width: warehouse.width ?? 0,
+    height: warehouse.height ?? 0,
+    description: warehouse.description || "등록된 설명이 없습니다.",
+    createdAt: (warehouse.createdAt ?? "").replace("T", " ").slice(0, 16),
+    updatedAt: (warehouse.updatedAt ?? "").replace("T", " ").slice(0, 16),
+
+    // 아래 값들은 목록 응답에 없다. 상세 조회를 붙이기 전까지 0으로 둔다.
+    robotCount: 0,
+    shelfCount: 0,
+    nodeCount: 0,
+    edgeCount: 0,
+    utilization: 0,
+    workingRobots: 0,
+    storageUsage: 0,
+    todayTasks: 0,
+    mapData: null,
+});
 
 const getShelfCount = (mapData) =>
     mapData?.summary?.rack_entity_count ??
@@ -74,18 +114,6 @@ const initialForm = {
     height: "",
     description: "",
     status: "운영 준비",
-};
-
-const getCurrentDateTime = () => {
-    const date = new Date();
-
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hour = String(date.getHours()).padStart(2, "0");
-    const minute = String(date.getMinutes()).padStart(2, "0");
-
-    return `${year}-${month}-${day} ${hour}:${minute}`;
 };
 
 function WarehouseMapPreview({ mapData, compact = false }) {
@@ -231,11 +259,14 @@ function WarehouseMapPreview({ mapData, compact = false }) {
 }
 
 function WarehouseManagement() {
-    const [warehouseList, setWarehouseList] =
-        useState(initialWarehouses);
+    // 목록은 백엔드에서 불러온다. 목업은 조회 실패 시에만 쓴다.
+    const [warehouseList, setWarehouseList] = useState([]);
 
-    const [selectedWarehouse, setSelectedWarehouse] =
-        useState(initialWarehouses[0]);
+    const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+
+    const [isLoading, setIsLoading] = useState(true);
+
+    const [saveError, setSaveError] = useState("");
 
     const [
         isWarehouseModalOpen,
@@ -254,6 +285,37 @@ function WarehouseManagement() {
 
     const [jsonError, setJsonError] = useState("");
 
+    /**
+     * 창고 목록을 다시 불러온다.
+     *
+     * @param keepId 새로고침 후에도 선택을 유지할 창고 ID
+     */
+    const reloadWarehouses = async (keepId = null) => {
+        try {
+            const list = await warehouseApi.getAll();
+            const views = (Array.isArray(list) ? list : []).map(toWarehouseView);
+
+            setWarehouseList(views);
+
+            const next =
+                views.find((warehouse) => warehouse.warehouse_id === keepId) ??
+                views[0] ??
+                null;
+
+            setSelectedWarehouse(next);
+        } catch (error) {
+            console.warn("창고 목록 조회 실패 - 목업을 사용합니다.", error.message);
+            setWarehouseList(initialWarehouses);
+            setSelectedWarehouse(initialWarehouses[0] ?? null);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        reloadWarehouses();
+    }, []);
+
     const openCreateModal = () => {
         setModalMode("CREATE");
         setWarehouseForm(initialForm);
@@ -265,6 +327,12 @@ function WarehouseManagement() {
 
     const openEditModal = () => {
         if (!selectedWarehouse) {
+            return;
+        }
+
+        // 공용 창고는 모두가 함께 쓰므로 고칠 수 없다
+        if (selectedWarehouse.shared) {
+            window.alert("공용 창고는 수정할 수 없습니다.");
             return;
         }
 
@@ -367,125 +435,77 @@ function WarehouseManagement() {
         isBasicFormValid &&
         (modalMode === "EDIT" || uploadedMapData !== null);
 
-    const handleSaveWarehouse = () => {
+    /**
+     * 창고 저장.
+     *
+     * 생성   지도 JSON 과 함께 보내면 백엔드가 노드·간선·랙·로봇까지 만든다.
+     * 수정   이름·소재지·상태 등만 바꾼다. 지도는 건드리지 않는다.
+     */
+    const handleSaveWarehouse = async () => {
         if (!canSave) {
             return;
         }
 
-        const now = getCurrentDateTime();
+        setSaveError("");
 
-        if (modalMode === "EDIT") {
-            const updatedWarehouse = {
-                ...selectedWarehouse,
-                name: warehouseForm.name.trim(),
-                location: warehouseForm.location.trim(),
-                status: warehouseForm.status,
-                width: Number(warehouseForm.width),
-                height: Number(warehouseForm.height),
-                updatedAt: now,
-                description:
-                    warehouseForm.description.trim() ||
-                    "등록된 설명이 없습니다.",
-            };
-
-            setWarehouseList((previous) =>
-                previous.map((warehouse) =>
-                    warehouse.warehouse_id ===
-                    selectedWarehouse.warehouse_id
-                        ? updatedWarehouse
-                        : warehouse,
-                ),
-            );
-
-            setSelectedWarehouse(updatedWarehouse);
-            closeWarehouseModal();
-            return;
-        }
-
-        const currentIds = warehouseList.map(
-            (warehouse) => warehouse.warehouse_id,
-        );
-
-        const nextWarehouseId =
-            currentIds.length > 0
-                ? Math.max(...currentIds) + 1
-                : 1;
-
-        const mapData = uploadedMapData;
-
-        const nodeCount =
-            mapData?.summary?.node_count ??
-            mapData?.nodes?.length ??
-            0;
-
-        const edgeCount =
-            mapData?.summary?.edge_count ??
-            mapData?.edges?.length ??
-            0;
-
-        const shelfCount =
-            mapData?.summary?.rack_entity_count ??
-            mapData?.summary?.rack_entities_external ??
-            0;
-
-        const newWarehouse = {
-            warehouse_id: nextWarehouseId,
+        const basePayload = {
             name: warehouseForm.name.trim(),
-            location: warehouseForm.location.trim(),
-            status: warehouseForm.status,
             width: Number(warehouseForm.width),
             height: Number(warehouseForm.height),
-            robotCount: 0,
-            shelfCount,
-            createdAt: now,
-            updatedAt: now,
-            description:
-                warehouseForm.description.trim() ||
-                "등록된 설명이 없습니다.",
-            creationType: "JSON",
-            mapTitle: mapData?.title ?? jsonFile?.name ?? "업로드 창고맵",
-            mapData,
-            nodeCount,
-            edgeCount,
-            mapTemplateId: null,
-            mapTemplateFileName: null,
-            jsonFileName: jsonFile?.name ?? null,
+            location: warehouseForm.location.trim(),
+            description: warehouseForm.description.trim(),
+            status: LABEL_TO_STATUS[warehouseForm.status] ?? "ACTIVE",
         };
 
-        setWarehouseList((previous) => [
-            ...previous,
-            newWarehouse,
-        ]);
+        try {
+            if (modalMode === "EDIT") {
+                await warehouseApi.update(
+                    selectedWarehouse.warehouse_id,
+                    basePayload,
+                );
 
-        setSelectedWarehouse(newWarehouse);
-        closeWarehouseModal();
+                await reloadWarehouses(selectedWarehouse.warehouse_id);
+                closeWarehouseModal();
+                return;
+            }
+
+            const created = await warehouseApi.importWarehouse({
+                ...basePayload,
+                map: {
+                    nodes: uploadedMapData.nodes,
+                    edges: uploadedMapData.edges,
+                },
+            });
+
+            await reloadWarehouses(created?.warehouseId ?? null);
+            closeWarehouseModal();
+        } catch (error) {
+            setSaveError(error.message || "저장에 실패했습니다.");
+        }
     };
 
-    const handleDeleteWarehouse = () => {
+    const handleDeleteWarehouse = async () => {
         if (!selectedWarehouse) {
             return;
         }
 
         const shouldDelete = window.confirm(
-            `${selectedWarehouse.name}를 삭제하시겠습니까?`,
+            `${selectedWarehouse.name}를 삭제하시겠습니까?\n` +
+                "창고의 지도와 로봇 정보도 함께 사라집니다.",
         );
 
         if (!shouldDelete) {
             return;
         }
 
-        const remainingWarehouses = warehouseList.filter(
-            (warehouse) =>
-                warehouse.warehouse_id !==
-                selectedWarehouse.warehouse_id,
-        );
-
-        setWarehouseList(remainingWarehouses);
-
-        if (remainingWarehouses.length > 0) {
-            setSelectedWarehouse(remainingWarehouses[0]);
-        } else {
-            setSelectedWarehouse(null);
+        try {
+            await warehouseApi.remove(selectedWarehouse.warehouse_id);
+            await reloadWarehouses();
+        } catch (error) {
+            window.alert(
+                error.message ||
+                    "삭제에 실패했습니다. 실행 중인 시뮬레이션이 있는지 확인해주세요.",
+            );
         }
     };
 
@@ -509,7 +529,13 @@ function WarehouseManagement() {
                 </div>
 
                 <div className="warehouse-list">
-                    {warehouseList.length === 0 && (
+                    {isLoading && (
+                        <div className="warehouse-list-empty">
+                            불러오는 중...
+                        </div>
+                    )}
+
+                    {!isLoading && warehouseList.length === 0 && (
                         <div className="warehouse-list-empty">
                             등록된 창고가 없습니다.
                         </div>
@@ -574,6 +600,12 @@ function WarehouseManagement() {
                                 <button
                                     type="button"
                                     onClick={openEditModal}
+                                    disabled={selectedWarehouse.shared}
+                                    title={
+                                        selectedWarehouse.shared
+                                            ? "공용 창고는 수정할 수 없습니다."
+                                            : undefined
+                                    }
                                 >
                                     수정
                                 </button>
@@ -582,6 +614,12 @@ function WarehouseManagement() {
                                     type="button"
                                     className="delete-button"
                                     onClick={handleDeleteWarehouse}
+                                    disabled={selectedWarehouse.shared}
+                                    title={
+                                        selectedWarehouse.shared
+                                            ? "공용 창고는 삭제할 수 없습니다."
+                                            : undefined
+                                    }
                                 >
                                     삭제
                                 </button>
@@ -851,6 +889,12 @@ function WarehouseManagement() {
                                     </>
                                 )}
                             </div>
+                        )}
+
+                        {saveError && (
+                            <p className="warehouse-json-error">
+                                {saveError}
+                            </p>
                         )}
 
                         <div className="warehouse-modal-actions">
