@@ -1,8 +1,25 @@
 import { useEffect, useState } from "react";
 import "../styles/WarehouseSVG.css";
 
-import warehouseGraph from "../data/Warehouse_graph.json";
+import warehouseGraph from "../data/warehouse_graph.json";
 import rackInventory from "../data/rack_inventory.json";
+
+// 창고별 폴백 지도.
+// API 조회가 실패했을 때 그리는 그림이라 창고마다 달라야 한다.
+// (하나만 쓰면 창고 2를 골라도 창고 1이 그려진다)
+import warehouseGraph1 from "../assets/warehouse-maps/warehouse_graph_1.json";
+import warehouseGraph2 from "../assets/warehouse-maps/warehouse_graph_2.json";
+import warehouseGraph3 from "../assets/warehouse-maps/warehouse_graph_3.json";
+
+const FALLBACK_GRAPHS = {
+    1: warehouseGraph1,
+    2: warehouseGraph2,
+    3: warehouseGraph3,
+};
+
+// 등록된 지도가 없는 창고(사용자가 추가한 창고)는 기본형으로 그린다.
+const fallbackGraphOf = (warehouseId) =>
+    FALLBACK_GRAPHS[warehouseId] ?? warehouseGraph1;
 
 import robotCharging from "../assets/robots/robot_charging.png";
 import robotHero from "../assets/robots/robot_hero.png";
@@ -11,21 +28,26 @@ import robotPutaway from "../assets/robots/robot_putaway.png";
 import robotRelocation from "../assets/robots/robot_relocation.png";
 import robotReplenish from "../assets/robots/robot_replenish.png";
 
-function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
+function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
     // 노드 표시 ON / OFF
     const [showNodeLabels, setShowNodeLabels] = useState(false);
 
-    // 처음에는 기존 JSON 지도를 보여주고,
+    // 처음에는 고른 창고의 JSON 지도를 보여주고,
     // API 조회 성공 후 백엔드 데이터로 교체
-    const [graphData, setGraphData] = useState(warehouseGraph);
+    const [graphData, setGraphData] = useState(
+        () => fallbackGraphOf(warehouseId)
+    );
 
     useEffect(() => {
+        // 창고를 바꾸면 API 응답이 오기 전까지 그 창고의 폴백 지도를 보여준다
+        setGraphData(fallbackGraphOf(warehouseId));
+
         const fetchWarehouseLayout = async () => {
             try {
                 const accessToken = localStorage.getItem("accessToken");
 
                 const response = await fetch(
-                    "http://localhost:8080/api/warehouses/1/layout",
+                    `http://localhost:8080/api/warehouses/${warehouseId}/layout`,
                     {
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -163,12 +185,13 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
 
                 setGraphData({
                     nodes: mergedNodes,
-                    edges: mergedNodes,
+                    edges: mergedEdges,
                 });
 
                 console.log("변환된 창고 지도:", {
-                    nodes: convertedNodes.length,
-                    edges: convertedEdges.length,
+                    warehouseId,
+                    nodes: mergedNodes.length,
+                    edges: mergedEdges.length,
                 });
             } catch (error) {
                 console.error("창고 레이아웃 조회 오류:", error);
@@ -176,7 +199,7 @@ function WarehouseSVG({ robots = [], simulationSpeed = 1 }) {
         };
 
         fetchWarehouseLayout();
-    }, []);
+    }, [warehouseId]);
 
     // SVG 크기
     const SVG_WIDTH = 1200;

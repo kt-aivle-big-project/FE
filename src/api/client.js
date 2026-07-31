@@ -188,4 +188,15 @@ export const warehouseApi = {
     getAll: () => api.get("/warehouses"),
     getLayout: (warehouseId) =>
         api.get(`/warehouses/${warehouseId}/layout`),
+
+    // 지도 JSON 과 함께 창고를 만든다.
+    // 노드·간선뿐 아니라 랙·충전소·로봇까지 백엔드가 만들어준다.
+    importWarehouse: (payload) =>
+        api.post("/warehouses/import", payload),
+
+    update: (warehouseId, payload) =>
+        api.patch(`/warehouses/${warehouseId}`, payload),
+
+    remove: (warehouseId) =>
+        api.delete(`/warehouses/${warehouseId}`),
 };
