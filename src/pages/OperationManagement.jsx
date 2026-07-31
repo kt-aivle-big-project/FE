@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/OperationManagement.css";
+import "../styles/operationManagement.css";
 
 // 백엔드 API가 준비되면 실제 경로에 맞춰 import합니다.
 // import { operationApi } from "../api/client";
