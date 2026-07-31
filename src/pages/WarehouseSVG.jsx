@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
+import "../styles/WarehouseSVG.css";
 
-import warehouseGraph from "../../data/Warehouse_graph.json";
-import rackInventory from "../../data/rack_inventory.json";
+import warehouseGraph from "../data/Warehouse_graph.json";
+import rackInventory from "../data/rack_inventory.json";
 
-import robotCharging from "../../assets/robots/robot_charging.png";
-import robotHero from "../../assets/robots/robot_hero.png";
-import robotPicking from "../../assets/robots/robot_picking.png";
-import robotPutaway from "../../assets/robots/robot_putaway.png";
-import robotRelocation from "../../assets/robots/robot_relocation.png";
-import robotReplenish from "../../assets/robots/robot_replenish.png";
-
-import "../../styles/WarehouseSVG.css";
+import robotCharging from "../assets/robots/robot_charging.png";
+import robotHero from "../assets/robots/robot_hero.png";
+import robotPicking from "../assets/robots/robot_picking.png";
+import robotPutaway from "../assets/robots/robot_putaway.png";
+import robotRelocation from "../assets/robots/robot_relocation.png";
+import robotReplenish from "../assets/robots/robot_replenish.png";
 
 function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
     // 노드 표시 ON / OFF

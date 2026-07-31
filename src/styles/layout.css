@@ -10,6 +10,25 @@
     --hover-color: #eeeeee;
 }
 
+:root {
+    --laro-primary: #2F80ED;
+    --laro-primary-hover: #1F6FD1;
+    --laro-primary-light: #EAF3FF;
+    --laro-navy: #16324F;
+    --laro-text: #202938;
+    --laro-subtext: #7A8494;
+    --laro-background: #F8FAFD;
+    --laro-white: #FFFFFF;
+    --laro-border: #DCE3EC;
+
+    --laro-surface-hover: #F1F5FA;
+    --laro-shadow: rgba(22, 50, 79, 0.12);
+    --laro-focus-ring: rgba(47, 128, 237, 0.28);
+
+    --laro-danger: #E5484D;
+    --laro-danger-light: #FFF1F2;
+    --laro-overlay: rgba(22, 50, 79, 0.45);
+}
 
 /* =========================
    전체 기본 설정

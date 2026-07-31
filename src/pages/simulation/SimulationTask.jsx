@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import "../../styles/SimulationTask.css";
+import "../../styles/simulation/SimulationTask.css";
 
 function SimulationTask({ tasks = [] }) {
     const taskListRef = useRef(null);
