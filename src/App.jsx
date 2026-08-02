@@ -6,7 +6,9 @@ import ForgotPassword from "./pages/login/ForgotPassword";
 import Signup from "./pages/login/Signup";
 import MainLayout from "./pages/MainLayout";
 import Simulation from "./pages/simulation/Simulation";
-import Scenario from "./pages/scenario/Scenario";
+// TODO: pages/scenario/Scenario.jsx 가 아직 저장소에 없어 화면이 뜨지 않는다.
+// 파일이 올라오면 아래 import 와 /scenarios 라우트 주석을 풀 것.
+// import Scenario from "./pages/scenario/Scenario";
 import SimulationSetting from "./pages/SimulationSetting";
 import RobotManagement from "./pages/RobotManagement";
 import WarehouseManagement from "./pages/WarehouseManagement";
@@ -24,7 +26,7 @@ function App() {
                 <Route element={<MainLayout />}>
                     <Route path="/simulation" element={<Simulation />} />
                     <Route path="/robot" element={<RobotManagement />} />
-                    <Route path="/scenarios" element={<Scenario />} />
+                    {/* <Route path="/scenarios" element={<Scenario />} /> */}
                     <Route path="/warehouse" element={<WarehouseManagement />} />
                     <Route path="/operation" element={<OperationManagement />} />
                 </Route>
