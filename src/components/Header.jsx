@@ -56,15 +56,10 @@ function Sidebar() {
 
                     <li>
                         <NavLink to="/operation">
-                            운영
+                            운영/대시보드
                         </NavLink>
                     </li>
 
-                    <li>
-                        <NavLink to="/dashboard">
-                            대시보드
-                        </NavLink>
-                    </li>
                 </ul>
             </nav>
 
