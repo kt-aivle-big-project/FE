@@ -1,24 +1,13 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import "../styles/WarehouseSVG.css";
 
 import rackInventory from "../data/rack_inventory.json";
 
-// 창고별 폴백 지도.
-// API 조회가 실패했을 때 그리는 그림이라 창고마다 달라야 한다.
-// (하나만 쓰면 창고 2를 골라도 창고 1이 그려진다)
+// 창고별 정적 지도 JSON.
+// 이 데이터는 창고의 고정 구조(노드, 엣지, 시설 위치)를 화면에 그리는 용도로만 사용한다.
 import warehouseGraph1 from "../assets/warehouse-maps/warehouse_graph_1.json";
 import warehouseGraph2 from "../assets/warehouse-maps/warehouse_graph_2.json";
 import warehouseGraph3 from "../assets/warehouse-maps/warehouse_graph_3.json";
-
-const FALLBACK_GRAPHS = {
-    1: warehouseGraph1,
-    2: warehouseGraph2,
-    3: warehouseGraph3,
-};
-
-// 등록된 지도가 없는 창고(사용자가 추가한 창고)는 기본형으로 그린다.
-const fallbackGraphOf = (warehouseId) =>
-    FALLBACK_GRAPHS[warehouseId] ?? warehouseGraph1;
 
 import robotCharging from "../assets/robots/robot_charging.png";
 import robotHero from "../assets/robots/robot_hero.png";
@@ -27,105 +16,167 @@ import robotPutaway from "../assets/robots/robot_putaway.png";
 import robotRelocation from "../assets/robots/robot_relocation.png";
 import robotReplenish from "../assets/robots/robot_replenish.png";
 
+const FALLBACK_GRAPHS = {
+    1: warehouseGraph1,
+    2: warehouseGraph2,
+    3: warehouseGraph3,
+};
+
+// 등록된 정적 지도가 없는 창고는 기본형 창고 지도를 사용한다.
+const fallbackGraphOf = (warehouseId) =>
+    FALLBACK_GRAPHS[warehouseId] ?? warehouseGraph1;
+
+// 양방향 노드의 쌍을 비교하기 위한 키를 만든다.
+const makeUndirectedEdgeKey = (sourceId, targetId) =>
+    [sourceId, targetId].sort().join("::");
+
+// 양방향 엣지를 평행한 두 선으로 표시할 때 사용하는 간격
+const BIDIRECTIONAL_EDGE_OFFSET = 2;
+
 function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
-    // 노드 표시 ON / OFF
+    // 노드 ID 표시 ON / OFF
     const [showNodeLabels, setShowNodeLabels] = useState(false);
 
-    // 처음에는 고른 창고의 JSON 지도를 보여주고,
-    // API 조회 성공 후 백엔드 데이터로 교체
-    const [graphData, setGraphData] = useState(
-        () => fallbackGraphOf(warehouseId)
+    /*
+     * 정적 지도와 동적 시뮬레이션 결과 분리
+     * layoutGraph: JSON에서 읽어오는 창고의 고정 구조
+     * - 창고가 바뀔 때만 교체된다.
+     * simulationData: 백엔드 또는 상위 컴포넌트에서 전달하는 동적 결과
+     * - 현재 단계에서는 로봇 상태만 보관한다.
+     * - 이후 activePaths, blockedEdges, tasks 등을 이 객체에 추가할 수 있다.
+     */
+    const layoutGraph = useMemo(() =>
+        fallbackGraphOf(warehouseId),
+        [warehouseId]
     );
 
-    useEffect(() => {
-        // 창고를 바꾸면 API 응답이 오기 전까지 그 창고의 폴백 지도를 보여준다
-        setGraphData(fallbackGraphOf(warehouseId));
+    const simulationData = useMemo(() => ({
+        robots,
+    }),
+        [robots]
+    );
 
-        const fetchWarehouseLayout = async () => {
-            try {
-                const accessToken = localStorage.getItem("accessToken");
+    // JSON 원본을 화면 렌더링에 필요한 형태로 분류한다.
+    const warehouseView = useMemo(() => {
+        const nodes = layoutGraph?.nodes ?? [];
 
-                const response = await fetch(
-                    `http://localhost:8080/api/warehouses/${warehouseId}/layout`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                    }
-                );
+        // 노드 타입별 배열을 미리 만들어 렌더링 코드의 중복 filter를 제거한다.
+        const routeNodes = nodes.filter((node) => node.type === "route");
+        const rackAccessNodes = nodes.filter(
+            (node) => node.type === "rack_access"
+        );
+        const inboundAccessNodes = nodes.filter(
+            (node) => node.type === "inbound_access"
+        );
+        const outboundAccessNodes = nodes.filter(
+            (node) => node.type === "outbound_access"
+        );
+        const chargeJunctionNodes = nodes.filter(
+            (node) => node.type === "route_charge_junction"
+        );
+        const chargingNodes = nodes.filter(
+            (node) => node.type === "charging_slot"
+        );
+        const inboundNodes = nodes.filter(
+            (node) => node.type === "inbound"
+        );
+        const outboundNodes = nodes.filter(
+            (node) => node.type === "outbound"
+        );
+        const emptyToteBufferNodes = nodes.filter(
+            (node) => node.type === "empty_tote_buffer_access"
+        );
 
-                if (!response.ok) {
-                    throw new Error(`레이아웃 조회 실패: ${response.status}`);
-                }
+        // edge.source / edge.target의 ID를 실제 노드 좌표로 찾을 때 사용한다.
+        const nodeMap = new Map(nodes.map((node) => [node.id, node]));
 
-                const data = await response.json();
+        // rack_access A/B의 가운데 좌표를 실제 랙의 화면 위치로 사용한다.
+        const rackMap = new Map();
 
-                const nodeCodeMap = new Map(
-                    data.nodes
-                        .filter((node) => node.nodeCode)
-                        .map((node) => [node.id, node.nodeCode])
-                );
-
-                const convertedNodes = data.nodes
-                    .filter((node) => node.nodeCode && node.nodeType)
-                    .map((node) => {
-                        const routeMatch = node.nodeCode.match(/^R(\d+)_(\d+)$/);
-                        const chargingMatch = node.nodeCode.match(/^C(\d+)$/);
-
-                        return {
-                            databaseId: node.id,
-                            id: node.nodeCode,
-                            type: node.nodeType.toLowerCase(),
-                            x: node.x,
-                            y: node.y,
-
-                            row: routeMatch
-                                ? Number(routeMatch[1])
-                                : undefined,
-
-                            col: routeMatch
-                                ? Number(routeMatch[2])
-                                : undefined,
-
-                            label:
-                                node.nodeType === "INBOUND"
-                                    ? node.nodeCode.replace("I_", "")
-                                    : node.nodeType === "OUTBOUND"
-                                        ? node.nodeCode.replace("O_", "")
-                                        : undefined,
-
-                            index: chargingMatch
-                                ? Number(chargingMatch[1])
-                                : undefined,
-                        };
-                    });
-
-                const convertedEdges = data.edges
-                    .map((edge) => ({
-                        id: edge.id,
-                        source: nodeCodeMap.get(edge.fromNodeId),
-                        target: nodeCodeMap.get(edge.toNodeId),
-                        type: "lane",
-                    }))
-                    .filter((edge) => edge.source && edge.target);
-
-                setGraphData({
-                    nodes: convertedNodes,
-                    edges: convertedEdges,
-                });
-
-                console.log("변환된 창고 지도:", {
-                    warehouseId,
-                    nodes: convertedNodes.length,
-                    edges: convertedEdges.length,
-                });
-            } catch (error) {
-                console.error("창고 레이아웃 조회 오류:", error);
+        rackAccessNodes.forEach((accessNode) => {
+            if (!accessNode.rack_id) {
+                return;
             }
-        };
 
-        fetchWarehouseLayout();
-    }, [warehouseId]);
+            if (!rackMap.has(accessNode.rack_id)) {
+                rackMap.set(accessNode.rack_id, {
+                    id: accessNode.rack_id,
+                    accessA: null,
+                    accessB: null,
+                });
+            }
+
+            const rack = rackMap.get(accessNode.rack_id);
+
+            if (accessNode.side === "A") {
+                rack.accessA = accessNode;
+            } else if (accessNode.side === "B") {
+                rack.accessB = accessNode;
+            }
+        });
+
+        const racks = [...rackMap.values()]
+            // A/B 접근점이 모두 있는 정상 랙만 화면에 표시한다.
+            .filter((rack) => rack.accessA && rack.accessB)
+            .map((rack) => {
+                const deltaX = rack.accessB.x - rack.accessA.x;
+                const deltaY = rack.accessB.y - rack.accessA.y;
+
+                return {
+                    ...rack,
+
+                    // A/B 접근점의 중간을 실제 랙 중심으로 사용한다.
+                    x: (rack.accessA.x + rack.accessB.x) / 2,
+                    y: (rack.accessA.y + rack.accessB.y) / 2,
+
+                    // 접근점이 좌우로 놓이면 랙은 세로 방향, 접근점이 위아래로 놓이면 랙은 가로 방향으로 표시한다.
+                    rotation: Math.abs(deltaX) > Math.abs(deltaY) ? 90 : 0,
+                };
+            });
+
+        // 랙 관통 엣지 렌더링 방지
+        // 화면상 랙을 뚫고 지나가는 엣지가 있다면 제외한다.
+        // 잘못된 JSON이 들어와도 관통선을 표시하지 않도록 JSX에서 한 번 더 방어한다.
+        const rackCrossingPairKeys = new Set(
+            racks
+                .map((rack) => {
+                    const routeA =
+                        rack.accessA.adjacent_route_node;
+                    const routeB =
+                        rack.accessB.adjacent_route_node;
+
+                    if (!routeA || !routeB || routeA === routeB) {
+                        return null;
+                    }
+
+                    return makeUndirectedEdgeKey(routeA, routeB);
+                })
+                .filter(Boolean)
+        );
+
+        // 실제 SVG에는 랙 관통 엣지를 제외한 선만 전달한다.
+        const edges = (layoutGraph?.edges ?? []).filter((edge) =>
+            !rackCrossingPairKeys.has(
+                makeUndirectedEdgeKey(edge.source, edge.target)
+            )
+        );
+
+        return {
+            nodes,
+            edges,
+            nodeMap,
+            routeNodes,
+            rackAccessNodes,
+            inboundAccessNodes,
+            outboundAccessNodes,
+            chargeJunctionNodes,
+            chargingNodes,
+            inboundNodes,
+            outboundNodes,
+            emptyToteBufferNodes,
+            racks,
+        };
+    }, [layoutGraph]);
 
     // SVG 크기
     const SVG_WIDTH = 1200;
@@ -134,49 +185,169 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
     const PADDING_X = 40;
     const PADDING_Y = 30;
 
-    // warehouse_graph.json 좌표 범위 계산
-    // JSON의 x, y 좌표를 SVG 좌표로 자동 변환하기 위해 최소/최대 좌표를 구함
-    const xValues = graphData.nodes.map((node) => node.x);
-    const yValues = graphData.nodes.map((node) => node.y);
+    // JSON 좌표를 SVG 좌표로 바꾸기 위해 전체 노드의 좌표 범위를 계산한다.
+    // 창고 지도마다 좌표 체계가 달라도 같은 SVG 영역에 자동으로 맞춰진다.
+    const coordinateBounds = useMemo(() => {
+        const xValues = warehouseView.nodes.map((node) => node.x);
+        const yValues = warehouseView.nodes.map((node) => node.y);
 
-    const minX = Math.min(...xValues);
-    const maxX = Math.max(...xValues);
+        // 비어 있는 지도나 동일 좌표만 있는 예외 상황에서도 0으로 나누지 않도록 보호한다.
+        const rawMinX = xValues.length ? Math.min(...xValues) : 0;
+        const rawMaxX = xValues.length ? Math.max(...xValues) : 1;
+        const rawMinY = yValues.length ? Math.min(...yValues) : 0;
+        const rawMaxY = yValues.length ? Math.max(...yValues) : 1;
 
-    const minY = Math.min(...yValues);
-    const maxY = Math.max(...yValues);
+        return {
+            minX: rawMinX,
+            maxX: rawMaxX === rawMinX ? rawMinX + 1 : rawMaxX,
+            minY: rawMinY,
+            maxY: rawMaxY === rawMinY ? rawMinY + 1 : rawMaxY,
+        };
+    }, [warehouseView.nodes]);
 
-    // JSON 좌표 → SVG 좌표 변환
+    const { minX, maxX, minY, maxY } = coordinateBounds;
+
+    // JSON X 좌표 → SVG X 좌표
     const convertX = (x) => {
         const availableWidth = SVG_WIDTH - PADDING_X * 2;
+
         return (
-            PADDING_X +
-            ((x - minX) / (maxX - minX)) *
-            availableWidth
+            PADDING_X + ((x - minX) / (maxX - minX)) * availableWidth
         );
     };
 
+    // JSON Y 좌표 → SVG Y 좌표
     const convertY = (y) => {
         const availableHeight = SVG_HEIGHT - PADDING_Y * 2;
+
         return (
-            PADDING_Y +
-            ((y - minY) / (maxY - minY)) *
-            availableHeight
+            PADDING_Y + ((y - minY) / (maxY - minY)) * availableHeight
         );
     };
 
-    // 노드 ID → 노드 정보
-    // edge.source / edge.target를 좌표로 변환할 때 사용
-    const nodeMap = new Map(
-        graphData.nodes.map((node) => [node.id, node])
-    );
+
+    /*
+     * 화면에 표시할 엣지 좌표를 계산한다.
+     * 1. 반대 방향 엣지가 없으면 기존 좌표 그대로 한 줄을 그린다.
+     * 2. 반대 방향 엣지가 있으면 같은 두 노드 사이의 선을
+     *    중심 기준 양쪽으로 조금씩 이동해 평행한 두 줄로 그린다.
+     * 3. 엣지 ID의 _IN / _OUT 여부나 엣지 type과 상관없이
+     *    실제 source → target의 반대 엣지가 존재하는지만 확인한다.
+     */
+    const renderEdges = useMemo(() => {
+        // source → target 형식으로 모든 방향 엣지를 빠르게 조회한다.
+        const directedEdgeKeys = new Set(
+            warehouseView.edges.map(
+                (edge) => `${edge.source}->${edge.target}`
+            )
+        );
+
+        return warehouseView.edges.map((edge) => {
+            const source = warehouseView.nodeMap.get(edge.source);
+            const target = warehouseView.nodeMap.get(edge.target);
+
+            if (!source || !target) {
+                return null;
+            }
+
+            const originalX1 = convertX(source.x);
+            const originalY1 = convertY(source.y);
+            const originalX2 = convertX(target.x);
+            const originalY2 = convertY(target.y);
+
+            // target → source 엣지가 있으면 이 연결은 양방향이다.
+            const isBidirectional = directedEdgeKeys.has(
+                `${edge.target}->${edge.source}`
+            );
+
+            // 단방향 연결은 기존 중앙선 위치를 그대로 사용한다.
+            if (!isBidirectional) {
+                return {
+                    ...edge,
+                    x1: originalX1,
+                    y1: originalY1,
+                    x2: originalX2,
+                    y2: originalY2,
+                    isBidirectional: false,
+                };
+            }
+
+            // 노드 ID를 정렬해 양방향 엣지의 공통 기준 방향을 만든다.
+            const [canonicalSourceId, canonicalTargetId] =
+                [edge.source, edge.target].sort();
+
+            const canonicalSource = warehouseView.nodeMap.get(
+                canonicalSourceId
+            );
+            const canonicalTarget = warehouseView.nodeMap.get(
+                canonicalTargetId
+            );
+
+            if (!canonicalSource || !canonicalTarget) {
+                return null;
+            }
+
+            const canonicalX1 = convertX(canonicalSource.x);
+            const canonicalY1 = convertY(canonicalSource.y);
+            const canonicalX2 = convertX(canonicalTarget.x);
+            const canonicalY2 = convertY(canonicalTarget.y);
+
+            const deltaX = canonicalX2 - canonicalX1;
+            const deltaY = canonicalY2 - canonicalY1;
+            const edgeLength = Math.hypot(deltaX, deltaY);
+
+            // 시작점과 끝점이 같은 비정상 엣지는 기존 위치로 표시한다.
+            if (edgeLength === 0) {
+                return {
+                    ...edge,
+                    x1: originalX1,
+                    y1: originalY1,
+                    x2: originalX2,
+                    y2: originalY2,
+                    isBidirectional: true,
+                };
+            }
+
+            // 공통 기준선에 수직인 단위 벡터
+            const normalX = -deltaY / edgeLength;
+            const normalY = deltaX / edgeLength;
+
+            // 정렬된 기준 방향과 같은 방향이면 +offset, 반대 방향이면 -offset을 적용한다.
+            const followsCanonicalDirection =
+                edge.source === canonicalSourceId
+                && edge.target === canonicalTargetId;
+
+            const offsetSign = followsCanonicalDirection ? 1 : -1;
+            const offsetX = normalX * BIDIRECTIONAL_EDGE_OFFSET * offsetSign;
+            const offsetY = normalY * BIDIRECTIONAL_EDGE_OFFSET * offsetSign;
+
+            return {
+                ...edge,
+                x1: originalX1 + offsetX,
+                y1: originalY1 + offsetY,
+                x2: originalX2 + offsetX,
+                y2: originalY2 + offsetY,
+                isBidirectional: true,
+            };
+        }).filter(Boolean);
+    }, [
+        warehouseView.edges,
+        warehouseView.nodeMap,
+        minX,
+        maxX,
+        minY,
+        maxY,
+    ]);
 
     // 랙 ID → 랙 재고 정보
-    // K0_1 같은 rack_storage 노드와 rack_inventory.json 데이터를 연결
-    const rackInventoryMap = new Map(
+    // rack_access에서 만든 화면용 랙 ID와 rack_inventory.json을 연결한다.
+    const rackInventoryMap = useMemo(() => new Map(
         rackInventory.racks.map((rack) => [rack.rack_node_id, rack])
+    ),
+        []
     );
 
-    // 랙 상태 class 반환
+    // 랙 재고 상태에 따라 사용할 CSS class를 반환한다.
     const getRackLevelClass = (status) => {
         switch (status) {
             case "FULL":
@@ -188,7 +359,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
         }
     };
 
-    // 로봇 이미지 매핑
+    // 로봇 상태별 이미지 매핑
     const robotImages = {
         IDLE: robotHero,
         CHARGING: robotCharging,
@@ -268,37 +439,35 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                     fill="url(#warehouse-grid)"
                 />
 
-                {/* EDGE
-                    항상 노드보다 먼저 그려야 선 위에 노드가 올라옴 */}
-                <g className="warehouse-edges">
-                    {graphData.edges.map(
-                        (edge) => {
-                            const source = nodeMap.get(edge.source);
-                            const target = nodeMap.get(edge.target);
-
-                            if (!source || !target) {
-                                return null;
-                            }
-
-                            return (
-                                <line
-                                    key={edge.id}
-                                    x1={convertX(source.x)}
-                                    y1={convertY(source.y)}
-                                    x2={convertX(target.x)}
-                                    y2={convertY(target.y)}
-                                    className={`warehouse-edge edge-${edge.type}`}
-                                />
-                            );
-                        })}
+                {/*  EDGE
+                    - 항상 노드보다 먼저 그려야 선 위에 노드가 올라온다.
+                    - 단방향 연결은 기존처럼 가운데 한 줄로 표시한다.
+                    - 양방향 연결은 같은 스타일의 평행선 두 줄로 표시한다.
+                */}
+                <g className="warehouse-edges warehouse-rendered-edges">
+                    {renderEdges.map((edge) => (
+                        <line
+                            key={edge.id}
+                            x1={edge.x1}
+                            y1={edge.y1}
+                            x2={edge.x2}
+                            y2={edge.y2}
+                            className={`warehouse-edge warehouse-rendered-edge ${edge.isBidirectional
+                                ? "warehouse-bidirectional-edge"
+                                : "warehouse-single-edge"
+                                } edge-${edge.type}`}
+                            data-edge-id={edge.id}
+                            data-bidirectional={edge.isBidirectional}
+                        >
+                            <title>{edge.id}</title>
+                        </line>
+                    ))}
                 </g>
 
                 {/* 통로 번호 */}
                 <g className="warehouse-aisle-labels">
-                    {graphData.nodes
-                        .filter((node) =>
-                            node.type === "route" && node.col === 0
-                        )
+                    {warehouseView.routeNodes
+                        .filter((node) => node.col === 0)
                         .map((node) => (
 
                             <text
@@ -315,9 +484,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
 
                 {/* 로봇이 실제로 이동하는 route 노드 */}
                 <g className="warehouse-route-nodes">
-                    {graphData.nodes
-                        .filter((node) => node.type === "route"
-                        )
+                    {warehouseView.routeNodes
                         .map((node) => (
                             <g key={node.id}>
 
@@ -348,10 +515,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
 
                 {/* 입고지 연결 inbound-access */}
                 <g className="warehouse-inbound-access">
-                    {graphData.nodes
-                        .filter((node) =>
-                            node.type === "inbound_access"
-                        )
+                    {warehouseView.inboundAccessNodes
                         .map((node) => (
                             <g key={node.id}>
 
@@ -381,10 +545,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
 
                 {/* 출고지 연결 inbound-access */}
                 <g className="warehouse-outbound-access">
-                    {graphData.nodes
-                        .filter((node) =>
-                            node.type === "outbound_access"
-                        )
+                    {warehouseView.outboundAccessNodes
                         .map((node) => (
                             <g key={node.id}>
                                 <circle
@@ -412,12 +573,9 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                 </g>
 
                 {/* 충전소 연결 Junction
-                    route ↔ charging slot 연결 지점 */}
+                            route ↔ charging slot 연결 지점 */}
                 <g className="warehouse-charge-junctions">
-                    {graphData.nodes
-                        .filter((node) =>
-                            node.type === "route_charge_junction"
-                        )
+                    {warehouseView.chargeJunctionNodes
                         .map((node) => (
                             <circle
                                 key={node.id}
@@ -432,36 +590,33 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                 </g>
 
                 {/* 선반
-                    rack_inventory.json의 3단 재고 상태까지 표시 */}
+                    - JSON에는 rack_storage 노드가 없다.
+                    - rack_access A/B의 중간 좌표에 실제 랙을 생성한다.
+                    - rack_inventory.json의 3단 재고 상태를 함께 표시한다.
+                */}
                 <g className="warehouse-racks">
-                    {graphData.nodes
-                        .filter((node) =>
-                            node.type === "rack_storage"
-                        )
-                        .map((node) => {
-                            const inventory = rackInventoryMap.get(node.id);
-                            /*
-                             * 화면에서는 상단 → 중단 → 하단 순서로 보여주기 위해
-                             * level을 역순으로 정렬
-                             */
-                            const levels =
-                                inventory?.levels
-                                    ? [...inventory.levels]
-                                        .sort((a, b) =>
-                                            b.level -
-                                            a.level
-                                        ) : [];
+                    {warehouseView.racks.map((rack) => {
+                        const inventory = rackInventoryMap.get(rack.id);
 
-                            return (
-                                <g
-                                    key={node.id}
-                                    transform={
-                                        `translate(
-                                                ${convertX(node.x)},
-                                                ${convertY(node.y)}
-                                            )`
-                                    }
-                                >
+                        // 화면에서는 상단 → 중단 → 하단 순서로 보여주기 위해 level을 역순으로 정렬한다.
+                        const levels = inventory?.levels
+                            ? [...inventory.levels].sort(
+                                (a, b) => b.level - a.level
+                            )
+                            : [];
+
+                        return (
+                            <g
+                                key={rack.id}
+                                transform={`translate(
+                                            ${convertX(rack.x)},
+                                            ${convertY(rack.y)}
+                                        )`}
+                            >
+                                {/* 랙 몸체만 회전시킨다.
+                                    ID 텍스트는 바깥 그룹에 두어 항상 수평으로 표시한다. */}
+                                <g transform={`rotate(${rack.rotation})`}>
+                                    
                                     {/* 선반 외곽 */}
                                     <rect
                                         x="-22"
@@ -469,46 +624,46 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                         width="44"
                                         height="34"
                                         className="warehouse-rack"
-                                    />
-
-                                    {/* 선반 3단 */}
-                                    {levels.map(
-                                        (level, index) => (
-                                            <rect
-                                                key={level.level}
-                                                x="-20"
-                                                y={-15 + index * 10}
-                                                width="40"
-                                                height="9"
-                                                className={`warehouse-rack-level ${getRackLevelClass(level.status)}`}
-                                            >
-                                                <title>
-                                                    {`${node.id} / ${level.level}단 / ${level.status}`}
-                                                </title>
-                                            </rect>
-                                        )
-                                    )}
-
-                                    {/* 랙 ID */}
-                                    <text
-                                        x="0"
-                                        y="27"
-                                        textAnchor="middle"
-                                        className="warehouse-rack-label"
                                     >
-                                        {node.id}
-                                    </text>
+                                        <title>
+                                            {`${rack.id} / 접근점: ${rack.accessA.id}, ${rack.accessB.id}`}
+                                        </title>
+                                    </rect>
+
+                                    {/* 선반 3단 재고 상태 */}
+                                    {levels.map((level, index) => (
+                                        <rect
+                                            key={level.level}
+                                            x="-20"
+                                            y={-15 + index * 10}
+                                            width="40"
+                                            height="9"
+                                            className={`warehouse-rack-level ${getRackLevelClass(level.status)}`}
+                                        >
+                                            <title>
+                                                {`${rack.id} / ${level.level}단 / ${level.status}`}
+                                            </title>
+                                        </rect>
+                                    ))}
                                 </g>
-                            );
-                        })}
+
+                                {/* 랙 ID는 회전하지 않고 항상 읽기 쉽게 표시한다. */}
+                                <text
+                                    x="0"
+                                    y="27"
+                                    textAnchor="middle"
+                                    className="warehouse-rack-label"
+                                >
+                                    {rack.id}
+                                </text>
+                            </g>
+                        );
+                    })}
                 </g>
 
                 {/* 입고 엘리베이터 IA ~ IG  */}
                 <g className="warehouse-inbound">
-                    {graphData.nodes
-                        .filter((node) =>
-                            node.type === "inbound"
-                        )
+                    {warehouseView.inboundNodes
                         .map((node) => (
                             <g key={node.id}>
                                 <rect
@@ -545,12 +700,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
 
                 {/* 출고 엘리베이터 OA ~ OG */}
                 <g className="warehouse-outbound">
-                    {graphData.nodes
-                        .filter(
-                            (node) =>
-                                node.type ===
-                                "outbound"
-                        )
+                    {warehouseView.outboundNodes
                         .map(
                             (node) => (
                                 <g key={node.id}>
@@ -588,10 +738,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
 
                 {/* 충전소 C01 ~ C10 */}
                 <g className="warehouse-charging">
-                    {graphData.nodes
-                        .filter((node) =>
-                            node.type === "charging_slot"
-                        )
+                    {warehouseView.chargingNodes
                         .map((node) => (
                             <g key={node.id}>
                                 <rect
@@ -658,10 +805,10 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
 
                 {/* 로봇 */}
                 <g className="warehouse-robots">
-                    {robots.map((robot) => {
+                    {simulationData.robots.map((robot) => {
                         // robots.json의 node_id를 이용해서
                         // warehouse_graph.json에서 현재 위치 찾기
-                        const currentNode = nodeMap.get(robot.node_id);
+                        const currentNode = warehouseView.nodeMap.get(robot.node_id);
 
                         if (!currentNode) {
                             return null;
@@ -720,9 +867,9 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
 
                                 <title>
                                     {`${robot.robot_code}
-                                        상태: ${robot.status}
-                                        배터리: ${robot.battery}%
-                                        현재 노드: ${robot.node_id}`}
+                                                상태: ${robot.status}
+                                                배터리: ${robot.battery}%
+                                                현재 노드: ${robot.node_id}`}
                                 </title>
                             </g>
                         );
