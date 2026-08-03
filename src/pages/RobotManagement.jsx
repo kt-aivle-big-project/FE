@@ -58,6 +58,16 @@ const SUMMARY_GROUPS = [
     },
 ];
 
+// 시뮬레이션 화면에서 고른 창고를 그대로 이어받는다.
+// 두 화면이 같은 키를 쓰면 창고를 한 번만 고르면 된다.
+const WAREHOUSE_ID_KEY = "selectedWarehouseId";
+
+// 창고 필터는 "ALL"(전체) 또는 창고 ID 문자열을 값으로 쓴다.
+const readSelectedWarehouseId = () => {
+    const saved = Number(localStorage.getItem(WAREHOUSE_ID_KEY));
+    return Number.isFinite(saved) && saved > 0 ? String(saved) : "ALL";
+};
+
 const mergeRobotState = (robot, runtimeStates, nodeDetails) => {
     const runtime = runtimeStates[robot.id];
     const nodeId = runtime?.currentNodeId ?? robot.nodeId;
@@ -101,7 +111,6 @@ const findCurrentTask = (robot, taskList) => {
     }
 
     const robotTasks = taskList.filter((task) => task.robotId === robot.id);
-
     return robotTasks.find((task) => task.status === "IN_PROGRESS")
         ?? robotTasks.find((task) => task.status === "ASSIGNED")
         ?? null;
@@ -145,12 +154,17 @@ function RobotManagement() {
 
     const [selectedRobot, setSelectedRobot] = useState(null);
     const [selectedTask, setSelectedTask] = useState(null);
+
     const [isLoading, setIsLoading] = useState(false);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
 
     const [searchText, setSearchText] = useState("");
-    const [warehouseFilter, setWarehouseFilter] = useState("ALL");
     const [statusFilter, setStatusFilter] = useState("ALL");
+
+    // 창고 필터. "ALL" 이면 전체 창고
+    const [warehouseFilter, setWarehouseFilter] = useState(
+        readSelectedWarehouseId
+    );
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newRobot, setNewRobot] = useState({
@@ -175,6 +189,16 @@ function RobotManagement() {
         [warehouses]
     );
 
+    // 이미 로봇이 서 있는 노드. 등록 화면에서 겹치는 자리를 알려준다.
+    const occupiedNodeIds = useMemo(
+        () => new Set(
+            robots
+                .map((robot) => robot.nodeId)
+                .filter((nodeId) => nodeId != null)
+        ),
+        [robots]
+    );
+
     const applyRuntimeState = useCallback((state) => {
         setRuntimeStates((prev) => ({
             ...prev,
@@ -189,7 +213,6 @@ function RobotManagement() {
 
         setTasks((prev) => {
             const exists = prev.some((item) => item.id === task.id);
-
             return exists
                 ? prev.map((item) => item.id === task.id ? task : item)
                 : [task, ...prev];
@@ -207,11 +230,7 @@ function RobotManagement() {
         switch (status) {
             case "AVAILABLE":
             case "IDLE":
-                return {
-                    label: "사용 가능",
-                    className: "status-available",
-                };
-
+                return { label: "사용 가능", className: "status-available" };
             case "ASSIGNED":
             case "WORKING":
             case "BUSY":
@@ -220,41 +239,18 @@ function RobotManagement() {
             case "PUTAWAY":
             case "REPLENISH":
             case "RELOCATION":
-                return {
-                    label: "작업 중",
-                    className: "status-working",
-                };
-
+                return { label: "작업 중", className: "status-working" };
             case "CHARGING":
-                return {
-                    label: "충전 중",
-                    className: "status-charging",
-                };
-
+                return { label: "충전 중", className: "status-charging" };
             case "UNAVAILABLE":
-                return {
-                    label: "사용 불가",
-                    className: "status-unavailable",
-                };
-
+                return { label: "사용 불가", className: "status-unavailable" };
             case "OFFLINE":
-                return {
-                    label: "오프라인",
-                    className: "status-offline",
-                };
-
+                return { label: "오프라인", className: "status-offline" };
             case "ERROR":
             case "FAULT":
-                return {
-                    label: "오류",
-                    className: "status-error",
-                };
-
+                return { label: "오류", className: "status-error" };
             default:
-                return {
-                    label: status || "-",
-                    className: "status-default",
-                };
+                return { label: status || "-", className: "status-default" };
         }
     };
 
@@ -309,7 +305,6 @@ function RobotManagement() {
 
     const getLocationLabel = (robot) => {
         const node = getNode(robot);
-
         const explicitLocation = robot?.currentLocationName
             ?? robot?.locationName
             ?? node?.name
@@ -337,7 +332,6 @@ function RobotManagement() {
 
     const getTaskLabelForRobot = (robot) => {
         const currentTask = findCurrentTask(robot, tasks);
-
         return getTaskTypeLabel(
             currentTask?.taskType
             ?? robot?.taskCode
@@ -346,8 +340,9 @@ function RobotManagement() {
         );
     };
 
+    // 창고를 고르면 그 창고에 배치된 로봇만 받아온다. null 이면 전체.
     const fetchRobots = async (warehouseId = null) =>
-        robotApi.getAll(warehouseId);
+        robotApi.getAll(warehouseId ?? undefined);
 
     const fetchTasks = async () => taskApi.getAll();
     const fetchRobotDetail = async (robotId) => robotApi.get(robotId);
@@ -391,6 +386,7 @@ function RobotManagement() {
         }
     };
 
+    // 페이지 전체 데이터 조회
     const fetchPageData = async (
         preferredRobotId = null,
         selectedWarehouseId = warehouseFilter
@@ -399,7 +395,7 @@ function RobotManagement() {
             setIsLoading(true);
 
             const warehouseId =
-                selectedWarehouseId === "ALL" || selectedWarehouseId === null
+                selectedWarehouseId === "ALL" || selectedWarehouseId == null
                     ? null
                     : Number(selectedWarehouseId);
 
@@ -415,8 +411,17 @@ function RobotManagement() {
             setRobotSpecs(specList);
             setWarehouses(warehouseList);
 
+            // 노드 정보는 화면에 보이는 로봇의 위치를 표시하는 데만 쓴다.
+            // 창고를 고른 경우 그 창고 레이아웃만 받으면 된다.
+            // (레이아웃 하나가 노드 168개 + 간선 265개라 전부 받으면 무겁다)
+            const layoutTargets = warehouseId
+                ? warehouseList.filter(
+                    (warehouse) => warehouse.id === warehouseId
+                )
+                : warehouseList;
+
             const layoutResults = await Promise.allSettled(
-                warehouseList.map((warehouse) =>
+                layoutTargets.map((warehouse) =>
                     warehouseApi.getLayout(warehouse.id)
                 )
             );
@@ -430,7 +435,7 @@ function RobotManagement() {
                     ...node,
                     warehouseId:
                         node.warehouseId
-                        ?? warehouseList[index]?.id
+                        ?? layoutTargets[index]?.id
                         ?? null,
                 }));
             });
@@ -476,7 +481,8 @@ function RobotManagement() {
     };
 
     useEffect(() => {
-        fetchPageData(null, "ALL");
+        // 저장된 창고 선택을 그대로 이어서 조회한다.
+        fetchPageData(null, warehouseFilter);
         // 최초 마운트에서만 전체 데이터를 조회한다.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -540,18 +546,15 @@ function RobotManagement() {
             const selectedStatusGroup = SUMMARY_GROUPS.find(
                 (group) => group.key === statusFilter
             );
+
             const matchesStatus =
                 statusFilter === "ALL"
                 || selectedStatusGroup?.statuses.includes(robot.status);
 
             return matchesSearch && matchesStatus;
         });
-    }, [
-        robotViews,
-        searchText,
-        statusFilter,
-        robotSpecsById,
-    ]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [robotViews, searchText, statusFilter, robotSpecsById]);
 
     // 창고 선택 시 백엔드가 해당 창고의 로봇만 반환한다.
     const warehouseFilteredRobotViews = robotViews;
@@ -574,9 +577,6 @@ function RobotManagement() {
 
     const selectedSpec = selectedRobotView
         ? robotSpecsById[selectedRobotView.robotSpecId] ?? {}
-        : {};
-    const selectedNode = selectedRobotView
-        ? getNode(selectedRobotView) ?? {}
         : {};
 
     const selectedWarehouseName = selectedRobotView
@@ -656,18 +656,32 @@ function RobotManagement() {
         setStatusFilter("ALL");
         setSelectedRobot(null);
         setSelectedTask(null);
-
+        localStorage.removeItem(WAREHOUSE_ID_KEY);
         await fetchPageData(null, "ALL");
     };
 
+    /**
+     * 창고를 바꾸면 그 창고의 로봇만 다시 불러온다.
+     *
+     * 목록이 바뀌면 선택 중이던 로봇이 사라질 수 있어
+     * 상세 선택은 fetchPageData 가 첫 번째 로봇으로 다시 잡는다.
+     * 고른 창고는 시뮬레이션 화면과 같은 키로 저장해 두 화면이 같은 창고를 본다.
+     */
     const handleWarehouseFilterChange = async (value) => {
         setWarehouseFilter(value);
+
+        if (value === "ALL") {
+            localStorage.removeItem(WAREHOUSE_ID_KEY);
+        } else {
+            localStorage.setItem(WAREHOUSE_ID_KEY, String(value));
+        }
+
         setSelectedRobot(null);
         setSelectedTask(null);
-
         await fetchPageData(null, value);
     };
 
+    // 로봇 등록 폼 입력값 변경 공통 함수
     const handleNewRobotChange = (field, value) => {
         setNewRobot((prev) => ({
             ...prev,
@@ -677,6 +691,7 @@ function RobotManagement() {
 
     const handleCloseModal = () => {
         setIsAddModalOpen(false);
+
         setNewRobot({
             robotSpecId: "",
             warehouseId: "",
@@ -698,11 +713,33 @@ function RobotManagement() {
 
         try {
             const layout = await warehouseApi.getLayout(Number(warehouseId));
-            setWarehouseNodes(layout.nodes ?? []);
+
+            // 로봇은 충전 자리에서 시작한다.
+            // 통로나 랙 위에 올려두면 시뮬레이션 시작 시 위치가 어긋난다.
+            const chargingSlots = (layout.nodes ?? []).filter(
+                (node) => node.nodeType === "CHARGING_SLOT"
+            );
+
+            setWarehouseNodes(chargingSlots);
         } catch (error) {
             console.error("창고 노드 조회 실패:", error);
             setWarehouseNodes([]);
             alert(error.message || "창고 노드를 불러오지 못했습니다.");
+        }
+    };
+
+    /**
+     * 로봇 등록 모달을 연다.
+     *
+     * 목록에서 고른 창고가 있으면 그 창고로 미리 채우는데,
+     * 값만 넣으면 초기 노드 목록이 비어 있게 된다.
+     * 노드를 불러오는 건 handleWarehouseChange 이므로 그걸 그대로 태운다.
+     */
+    const handleOpenAddModal = () => {
+        setIsAddModalOpen(true);
+
+        if (warehouseFilter && warehouseFilter !== "ALL") {
+            handleWarehouseChange(String(warehouseFilter));
         }
     };
 
@@ -742,6 +779,8 @@ function RobotManagement() {
             const createdWarehouseId = String(newRobot.warehouseId);
 
             setWarehouseFilter(createdWarehouseId);
+            localStorage.setItem(WAREHOUSE_ID_KEY, createdWarehouseId);
+
             await fetchPageData(createdRobot.id, createdWarehouseId);
             handleCloseModal();
         } catch (error) {
@@ -777,7 +816,7 @@ function RobotManagement() {
                     <button
                         type="button"
                         className="robot-management-button primary"
-                        onClick={() => setIsAddModalOpen(true)}
+                        onClick={handleOpenAddModal}
                     >
                         + 로봇 등록
                     </button>
@@ -832,9 +871,11 @@ function RobotManagement() {
                         onChange={(event) => setSearchText(event.target.value)}
                     />
 
+                    {/* 창고 필터 */}
                     <select
                         className="robot-filter-select"
                         value={warehouseFilter}
+                        disabled={isLoading}
                         onChange={(event) =>
                             handleWarehouseFilterChange(event.target.value)
                         }
@@ -896,7 +937,6 @@ function RobotManagement() {
                                     <th>담당 작업 유형</th>
                                 </tr>
                             </thead>
-
                             <tbody>
                                 {isLoading ? (
                                     <tr>
@@ -925,11 +965,9 @@ function RobotManagement() {
                                                 <span className="robot-row-icon">◉</span>
                                                 {getRobotDisplayName(robot)}
                                             </td>
-
                                             <td className="robot-model-cell">
                                                 {getRobotModel(robot)}
                                             </td>
-
                                             <td>
                                                 <span
                                                     className={`robot-status ${getRobotStatus(robot.status).className}`}
@@ -937,7 +975,6 @@ function RobotManagement() {
                                                     {getRobotStatus(robot.status).label}
                                                 </span>
                                             </td>
-
                                             <td>
                                                 <div className="robot-battery">
                                                     <span>{robot.battery ?? 0}%</span>
@@ -957,7 +994,6 @@ function RobotManagement() {
                                                     </div>
                                                 </div>
                                             </td>
-
                                             <td>{getLocationLabel(robot)}</td>
                                             <td>{robot.nodeId ?? "-"}</td>
                                             <td>{getTaskLabelForRobot(robot)}</td>
@@ -996,7 +1032,6 @@ function RobotManagement() {
                                         {getRobotModel(selectedRobotView)}
                                     </div>
                                 </div>
-
                                 <span
                                     className={`robot-status ${getRobotStatus(selectedRobotView.status).className}`}
                                 >
@@ -1006,19 +1041,16 @@ function RobotManagement() {
 
                             <div className="robot-detail-section">
                                 <h3>A. 현재 상태</h3>
-
                                 <div className="robot-detail-item">
                                     <span>상태</span>
                                     <strong>
                                         {getRobotStatus(selectedRobotView.status).label}
                                     </strong>
                                 </div>
-
                                 <div className="robot-detail-item">
                                     <span>배터리</span>
                                     <strong>{selectedRobotView.battery ?? 0}%</strong>
                                 </div>
-
                                 <div className="robot-detail-battery-track">
                                     <div
                                         className="robot-detail-battery-fill"
@@ -1033,12 +1065,10 @@ function RobotManagement() {
                                         }}
                                     />
                                 </div>
-
                                 <div className="robot-detail-item">
                                     <span>현재 위치</span>
                                     <strong>{getLocationLabel(selectedRobotView)}</strong>
                                 </div>
-
                                 <div className="robot-detail-item">
                                     <span>위치 노드</span>
                                     <strong>{selectedRobotView.nodeId ?? "-"}</strong>
@@ -1047,7 +1077,6 @@ function RobotManagement() {
 
                             <div className="robot-detail-section">
                                 <h3>B. 현재 작업</h3>
-
                                 <div className="robot-detail-item">
                                     <span>담당 작업 유형</span>
                                     <strong>
@@ -1072,12 +1101,10 @@ function RobotManagement() {
                                                 {getTaskStatusLabel(selectedTask.status)}
                                             </span>
                                         </div>
-
                                         <div className="robot-detail-item">
                                             <span>출발 노드</span>
                                             <strong>{selectedTask.startNodeId ?? "-"}</strong>
                                         </div>
-
                                         <div className="robot-detail-item">
                                             <span>도착 노드</span>
                                             <strong>{selectedTask.endNodeId ?? "-"}</strong>
@@ -1088,32 +1115,26 @@ function RobotManagement() {
 
                             <div className="robot-detail-section">
                                 <h3>C. 기본 정보</h3>
-
                                 <div className="robot-detail-item">
                                     <span>기본 배터리 소모율</span>
                                     <strong>{baseBatteryConsumption}</strong>
                                 </div>
-
                                 <div className="robot-detail-item">
                                     <span>작업 중 배터리 소모율</span>
                                     <strong>{workingBatteryConsumption}</strong>
                                 </div>
-
                                 <div className="robot-detail-item">
                                     <span>고장 확률</span>
                                     <strong>{failureProbability}%</strong>
                                 </div>
-
                                 <div className="robot-detail-item">
                                     <span>소속 창고</span>
                                     <strong>{selectedWarehouseName}</strong>
                                 </div>
-
                                 <div className="robot-detail-item">
                                     <span>시작 위치 노드</span>
                                     <strong>{startNodeLabel}</strong>
                                 </div>
-
                             </div>
                         </div>
                     )}
@@ -1188,7 +1209,7 @@ function RobotManagement() {
                             </label>
 
                             <label className="robot-modal-field">
-                                <span>초기 노드</span>
+                                <span>초기 노드 (충전 자리)</span>
                                 <select
                                     value={newRobot.nodeId}
                                     disabled={!newRobot.warehouseId}
@@ -1197,10 +1218,19 @@ function RobotManagement() {
                                         event.target.value
                                     )}
                                 >
-                                    <option value="">노드 선택</option>
+                                    <option value="">
+                                        {!newRobot.warehouseId
+                                            ? "창고를 먼저 선택하세요"
+                                            : warehouseNodes.length === 0
+                                                ? "충전 자리가 없습니다"
+                                                : "충전 자리 선택"}
+                                    </option>
                                     {warehouseNodes.map((node) => (
                                         <option key={node.id} value={node.id}>
-                                            {node.nodeCode} (ID: {node.id})
+                                            {node.nodeCode}
+                                            {occupiedNodeIds.has(node.id)
+                                                ? " (사용 중)"
+                                                : ""}
                                         </option>
                                     ))}
                                 </select>

@@ -4,6 +4,8 @@ import "../../styles/login/LoginCommon.css";
 import "../../styles/login/LoginSelect.css";
 import { EmailIcon, LockIcon, GoogleIcon } from "../../components/icon";
 
+const API_URL = "http://localhost:8080/api";
+
 function LoginSelect() {
     const navigate = useNavigate();
 
@@ -15,9 +17,39 @@ function LoginSelect() {
         alert("Google 로그인 연동 준비 중입니다.");
     };
 
-    const handleGuestLogin = () => {
-        localStorage.setItem("loginType", "guest");
-        navigate("/simulation");
+    const handleGuestLogin = async () => {
+        try {
+            const response = await fetch(
+                "/api/auth/guest",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                });
+
+            const data = await response
+                .json()
+                .catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data.message || "게스트 로그인에 실패했습니다.");
+            }
+
+            const accessToken = data.accessToken || data.access_token || data.token;
+
+            if (accessToken) {
+                localStorage.setItem("accessToken", accessToken);
+            }
+
+            localStorage.setItem("loginType", "guest");
+            navigate("/simulation", {replace: true,});
+
+        } catch (error) {
+            console.error("게스트 로그인 실패:", error);
+            alert(error instanceof Error ? error.message : "게스트 로그인 중 오류가 발생했습니다.");
+        }
     };
 
     const handleSignup = () => {
