@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import "../styles/WarehouseSVG.css";
 
-import warehouseGraph from "../data/warehouse_graph.json";
 import rackInventory from "../data/rack_inventory.json";
 
 // 창고별 폴백 지도.
@@ -101,37 +100,6 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                         };
                     });
 
-                // =========================================================
-                // 창고 조회 API 가져오기 전에 그래프 수정한 거 보느라 추가한 코드입니다.
-                // 창고 맵 수정 때 필요할 수도 있을 것 같아서 삭제 하지 말아주세요. 제가 나중에 삭제할게요!
-                // 로봇 경로 이동에 문제되진 않을 겁니다!
-                // 
-                // JSON에 새로 추가한 입출고 경로 노드 추가
-                //
-                // 입고 경로: I_0 ~ I_5
-                // 출고 경로: O_0 ~ O_5
-                //
-                // API 응답에 아직 없는 노드만 warehouse_graph.json에서 가져온다.
-                // 좌표/type 등은 JSON에 작성한 값을 그대로 사용한다.
-                // =========================================================
-                const additionalRouteNodes = warehouseGraph.nodes.filter(
-                    (node) =>
-                        /^I_[0-5]$/.test(node.id) ||
-                        /^O_[0-3]$/.test(node.id)
-                );
-
-                // API에서 이미 받은 노드는 중복으로 추가하지 않음
-                const apiNodeIds = new Set(
-                    convertedNodes.map((node) => node.id)
-                );
-
-                const mergedNodes = [
-                    ...convertedNodes,
-                    ...additionalRouteNodes.filter(
-                        (node) => !apiNodeIds.has(node.id)
-                    ),
-                ];
-
                 const convertedEdges = data.edges
                     .map((edge) => ({
                         id: edge.id,
@@ -141,57 +109,15 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                     }))
                     .filter((edge) => edge.source && edge.target);
 
-                // =========================================================
-                // 창고 조회 API 가져오기 전에 그래프 수정한 거 보느라 추가한 코드입니다.
-                // 창고 맵 수정 때 필요할 수도 있을 것 같아서 삭제 하지 말아주세요. 제가 나중에 삭제할게요!
-                // 로봇 경로 이동에 문제되진 않을 겁니다!
-                //
-                // JSON에 추가한 입출고 경로 Edge 추가
-                //
-                // I_9 ~ I_5 또는 O_0 ~ O_2가 포함된 edge를
-                // warehouse_graph.json에서 자동으로 가져온다.
-                //
-                // 따라서 입출고 연결 관계는 JSX에 하드코딩하지 않고
-                // JSON의 source / target을 그대로 사용한다.
-                // =========================================================
-                const additionalRouteNodeIds = new Set(
-                    additionalRouteNodes.map((node) => node.id)
-                );
-
-                // API에서 이미 받은 동일한 연결은 중복 추가하지 않음
-                const apiEdgeKeys = new Set(
-                    convertedEdges.map(
-                        (edge) => `${edge.source}->${edge.target}`
-                    )
-                );
-
-                const additionalRouteEdges = warehouseGraph.edges
-                    .filter(
-                        (edge) =>
-                            additionalRouteNodeIds.has(edge.source) ||
-                            additionalRouteNodeIds.has(edge.target)
-                    )
-                    .filter(
-                        (edge) =>
-                            !apiEdgeKeys.has(
-                                `${edge.source}->${edge.target}`
-                            )
-                    );
-
-                const mergedEdges = [
-                    ...convertedEdges,
-                    ...additionalRouteEdges,
-                ];
-
                 setGraphData({
-                    nodes: mergedNodes,
-                    edges: mergedEdges,
+                    nodes: convertedNodes,
+                    edges: convertedEdges,
                 });
 
                 console.log("변환된 창고 지도:", {
                     warehouseId,
-                    nodes: mergedNodes.length,
-                    edges: mergedEdges.length,
+                    nodes: convertedNodes.length,
+                    edges: convertedEdges.length,
                 });
             } catch (error) {
                 console.error("창고 레이아웃 조회 오류:", error);
