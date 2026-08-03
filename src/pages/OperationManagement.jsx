@@ -1,8 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/operationManagement.css";
 
 import { operationApi, warehouseApi } from "../api/client";
+import { TOPICS } from "../api/config";
+import useStompSubscriptions from "../hooks/useStompSubscriptions";
+
+// 실시간 갱신을 몰아서 처리하는 간격(ms).
+// 시뮬레이션이 돌면 작업 변경이 몰아서 오기 때문에
+// 하나 올 때마다 조회하면 요청이 너무 잦아진다.
+const LIVE_REFRESH_DELAY_MS = 1500;
 
 // 창고 목록을 못 불러왔을 때 쓸 기본값
 const ALL_WAREHOUSES = {
@@ -70,10 +77,12 @@ const EMPTY_DASHBOARD = {
     hourlyTaskVolume: HOURS.map((hour) => ({
         hour,
         count: 0,
+        completedCount: 0,
     })),
     hourlyEventVolume: HOURS.map((hour) => ({
         hour,
         count: 0,
+        completedCount: 0,
     })),
     robotStatusDistribution: ROBOT_STATUS_META.map((status) => ({
         ...status,
@@ -123,16 +132,14 @@ const formatValue = (value) => {
 };
 
 const mergeHourlyData = (items = []) => {
-    const countByHour = new Map(
-        items.map((item) => [
-            String(item.hour),
-            Number(item.count ?? 0),
-        ])
+    const byHour = new Map(
+        items.map((item) => [String(item.hour), item])
     );
 
     return HOURS.map((hour) => ({
         hour,
-        count: countByHour.get(hour) ?? 0,
+        count: Number(byHour.get(hour)?.count ?? 0),
+        completedCount: Number(byHour.get(hour)?.completedCount ?? 0),
     }));
 };
 
@@ -288,6 +295,62 @@ const buildEventChart = (items) => {
     };
 };
 
+/**
+ * 작업 목록 표.
+ *
+ * 「작업 요약」 패널과 「전체 보기」 팝업이 같은 열 구성을 쓰기 때문에
+ * 한 곳에서만 그린다.
+ */
+function TaskTable({ tasks, emptyMessage }) {
+    return (
+        <table className="operation-table">
+            <thead>
+                <tr>
+                    <th>작업 ID</th>
+                    <th>창고</th>
+                    <th>작업 유형</th>
+                    <th>상태</th>
+                    <th>지연 시간</th>
+                    <th>시작 시간</th>
+                    <th>완료 시간</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {tasks.length === 0 ? (
+                    <tr>
+                        <td colSpan="7" className="operation-table-empty">
+                            {emptyMessage}
+                        </td>
+                    </tr>
+                ) : (
+                    tasks.map((task) => (
+                        <tr key={task.taskId ?? task.id}>
+                            <td>
+                                {task.taskCode
+                                ?? task.taskId
+                                ?? task.id
+                                ?? "-"}
+                            </td>
+                            <td>{task.warehouseName ?? "-"}</td>
+                            <td>{task.taskType ?? "-"}</td>
+                            <td>{task.status ?? "-"}</td>
+                            <td>
+                                {task.delayMinutes === null
+                                || task.delayMinutes === undefined
+                                    ? "-"
+                                    : `${task.delayMinutes}분`}
+                            </td>
+                            <td>{task.startedAt ?? "-"}</td>
+                            <td>{task.completedAt ?? "-"}</td>
+                        </tr>
+                    ))
+                )}
+            </tbody>
+        </table>
+    );
+}
+
 function OperationManagement() {
     const navigate = useNavigate();
     const today = getToday();
@@ -297,18 +360,27 @@ function OperationManagement() {
     const [warehouseId, setWarehouseId] = useState("ALL");
     const [warehouses, setWarehouses] = useState([ALL_WAREHOUSES]);
     const [taskMetric, setTaskMetric] = useState("COUNT");
+
+    // 창고별 처리량 막대에 무엇을 그릴지
+    const [warehouseMetric, setWarehouseMetric] = useState("TOTAL");
     const [dashboardData, setDashboardData] = useState(EMPTY_DASHBOARD);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [loadError, setLoadError] = useState("");
+
+    // 「전체 보기」 팝업
+    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+    const [allTasks, setAllTasks] = useState([]);
+    const [isTaskModalLoading, setIsTaskModalLoading] = useState(false);
+    const [taskModalError, setTaskModalError] = useState("");
 
     const summaryCards = useMemo(
         () => [
             {
                 key: "tasks",
-                title: "오늘 작업 수",
+                title: "선택 기간 작업 수",
                 value: dashboardData.summary.todayTaskCount,
                 unit: "건",
-                caption: "선택 기간 처리 작업",
+                caption: "기간 내 발생한 전체 작업",
                 tone: "blue",
                 icon: "▤",
             },
@@ -354,24 +426,42 @@ function OperationManagement() {
         [dashboardData]
     );
 
+    /** 시간대별 막대에 그릴 값. "완료 작업"을 고르면 완료 건수만 본다. */
+    const hourlyTaskValue = useCallback(
+        (item) => taskMetric === "COMPLETED"
+            ? Number(item.completedCount ?? 0)
+            : Number(item.count ?? 0),
+        [taskMetric]
+    );
+
     const maxHourlyTask = useMemo(
         () => Math.max(
-            ...dashboardData.hourlyTaskVolume.map(
-                (item) => Number(item.count ?? 0)
-            ),
+            ...dashboardData.hourlyTaskVolume.map(hourlyTaskValue),
             1
         ),
-        [dashboardData.hourlyTaskVolume]
+        [dashboardData.hourlyTaskVolume, hourlyTaskValue]
+    );
+
+    /** 고른 기준에 해당하는 값을 꺼낸다. */
+    const warehouseMetricValue = useCallback(
+        (item) => {
+            if (warehouseMetric === "DONE") {
+                return Number(item.count ?? 0);
+            }
+            if (warehouseMetric === "RATE") {
+                return Number(item.completionRate ?? 0);
+            }
+            return Number(item.totalCount ?? 0);
+        },
+        [warehouseMetric]
     );
 
     const maxWarehouseCount = useMemo(
         () => Math.max(
-            ...dashboardData.warehouseThroughput.map(
-                (item) => Number(item.count ?? 0)
-            ),
+            ...dashboardData.warehouseThroughput.map(warehouseMetricValue),
             1
         ),
-        [dashboardData.warehouseThroughput]
+        [dashboardData.warehouseThroughput, warehouseMetricValue]
     );
 
     const totalRobotCount = useMemo(
@@ -395,8 +485,17 @@ function OperationManagement() {
         [dashboardData.hourlyEventVolume]
     );
 
-    const handleRefresh = useCallback(async () => {
-        setIsRefreshing(true);
+    /**
+     * 대시보드를 다시 불러온다.
+     *
+     * @param silent 실시간 갱신처럼 배경에서 도는 경우 true.
+     *               "조회 중..." 표시를 띄우지 않아 화면이 깜빡이지 않는다.
+     */
+    const handleRefresh = useCallback(async (silent = false) => {
+        if (!silent) {
+            setIsRefreshing(true);
+        }
+
         setLoadError("");
 
         try {
@@ -416,9 +515,13 @@ function OperationManagement() {
                 ?? "운영 데이터를 불러오지 못했습니다."
             );
 
-            setDashboardData(EMPTY_DASHBOARD);
+            if (!silent) {
+                setDashboardData(EMPTY_DASHBOARD);
+            }
         } finally {
-            setIsRefreshing(false);
+            if (!silent) {
+                setIsRefreshing(false);
+            }
         }
     }, [warehouseId, startDate, endDate]);
 
@@ -448,6 +551,133 @@ function OperationManagement() {
     useEffect(() => {
         handleRefresh();
     }, [handleRefresh]);
+
+    /* =========================================================
+       실시간 갱신
+
+       백엔드는 작업이 배정·시작·완료될 때마다 /topic/tasks 로 알려준다.
+       그때마다 조회하면 요청이 너무 잦아지므로 잠깐 모았다가 한 번만 부른다.
+
+       조회 기간에 오늘이 안 들어 있으면 지난 기록만 보는 것이므로
+       실시간으로 바뀔 일이 없어 아예 연결하지 않는다.
+    ========================================================= */
+
+    /* =========================================================
+       「전체 보기」 팝업
+
+       대시보드 응답에는 최근 10건만 들어 있어서
+       팝업을 열 때 전체 목록을 따로 받아온다.
+    ========================================================= */
+
+    const fetchAllTasks = useCallback(async (silent = false) => {
+        if (!silent) {
+            setIsTaskModalLoading(true);
+        }
+
+        setTaskModalError("");
+
+        try {
+            const response = await operationApi.getTasks({
+                warehouseId: warehouseId === "ALL" ? null : warehouseId,
+                startDate,
+                endDate,
+            });
+
+            setAllTasks(Array.isArray(response) ? response : []);
+        } catch (error) {
+            console.error("작업 전체 조회 실패:", error);
+
+            setTaskModalError(
+                error.message
+                ?? "작업 목록을 불러오지 못했습니다."
+            );
+
+            if (!silent) {
+                setAllTasks([]);
+            }
+        } finally {
+            if (!silent) {
+                setIsTaskModalLoading(false);
+            }
+        }
+    }, [warehouseId, startDate, endDate]);
+
+    // 실시간 갱신 콜백이 팝업 상태를 보려고 매번 새로 만들어지면
+    // 그때마다 재구독이 일어난다. ref 로만 읽는다.
+    const isTaskModalOpenRef = useRef(false);
+    isTaskModalOpenRef.current = isTaskModalOpen;
+
+    const openTaskModal = useCallback(() => {
+        setIsTaskModalOpen(true);
+        fetchAllTasks();
+    }, [fetchAllTasks]);
+
+    const closeTaskModal = useCallback(() => {
+        setIsTaskModalOpen(false);
+        setTaskModalError("");
+    }, []);
+
+    /* =========================================================
+       실시간 갱신
+
+       백엔드는 작업이 배정·시작·완료될 때마다 /topic/tasks 로 알려준다.
+       그때마다 조회하면 요청이 너무 잦아지므로 잠깐 모았다가 한 번만 부른다.
+
+       조회 기간에 오늘이 안 들어 있으면 지난 기록만 보는 것이므로
+       실시간으로 바뀔 일이 없어 아예 연결하지 않는다.
+    ========================================================= */
+
+    const refreshTimerRef = useRef(null);
+
+    const scheduleLiveRefresh = useCallback(() => {
+        if (refreshTimerRef.current) {
+            clearTimeout(refreshTimerRef.current);
+        }
+
+        refreshTimerRef.current = setTimeout(() => {
+            handleRefresh(true);
+
+            // 팝업이 열려 있으면 전체 목록도 같이 맞춘다.
+            if (isTaskModalOpenRef.current) {
+                fetchAllTasks(true);
+            }
+        }, LIVE_REFRESH_DELAY_MS);
+    }, [handleRefresh, fetchAllTasks]);
+
+    const isLivePeriod = endDate >= today;
+
+    useStompSubscriptions(
+        isLivePeriod
+            ? {
+                [TOPICS.TASKS]: scheduleLiveRefresh,
+                [TOPICS.EVENTS]: scheduleLiveRefresh,
+            }
+            : {},
+        isLivePeriod
+    );
+
+    useEffect(() => () => {
+        if (refreshTimerRef.current) {
+            clearTimeout(refreshTimerRef.current);
+        }
+    }, []);
+
+    // 팝업은 Esc 로도 닫는다.
+    useEffect(() => {
+        if (!isTaskModalOpen) {
+            return;
+        }
+
+        const handleKeyDown = (event) => {
+            if (event.key === "Escape") {
+                closeTaskModal();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isTaskModalOpen, closeTaskModal]);
 
     /**
      * 시작일을 바꾼다.
@@ -615,37 +845,34 @@ function OperationManagement() {
 
                         <div className="operation-bar-chart-items">
                             {dashboardData.hourlyTaskVolume.map(
-                                (item) => (
-                                    <div
-                                        className="operation-bar-item"
-                                        key={item.hour}
-                                    >
-                                        <span className="operation-bar-value">
-                                            {item.count > 0
-                                                ? item.count
-                                                : ""}
-                                        </span>
+                                (item) => {
+                                    const value = hourlyTaskValue(item);
 
+                                    return (
                                         <div
-                                            className="operation-bar"
-                                            style={{
-                                                height: `${
-                                                    (
-                                                        Number(
-                                                            item.count
-                                                            ?? 0
-                                                        )
-                                                        / maxHourlyTask
-                                                    ) * 100
-                                                }%`,
-                                            }}
-                                        />
+                                            className="operation-bar-item"
+                                            key={item.hour}
+                                        >
+                                            <span className="operation-bar-value">
+                                                {value > 0 ? value : ""}
+                                            </span>
 
-                                        <span className="operation-bar-label">
-                                            {item.hour}
-                                        </span>
-                                    </div>
-                                )
+                                            <div
+                                                className="operation-bar"
+                                                style={{
+                                                    height: `${
+                                                        (value / maxHourlyTask)
+                                                        * 100
+                                                    }%`,
+                                                }}
+                                            />
+
+                                            <span className="operation-bar-label">
+                                                {item.hour}
+                                            </span>
+                                        </div>
+                                    );
+                                }
                             )}
                         </div>
                     </div>
@@ -732,48 +959,57 @@ function OperationManagement() {
                     <div className="operation-panel-header">
                         <div>
                             <h2>창고별 처리량</h2>
-                            <p>창고별 완료 작업 수를 비교합니다.</p>
+                            <p>
+                                전체 창고를 비교합니다. (창고 선택과 무관)
+                            </p>
                         </div>
 
-                        <select defaultValue="COUNT">
-                            <option value="COUNT">작업 수</option>
+                        <select
+                            value={warehouseMetric}
+                            onChange={(event) =>
+                                setWarehouseMetric(event.target.value)
+                            }
+                        >
+                            <option value="TOTAL">전체 작업</option>
+                            <option value="DONE">완료 작업</option>
                             <option value="RATE">완료율</option>
                         </select>
                     </div>
 
                     <div className="operation-horizontal-chart">
                         {dashboardData.warehouseThroughput.map(
-                            (item) => (
-                                <div
-                                    className="operation-horizontal-row"
-                                    key={item.warehouseId}
-                                >
-                                    <span>{item.warehouseName}</span>
+                            (item) => {
+                                const value = warehouseMetricValue(item);
 
-                                    <div className="operation-horizontal-track">
-                                        <div
-                                            className="operation-horizontal-fill"
-                                            style={{
-                                                width: `${
-                                                    (
-                                                        Number(
-                                                            item.count
-                                                            ?? 0
-                                                        )
-                                                        / maxWarehouseCount
-                                                    ) * 100
-                                                }%`,
-                                            }}
-                                        />
+                                return (
+                                    <div
+                                        className="operation-horizontal-row"
+                                        key={item.warehouseId}
+                                    >
+                                        <span>{item.warehouseName}</span>
+
+                                        <div className="operation-horizontal-track">
+                                            <div
+                                                className="operation-horizontal-fill"
+                                                style={{
+                                                    width: `${
+                                                        (value / maxWarehouseCount)
+                                                        * 100
+                                                    }%`,
+                                                }}
+                                            />
+                                        </div>
+
+                                        <strong>
+                                            {value > 0
+                                                ? warehouseMetric === "RATE"
+                                                    ? `${value}%`
+                                                    : value
+                                                : "-"}
+                                        </strong>
                                     </div>
-
-                                    <strong>
-                                        {item.count > 0
-                                            ? item.count
-                                            : "-"}
-                                    </strong>
-                                </div>
-                            )
+                                );
+                            }
                         )}
                     </div>
                 </article>
@@ -899,7 +1135,7 @@ function OperationManagement() {
                         <button
                             type="button"
                             className="operation-text-button"
-                            onClick={() => navigate("/simulation")}
+                            onClick={openTaskModal}
                         >
                             전체 보기
                             <span>›</span>
@@ -907,68 +1143,10 @@ function OperationManagement() {
                     </div>
 
                     <div className="operation-table-wrapper">
-                        <table className="operation-table">
-                            <thead>
-                                <tr>
-                                    <th>작업 ID</th>
-                                    <th>창고</th>
-                                    <th>작업 유형</th>
-                                    <th>상태</th>
-                                    <th>시작 시간</th>
-                                    <th>완료 시간</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {dashboardData.recentTasks.length === 0 ? (
-                                    <tr>
-                                        <td
-                                            colSpan="6"
-                                            className="operation-table-empty"
-                                        >
-                                            표시할 작업 데이터가 없습니다.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    dashboardData.recentTasks.map(
-                                        (task) => (
-                                            <tr
-                                                key={
-                                                    task.taskId
-                                                    ?? task.id
-                                                }
-                                            >
-                                                <td>
-                                                    {task.taskCode
-                                                    ?? task.taskId
-                                                    ?? task.id
-                                                    ?? "-"}
-                                                </td>
-                                                <td>
-                                                    {task.warehouseName ?? "-"}
-                                                </td>
-                                                <td>
-                                                    {task.taskType
-                                                    ?? "-"}
-                                                </td>
-                                                <td>
-                                                    {task.status
-                                                    ?? "-"}
-                                                </td>
-                                                <td>
-                                                    {task.startedAt
-                                                    ?? "-"}
-                                                </td>
-                                                <td>
-                                                    {task.completedAt
-                                                    ?? "-"}
-                                                </td>
-                                            </tr>
-                                        )
-                                    )
-                                )}
-                            </tbody>
-                        </table>
+                        <TaskTable
+                            tasks={dashboardData.recentTasks}
+                            emptyMessage="표시할 작업 데이터가 없습니다."
+                        />
                     </div>
                 </article>
 
@@ -1004,6 +1182,67 @@ function OperationManagement() {
                     </div>
                 </article>
             </section>
+
+            {isTaskModalOpen && (
+                <div
+                    className="operation-modal-backdrop"
+                    onClick={closeTaskModal}
+                >
+                    {/* 안쪽을 눌렀을 때는 닫히지 않게 막는다. */}
+                    <div
+                        className="operation-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="전체 작업 목록"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="operation-modal-header">
+                            <div>
+                                <h2>전체 작업</h2>
+                                <p>
+                                    {selectedWarehouseName}
+                                    {" · "}
+                                    {startDate}
+                                    {startDate === endDate
+                                        ? ""
+                                        : ` ~ ${endDate}`}
+                                    {" · 총 "}
+                                    {allTasks.length.toLocaleString()}
+                                    건
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="operation-modal-close"
+                                onClick={closeTaskModal}
+                                aria-label="닫기"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        {taskModalError && (
+                            <p className="operation-modal-error">
+                                {taskModalError}
+                            </p>
+                        )}
+
+                        <div className="operation-modal-body">
+                            {isTaskModalLoading ? (
+                                <p className="operation-modal-loading">
+                                    작업 목록을 불러오는 중입니다...
+                                </p>
+                            ) : (
+                                <TaskTable
+                                    tasks={allTasks}
+                                    emptyMessage="선택한 조건에 해당하는 작업이 없습니다."
+                                />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

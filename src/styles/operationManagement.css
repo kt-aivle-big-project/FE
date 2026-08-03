@@ -441,6 +441,91 @@
     cursor: pointer;
 }
 
+/* =========================================================
+   전체 작업 팝업
+========================================================= */
+
+.operation-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.operation-modal {
+    display: flex;
+    flex-direction: column;
+    width: min(1040px, 100%);
+    max-height: 85vh;
+    background: #ffffff;
+    border: 1px solid #cccccc;
+    border-radius: 6px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.operation-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid #dddddd;
+}
+
+.operation-modal-header h2 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.operation-modal-header p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #666666;
+}
+
+.operation-modal-close {
+    border: 0;
+    background: transparent;
+    font-size: 22px;
+    line-height: 1;
+    color: #555555;
+    cursor: pointer;
+}
+
+.operation-modal-close:hover {
+    color: #000000;
+}
+
+/* 표가 길어지면 팝업 안에서만 스크롤된다. */
+.operation-modal-body {
+    flex: 1;
+    overflow: auto;
+    padding: 0 20px 20px;
+}
+
+/* 스크롤해도 열 이름이 계속 보이게 고정한다. */
+.operation-modal-body .operation-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.operation-modal-loading,
+.operation-modal-error {
+    margin: 0;
+    padding: 16px 20px;
+    font-size: 12px;
+    color: #666666;
+}
+
+.operation-modal-error {
+    color: #c0392b;
+}
+
 .operation-quick-links {
     display: grid;
     gap: 10px;
