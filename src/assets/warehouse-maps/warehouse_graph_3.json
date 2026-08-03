@@ -2071,7 +2071,7 @@
   ],
   "edges": [
     {
-      "id": "H0_0",
+      "id": "H0_0_IN",
       "source": "R0_0",
       "target": "R0_1",
       "type": "lane",
@@ -2081,7 +2081,7 @@
       "cost": 2.15
     },
     {
-      "id": "H0_1",
+      "id": "H0_1_IN",
       "source": "R0_1",
       "target": "R0_2",
       "type": "lane",
@@ -2091,7 +2091,7 @@
       "cost": 2.15
     },
     {
-      "id": "H0_2",
+      "id": "H0_2_IN",
       "source": "R0_2",
       "target": "R0_3",
       "type": "lane",
@@ -2101,7 +2101,7 @@
       "cost": 2.15
     },
     {
-      "id": "H0_3",
+      "id": "H0_3_IN",
       "source": "R0_3",
       "target": "R0_4",
       "type": "lane",
@@ -2111,7 +2111,7 @@
       "cost": 2.15
     },
     {
-      "id": "H0_4",
+      "id": "H0_4_IN",
       "source": "R0_4",
       "target": "R0_5",
       "type": "lane",
@@ -2121,7 +2121,7 @@
       "cost": 2.15
     },
     {
-      "id": "H0_5",
+      "id": "H0_5_IN",
       "source": "R0_5",
       "target": "R0_6",
       "type": "lane",
@@ -2131,7 +2131,7 @@
       "cost": 2.15
     },
     {
-      "id": "H0_6",
+      "id": "H0_6_IN",
       "source": "R0_6",
       "target": "R0_7",
       "type": "lane",
@@ -2141,7 +2141,7 @@
       "cost": 2.15
     },
     {
-      "id": "H0_7",
+      "id": "H0_7_IN",
       "source": "R0_7",
       "target": "R0_8",
       "type": "lane",
@@ -2151,7 +2151,7 @@
       "cost": 2.15
     },
     {
-      "id": "H0_8",
+      "id": "H0_8_IN",
       "source": "R0_8",
       "target": "R0_9",
       "type": "lane",
@@ -2161,7 +2161,7 @@
       "cost": 2.15
     },
     {
-      "id": "H0_9",
+      "id": "H0_9_IN",
       "source": "R0_9",
       "target": "R0_10",
       "type": "lane",
@@ -2671,7 +2671,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB0a",
+      "id": "HB0a_IN",
       "source": "R6_0",
       "target": "R6_1",
       "type": "lane",
@@ -2681,7 +2681,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB0b",
+      "id": "HB0b_IN",
       "source": "R6_1",
       "target": "R6_2",
       "type": "lane",
@@ -2691,7 +2691,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB1a",
+      "id": "HB1a_IN",
       "source": "R6_2",
       "target": "R6_3",
       "type": "lane",
@@ -2701,7 +2701,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB1b",
+      "id": "HB1b_IN",
       "source": "R6_3",
       "target": "R6_4",
       "type": "lane",
@@ -2711,7 +2711,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB2a",
+      "id": "HB2a_IN",
       "source": "R6_4",
       "target": "R6_5",
       "type": "lane",
@@ -2721,7 +2721,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB2b",
+      "id": "HB2b_IN",
       "source": "R6_5",
       "target": "R6_6",
       "type": "lane",
@@ -2731,7 +2731,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB3a",
+      "id": "HB3a_IN",
       "source": "R6_6",
       "target": "R6_7",
       "type": "lane",
@@ -2741,7 +2741,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB3b",
+      "id": "HB3b_IN",
       "source": "R6_7",
       "target": "R6_8",
       "type": "lane",
@@ -2771,7 +2771,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB5a",
+      "id": "H0_0_OUT",
       "source": "R0_1",
       "target": "R0_0",
       "type": "lane",
@@ -2781,7 +2781,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB5b",
+      "id": "H0_1_OUT",
       "source": "R0_2",
       "target": "R0_1",
       "type": "lane",
@@ -2791,7 +2791,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB6a",
+      "id": "H0_2_OUT",
       "source": "R0_3",
       "target": "R0_2",
       "type": "lane",
@@ -2801,7 +2801,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB6b",
+      "id": "H0_3_OUT",
       "source": "R0_4",
       "target": "R0_3",
       "type": "lane",
@@ -2811,7 +2811,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB7a",
+      "id": "H0_4_OUT",
       "source": "R0_5",
       "target": "R0_4",
       "type": "lane",
@@ -2821,7 +2821,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB7b",
+      "id": "H0_5_OUT",
       "source": "R0_6",
       "target": "R0_5",
       "type": "lane",
@@ -2831,7 +2831,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB8a",
+      "id": "H0_6_OUT",
       "source": "R0_7",
       "target": "R0_6",
       "type": "lane",
@@ -2841,7 +2841,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB8b",
+      "id": "H0_7_OUT",
       "source": "R0_8",
       "target": "R0_7",
       "type": "lane",
@@ -2851,7 +2851,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB9a",
+      "id": "H0_8_OUT",
       "source": "R0_9",
       "target": "R0_8",
       "type": "lane",
@@ -2861,7 +2861,7 @@
       "cost": 2.15
     },
     {
-      "id": "HB9b",
+      "id": "H0_9_OUT",
       "source": "R0_10",
       "target": "R0_9",
       "type": "lane",
@@ -2871,7 +2871,7 @@
       "cost": 2.15
     },
     {
-      "id": "V0_0",
+      "id": "V0_0_IN",
       "source": "R0_10",
       "target": "R1_10",
       "type": "spine",
@@ -2891,7 +2891,7 @@
       "cost": 1.8
     },
     {
-      "id": "V0_2",
+      "id": "V0_2_IN",
       "source": "R2_10",
       "target": "R3_10",
       "type": "spine",
@@ -2911,7 +2911,7 @@
       "cost": 1.8
     },
     {
-      "id": "V0_4",
+      "id": "V0_4_IN",
       "source": "R4_10",
       "target": "R5_10",
       "type": "spine",
@@ -2931,7 +2931,7 @@
       "cost": 1.8
     },
     {
-      "id": "V5_0",
+      "id": "V0_0_OUT",
       "source": "R1_10",
       "target": "R0_10",
       "type": "spine",
@@ -2951,7 +2951,7 @@
       "cost": 1.8
     },
     {
-      "id": "V5_2",
+      "id": "V0_2_OUT",
       "source": "R3_10",
       "target": "R2_10",
       "type": "spine",
@@ -2971,7 +2971,7 @@
       "cost": 1.8
     },
     {
-      "id": "V5_4",
+      "id": "V0_4_OUT",
       "source": "R5_10",
       "target": "R4_10",
       "type": "spine",
@@ -2991,7 +2991,7 @@
       "cost": 1.8
     },
     {
-      "id": "V10_0",
+      "id": "V10_0_IN",
       "source": "R6_1",
       "target": "RJ01",
       "type": "spine",
@@ -3001,7 +3001,7 @@
       "cost": 1.8
     },
     {
-      "id": "V10_1",
+      "id": "V10_0_OUT",
       "source": "RJ01",
       "target": "R6_1",
       "type": "spine",
@@ -3011,7 +3011,7 @@
       "cost": 1.8
     },
     {
-      "id": "V10_2",
+      "id": "V10_2_IN",
       "source": "R6_2",
       "target": "RJ02",
       "type": "spine",
@@ -3021,7 +3021,7 @@
       "cost": 1.8
     },
     {
-      "id": "V10_3",
+      "id": "V10_2_OUT",
       "source": "RJ02",
       "target": "R6_2",
       "type": "spine",
@@ -3031,7 +3031,7 @@
       "cost": 1.8
     },
     {
-      "id": "V10_4",
+      "id": "V10_4_IN",
       "source": "R6_3",
       "target": "RJ03",
       "type": "spine",
@@ -3041,7 +3041,7 @@
       "cost": 1.8
     },
     {
-      "id": "V10_5",
+      "id": "V10_4_OUT",
       "source": "RJ03",
       "target": "R6_3",
       "type": "spine",
@@ -3051,7 +3051,7 @@
       "cost": 1.8
     },
     {
-      "id": "IV0",
+      "id": "IV0_IN",
       "source": "R6_4",
       "target": "RJ04",
       "type": "spine",
@@ -3061,7 +3061,7 @@
       "cost": 1.8
     },
     {
-      "id": "IV1",
+      "id": "IV0_OUT",
       "source": "RJ04",
       "target": "R6_4",
       "type": "spine",
@@ -3071,7 +3071,7 @@
       "cost": 1.8
     },
     {
-      "id": "IV2",
+      "id": "IV2_IN",
       "source": "R6_5",
       "target": "RJ05",
       "type": "spine",
@@ -3081,7 +3081,7 @@
       "cost": 1.8
     },
     {
-      "id": "IV3",
+      "id": "IV2_OUT",
       "source": "RJ05",
       "target": "R6_5",
       "type": "spine",
@@ -3091,7 +3091,7 @@
       "cost": 1.8
     },
     {
-      "id": "IV4",
+      "id": "IV4_IN",
       "source": "R6_6",
       "target": "RJ06",
       "type": "spine",
@@ -3101,7 +3101,7 @@
       "cost": 1.8
     },
     {
-      "id": "IV5",
+      "id": "IV4_OUT",
       "source": "RJ06",
       "target": "R6_6",
       "type": "spine",
@@ -3267,7 +3267,7 @@
       "station_robot_traversable": true
     },
     {
-      "id": "CH1",
+      "id": "CH1_IN",
       "source": "RJ01",
       "target": "C01",
       "type": "charging_connector",
@@ -3279,7 +3279,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH2",
+      "id": "CH2_IN",
       "source": "RJ02",
       "target": "C02",
       "type": "charging_connector",
@@ -3291,7 +3291,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH3",
+      "id": "CH3_IN",
       "source": "RJ03",
       "target": "C03",
       "type": "charging_connector",
@@ -3303,7 +3303,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH4",
+      "id": "CH4_IN",
       "source": "RJ04",
       "target": "C04",
       "type": "charging_connector",
@@ -3315,7 +3315,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH5",
+      "id": "CH5_IN",
       "source": "RJ05",
       "target": "C05",
       "type": "charging_connector",
@@ -3327,7 +3327,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH6",
+      "id": "CH6_IN",
       "source": "RJ06",
       "target": "C06",
       "type": "charging_connector",
@@ -3339,7 +3339,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH7",
+      "id": "CH7_IN",
       "source": "RJ07",
       "target": "C07",
       "type": "charging_connector",
@@ -3351,7 +3351,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH8",
+      "id": "CH8_IN",
       "source": "RJ08",
       "target": "C08",
       "type": "charging_connector",
@@ -3363,7 +3363,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH9",
+      "id": "CH9_IN",
       "source": "RJ09",
       "target": "C09",
       "type": "charging_connector",
@@ -3375,7 +3375,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH10",
+      "id": "CH10_IN",
       "source": "RJ10",
       "target": "C10",
       "type": "charging_connector",
@@ -6367,7 +6367,7 @@
       "logical_mapping": true
     },
     {
-      "id": "RETURN_V10_5",
+      "id": "RETURN_V10_5_IN",
       "source": "R6_7",
       "target": "RJ07",
       "type": "return_perimeter",
@@ -6378,7 +6378,7 @@
       "cost": 1.8
     },
     {
-      "id": "RETURN_V10_4",
+      "id": "RETURN_V10_5_OUT",
       "source": "RJ07",
       "target": "R6_7",
       "type": "return_perimeter",
@@ -6389,7 +6389,7 @@
       "cost": 1.8
     },
     {
-      "id": "RETURN_V10_3",
+      "id": "RETURN_V10_3_IN",
       "source": "R6_8",
       "target": "RJ08",
       "type": "return_perimeter",
@@ -6400,7 +6400,7 @@
       "cost": 1.8
     },
     {
-      "id": "RETURN_V10_2",
+      "id": "RETURN_V10_3_OUT",
       "source": "RJ08",
       "target": "R6_8",
       "type": "return_perimeter",
@@ -6411,7 +6411,7 @@
       "cost": 1.8
     },
     {
-      "id": "RETURN_V10_1",
+      "id": "RETURN_V10_1_IN",
       "source": "R6_9",
       "target": "RJ09",
       "type": "return_perimeter",
@@ -6422,7 +6422,7 @@
       "cost": 1.8
     },
     {
-      "id": "RETURN_V10_0",
+      "id": "RETURN_V10_1_OUT",
       "source": "RJ09",
       "target": "R6_9",
       "type": "return_perimeter",
@@ -6433,7 +6433,7 @@
       "cost": 1.8
     },
     {
-      "id": "RETURN_H0_9",
+      "id": "RETURN_H0_9_IN",
       "source": "R6_10",
       "target": "RJ10",
       "type": "return_perimeter",
@@ -6444,7 +6444,7 @@
       "cost": 1.8
     },
     {
-      "id": "RETURN_H0_8",
+      "id": "RETURN_H0_9_OUT",
       "source": "RJ10",
       "target": "R6_10",
       "type": "return_perimeter",
@@ -6455,7 +6455,7 @@
       "cost": 1.8
     },
     {
-      "id": "RETURN_H0_7",
+      "id": "HB0a_OUT",
       "source": "R6_1",
       "target": "R6_0",
       "type": "return_perimeter",
@@ -6466,7 +6466,7 @@
       "cost": 2.15
     },
     {
-      "id": "RETURN_H0_6",
+      "id": "HB0b_OUT",
       "source": "R6_2",
       "target": "R6_1",
       "type": "return_perimeter",
@@ -6477,7 +6477,7 @@
       "cost": 2.15
     },
     {
-      "id": "RETURN_H0_5",
+      "id": "HB1a_OUT",
       "source": "R6_3",
       "target": "R6_2",
       "type": "return_perimeter",
@@ -6488,7 +6488,7 @@
       "cost": 2.15
     },
     {
-      "id": "RETURN_H0_4",
+      "id": "HB1b_OUT",
       "source": "R6_4",
       "target": "R6_3",
       "type": "return_perimeter",
@@ -6499,7 +6499,7 @@
       "cost": 2.15
     },
     {
-      "id": "RETURN_H0_3",
+      "id": "HB2a_OUT",
       "source": "R6_5",
       "target": "R6_4",
       "type": "return_perimeter",
@@ -6510,7 +6510,7 @@
       "cost": 2.15
     },
     {
-      "id": "RETURN_H0_2",
+      "id": "HB2b_OUT",
       "source": "R6_6",
       "target": "R6_5",
       "type": "return_perimeter",
@@ -6521,7 +6521,7 @@
       "cost": 2.15
     },
     {
-      "id": "RETURN_H0_1",
+      "id": "HB3a_OUT",
       "source": "R6_7",
       "target": "R6_6",
       "type": "return_perimeter",
@@ -6532,7 +6532,7 @@
       "cost": 2.15
     },
     {
-      "id": "RETURN_H0_0",
+      "id": "HB3b_OUT",
       "source": "R6_8",
       "target": "R6_7",
       "type": "return_perimeter",
@@ -6543,7 +6543,7 @@
       "cost": 2.15
     },
     {
-      "id": "CH1_RETURN",
+      "id": "CH1_OUT",
       "source": "C01",
       "target": "RJ01",
       "type": "charging_connector",
@@ -6555,7 +6555,7 @@
       "movement_role": "charging_exit"
     },
     {
-      "id": "CH2_RETURN",
+      "id": "CH2_OUT",
       "source": "C02",
       "target": "RJ02",
       "type": "charging_connector",
@@ -6567,7 +6567,7 @@
       "movement_role": "charging_exit"
     },
     {
-      "id": "CH3_RETURN",
+      "id": "CH3_OUT",
       "source": "C03",
       "target": "RJ03",
       "type": "charging_connector",
@@ -6579,7 +6579,7 @@
       "movement_role": "charging_exit"
     },
     {
-      "id": "CH4_RETURN",
+      "id": "CH4_OUT",
       "source": "C04",
       "target": "RJ04",
       "type": "charging_connector",
@@ -6591,7 +6591,7 @@
       "movement_role": "charging_exit"
     },
     {
-      "id": "CH5_RETURN",
+      "id": "CH5_OUT",
       "source": "C05",
       "target": "RJ05",
       "type": "charging_connector",
@@ -6603,7 +6603,7 @@
       "movement_role": "charging_exit"
     },
     {
-      "id": "CH6_RETURN",
+      "id": "CH6_OUT",
       "source": "C06",
       "target": "RJ06",
       "type": "charging_connector",
@@ -6615,7 +6615,7 @@
       "movement_role": "charging_exit"
     },
     {
-      "id": "CH7_RETURN",
+      "id": "CH7_OUT",
       "source": "C07",
       "target": "RJ07",
       "type": "charging_connector",
@@ -6627,7 +6627,7 @@
       "movement_role": "charging_exit"
     },
     {
-      "id": "CH8_RETURN",
+      "id": "CH8_OUT",
       "source": "C08",
       "target": "RJ08",
       "type": "charging_connector",
@@ -6639,7 +6639,7 @@
       "movement_role": "charging_exit"
     },
     {
-      "id": "CH9_RETURN",
+      "id": "CH9_OUT",
       "source": "C09",
       "target": "RJ09",
       "type": "charging_connector",
@@ -6651,7 +6651,7 @@
       "movement_role": "charging_exit"
     },
     {
-      "id": "CH10_RETURN",
+      "id": "CH10_OUT",
       "source": "C10",
       "target": "RJ10",
       "type": "charging_connector",

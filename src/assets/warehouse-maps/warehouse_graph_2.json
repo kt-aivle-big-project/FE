@@ -18,7 +18,7 @@
     "outbound_access_nodes": 3,
     "outbound_station_count": 3,
     "station_robot_count": 3,
-    "return_perimeter_edges": 16,
+    "return_perimeter_edges": 18,
     "empty_tote_buffer_access_nodes": 1,
     "logical_outbound_destinations": 7
   },
@@ -2173,7 +2173,7 @@
   ],
   "edges": [
     {
-      "id": "H0_0",
+      "id": "H0_0_IN",
       "source": "R0_0",
       "target": "R0_1",
       "type": "lane",
@@ -2183,7 +2183,7 @@
       "cost": 5.5
     },
     {
-      "id": "H0_1",
+      "id": "H0_1_IN",
       "source": "R0_1",
       "target": "R0_2",
       "type": "lane",
@@ -2193,7 +2193,7 @@
       "cost": 5.5
     },
     {
-      "id": "H0_2",
+      "id": "H0_2_IN",
       "source": "R0_2",
       "target": "R0_3",
       "type": "lane",
@@ -2203,7 +2203,7 @@
       "cost": 5.5
     },
     {
-      "id": "H0_3",
+      "id": "H0_3_IN",
       "source": "R0_3",
       "target": "R0_4",
       "type": "lane",
@@ -2213,7 +2213,7 @@
       "cost": 5.5
     },
     {
-      "id": "H0_4",
+      "id": "H0_4_IN",
       "source": "R0_4",
       "target": "R0_5",
       "type": "lane",
@@ -2223,7 +2223,7 @@
       "cost": 5.5
     },
     {
-      "id": "H0_5",
+      "id": "H0_5_IN",
       "source": "R0_5",
       "target": "R0_6",
       "type": "lane",
@@ -2233,7 +2233,7 @@
       "cost": 6.1033
     },
     {
-      "id": "H0_9",
+      "id": "H0_9_IN",
       "source": "R0_9",
       "target": "R0_10",
       "type": "lane",
@@ -2243,7 +2243,7 @@
       "cost": 4.6971
     },
     {
-      "id": "H1_0",
+      "id": "H1_0_IN",
       "source": "R0_10",
       "target": "RJ01",
       "type": "lane",
@@ -2253,7 +2253,7 @@
       "cost": 3.3001
     },
     {
-      "id": "H1_1",
+      "id": "H1_1_IN",
       "source": "RJ01",
       "target": "RJ02",
       "type": "lane",
@@ -2263,7 +2263,7 @@
       "cost": 2.5359
     },
     {
-      "id": "H1_2",
+      "id": "H1_2_IN",
       "source": "RJ02",
       "target": "RJ03",
       "type": "lane",
@@ -2273,7 +2273,7 @@
       "cost": 2.5179
     },
     {
-      "id": "H1_3",
+      "id": "H1_3_IN",
       "source": "RJ03",
       "target": "RJ04",
       "type": "lane",
@@ -2283,7 +2283,7 @@
       "cost": 2.508
     },
     {
-      "id": "H1_4",
+      "id": "H1_4_IN",
       "source": "RJ04",
       "target": "RJ05",
       "type": "lane",
@@ -2293,7 +2293,7 @@
       "cost": 2.5031
     },
     {
-      "id": "H1_5",
+      "id": "H1_5_IN",
       "source": "RJ05",
       "target": "RJ06",
       "type": "lane",
@@ -2913,7 +2913,7 @@
       "cost": 2.5
     },
     {
-      "id": "HB9a",
+      "id": "HB9_IN",
       "source": "R0_3",
       "target": "R6_4",
       "type": "lane",
@@ -2923,7 +2923,7 @@
       "cost": 7.4351
     },
     {
-      "id": "HB9b",
+      "id": "HB9_OUT",
       "source": "R6_4",
       "target": "R0_3",
       "type": "lane",
@@ -2933,7 +2933,7 @@
       "cost": 7.4351
     },
     {
-      "id": "V0_0",
+      "id": "V0_0_IN",
       "source": "R6_2",
       "target": "R6_3",
       "type": "spine",
@@ -2943,7 +2943,7 @@
       "cost": 1.75
     },
     {
-      "id": "V0_1",
+      "id": "V0_0_OUT",
       "source": "R6_3",
       "target": "R6_2",
       "type": "spine",
@@ -2953,7 +2953,7 @@
       "cost": 1.75
     },
     {
-      "id": "V0_2",
+      "id": "V0_2_IN",
       "source": "R6_3",
       "target": "R6_4",
       "type": "spine",
@@ -2963,7 +2963,7 @@
       "cost": 1.75
     },
     {
-      "id": "V0_3",
+      "id": "V0_2_OUT",
       "source": "R6_4",
       "target": "R6_3",
       "type": "spine",
@@ -2973,7 +2973,7 @@
       "cost": 1.75
     },
     {
-      "id": "V0_4",
+      "id": "V0_4_IN",
       "source": "R6_2",
       "target": "R6_5",
       "type": "spine",
@@ -2983,7 +2983,7 @@
       "cost": 1.75
     },
     {
-      "id": "V0_5",
+      "id": "V0_4_OUT",
       "source": "R6_5",
       "target": "R6_2",
       "type": "spine",
@@ -2993,7 +2993,7 @@
       "cost": 1.75
     },
     {
-      "id": "V5_0",
+      "id": "V5_0_IN",
       "source": "R6_5",
       "target": "R6_6",
       "type": "spine",
@@ -3003,7 +3003,7 @@
       "cost": 1.75
     },
     {
-      "id": "V5_1",
+      "id": "V5_0_OUT",
       "source": "R6_6",
       "target": "R6_5",
       "type": "spine",
@@ -3013,7 +3013,7 @@
       "cost": 1.75
     },
     {
-      "id": "V5_2",
+      "id": "V5_2_IN",
       "source": "R6_2",
       "target": "R6_7",
       "type": "spine",
@@ -3023,7 +3023,7 @@
       "cost": 1.875
     },
     {
-      "id": "V5_3",
+      "id": "V5_2_OUT",
       "source": "R6_7",
       "target": "R6_2",
       "type": "spine",
@@ -3033,7 +3033,7 @@
       "cost": 1.875
     },
     {
-      "id": "V5_4",
+      "id": "V5_4_IN",
       "source": "R6_7",
       "target": "R6_8",
       "type": "spine",
@@ -3043,7 +3043,7 @@
       "cost": 1.875
     },
     {
-      "id": "V5_5",
+      "id": "V5_4_OUT",
       "source": "R6_8",
       "target": "R6_7",
       "type": "spine",
@@ -3053,7 +3053,7 @@
       "cost": 1.875
     },
     {
-      "id": "V10_0",
+      "id": "V10_0_IN",
       "source": "R6_2",
       "target": "R6_9",
       "type": "spine",
@@ -3063,7 +3063,7 @@
       "cost": 1.875
     },
     {
-      "id": "V10_1",
+      "id": "V10_0_OUT",
       "source": "R6_9",
       "target": "R6_2",
       "type": "spine",
@@ -3073,7 +3073,7 @@
       "cost": 1.875
     },
     {
-      "id": "V10_2",
+      "id": "V10_2_IN",
       "source": "R6_9",
       "target": "R6_10",
       "type": "spine",
@@ -3083,7 +3083,7 @@
       "cost": 1.875
     },
     {
-      "id": "V10_3",
+      "id": "V10_2_OUT",
       "source": "R6_10",
       "target": "R6_9",
       "type": "spine",
@@ -3093,7 +3093,7 @@
       "cost": 1.875
     },
     {
-      "id": "V10_4",
+      "id": "V10_4_IN",
       "source": "R2_3",
       "target": "R6_8",
       "type": "spine",
@@ -3103,7 +3103,7 @@
       "cost": 3.52
     },
     {
-      "id": "V10_5",
+      "id": "V10_4_OUT",
       "source": "R6_8",
       "target": "R2_3",
       "type": "spine",
@@ -3113,7 +3113,7 @@
       "cost": 3.52
     },
     {
-      "id": "IV0",
+      "id": "IV0_IN",
       "source": "R3_9",
       "target": "R6_10",
       "type": "spine",
@@ -3123,7 +3123,7 @@
       "cost": 3.52
     },
     {
-      "id": "IV1",
+      "id": "IV0_OUT",
       "source": "R6_10",
       "target": "R3_9",
       "type": "spine",
@@ -3133,7 +3133,7 @@
       "cost": 3.52
     },
     {
-      "id": "IV2",
+      "id": "IV2_IN",
       "source": "R4_4",
       "target": "R6_8",
       "type": "spine",
@@ -3143,7 +3143,7 @@
       "cost": 3.3958
     },
     {
-      "id": "IV3",
+      "id": "IV2_OUT",
       "source": "R6_8",
       "target": "R4_4",
       "type": "spine",
@@ -3153,7 +3153,7 @@
       "cost": 3.3958
     },
     {
-      "id": "IV4",
+      "id": "IV4_IN",
       "source": "R5_10",
       "target": "R6_10",
       "type": "spine",
@@ -3163,7 +3163,7 @@
       "cost": 7.6096
     },
     {
-      "id": "IV5",
+      "id": "IV4_OUT",
       "source": "R6_10",
       "target": "R5_10",
       "type": "spine",
@@ -3329,7 +3329,7 @@
       "station_robot_traversable": true
     },
     {
-      "id": "CH1",
+      "id": "CH1_IN",
       "source": "RJ01",
       "target": "C01",
       "type": "charging_connector",
@@ -3341,7 +3341,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH2",
+      "id": "CH2_IN",
       "source": "RJ02",
       "target": "C02",
       "type": "charging_connector",
@@ -3353,7 +3353,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH3",
+      "id": "CH3_IN",
       "source": "RJ03",
       "target": "C03",
       "type": "charging_connector",
@@ -3365,7 +3365,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH4",
+      "id": "CH4_IN",
       "source": "RJ04",
       "target": "C04",
       "type": "charging_connector",
@@ -3377,7 +3377,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH5",
+      "id": "CH5_IN",
       "source": "RJ05",
       "target": "C05",
       "type": "charging_connector",
@@ -3389,7 +3389,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH6",
+      "id": "CH6_IN",
       "source": "RJ06",
       "target": "C06",
       "type": "charging_connector",
@@ -3401,7 +3401,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH7",
+      "id": "CH7_IN",
       "source": "RJ07",
       "target": "C07",
       "type": "charging_connector",
@@ -3413,7 +3413,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH8",
+      "id": "CH8_IN",
       "source": "RJ08",
       "target": "C08",
       "type": "charging_connector",
@@ -3425,7 +3425,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH9",
+      "id": "CH9_IN",
       "source": "RJ09",
       "target": "C09",
       "type": "charging_connector",
@@ -3437,7 +3437,7 @@
       "movement_role": "charging_entry"
     },
     {
-      "id": "CH10",
+      "id": "CH10_IN",
       "source": "RJ10",
       "target": "C10",
       "type": "charging_connector",
@@ -5369,7 +5369,7 @@
       "cost": 1.3544
     },
     {
-      "id": "RETURN_V10_5",
+      "id": "H0_0_OUT",
       "source": "R0_1",
       "target": "R0_0",
       "type": "return_perimeter",
@@ -5380,7 +5380,7 @@
       "cost": 5.5
     },
     {
-      "id": "RETURN_V10_4",
+      "id": "H0_1_OUT",
       "source": "R0_2",
       "target": "R0_1",
       "type": "return_perimeter",
@@ -5391,7 +5391,7 @@
       "cost": 5.5
     },
     {
-      "id": "RETURN_V10_3",
+      "id": "H0_2_OUT",
       "source": "R0_3",
       "target": "R0_2",
       "type": "return_perimeter",
@@ -5402,7 +5402,7 @@
       "cost": 5.5
     },
     {
-      "id": "RETURN_V10_2",
+      "id": "H0_3_OUT",
       "source": "R0_4",
       "target": "R0_3",
       "type": "return_perimeter",
@@ -5413,7 +5413,7 @@
       "cost": 5.5
     },
     {
-      "id": "RETURN_V10_1",
+      "id": "H0_4_OUT",
       "source": "R0_5",
       "target": "R0_4",
       "type": "return_perimeter",
@@ -5424,7 +5424,7 @@
       "cost": 5.5
     },
     {
-      "id": "RETURN_V10_0",
+      "id": "H0_5_OUT",
       "source": "R0_6",
       "target": "R0_5",
       "type": "return_perimeter",
@@ -5457,7 +5457,7 @@
       "cost": 4.0
     },
     {
-      "id": "RETURN_H0_6",
+      "id": "H0_9_OUT",
       "source": "R0_10",
       "target": "R0_9",
       "type": "return_perimeter",
@@ -5468,7 +5468,7 @@
       "cost": 4.6971
     },
     {
-      "id": "RETURN_H0_5",
+      "id": "H1_0_OUT",
       "source": "RJ01",
       "target": "R0_10",
       "type": "return_perimeter",
@@ -5479,7 +5479,7 @@
       "cost": 3.3001
     },
     {
-      "id": "RETURN_H0_4",
+      "id": "H1_1_OUT",
       "source": "RJ02",
       "target": "RJ01",
       "type": "return_perimeter",
@@ -5490,7 +5490,7 @@
       "cost": 2.5359
     },
     {
-      "id": "RETURN_H0_3",
+      "id": "H1_2_OUT",
       "source": "RJ03",
       "target": "RJ02",
       "type": "return_perimeter",
@@ -5501,7 +5501,7 @@
       "cost": 2.5179
     },
     {
-      "id": "RETURN_H0_2",
+      "id": "H1_3_OUT",
       "source": "RJ04",
       "target": "RJ03",
       "type": "return_perimeter",
@@ -5512,7 +5512,7 @@
       "cost": 2.508
     },
     {
-      "id": "RETURN_H0_1",
+      "id": "H1_4_OUT",
       "source": "RJ05",
       "target": "RJ04",
       "type": "return_perimeter",
@@ -5523,7 +5523,7 @@
       "cost": 2.5031
     },
     {
-      "id": "RETURN_H0_0",
+      "id": "H1_5_OUT",
       "source": "RJ06",
       "target": "RJ05",
       "type": "return_perimeter",
@@ -5534,7 +5534,7 @@
       "cost": 2.5011
     },
     {
-      "id": "CH1_RETURN",
+      "id": "CH1_OUT",
       "source": "C01",
       "target": "RJ01",
       "type": "charging_connector",
@@ -5546,7 +5546,7 @@
       "cost": 1.55
     },
     {
-      "id": "CH2_RETURN",
+      "id": "CH2_OUT",
       "source": "C02",
       "target": "RJ02",
       "type": "charging_connector",
@@ -5558,7 +5558,7 @@
       "cost": 1.55
     },
     {
-      "id": "CH3_RETURN",
+      "id": "CH3_OUT",
       "source": "C03",
       "target": "RJ03",
       "type": "charging_connector",
@@ -5570,7 +5570,7 @@
       "cost": 1.55
     },
     {
-      "id": "CH4_RETURN",
+      "id": "CH4_OUT",
       "source": "C04",
       "target": "RJ04",
       "type": "charging_connector",
@@ -5582,7 +5582,7 @@
       "cost": 1.55
     },
     {
-      "id": "CH5_RETURN",
+      "id": "CH5_OUT",
       "source": "C05",
       "target": "RJ05",
       "type": "charging_connector",
@@ -5594,7 +5594,7 @@
       "cost": 1.55
     },
     {
-      "id": "CH6_RETURN",
+      "id": "CH6_OUT",
       "source": "C06",
       "target": "RJ06",
       "type": "charging_connector",
@@ -5606,7 +5606,7 @@
       "cost": 1.55
     },
     {
-      "id": "CH7_RETURN",
+      "id": "CH7_OUT",
       "source": "C07",
       "target": "RJ07",
       "type": "charging_connector",
@@ -5618,7 +5618,7 @@
       "cost": 1.55
     },
     {
-      "id": "CH8_RETURN",
+      "id": "CH8_OUT",
       "source": "C08",
       "target": "RJ08",
       "type": "charging_connector",
@@ -5630,7 +5630,7 @@
       "cost": 1.55
     },
     {
-      "id": "CH9_RETURN",
+      "id": "CH9_OUT",
       "source": "C09",
       "target": "RJ09",
       "type": "charging_connector",
@@ -5642,7 +5642,7 @@
       "cost": 1.55
     },
     {
-      "id": "CH10_RETURN",
+      "id": "CH10_OUT",
       "source": "C10",
       "target": "RJ10",
       "type": "charging_connector",
@@ -5698,7 +5698,7 @@
       "cost": 2.0
     },
     {
-      "id": "H0_7A",
+      "id": "H0_7A_IN",
       "source": "R0_7",
       "target": "R0_OUT_M",
       "type": "lane",
@@ -5728,7 +5728,7 @@
       "cost": 2.0
     },
     {
-      "id": "IN_0_UPPER_F",
+      "id": "IN_0_UPPER_IN",
       "source": "I_0",
       "target": "R1_7",
       "type": "inbound_access",
@@ -5739,7 +5739,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_0_UPPER_R",
+      "id": "IN_0_UPPER_OUT",
       "source": "R1_7",
       "target": "I_0",
       "type": "inbound_access",
@@ -5750,7 +5750,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_0_LOWER_F",
+      "id": "IN_0_LOWER_IN",
       "source": "I_0",
       "target": "R1_6",
       "type": "inbound_access",
@@ -5761,7 +5761,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_0_LOWER_R",
+      "id": "IN_0_LOWER_OUT",
       "source": "R1_6",
       "target": "I_0",
       "type": "inbound_access",
@@ -5772,7 +5772,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_1_UPPER_F",
+      "id": "IN_1_UPPER_IN",
       "source": "I_1",
       "target": "R1_6",
       "type": "inbound_access",
@@ -5783,7 +5783,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_1_UPPER_R",
+      "id": "IN_1_UPPER_OUT",
       "source": "R1_6",
       "target": "I_1",
       "type": "inbound_access",
@@ -5794,7 +5794,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_1_LOWER_F",
+      "id": "IN_1_LOWER_IN",
       "source": "I_1",
       "target": "R1_5",
       "type": "inbound_access",
@@ -5805,7 +5805,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_1_LOWER_R",
+      "id": "IN_1_LOWER_OUT",
       "source": "R1_5",
       "target": "I_1",
       "type": "inbound_access",
@@ -5816,7 +5816,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_2_UPPER_F",
+      "id": "IN_2_UPPER_IN",
       "source": "I_2",
       "target": "R1_5",
       "type": "inbound_access",
@@ -5827,7 +5827,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_2_UPPER_R",
+      "id": "IN_2_UPPER_OUT",
       "source": "R1_5",
       "target": "I_2",
       "type": "inbound_access",
@@ -5838,7 +5838,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_2_LOWER_F",
+      "id": "IN_2_LOWER_IN",
       "source": "I_2",
       "target": "R1_4",
       "type": "inbound_access",
@@ -5849,7 +5849,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_2_LOWER_R",
+      "id": "IN_2_LOWER_OUT",
       "source": "R1_4",
       "target": "I_2",
       "type": "inbound_access",
@@ -5860,7 +5860,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_3_UPPER_F",
+      "id": "IN_3_UPPER_IN",
       "source": "I_3",
       "target": "R1_4",
       "type": "inbound_access",
@@ -5871,7 +5871,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_3_UPPER_R",
+      "id": "IN_3_UPPER_OUT",
       "source": "R1_4",
       "target": "I_3",
       "type": "inbound_access",
@@ -5882,7 +5882,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_3_LOWER_F",
+      "id": "IN_3_LOWER_IN",
       "source": "I_3",
       "target": "R1_3",
       "type": "inbound_access",
@@ -5893,7 +5893,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_3_LOWER_R",
+      "id": "IN_3_LOWER_OUT",
       "source": "R1_3",
       "target": "I_3",
       "type": "inbound_access",
@@ -5904,7 +5904,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_4_UPPER_F",
+      "id": "IN_4_UPPER_IN",
       "source": "I_4",
       "target": "R1_3",
       "type": "inbound_access",
@@ -5915,7 +5915,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_4_UPPER_R",
+      "id": "IN_4_UPPER_OUT",
       "source": "R1_3",
       "target": "I_4",
       "type": "inbound_access",
@@ -5926,7 +5926,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_4_LOWER_F",
+      "id": "IN_4_LOWER_IN",
       "source": "I_4",
       "target": "R1_2",
       "type": "inbound_access",
@@ -5937,7 +5937,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_4_LOWER_R",
+      "id": "IN_4_LOWER_OUT",
       "source": "R1_2",
       "target": "I_4",
       "type": "inbound_access",
@@ -5948,7 +5948,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_5_UPPER_F",
+      "id": "IN_5_UPPER_IN",
       "source": "I_5",
       "target": "R1_2",
       "type": "inbound_access",
@@ -5959,7 +5959,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_5_UPPER_R",
+      "id": "IN_5_UPPER_OUT",
       "source": "R1_2",
       "target": "I_5",
       "type": "inbound_access",
@@ -5970,7 +5970,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_5_LOWER_F",
+      "id": "IN_5_LOWER_IN",
       "source": "I_5",
       "target": "R1_1",
       "type": "inbound_access",
@@ -5981,7 +5981,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_5_LOWER_R",
+      "id": "IN_5_LOWER_OUT",
       "source": "R1_1",
       "target": "I_5",
       "type": "inbound_access",
@@ -5992,7 +5992,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "IN_LOGICAL_I_a_I_0_F",
+      "id": "IN_LOGICAL_I_a_I_0_IN",
       "source": "I_a",
       "target": "I_0",
       "type": "inbound_access",
@@ -6005,7 +6005,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_a_I_0_R",
+      "id": "IN_LOGICAL_I_a_I_0_OUT",
       "source": "I_0",
       "target": "I_a",
       "type": "inbound_access",
@@ -6018,7 +6018,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_b_I_0_F",
+      "id": "IN_LOGICAL_I_b_I_0_IN",
       "source": "I_b",
       "target": "I_0",
       "type": "inbound_access",
@@ -6031,7 +6031,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_b_I_0_R",
+      "id": "IN_LOGICAL_I_b_I_0_OUT",
       "source": "I_0",
       "target": "I_b",
       "type": "inbound_access",
@@ -6044,7 +6044,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_b_I_1_F",
+      "id": "IN_LOGICAL_I_b_I_1_IN",
       "source": "I_b",
       "target": "I_1",
       "type": "inbound_access",
@@ -6057,7 +6057,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_b_I_1_R",
+      "id": "IN_LOGICAL_I_b_I_1_OUT",
       "source": "I_1",
       "target": "I_b",
       "type": "inbound_access",
@@ -6070,7 +6070,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_c_I_1_F",
+      "id": "IN_LOGICAL_I_c_I_1_IN",
       "source": "I_c",
       "target": "I_1",
       "type": "inbound_access",
@@ -6083,7 +6083,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_c_I_1_R",
+      "id": "IN_LOGICAL_I_c_I_1_OUT",
       "source": "I_1",
       "target": "I_c",
       "type": "inbound_access",
@@ -6096,7 +6096,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_c_I_2_F",
+      "id": "IN_LOGICAL_I_c_I_2_IN",
       "source": "I_c",
       "target": "I_2",
       "type": "inbound_access",
@@ -6109,7 +6109,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_c_I_2_R",
+      "id": "IN_LOGICAL_I_c_I_2_OUT",
       "source": "I_2",
       "target": "I_c",
       "type": "inbound_access",
@@ -6122,7 +6122,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_d_I_2_F",
+      "id": "IN_LOGICAL_I_d_I_2_IN",
       "source": "I_d",
       "target": "I_2",
       "type": "inbound_access",
@@ -6135,7 +6135,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_d_I_2_R",
+      "id": "IN_LOGICAL_I_d_I_2_OUT",
       "source": "I_2",
       "target": "I_d",
       "type": "inbound_access",
@@ -6148,7 +6148,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_d_I_3_F",
+      "id": "IN_LOGICAL_I_d_I_3_IN",
       "source": "I_d",
       "target": "I_3",
       "type": "inbound_access",
@@ -6161,7 +6161,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_d_I_3_R",
+      "id": "IN_LOGICAL_I_d_I_3_OUT",
       "source": "I_3",
       "target": "I_d",
       "type": "inbound_access",
@@ -6174,7 +6174,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_e_I_3_F",
+      "id": "IN_LOGICAL_I_e_I_3_IN",
       "source": "I_e",
       "target": "I_3",
       "type": "inbound_access",
@@ -6187,7 +6187,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_e_I_3_R",
+      "id": "IN_LOGICAL_I_e_I_3_OUT",
       "source": "I_3",
       "target": "I_e",
       "type": "inbound_access",
@@ -6200,7 +6200,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_e_I_4_F",
+      "id": "IN_LOGICAL_I_e_I_4_IN",
       "source": "I_e",
       "target": "I_4",
       "type": "inbound_access",
@@ -6213,7 +6213,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_e_I_4_R",
+      "id": "IN_LOGICAL_I_e_I_4_OUT",
       "source": "I_4",
       "target": "I_e",
       "type": "inbound_access",
@@ -6226,7 +6226,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_f_I_4_F",
+      "id": "IN_LOGICAL_I_f_I_4_IN",
       "source": "I_f",
       "target": "I_4",
       "type": "inbound_access",
@@ -6239,7 +6239,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_f_I_4_R",
+      "id": "IN_LOGICAL_I_f_I_4_OUT",
       "source": "I_4",
       "target": "I_f",
       "type": "inbound_access",
@@ -6252,7 +6252,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_f_I_5_F",
+      "id": "IN_LOGICAL_I_f_I_5_IN",
       "source": "I_f",
       "target": "I_5",
       "type": "inbound_access",
@@ -6265,7 +6265,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_f_I_5_R",
+      "id": "IN_LOGICAL_I_f_I_5_OUT",
       "source": "I_5",
       "target": "I_f",
       "type": "inbound_access",
@@ -6278,7 +6278,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_g_I_5_F",
+      "id": "IN_LOGICAL_I_g_I_5_IN",
       "source": "I_g",
       "target": "I_5",
       "type": "inbound_access",
@@ -6291,7 +6291,7 @@
       "logical_mapping": true
     },
     {
-      "id": "IN_LOGICAL_I_g_I_5_R",
+      "id": "IN_LOGICAL_I_g_I_5_OUT",
       "source": "I_5",
       "target": "I_g",
       "type": "inbound_access",
@@ -6304,7 +6304,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_PHYSICAL_O_0_R0_6_F",
+      "id": "OUT_PHYSICAL_O_0_R0_6_IN",
       "source": "O_0",
       "target": "R0_6",
       "type": "outbound_access",
@@ -6315,7 +6315,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "OUT_PHYSICAL_O_0_R0_6_R",
+      "id": "OUT_PHYSICAL_O_0_R0_6_OUT",
       "source": "R0_6",
       "target": "O_0",
       "type": "outbound_access",
@@ -6326,7 +6326,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "OUT_PHYSICAL_O_0_R0_OUT_U_F",
+      "id": "OUT_PHYSICAL_O_0_R0_OUT_U_IN",
       "source": "O_0",
       "target": "R0_OUT_U",
       "type": "outbound_access",
@@ -6337,7 +6337,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "OUT_PHYSICAL_O_0_R0_OUT_U_R",
+      "id": "OUT_PHYSICAL_O_0_R0_OUT_U_OUT",
       "source": "R0_OUT_U",
       "target": "O_0",
       "type": "outbound_access",
@@ -6348,7 +6348,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "OUT_PHYSICAL_O_1_R0_7_F",
+      "id": "OUT_PHYSICAL_O_1_R0_7_IN",
       "source": "O_1",
       "target": "R0_7",
       "type": "outbound_access",
@@ -6359,7 +6359,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "OUT_PHYSICAL_O_1_R0_7_R",
+      "id": "OUT_PHYSICAL_O_1_R0_7_OUT",
       "source": "R0_7",
       "target": "O_1",
       "type": "outbound_access",
@@ -6370,7 +6370,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "OUT_PHYSICAL_O_1_R0_OUT_M_F",
+      "id": "OUT_PHYSICAL_O_1_R0_OUT_M_IN",
       "source": "O_1",
       "target": "R0_OUT_M",
       "type": "outbound_access",
@@ -6381,7 +6381,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "OUT_PHYSICAL_O_1_R0_OUT_M_R",
+      "id": "OUT_PHYSICAL_O_1_R0_OUT_M_OUT",
       "source": "R0_OUT_M",
       "target": "O_1",
       "type": "outbound_access",
@@ -6392,7 +6392,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "OUT_PHYSICAL_O_2_R0_8_F",
+      "id": "OUT_PHYSICAL_O_2_R0_8_IN",
       "source": "O_2",
       "target": "R0_8",
       "type": "outbound_access",
@@ -6403,7 +6403,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "OUT_PHYSICAL_O_2_R0_8_R",
+      "id": "OUT_PHYSICAL_O_2_R0_8_OUT",
       "source": "R0_8",
       "target": "O_2",
       "type": "outbound_access",
@@ -6414,7 +6414,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "OUT_PHYSICAL_O_2_R0_OUT_L_F",
+      "id": "OUT_PHYSICAL_O_2_R0_OUT_L_IN",
       "source": "O_2",
       "target": "R0_OUT_L",
       "type": "outbound_access",
@@ -6425,7 +6425,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "OUT_PHYSICAL_O_2_R0_OUT_L_R",
+      "id": "OUT_PHYSICAL_O_2_R0_OUT_L_OUT",
       "source": "R0_OUT_L",
       "target": "O_2",
       "type": "outbound_access",
@@ -6436,7 +6436,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "OUT_LOGICAL_O_0_O_A_F",
+      "id": "OUT_LOGICAL_O_0_O_A_IN",
       "source": "O_0",
       "target": "O_A",
       "type": "outbound_access",
@@ -6449,7 +6449,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_0_O_A_R",
+      "id": "OUT_LOGICAL_O_0_O_A_OUT",
       "source": "O_A",
       "target": "O_0",
       "type": "outbound_access",
@@ -6462,7 +6462,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_0_O_B_F",
+      "id": "OUT_LOGICAL_O_0_O_B_IN",
       "source": "O_0",
       "target": "O_B",
       "type": "outbound_access",
@@ -6475,7 +6475,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_0_O_B_R",
+      "id": "OUT_LOGICAL_O_0_O_B_OUT",
       "source": "O_B",
       "target": "O_0",
       "type": "outbound_access",
@@ -6488,7 +6488,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_0_O_C_F",
+      "id": "OUT_LOGICAL_O_0_O_C_IN",
       "source": "O_0",
       "target": "O_C",
       "type": "outbound_access",
@@ -6501,7 +6501,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_0_O_C_R",
+      "id": "OUT_LOGICAL_O_0_O_C_OUT",
       "source": "O_C",
       "target": "O_0",
       "type": "outbound_access",
@@ -6514,7 +6514,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_1_O_C_F",
+      "id": "OUT_LOGICAL_O_1_O_C_IN",
       "source": "O_1",
       "target": "O_C",
       "type": "outbound_access",
@@ -6527,7 +6527,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_1_O_C_R",
+      "id": "OUT_LOGICAL_O_1_O_C_OUT",
       "source": "O_C",
       "target": "O_1",
       "type": "outbound_access",
@@ -6540,7 +6540,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_1_O_D_F",
+      "id": "OUT_LOGICAL_O_1_O_D_IN",
       "source": "O_1",
       "target": "O_D",
       "type": "outbound_access",
@@ -6553,7 +6553,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_1_O_D_R",
+      "id": "OUT_LOGICAL_O_1_O_D_OUT",
       "source": "O_D",
       "target": "O_1",
       "type": "outbound_access",
@@ -6566,7 +6566,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_1_O_E_F",
+      "id": "OUT_LOGICAL_O_1_O_E_IN",
       "source": "O_1",
       "target": "O_E",
       "type": "outbound_access",
@@ -6579,7 +6579,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_1_O_E_R",
+      "id": "OUT_LOGICAL_O_1_O_E_OUT",
       "source": "O_E",
       "target": "O_1",
       "type": "outbound_access",
@@ -6592,7 +6592,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_2_O_E_F",
+      "id": "OUT_LOGICAL_O_2_O_E_IN",
       "source": "O_2",
       "target": "O_E",
       "type": "outbound_access",
@@ -6605,7 +6605,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_2_O_E_R",
+      "id": "OUT_LOGICAL_O_2_O_E_OUT",
       "source": "O_E",
       "target": "O_2",
       "type": "outbound_access",
@@ -6618,7 +6618,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_2_O_F_F",
+      "id": "OUT_LOGICAL_O_2_O_F_IN",
       "source": "O_2",
       "target": "O_F",
       "type": "outbound_access",
@@ -6631,7 +6631,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_2_O_F_R",
+      "id": "OUT_LOGICAL_O_2_O_F_OUT",
       "source": "O_F",
       "target": "O_2",
       "type": "outbound_access",
@@ -6644,7 +6644,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_2_O_G_F",
+      "id": "OUT_LOGICAL_O_2_O_G_IN",
       "source": "O_2",
       "target": "O_G",
       "type": "outbound_access",
@@ -6657,7 +6657,7 @@
       "logical_mapping": true
     },
     {
-      "id": "OUT_LOGICAL_O_2_O_G_R",
+      "id": "OUT_LOGICAL_O_2_O_G_OUT",
       "source": "O_G",
       "target": "O_2",
       "type": "outbound_access",
@@ -6690,7 +6690,7 @@
       "cost": 1.625
     },
     {
-      "id": "XLEFT_0_F",
+      "id": "XLEFT_0_IN",
       "source": "R_XL_J",
       "target": "R_XL_1",
       "type": "spine",
@@ -6701,7 +6701,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XLEFT_0_R",
+      "id": "XLEFT_0_OUT",
       "source": "R_XL_1",
       "target": "R_XL_J",
       "type": "spine",
@@ -6712,7 +6712,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XLEFT_1_F",
+      "id": "XLEFT_1_IN",
       "source": "R_XL_1",
       "target": "R_XL_2",
       "type": "spine",
@@ -6723,7 +6723,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XLEFT_1_R",
+      "id": "XLEFT_1_OUT",
       "source": "R_XL_2",
       "target": "R_XL_1",
       "type": "spine",
@@ -6734,7 +6734,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XLEFT_2_F",
+      "id": "XLEFT_2_IN",
       "source": "R_XL_2",
       "target": "R_XL_3",
       "type": "spine",
@@ -6745,7 +6745,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XLEFT_2_R",
+      "id": "XLEFT_2_OUT",
       "source": "R_XL_3",
       "target": "R_XL_2",
       "type": "spine",
@@ -6756,7 +6756,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XLEFT_3_F",
+      "id": "XLEFT_3_IN",
       "source": "R_XL_3",
       "target": "R_XL_4",
       "type": "spine",
@@ -6767,7 +6767,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XLEFT_3_R",
+      "id": "XLEFT_3_OUT",
       "source": "R_XL_4",
       "target": "R_XL_3",
       "type": "spine",
@@ -6778,7 +6778,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XLEFT_4_F",
+      "id": "XLEFT_4_IN",
       "source": "R_XL_4",
       "target": "R6_8",
       "type": "spine",
@@ -6789,7 +6789,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XLEFT_4_R",
+      "id": "XLEFT_4_OUT",
       "source": "R6_8",
       "target": "R_XL_4",
       "type": "spine",
@@ -6800,7 +6800,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "H0_7B_A",
+      "id": "H0_7B_A_IN",
       "source": "R0_OUT_M",
       "target": "R_XR_J",
       "type": "lane",
@@ -6810,7 +6810,7 @@
       "cost": 1.0
     },
     {
-      "id": "H0_7B_B",
+      "id": "H0_7B_B_IN",
       "source": "R_XR_J",
       "target": "R0_8",
       "type": "lane",
@@ -6820,7 +6820,7 @@
       "cost": 1.125
     },
     {
-      "id": "RETURN_H0_8A",
+      "id": "H0_7B_B_OUT",
       "source": "R0_8",
       "target": "R_XR_J",
       "type": "return_perimeter",
@@ -6831,7 +6831,7 @@
       "direction": "counter_clockwise"
     },
     {
-      "id": "RETURN_H0_8B",
+      "id": "H0_7B_A_OUT",
       "source": "R_XR_J",
       "target": "R0_OUT_M",
       "type": "return_perimeter",
@@ -6842,7 +6842,7 @@
       "direction": "counter_clockwise"
     },
     {
-      "id": "RETURN_H0_8C",
+      "id": "H0_7A_OUT",
       "source": "R0_OUT_M",
       "target": "R0_7",
       "type": "return_perimeter",
@@ -6853,7 +6853,7 @@
       "direction": "counter_clockwise"
     },
     {
-      "id": "XRIGHT_0_F",
+      "id": "XRIGHT_0_IN",
       "source": "R6_10",
       "target": "R_XR_1",
       "type": "spine",
@@ -6864,7 +6864,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XRIGHT_0_R",
+      "id": "XRIGHT_0_OUT",
       "source": "R_XR_1",
       "target": "R6_10",
       "type": "spine",
@@ -6875,7 +6875,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XRIGHT_1_F",
+      "id": "XRIGHT_1_IN",
       "source": "R_XR_1",
       "target": "R_XR_2",
       "type": "spine",
@@ -6886,7 +6886,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XRIGHT_1_R",
+      "id": "XRIGHT_1_OUT",
       "source": "R_XR_2",
       "target": "R_XR_1",
       "type": "spine",
@@ -6897,7 +6897,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XRIGHT_2_F",
+      "id": "XRIGHT_2_IN",
       "source": "R_XR_2",
       "target": "R_XR_3",
       "type": "spine",
@@ -6908,7 +6908,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XRIGHT_2_R",
+      "id": "XRIGHT_2_OUT",
       "source": "R_XR_3",
       "target": "R_XR_2",
       "type": "spine",
@@ -6919,7 +6919,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XRIGHT_3_F",
+      "id": "XRIGHT_3_IN",
       "source": "R_XR_3",
       "target": "R_XR_4",
       "type": "spine",
@@ -6930,7 +6930,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XRIGHT_3_R",
+      "id": "XRIGHT_3_OUT",
       "source": "R_XR_4",
       "target": "R_XR_3",
       "type": "spine",
@@ -6941,7 +6941,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XRIGHT_4_F",
+      "id": "XRIGHT_4_IN",
       "source": "R_XR_4",
       "target": "R_XR_J",
       "type": "spine",
@@ -6952,7 +6952,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XRIGHT_4_R",
+      "id": "XRIGHT_4_OUT",
       "source": "R_XR_J",
       "target": "R_XR_4",
       "type": "spine",
@@ -6963,7 +6963,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XCHARGE_0_F",
+      "id": "XCHARGE_0_IN",
       "source": "R6_6",
       "target": "R_CH_1",
       "type": "spine",
@@ -6974,7 +6974,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XCHARGE_0_R",
+      "id": "XCHARGE_0_OUT",
       "source": "R_CH_1",
       "target": "R6_6",
       "type": "spine",
@@ -6985,7 +6985,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XCHARGE_1_F",
+      "id": "XCHARGE_1_IN",
       "source": "R_CH_1",
       "target": "R_CH_2",
       "type": "spine",
@@ -6996,7 +6996,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XCHARGE_1_R",
+      "id": "XCHARGE_1_OUT",
       "source": "R_CH_2",
       "target": "R_CH_1",
       "type": "spine",
@@ -7007,7 +7007,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XCHARGE_2_F",
+      "id": "XCHARGE_2_IN",
       "source": "R_CH_2",
       "target": "R_CH_3",
       "type": "spine",
@@ -7018,7 +7018,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XCHARGE_2_R",
+      "id": "XCHARGE_2_OUT",
       "source": "R_CH_3",
       "target": "R_CH_2",
       "type": "spine",
@@ -7029,7 +7029,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XCHARGE_3_F",
+      "id": "XCHARGE_3_IN",
       "source": "R_CH_3",
       "target": "RJ06",
       "type": "spine",
@@ -7040,7 +7040,7 @@
       "mobile_robot_traversable": true
     },
     {
-      "id": "XCHARGE_3_R",
+      "id": "XCHARGE_3_OUT",
       "source": "RJ06",
       "target": "R_CH_3",
       "type": "spine",
