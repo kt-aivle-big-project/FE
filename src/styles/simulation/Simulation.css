@@ -14,7 +14,7 @@
         "simulation-view   simulation-panel"
         "simulation-task   simulation-event"
         "simulation-setting simulation-setting"
-        "footer footer";
+        ;
 
     grid-template-columns: minmax(0, 1fr) 250px;
     grid-template-rows:
