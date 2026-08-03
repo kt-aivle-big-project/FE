@@ -297,6 +297,9 @@ function OperationManagement() {
     const [warehouseId, setWarehouseId] = useState("ALL");
     const [warehouses, setWarehouses] = useState([ALL_WAREHOUSES]);
     const [taskMetric, setTaskMetric] = useState("COUNT");
+
+    // 창고별 처리량 막대에 무엇을 그릴지
+    const [warehouseMetric, setWarehouseMetric] = useState("TOTAL");
     const [dashboardData, setDashboardData] = useState(EMPTY_DASHBOARD);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [loadError, setLoadError] = useState("");
@@ -305,10 +308,10 @@ function OperationManagement() {
         () => [
             {
                 key: "tasks",
-                title: "오늘 작업 수",
+                title: "선택 기간 작업 수",
                 value: dashboardData.summary.todayTaskCount,
                 unit: "건",
-                caption: "선택 기간 처리 작업",
+                caption: "기간 내 발생한 전체 작업",
                 tone: "blue",
                 icon: "▤",
             },
@@ -364,14 +367,26 @@ function OperationManagement() {
         [dashboardData.hourlyTaskVolume]
     );
 
+    /** 고른 기준에 해당하는 값을 꺼낸다. */
+    const warehouseMetricValue = useCallback(
+        (item) => {
+            if (warehouseMetric === "DONE") {
+                return Number(item.count ?? 0);
+            }
+            if (warehouseMetric === "RATE") {
+                return Number(item.completionRate ?? 0);
+            }
+            return Number(item.totalCount ?? 0);
+        },
+        [warehouseMetric]
+    );
+
     const maxWarehouseCount = useMemo(
         () => Math.max(
-            ...dashboardData.warehouseThroughput.map(
-                (item) => Number(item.count ?? 0)
-            ),
+            ...dashboardData.warehouseThroughput.map(warehouseMetricValue),
             1
         ),
-        [dashboardData.warehouseThroughput]
+        [dashboardData.warehouseThroughput, warehouseMetricValue]
     );
 
     const totalRobotCount = useMemo(
@@ -732,48 +747,57 @@ function OperationManagement() {
                     <div className="operation-panel-header">
                         <div>
                             <h2>창고별 처리량</h2>
-                            <p>창고별 완료 작업 수를 비교합니다.</p>
+                            <p>
+                                전체 창고를 비교합니다. (창고 선택과 무관)
+                            </p>
                         </div>
 
-                        <select defaultValue="COUNT">
-                            <option value="COUNT">작업 수</option>
+                        <select
+                            value={warehouseMetric}
+                            onChange={(event) =>
+                                setWarehouseMetric(event.target.value)
+                            }
+                        >
+                            <option value="TOTAL">전체 작업</option>
+                            <option value="DONE">완료 작업</option>
                             <option value="RATE">완료율</option>
                         </select>
                     </div>
 
                     <div className="operation-horizontal-chart">
                         {dashboardData.warehouseThroughput.map(
-                            (item) => (
-                                <div
-                                    className="operation-horizontal-row"
-                                    key={item.warehouseId}
-                                >
-                                    <span>{item.warehouseName}</span>
+                            (item) => {
+                                const value = warehouseMetricValue(item);
 
-                                    <div className="operation-horizontal-track">
-                                        <div
-                                            className="operation-horizontal-fill"
-                                            style={{
-                                                width: `${
-                                                    (
-                                                        Number(
-                                                            item.count
-                                                            ?? 0
-                                                        )
-                                                        / maxWarehouseCount
-                                                    ) * 100
-                                                }%`,
-                                            }}
-                                        />
+                                return (
+                                    <div
+                                        className="operation-horizontal-row"
+                                        key={item.warehouseId}
+                                    >
+                                        <span>{item.warehouseName}</span>
+
+                                        <div className="operation-horizontal-track">
+                                            <div
+                                                className="operation-horizontal-fill"
+                                                style={{
+                                                    width: `${
+                                                        (value / maxWarehouseCount)
+                                                        * 100
+                                                    }%`,
+                                                }}
+                                            />
+                                        </div>
+
+                                        <strong>
+                                            {value > 0
+                                                ? warehouseMetric === "RATE"
+                                                    ? `${value}%`
+                                                    : value
+                                                : "-"}
+                                        </strong>
                                     </div>
-
-                                    <strong>
-                                        {item.count > 0
-                                            ? item.count
-                                            : "-"}
-                                    </strong>
-                                </div>
-                            )
+                                );
+                            }
                         )}
                     </div>
                 </article>
