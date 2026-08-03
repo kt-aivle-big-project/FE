@@ -1,20 +1,14 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/operationManagement.css";
 
-// 백엔드 API가 준비되면 실제 경로에 맞춰 import합니다.
-// import { operationApi } from "../api/client";
+import { operationApi, warehouseApi } from "../api/client";
 
-const WAREHOUSES = [
-     {
-        id: "ALL",
-        name: "전체 창고",
-    },
-    {
-        id: 1,
-        name: "대전 물류센터 A",
-    },
-];
+// 창고 목록을 못 불러왔을 때 쓸 기본값
+const ALL_WAREHOUSES = {
+    id: "ALL",
+    name: "전체 창고",
+};
 
 const HOURS = [
     "00시",
@@ -85,13 +79,7 @@ const EMPTY_DASHBOARD = {
         ...status,
         count: 0,
     })),
-    warehouseThroughput: [
-        {
-            warehouseId: 1,
-            warehouseName: "대전 물류센터 A",
-            count: 0,
-        },
-    ],
+    warehouseThroughput: [],
     recentTasks: [],
     updatedAt: null,
 };
@@ -207,10 +195,7 @@ const normalizeDashboardResponse = (response = {}) => {
             ...status,
             count: robotStatusMap.get(status.key) ?? 0,
         })),
-        warehouseThroughput:
-            data.warehouseThroughput?.length > 0
-                ? data.warehouseThroughput
-                : EMPTY_DASHBOARD.warehouseThroughput,
+        warehouseThroughput: data.warehouseThroughput ?? [],
         recentTasks:
             data.recentTasks
             ?? data.tasks
@@ -310,9 +295,8 @@ function OperationManagement() {
     const [startDate, setStartDate] = useState(today);
     const [endDate, setEndDate] = useState(today);
     const [warehouseId, setWarehouseId] = useState("ALL");
-    const [timeRange, setTimeRange] = useState("ALL");
+    const [warehouses, setWarehouses] = useState([ALL_WAREHOUSES]);
     const [taskMetric, setTaskMetric] = useState("COUNT");
-    const [eventMetric, setEventMetric] = useState("COUNT");
     const [dashboardData, setDashboardData] = useState(EMPTY_DASHBOARD);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [loadError, setLoadError] = useState("");
@@ -411,31 +395,19 @@ function OperationManagement() {
         [dashboardData.hourlyEventVolume]
     );
 
-    const handleRefresh = async () => {
+    const handleRefresh = useCallback(async () => {
         setIsRefreshing(true);
         setLoadError("");
 
         try {
-            const query = {
-                warehouseId: Number(warehouseId),
+            const response = await operationApi.getDashboard({
+                // "ALL" 이면 창고 조건 없이 전체를 집계한다.
+                warehouseId: warehouseId === "ALL" ? null : warehouseId,
                 startDate,
                 endDate,
-                timeRange,
-                taskMetric,
-                eventMetric,
-            };
+            });
 
-            console.log("운영 대시보드 조회 조건:", query);
-
-            /*
-             * 백엔드 연결 시 아래 부분만 실제 API에 맞춰 활성화합니다.
-             *
-             * const response = await operationApi.getDashboard(query);
-             * setDashboardData(normalizeDashboardResponse(response));
-             */
-
-            // API 연결 전에는 EMPTY_DASHBOARD가 유지되어
-            // 숫자는 '-'로, 그래프는 기본 틀로 표시됩니다.
+            setDashboardData(normalizeDashboardResponse(response));
         } catch (error) {
             console.error("운영 대시보드 조회 실패:", error);
 
@@ -448,7 +420,72 @@ function OperationManagement() {
         } finally {
             setIsRefreshing(false);
         }
+    }, [warehouseId, startDate, endDate]);
+
+    // 창고 목록을 받아 드롭다운을 채운다.
+    useEffect(() => {
+        const loadWarehouses = async () => {
+            try {
+                const list = await warehouseApi.getAll();
+
+                setWarehouses([
+                    ALL_WAREHOUSES,
+                    ...list.map((warehouse) => ({
+                        id: warehouse.id,
+                        name: warehouse.name,
+                    })),
+                ]);
+            } catch (error) {
+                console.warn("창고 목록 조회 실패", error.message);
+            }
+        };
+
+        loadWarehouses();
+    }, []);
+
+    // 창고나 기간을 바꾸면 바로 다시 조회한다.
+    // 화면에 처음 들어올 때도 오늘 기준으로 한 번 돈다.
+    useEffect(() => {
+        handleRefresh();
+    }, [handleRefresh]);
+
+    /**
+     * 시작일을 바꾼다.
+     *
+     * 달력에서는 max 로 막아두지만 직접 입력하면 뚫릴 수 있어
+     * 종료일보다 뒤면 종료일도 같이 당긴다.
+     */
+    const handleStartDateChange = (value) => {
+        if (!value) {
+            return;
+        }
+
+        setStartDate(value);
+
+        if (value > endDate) {
+            setEndDate(value);
+        }
     };
+
+    /** 종료일이 시작일보다 앞이면 시작일도 같이 당긴다. */
+    const handleEndDateChange = (value) => {
+        if (!value) {
+            return;
+        }
+
+        setEndDate(value);
+
+        if (value < startDate) {
+            setStartDate(value);
+        }
+    };
+
+    const selectedWarehouseName = useMemo(
+        () => warehouses.find(
+            (warehouse) => String(warehouse.id) === String(warehouseId)
+        )?.name ?? "전체 창고",
+        [warehouses, warehouseId]
+    );
 
     return (
         <div className="operation-dashboard">
@@ -456,14 +493,18 @@ function OperationManagement() {
                 <div>
                     <h1>운영 관리</h1>
                     <p>
-                        대전 물류센터 A의 운영 현황과 주요 지표를
+                        {selectedWarehouseName}의 운영 현황과 주요 지표를
                         한눈에 확인합니다.
                     </p>
                 </div>
 
                 <div className="operation-dashboard-updated">
                     <span>기준 시각</span>
-                    <strong>{dashboardData.updatedAt ?? "-"}</strong>
+                    <strong>
+                        {isRefreshing
+                            ? "조회 중..."
+                            : dashboardData.updatedAt ?? "-"}
+                    </strong>
                 </div>
             </header>
 
@@ -473,8 +514,10 @@ function OperationManagement() {
                     <input
                         type="date"
                         value={startDate}
+                        // 달력에서 종료일 이후는 아예 고를 수 없게 한다
+                        max={endDate}
                         onChange={(event) =>
-                            setStartDate(event.target.value)
+                            handleStartDateChange(event.target.value)
                         }
                     />
                 </label>
@@ -486,8 +529,10 @@ function OperationManagement() {
                     <input
                         type="date"
                         value={endDate}
+                        // 시작일 이전은 고를 수 없다
+                        min={startDate}
                         onChange={(event) =>
-                            setEndDate(event.target.value)
+                            handleEndDateChange(event.target.value)
                         }
                     />
                 </label>
@@ -496,11 +541,12 @@ function OperationManagement() {
                     <span className="sr-only">창고 선택</span>
                     <select
                         value={warehouseId}
+                        disabled={isRefreshing}
                         onChange={(event) =>
                             setWarehouseId(event.target.value)
                         }
                     >
-                        {WAREHOUSES.map((warehouse) => (
+                        {warehouses.map((warehouse) => (
                             <option
                                 key={warehouse.id}
                                 value={warehouse.id}
@@ -510,34 +556,6 @@ function OperationManagement() {
                         ))}
                     </select>
                 </label>
-
-                <label className="operation-filter-field">
-                    <span className="sr-only">시간대 선택</span>
-                    <select
-                        value={timeRange}
-                        onChange={(event) =>
-                            setTimeRange(event.target.value)
-                        }
-                    >
-                        <option value="ALL">전체 시간대</option>
-                        <option value="MORNING">00:00 ~ 12:00</option>
-                        <option value="AFTERNOON">12:00 ~ 18:00</option>
-                        <option value="EVENING">18:00 ~ 24:00</option>
-                    </select>
-                </label>
-
-                <button
-                    type="button"
-                    className="operation-refresh-button"
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                >
-                    <span className={isRefreshing ? "is-spinning" : ""}>
-                        ↻
-                    </span>
-
-                    {isRefreshing ? "조회 중" : "조회"}
-                </button>
             </section>
 
             {loadError && (
@@ -766,17 +784,6 @@ function OperationManagement() {
                             <h2>시간대별 이벤트 발생</h2>
                             <p>오류·경고·작업 이벤트 발생 추이입니다.</p>
                         </div>
-
-                        <select
-                            value={eventMetric}
-                            onChange={(event) =>
-                                setEventMetric(event.target.value)
-                            }
-                        >
-                            <option value="COUNT">이벤트 수</option>
-                            <option value="WARNING">경고 이벤트</option>
-                            <option value="ERROR">오류 이벤트</option>
-                        </select>
                     </div>
 
                     <div className="operation-line-chart">
@@ -907,7 +914,6 @@ function OperationManagement() {
                                     <th>창고</th>
                                     <th>작업 유형</th>
                                     <th>상태</th>
-                                    <th>지연 시간</th>
                                     <th>시작 시간</th>
                                     <th>완료 시간</th>
                                 </tr>
@@ -917,7 +923,7 @@ function OperationManagement() {
                                 {dashboardData.recentTasks.length === 0 ? (
                                     <tr>
                                         <td
-                                            colSpan="7"
+                                            colSpan="6"
                                             className="operation-table-empty"
                                         >
                                             표시할 작업 데이터가 없습니다.
@@ -939,8 +945,7 @@ function OperationManagement() {
                                                     ?? "-"}
                                                 </td>
                                                 <td>
-                                                    {task.warehouseName
-                                                    ?? "대전 물류센터 A"}
+                                                    {task.warehouseName ?? "-"}
                                                 </td>
                                                 <td>
                                                     {task.taskType
@@ -949,11 +954,6 @@ function OperationManagement() {
                                                 <td>
                                                     {task.status
                                                     ?? "-"}
-                                                </td>
-                                                <td>
-                                                    {task.delayMinutes
-                                                        ? `${task.delayMinutes}분`
-                                                        : "-"}
                                                 </td>
                                                 <td>
                                                     {task.startedAt

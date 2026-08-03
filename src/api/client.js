@@ -200,3 +200,28 @@ export const warehouseApi = {
     remove: (warehouseId) =>
         api.delete(`/warehouses/${warehouseId}`),
 };
+
+export const operationApi = {
+    /**
+     * 운영 관리 화면 지표를 한 번에 받아온다.
+     *
+     * warehouseId 를 안 넘기면 전체 창고 기준으로 집계한다.
+     */
+    getDashboard: ({ warehouseId, startDate, endDate } = {}) => {
+        const params = new URLSearchParams();
+
+        if (warehouseId) {
+            params.set("warehouseId", warehouseId);
+        }
+        if (startDate) {
+            params.set("startDate", startDate);
+        }
+        if (endDate) {
+            params.set("endDate", endDate);
+        }
+
+        const query = params.toString();
+
+        return api.get(`/operations/dashboard${query ? `?${query}` : ""}`);
+    },
+};
