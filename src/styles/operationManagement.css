@@ -1,718 +1,536 @@
-/* =========================
-   운영 관리 전체 레이아웃
-========================= */
-h3 {
-    padding-bottom: 10px;
-}
-
-th,
-td {
-    height: 30px;
-    border: var(--border);
-
-    padding: 5px;
-    font-size: 13px;
-    text-align: center;
-}
-
-th {
-    font-weight: 500;
-}
-
-tbody tr:hover {
-    background: var(--hover-color);
-}
-
-.operation-management {
-    width: 100%;
-    min-height: 100vh;
-
-    display: grid;
-
-    grid-template-areas:
-        "management-header management-header management-header"
-        "operation-filter operation-filter operation-filter"
-        "operation-list operation-list operation-list"
-        "task-queue-section task-queue-section alert-section"
-        "robot-section task-timeline passivity-control";
-
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: auto auto auto auto auto;
-
-    padding: 10px;
-    gap: 10px;
-
-}
-
-/* =========================
-   운영 관리 상단
-========================= */
-
-.management-header {
-    grid-area: management-header;
-    padding: 10px 10px;
-}
-
-.operation-filter {
-    grid-area: operation-filter;
-    width: 100%;
-    padding: 10px 10px;
-
-    display: flex;
-    align-items: center;
-
-    gap: 10px;
-
-    border: var(--border);
-}
-
-.date-select,
-.time-select,
-.warehouse-select,
-.date-input {
-    width: 150px;
-}
-
-.operation-list {
-    grid-area: operation-list;
-
-    display: flex;
-
-    gap: 10px;
-}
-
-.operation-list-card {
-    flex: 1;
-
-    display: grid;
-
-    padding: 15px;
-
-    border: var(--border);
-}
-
-
-/* =========================
-   실시간 작업 큐
-========================= */
-
-.task-queue-section {
-    grid-area: task-queue-section;
-
-    min-width: 0;
-    padding: 10px;
-    border: var(--border);
-}
-
-.task-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: center;
-}
-
-/* =========================
-   예외 / 알림
-========================= */
-
-.alert-section {
-    grid-area: alert-section;
-
-    min-width: 0;
-    padding: 10px;
-    display: grid;
-
-    border: var(--border);
-}
-
-.alert-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: var(--border);
-}
-
-.alert-view-all {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    border: none;
-    font-size: 14px;
-}
-
-.alert-view-all span,
-.alert-footer-button span {
-    font-size: 20px;
-    line-height: 1;
-}
-
-.alert-list {
-    display: grid;
-}
-
-.alert-item {
-    display: grid;
-    grid-template-columns: 30px 100px minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 10px;
-
-    width: 100%;
-    min-height: 30px;
-    padding: 10px;
-
-    border: none;
-    border-bottom: var(--border);
-
-
+.operation-dashboard {
+    padding: 24px;
+    background: #f5f5f5;
     color: #222222;
-    text-align: left;
 }
 
-.alert-item:hover {
-    background: var(--hover-color);
+.operation-dashboard *,
+.operation-dashboard *::before,
+.operation-dashboard *::after {
+    box-sizing: border-box;
 }
 
-
-.alert-status-심각 {
-    color: red;
+.operation-dashboard button,
+.operation-dashboard input,
+.operation-dashboard select {
+    font: inherit;
 }
 
-.alert-status-경고 {
-    color: orange;
-}
-
-.alert-status-정보 {
-    color: blue;
-}
-
-.alert-content {
-    min-width: 0;
-    padding-left: 10px;
-}
-
-.alert-content strong {
-    display: block;
-    overflow: hidden;
-
-    margin-bottom: 5px;
-
-    font-size: 14px;
-    font-weight: 500;
-
-}
-
-.alert-content span {
-    display: block;
-    overflow: hidden;
-    font-size: 14px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.alert-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    padding-left: 120px;
-}
-
-.alert-meta time {
-    font-size: 13px;
-}
-
-.alert-unread {
-    width: 8px;
-    height: 8px;
-
-    border-radius: 50%;
-    background: #ff3b3b;
-}
-
-.alert-footer-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-
-    width: 100%;
-    height: 30px;
-
-    border: none;
-    font-size: 14px;
-}
-
-.alert-footer-button:hover {
-    background: var(--hover-color);
-}
-
-
-/* =========================
-   실시간 로봇 현황
-========================= */
-
-.robot-section {
-    grid-area: robot-section;
-
-    min-width: 0;
-
-    padding: 10px 10px;
-
-    border: var(--border);
-    background: var(--background-color);
-}
-
-.robot-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: center;
-}
-
-.battery-info {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.battery-info>span {
-    min-width: 30px;
-    text-align: right;
-}
-
-.battery-bar {
-    width: 70px;
-    height: 10px;
-    border: var(--border);
-}
-
-.battery-level {
-    height: 100%;
-    background: green;
-}
-
-.battery-low {
-    background: red;
-}
-
-.robot-status {
-    display: inline-block;
-
-    min-width: 60px;
-    border: var(--border);
-
-    text-align: center;
-
-    font-size: 12px;
-}
-
-.robot-status-작업-중 {
-    color: green;
-}
-
-.robot-status-대기 {
-    color: blue;
-}
-
-.robot-status-충전-필요 {
-    color: red;
-}
-
-.robot-status-지연 {
-    color: orange;
-}
-
-.robot-status-작업-완료 {
-    color: gray;
-}
-
-.robot-view-all {
-    display: block;
-    margin: 20px auto 0;
-    border: none;
-    font-size: 14px;
-}
-
-.robot-view-all:hover {
-    background: var(--hover-color);
-}
-
-
-/* =========================
-   작업 타임라인
-========================= */
-
-.task-timeline {
-    grid-area: task-timeline;
-
-    min-width: 0;
-    padding: 10px;
-    border: var(--border);
-}
-
-.task-timeling-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.task-timeling-header h2 {
-    font-size: 20px;
-    font-weight: 500;
-}
-
-.task-timeling-header select {
-    width: 80px;
-    height: 30px;
-
-    padding: 0 8px;
-
-    border: var(--border);
-
-    background: var(--background-color);
-    color: var(--font-color);
-}
-
-
-/* =========================
-   시간 표시 영역
-========================= */
-
-.timeline-time-header {
-    display: grid;
-
-    grid-template-columns:
-        110px minmax(0, 1fr);
-
-    margin-bottom: 5px;
-}
-
-.timeline-time-area {
-    position: relative;
-
-    height: 20px;
-}
-
-.timeline-time-area span {
+.sr-only {
     position: absolute;
-
-    top: 0;
-
-    font-size: 12px;
-
-    white-space: nowrap;
-
-    transform: translateX(-50%);
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
 }
 
-.timeline-time-area span:first-child {
-    transform: translateX(0);
+.operation-dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
 }
 
-.timeline-time-area span:last-child {
-    transform: translateX(-100%);
+.operation-dashboard-header h1 {
+    margin: 0;
+    font-size: 28px;
 }
 
-
-/* =========================
-   타임라인 작업 목록
-========================= */
-
-.timeline-list {
-    width: 100%;
+.operation-dashboard-header p {
+    margin: 8px 0 0;
+    color: #666666;
+    font-size: 14px;
 }
 
-.timeline-row {
-    display: grid;
-
-    grid-template-columns:
-        70px minmax(0, 1fr);
-
-    min-height: 50px;
-
-    border-bottom: var(--border);
-}
-
-.timeline-row:first-child {
-    border-top: var(--border);
-}
-
-
-/* =========================
-   작업 기본 정보
-========================= */
-
-.timeline-task-name {
-    display: grid;
-
-    grid-template-columns: auto 1fr;
-    align-content: center;
-
-    column-gap: 10px;
-
-    padding: 10px;
-
-    border-right: var(--border);
-
+.operation-dashboard-updated {
+    display: flex;
+    gap: 8px;
+    color: #666666;
     font-size: 13px;
 }
 
-.timeline-task-name strong {
-    font-weight: 600;
-
-    white-space: nowrap;
+.operation-dashboard-updated strong {
+    color: #222222;
 }
 
-.timeline-task-name span {
-    overflow: hidden;
-
-    white-space: nowrap;
-    text-overflow: ellipsis;
+.operation-dashboard-filter,
+.operation-summary-card,
+.operation-panel {
+    border: 1px solid #cccccc;
+    background: #ffffff;
 }
 
-.timeline-task-name small {
-    grid-column: 1 / -1;
-
-    font-size: 11px;
+.operation-dashboard-filter {
+    display: grid;
+    grid-template-columns: 1fr 20px 1fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 14px;
+    margin-bottom: 16px;
 }
 
+.operation-filter-field input,
+.operation-filter-field select,
+.operation-panel-header select {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 10px;
+    border: 1px solid #bbbbbb;
+    background: #ffffff;
+}
 
-/* =========================
-   타임라인 막대 영역
-========================= */
+.operation-date-separator {
+    text-align: center;
+}
 
-.timeline-track {
-    position: relative;
+.operation-refresh-button {
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid #222222;
+    background: #ffffff;
+    cursor: pointer;
+}
 
+.operation-refresh-button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.is-spinning {
+    display: inline-block;
+    margin-right: 6px;
+    animation: operation-spin 0.7s linear infinite;
+}
+
+@keyframes operation-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.operation-error-message {
+    margin-bottom: 16px;
+    padding: 12px;
+    border: 1px solid #cc7777;
+    background: #fff5f5;
+    color: #aa2222;
+}
+
+.operation-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.operation-summary-card {
+    display: flex;
+    gap: 12px;
+    min-height: 110px;
+    padding: 16px;
+}
+
+.operation-summary-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #bbbbbb;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.operation-summary-copy > span {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.operation-summary-value {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.operation-summary-value strong {
+    font-size: 28px;
+}
+
+.operation-summary-copy p {
+    margin: 8px 0 0;
+    color: #777777;
+    font-size: 12px;
+}
+
+.operation-chart-grid,
+.operation-bottom-grid {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.operation-chart-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+.operation-bottom-grid {
+    grid-template-columns: 2fr 1fr;
+}
+
+.operation-panel {
     min-width: 0;
-    height: 55px;
+    padding: 16px;
+}
 
-    background-image:
-        linear-gradient(
-            to right,
+.operation-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.operation-panel-header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.operation-panel-header p {
+    margin: 6px 0 0;
+    color: #777777;
+    font-size: 12px;
+}
+
+.operation-panel-header select {
+    width: auto;
+    min-width: 110px;
+}
+
+.operation-panel-badge {
+    padding: 6px 10px;
+    border: 1px solid #bbbbbb;
+    font-size: 12px;
+}
+
+.operation-empty-panel {
+    display: flex;
+    min-height: 220px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed #bbbbbb;
+    background: #fafafa;
+    text-align: center;
+}
+
+.operation-empty-icon {
+    margin-bottom: 10px;
+    font-size: 24px;
+}
+
+.operation-empty-panel strong {
+    font-size: 14px;
+}
+
+.operation-empty-panel p {
+    margin: 6px 0 0;
+    color: #777777;
+    font-size: 12px;
+}
+
+.operation-bar-chart {
+    position: relative;
+    height: 240px;
+    padding-top: 12px;
+}
+
+.operation-bar-chart-grid {
+    position: absolute;
+    inset: 12px 0 30px;
+    border-bottom: 1px solid #cccccc;
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0,
             transparent calc(25% - 1px),
-            var(--border-color) 25%,
-            transparent calc(25% + 1px)
-        ),
-        linear-gradient(
-            to right,
-            transparent calc(50% - 1px),
-            var(--border-color) 50%,
-            transparent calc(50% + 1px)
-        ),
-        linear-gradient(
-            to right,
-            transparent calc(75% - 1px),
-            var(--border-color) 75%,
-            transparent calc(75% + 1px)
+            #eeeeee calc(25% - 1px),
+            #eeeeee 25%
         );
 }
 
-
-/* =========================
-   현재 시간 표시선
-========================= */
-
-.timeline-current-line {
-    position: absolute;
-
-    top: 0;
-    bottom: 0;
-    left: 28%;
-
-    border-left: 1px dashed #ff0000;
-
-    z-index: 5;
+.operation-bar-chart-items {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: end;
+    gap: 6px;
+    height: 100%;
 }
 
-
-/* =========================
-   작업 막대 공통
-========================= */
-
-.timeline-segment {
-    position: absolute;
-
-    top: 10px;
-
-    height: 34px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    overflow: hidden;
-
-    padding: 0 6px;
-
-    border: var(--border);
-
-    background: var(--background-color);
-    color: var(--font-color);
-
-    font-size: 12px;
-
-    white-space: nowrap;
-    text-overflow: ellipsis;
-
-    z-index: 2;
+.operation-bar-item {
+    display: grid;
+    grid-template-rows: 20px 1fr 24px;
+    align-items: end;
+    justify-items: center;
+    height: 100%;
 }
 
-
-/* =========================
-   작업 상태
-========================= */
-
-.timeline-progress {
-    background: var(--background-color);
+.operation-bar {
+    width: 24px;
+    min-height: 4px;
+    background: #666666;
 }
 
-.timeline-waiting {
-    background: var(--hover-color);
+.operation-bar-value,
+.operation-bar-label {
+    font-size: 11px;
+    color: #666666;
 }
 
-.timeline-delay {
-    border: 1px dashed #ff0000;
-
-    background: var(--background-color);
-}
-
-.timeline-complete {
-    background: var(--hover-color);
-
-    text-decoration: line-through;
-}
-
-
-/* =========================
-   완료 및 문제 표시
-========================= */
-
-.timeline-marker {
-    position: absolute;
-
-    top: 10px;
-
-    z-index: 6;
-
-    font-size: 15px;
-
-    transform: translateX(-50%);
-}
-
-.expected-marker {
-    color: var(--font-color);
-}
-
-.warning-marker {
-    color: #ff0000;
-}
-
-
-/* =========================
-   종료 시간
-========================= */
-
-.timeline-end-time {
-    position: absolute;
-
-    top: 18px;
-
-    z-index: 6;
-
-    font-size: 12px;
-
-    white-space: nowrap;
-}
-
-
-/* =========================
-   데이터가 없는 경우
-========================= */
-
-.timeline-empty {
-    width: 100%;
-
-    padding: 30px;
-
-    border-top: var(--border);
-    border-bottom: var(--border);
-
-    text-align: center;
-
-    font-size: 14px;
-}
-
-
-/* =========================
-   타임라인 범례
-========================= */
-
-.timeline-legend {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-wrap: wrap;
-
+.operation-donut-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 20px;
+    align-items: center;
+    min-height: 240px;
+}
 
-    margin-top: 10px;
+.operation-donut {
+    position: relative;
+    justify-self: center;
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+}
 
+.operation-donut::after {
+    content: "";
+    position: absolute;
+    inset: 30%;
+    border-radius: 50%;
+    background: #ffffff;
+}
+
+.operation-donut-center {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.operation-donut-center strong {
+    font-size: 24px;
+}
+
+.operation-donut-center span {
+    color: #777777;
+    font-size: 12px;
+}
+
+.operation-donut-legend {
+    display: grid;
+    gap: 12px;
+}
+
+.operation-donut-legend-row {
+    display: grid;
+    grid-template-columns: 12px 1fr auto;
+    gap: 8px;
+    align-items: center;
     font-size: 13px;
 }
 
-.timeline-legend > div {
-    display: flex;
-    align-items: center;
-
-    gap: 5px;
-}
-
-.legend-dot {
+.operation-legend-dot {
     width: 10px;
     height: 10px;
-
-    display: inline-block;
-
-    border: var(--border);
+    border-radius: 50%;
 }
 
-.waiting-dot {
-    background: var(--hover-color);
+.operation-horizontal-chart {
+    display: grid;
+    gap: 18px;
+    padding: 18px 0;
 }
 
-.progress-dot {
-    background: var(--background-color);
+.operation-horizontal-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 40px;
+    gap: 10px;
+    align-items: center;
+    font-size: 13px;
 }
 
-.delay-dot {
-    border: 1px dashed #ff0000;
-
-    background: var(--background-color);
+.operation-horizontal-track {
+    height: 14px;
+    background: #eeeeee;
 }
 
-.complete-dot {
-    background: var(--hover-color);
+.operation-horizontal-fill {
+    height: 100%;
+    background: #666666;
 }
 
-.legend-symbol {
-    font-size: 14px;
+.operation-line-chart svg {
+    display: block;
+    width: 100%;
+    height: 240px;
 }
 
-.legend-warning {
-    color: #ff0000;
-
-    font-size: 14px;
+.operation-line-grid {
+    stroke: #eeeeee;
+    stroke-width: 1;
 }
-ㄴㄴ
-/* =========================
-   수동 제어
-========================= */
 
-.passivity-control {
-    grid-area: passivity-control;
+.operation-line-path {
+    fill: none;
+    stroke: #555555;
+    stroke-width: 2;
+}
 
-    min-width: 0;
+.operation-line-point {
+    fill: #555555;
+    stroke: #ffffff;
+    stroke-width: 2;
+}
+
+.operation-line-value,
+.operation-line-label {
+    fill: #666666;
+    font-size: 10px;
+}
+
+.operation-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #cccccc;
+}
+
+.operation-table {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.operation-table th,
+.operation-table td {
     padding: 10px;
-    border: var(--border);
+    border-bottom: 1px solid #dddddd;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.operation-table th {
+    background: #f3f3f3;
+}
+
+.operation-table-empty {
+    height: 110px;
+    color: #777777;
+}
+
+.operation-text-button {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.operation-quick-links {
+    display: grid;
+    gap: 10px;
+}
+
+.operation-quick-links button {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cccccc;
+    background: #ffffff;
+    text-align: left;
+    cursor: pointer;
+}
+
+.operation-quick-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #bbbbbb;
+}
+
+.operation-quick-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.operation-quick-copy small {
+    color: #777777;
+}
+
+.operation-quick-arrow {
+    font-size: 20px;
+}
+
+@media (max-width: 1200px) {
+    .operation-summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .operation-chart-grid,
+    .operation-bottom-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .operation-dashboard-filter {
+        grid-template-columns: 1fr 20px 1fr;
+    }
+
+    .operation-dashboard-filter .operation-filter-field:nth-of-type(3),
+    .operation-dashboard-filter .operation-filter-field:nth-of-type(4),
+    .operation-refresh-button {
+        grid-column: span 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .operation-dashboard {
+        padding: 16px;
+    }
+
+    .operation-dashboard-header {
+        flex-direction: column;
+    }
+
+    .operation-dashboard-filter {
+        grid-template-columns: 1fr;
+    }
+
+    .operation-date-separator {
+        display: none;
+    }
+
+    .operation-summary-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .operation-donut-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .operation-summary-grid {
+        grid-template-columns: 1fr;
+    }
 }
