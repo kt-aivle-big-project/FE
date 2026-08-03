@@ -11,10 +11,12 @@ import { TOPICS } from "../api/config";
 import useStompSubscriptions from "../hooks/useStompSubscriptions";
 
 const SUMMARY_GROUPS = [
-    { key: "AVAILABLE", label: "사용 가능", statuses: ["AVAILABLE"] },
-    { key: "UNAVAILABLE", label: "사용 불가", statuses: ["UNAVAILABLE"] },
-    { key: "IDLE", label: "대기", statuses: ["IDLE"] },
-    { key: "MOVING", label: "이동 중", statuses: ["MOVING"] },
+    {
+        key: "AVAILABLE",
+        label: "사용 가능",
+        statuses: ["AVAILABLE", "IDLE"],
+        tone: "available",
+    },
     {
         key: "WORKING",
         label: "작업 중",
@@ -22,39 +24,73 @@ const SUMMARY_GROUPS = [
             "ASSIGNED",
             "WORKING",
             "BUSY",
+            "MOVING",
             "PICKING",
             "PUTAWAY",
             "REPLENISH",
             "RELOCATION",
         ],
+        tone: "working",
     },
-    { key: "CHARGING", label: "충전 중", statuses: ["CHARGING"] },
-    { key: "ERROR", label: "오류", statuses: ["ERROR", "FAULT"] },
-    { key: "OFFLINE", label: "오프라인", statuses: ["OFFLINE"] },
+    {
+        key: "CHARGING",
+        label: "충전 중",
+        statuses: ["CHARGING"],
+        tone: "charging",
+    },
+    {
+        key: "UNAVAILABLE",
+        label: "사용 불가",
+        statuses: ["UNAVAILABLE"],
+        tone: "unavailable",
+    },
+    {
+        key: "OFFLINE",
+        label: "오프라인",
+        statuses: ["OFFLINE"],
+        tone: "offline",
+    },
+    {
+        key: "ERROR",
+        label: "오류",
+        statuses: ["ERROR", "FAULT"],
+        tone: "error",
+    },
 ];
 
 // 시뮬레이션 화면에서 고른 창고를 그대로 이어받는다.
+// 두 화면이 같은 키를 쓰면 창고를 한 번만 고르면 된다.
 const WAREHOUSE_ID_KEY = "selectedWarehouseId";
 
+// 창고 필터는 "ALL"(전체) 또는 창고 ID 문자열을 값으로 쓴다.
 const readSelectedWarehouseId = () => {
     const saved = Number(localStorage.getItem(WAREHOUSE_ID_KEY));
-    return Number.isFinite(saved) && saved > 0 ? saved : null;
+    return Number.isFinite(saved) && saved > 0 ? String(saved) : "ALL";
 };
 
-const mergeRobotState = (robot, runtimeStates, nodeCodes) => {
+const mergeRobotState = (robot, runtimeStates, nodeDetails) => {
     const runtime = runtimeStates[robot.id];
     const nodeId = runtime?.currentNodeId ?? robot.nodeId;
+    const node = nodeDetails[nodeId];
 
     return {
         ...robot,
         nodeId,
+        warehouseId:
+            runtime?.warehouseId
+            ?? runtime?.currentWarehouseId
+            ?? robot.warehouseId
+            ?? robot.warehouse?.id
+            ?? node?.warehouseId
+            ?? null,
         nodeCode:
             runtime?.currentNodeCode
-            ?? nodeCodes[nodeId]
+            ?? node?.nodeCode
+            ?? robot.nodeCode
             ?? null,
         battery: runtime?.batteryLevel ?? robot.battery,
         status: runtime?.status ?? robot.status,
-        currentTaskId: runtime?.currentTaskId ?? null,
+        currentTaskId: runtime?.currentTaskId ?? robot.currentTaskId ?? null,
         hasRuntimeState: Boolean(runtime),
     };
 };
@@ -64,10 +100,14 @@ const findCurrentTask = (robot, taskList) => {
         return null;
     }
 
-    if (robot.hasRuntimeState) {
-        return taskList.find(
+    if (robot.currentTaskId) {
+        const runtimeTask = taskList.find(
             (task) => task.id === robot.currentTaskId
-        ) ?? null;
+        );
+
+        if (runtimeTask) {
+            return runtimeTask;
+        }
     }
 
     const robotTasks = taskList.filter((task) => task.robotId === robot.id);
@@ -76,16 +116,38 @@ const findCurrentTask = (robot, taskList) => {
         ?? null;
 };
 
-function RobotManagement() {
+const getRobotDisplayName = (robot) => {
+    const explicitName = robot?.robotName
+        ?? robot?.name
+        ?? robot?.displayName
+        ?? robot?.robotNumber;
 
-    // 로봇 / 작업
+    if (explicitName) {
+        return explicitName;
+    }
+
+    return `Robot ${String(robot?.id ?? "").padStart(2, "0")}`;
+};
+
+const normalizePercent = (value, fallback = 1) => {
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) {
+        return fallback;
+    }
+
+    return numericValue <= 1 ? numericValue * 100 : numericValue;
+};
+
+function RobotManagement() {
     const [robots, setRobots] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [robotSpecs, setRobotSpecs] = useState([]);
     const [warehouses, setWarehouses] = useState([]);
     const [warehouseNodes, setWarehouseNodes] = useState([]);
-    const [nodeCodes, setNodeCodes] = useState({});
+    const [nodeDetails, setNodeDetails] = useState({});
     const [runtimeStates, setRuntimeStates] = useState({});
+
     const simulationRunId = Number(
         localStorage.getItem("simulationRunId")
     ) || null;
@@ -96,18 +158,14 @@ function RobotManagement() {
     const [isLoading, setIsLoading] = useState(false);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
 
-
-    // 검색 / 필터
     const [searchText, setSearchText] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
 
-    // 창고 필터. null 이면 전체 창고
+    // 창고 필터. "ALL" 이면 전체 창고
     const [warehouseFilter, setWarehouseFilter] = useState(
         readSelectedWarehouseId
     );
 
-
-    // 로봇 등록 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newRobot, setNewRobot] = useState({
         robotSpecId: "",
@@ -117,6 +175,20 @@ function RobotManagement() {
         status: "AVAILABLE",
     });
 
+    const robotSpecsById = useMemo(
+        () => Object.fromEntries(
+            robotSpecs.map((spec) => [spec.id, spec])
+        ),
+        [robotSpecs]
+    );
+
+    const warehouseNames = useMemo(
+        () => Object.fromEntries(
+            warehouses.map((warehouse) => [warehouse.id, warehouse.name])
+        ),
+        [warehouses]
+    );
+
     // 이미 로봇이 서 있는 노드. 등록 화면에서 겹치는 자리를 알려준다.
     const occupiedNodeIds = useMemo(
         () => new Set(
@@ -125,13 +197,6 @@ function RobotManagement() {
                 .filter((nodeId) => nodeId != null)
         ),
         [robots]
-    );
-
-    const robotSpecCodes = useMemo(
-        () => Object.fromEntries(
-            robotSpecs.map((spec) => [spec.id, spec.robotCode])
-        ),
-        [robotSpecs]
     );
 
     const applyRuntimeState = useCallback((state) => {
@@ -148,7 +213,6 @@ function RobotManagement() {
 
         setTasks((prev) => {
             const exists = prev.some((item) => item.id === task.id);
-
             return exists
                 ? prev.map((item) => item.id === task.id ? task : item)
                 : [task, ...prev];
@@ -157,150 +221,138 @@ function RobotManagement() {
 
     const robotViews = useMemo(
         () => robots.map((robot) =>
-            mergeRobotState(robot, runtimeStates, nodeCodes)
+            mergeRobotState(robot, runtimeStates, nodeDetails)
         ),
-        [robots, runtimeStates, nodeCodes]
+        [robots, runtimeStates, nodeDetails]
     );
 
-    // 로봇 상태
     const getRobotStatus = (status) => {
         switch (status) {
-            case "IDLE":
-                return {
-                    label: "대기",
-                    className: "status-idle",
-                };
-
             case "AVAILABLE":
-                return {
-                    label: "사용 가능",
-                    className: "status-idle",
-                };
-
-            case "MOVING":
-                return {
-                    label: "이동 중",
-                    className: "status-working",
-                };
-
+            case "IDLE":
+                return { label: "사용 가능", className: "status-available" };
             case "ASSIGNED":
-                return {
-                    label: "작업 배정",
-                    className: "status-working",
-                };
-
             case "WORKING":
             case "BUSY":
+            case "MOVING":
             case "PICKING":
             case "PUTAWAY":
             case "REPLENISH":
             case "RELOCATION":
-                return {
-                    label: "작업 중",
-                    className: "status-working",
-                };
-
+                return { label: "작업 중", className: "status-working" };
             case "CHARGING":
-                return {
-                    label: "충전 중",
-                    className: "status-charging",
-                };
-
+                return { label: "충전 중", className: "status-charging" };
+            case "UNAVAILABLE":
+                return { label: "사용 불가", className: "status-unavailable" };
+            case "OFFLINE":
+                return { label: "오프라인", className: "status-offline" };
             case "ERROR":
             case "FAULT":
-                return {
-                    label: "오류",
-                    className: "status-error",
-                };
-
-            case "OFFLINE":
-                return {
-                    label: "오프라인",
-                    className: "status-offline",
-                };
-
+                return { label: "오류", className: "status-error" };
             default:
-                return {
-                    label: status || "-",
-                    className: "status-default",
-                };
+                return { label: status || "-", className: "status-default" };
         }
     };
 
-    // 작업 상태
     const getTaskStatusLabel = (status) => {
         switch (status) {
             case "PENDING":
                 return "대기";
-
             case "ASSIGNED":
                 return "배정";
-
             case "IN_PROGRESS":
                 return "진행 중";
-
             case "COMPLETED":
                 return "완료";
-
             case "FAILED":
                 return "실패";
-
             default:
                 return status || "-";
         }
     };
 
-
-    // 작업 유형
     const getTaskTypeLabel = (taskType) => {
         switch (taskType) {
+            case "GENERAL":
+            case "NORMAL":
+                return "일반 작업";
             case "INBOUND":
                 return "입고";
-
             case "OUTBOUND":
                 return "출고";
-
             case "CHARGING":
             case "CHARGE":
                 return "충전";
-
             case "MOVE":
                 return "이동";
-
             case "RELOCATION":
                 return "재배치";
-
             case "REPLENISHMENT":
+            case "REPLENISH":
                 return "보충";
-
             default:
-                return taskType || "-";
+                return taskType || "일반 작업";
         }
     };
 
-    // 로봇 조회 (/api/robots)
-    // 창고를 고르면 그 창고에 배치된 로봇만 받아온다.
-    const fetchRobots = async (warehouseId = warehouseFilter) => {
-        return robotApi.getAll(warehouseId ?? undefined);
+    const getRobotModel = (robot) => {
+        return robotSpecsById[robot?.robotSpecId]?.robotCode
+            ?? robot?.robotCode
+            ?? `Spec #${robot?.robotSpecId ?? "-"}`;
     };
 
-    // 전체 작업 조회 (/api/tasks 붙여야 함)
-    const fetchTasks = async () => {
-        return taskApi.getAll();
+    const getNode = (robot) => nodeDetails[robot?.nodeId] ?? null;
+
+    const getLocationLabel = (robot) => {
+        const node = getNode(robot);
+        const explicitLocation = robot?.currentLocationName
+            ?? robot?.locationName
+            ?? node?.name
+            ?? node?.nodeName
+            ?? node?.stationName;
+
+        if (explicitLocation) {
+            return explicitLocation;
+        }
+
+        const nodeCode = robot?.nodeCode ?? node?.nodeCode;
+        const nodeType = String(
+            node?.nodeType ?? node?.type ?? node?.category ?? ""
+        ).toUpperCase();
+
+        if (nodeCode && (
+            nodeType.includes("CHARG")
+            || nodeType.includes("STATION")
+        )) {
+            return `충전소 ${nodeCode}`;
+        }
+
+        return nodeCode ?? `Node #${robot?.nodeId ?? "-"}`;
     };
 
-    // 로봇 상세 조회 (/api/robots/{robotId} 붙여야 함)
-    const fetchRobotDetail = async (robotId) => {
-        return robotApi.get(robotId);
+    const getTaskLabelForRobot = (robot) => {
+        const currentTask = findCurrentTask(robot, tasks);
+        return getTaskTypeLabel(
+            currentTask?.taskType
+            ?? robot?.taskCode
+            ?? robot?.taskType
+            ?? "GENERAL"
+        );
     };
 
-    // 작업 상세 조회 (/api/tasks/{taskId} 붙여야 됨)
-    const fetchTaskDetail = async (taskId) => {
-        return taskApi.get(taskId);
-    };
+    // 창고를 고르면 그 창고에 배치된 로봇만 받아온다. null 이면 전체.
+    const fetchRobots = async (warehouseId = null) =>
+        robotApi.getAll(warehouseId ?? undefined);
 
-    // 선택한 로봇 상세 조회
-    const loadRobotDetail = async (robotId, taskList = tasks) => {
+    const fetchTasks = async () => taskApi.getAll();
+    const fetchRobotDetail = async (robotId) => robotApi.get(robotId);
+    const fetchTaskDetail = async (taskId) => taskApi.get(taskId);
+
+    const loadRobotDetail = async (
+        robotId,
+        taskList = tasks,
+        nodeDetailsOverride = nodeDetails
+    ) => {
         try {
             setIsDetailLoading(true);
 
@@ -310,7 +362,7 @@ function RobotManagement() {
             const robotView = mergeRobotState(
                 robotData,
                 runtimeStates,
-                nodeCodes
+                nodeDetailsOverride
             );
             const currentTask = findCurrentTask(robotView, taskList);
 
@@ -319,22 +371,16 @@ function RobotManagement() {
                 return;
             }
 
-            // 로봇 상세 조회 API 사용
             try {
                 const taskData = await fetchTaskDetail(currentTask.id);
                 setSelectedTask(taskData);
             } catch (taskError) {
-
                 console.error("작업 상세 조회 실패:", taskError);
-
-                // 상세 조회 실패 시 전체 작업 조회 API로 표시
-                //
                 setSelectedTask(currentTask);
             }
         } catch (error) {
             console.error("로봇 상세 조회 실패:", error);
             alert(error.message || "로봇 정보를 불러오지 못했습니다.");
-
         } finally {
             setIsDetailLoading(false);
         }
@@ -343,10 +389,15 @@ function RobotManagement() {
     // 페이지 전체 데이터 조회
     const fetchPageData = async (
         preferredRobotId = null,
-        warehouseId = warehouseFilter
+        selectedWarehouseId = warehouseFilter
     ) => {
         try {
             setIsLoading(true);
+
+            const warehouseId =
+                selectedWarehouseId === "ALL" || selectedWarehouseId == null
+                    ? null
+                    : Number(selectedWarehouseId);
 
             const [robotList, taskList, specList, warehouseList] = await Promise.all([
                 fetchRobots(warehouseId),
@@ -360,7 +411,7 @@ function RobotManagement() {
             setRobotSpecs(specList);
             setWarehouses(warehouseList);
 
-            // 노드 코드는 화면에 보이는 로봇의 위치를 표시하는 데만 쓴다.
+            // 노드 정보는 화면에 보이는 로봇의 위치를 표시하는 데만 쓴다.
             // 창고를 고른 경우 그 창고 레이아웃만 받으면 된다.
             // (레이아웃 하나가 노드 168개 + 간선 265개라 전부 받으면 무겁다)
             const layoutTargets = warehouseId
@@ -374,21 +425,29 @@ function RobotManagement() {
                     warehouseApi.getLayout(warehouse.id)
                 )
             );
-            const allNodes = layoutResults.flatMap((result) =>
-                result.status === "fulfilled"
-                    ? result.value.nodes ?? []
-                    : []
+
+            const allNodes = layoutResults.flatMap((result, index) => {
+                if (result.status !== "fulfilled") {
+                    return [];
+                }
+
+                return (result.value.nodes ?? []).map((node) => ({
+                    ...node,
+                    warehouseId:
+                        node.warehouseId
+                        ?? layoutTargets[index]?.id
+                        ?? null,
+                }));
+            });
+
+            const nextNodeDetails = Object.fromEntries(
+                allNodes.map((node) => [node.id, node])
             );
-            setNodeCodes(
-                Object.fromEntries(
-                    allNodes.map((node) => [node.id, node.nodeCode])
-                )
-            );
+            setNodeDetails(nextNodeDetails);
 
             if (robotList.length === 0) {
                 setSelectedRobot(null);
                 setSelectedTask(null);
-
                 return;
             }
 
@@ -408,20 +467,22 @@ function RobotManagement() {
                     : robotList[0].id;
             }
 
-            await loadRobotDetail(Number(targetRobotId), taskList);
-
+            await loadRobotDetail(
+                Number(targetRobotId),
+                taskList,
+                nextNodeDetails
+            );
         } catch (error) {
             console.error("로봇 관리 데이터 조회 실패:", error);
             alert(error.message || "데이터를 불러오지 못했습니다.");
-
         } finally {
             setIsLoading(false);
         }
     };
 
-    // 최초 조회
     useEffect(() => {
-        fetchPageData();
+        // 저장된 창고 선택을 그대로 이어서 조회한다.
+        fetchPageData(null, warehouseFilter);
         // 최초 마운트에서만 전체 데이터를 조회한다.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -465,52 +526,101 @@ function RobotManagement() {
         Boolean(simulationRunId)
     );
 
-    // 로봇 선택
     const handleSelectRobot = (robotId) => {
         loadRobotDetail(robotId, tasks);
     };
 
-
-    // 로봇 필터링
     const filteredRobots = useMemo(() => {
         const keyword = searchText.trim().toLowerCase();
 
         return robotViews.filter((robot) => {
+            const robotName = getRobotDisplayName(robot).toLowerCase();
+            const robotModel = getRobotModel(robot).toLowerCase();
+
             const matchesSearch =
-                !keyword ||
-                (robotSpecCodes[robot.robotSpecId]
-                    ?? `Spec #${robot.robotSpecId}`)
-                    ?.toLowerCase()
-                    .includes(keyword) ||
-                String(robot.id).includes(keyword);
+                !keyword
+                || robotName.includes(keyword)
+                || robotModel.includes(keyword)
+                || String(robot.id).includes(keyword);
 
             const selectedStatusGroup = SUMMARY_GROUPS.find(
                 (group) => group.key === statusFilter
             );
+
             const matchesStatus =
-                statusFilter === "ALL" ||
-                selectedStatusGroup?.statuses.includes(robot.status);
+                statusFilter === "ALL"
+                || selectedStatusGroup?.statuses.includes(robot.status);
 
-            return (matchesSearch && matchesStatus);
+            return matchesSearch && matchesStatus;
         });
-    }, [robotViews, robotSpecCodes, searchText, statusFilter]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [robotViews, searchText, statusFilter, robotSpecsById]);
 
-    // 상태별 요약
+    // 창고 선택 시 백엔드가 해당 창고의 로봇만 반환한다.
+    const warehouseFilteredRobotViews = robotViews;
+
     const statusSummary = useMemo(() => {
         return SUMMARY_GROUPS.map((group) => ({
             ...group,
-            count: robotViews.filter((robot) =>
+            count: warehouseFilteredRobotViews.filter((robot) =>
                 group.statuses.includes(robot.status)
             ).length,
         }));
-    }, [robotViews]);
+    }, [warehouseFilteredRobotViews]);
 
     const selectedRobotView = useMemo(
         () => selectedRobot
-            ? mergeRobotState(selectedRobot, runtimeStates, nodeCodes)
+            ? mergeRobotState(selectedRobot, runtimeStates, nodeDetails)
             : null,
-        [selectedRobot, runtimeStates, nodeCodes]
+        [selectedRobot, runtimeStates, nodeDetails]
     );
+
+    const selectedSpec = selectedRobotView
+        ? robotSpecsById[selectedRobotView.robotSpecId] ?? {}
+        : {};
+
+    const selectedWarehouseName = selectedRobotView
+        ? warehouseNames[selectedRobotView.warehouseId]
+            ?? selectedRobotView.warehouseName
+            ?? `창고 ${selectedRobotView.warehouseId ?? "-"}`
+        : "-";
+
+    const baseBatteryConsumption =
+        selectedSpec.baseBatteryConsumptionRate
+        ?? selectedSpec.baseBatteryDrainRate
+        ?? selectedSpec.idleBatteryConsumptionRate
+        ?? selectedRobotView?.baseBatteryConsumptionRate
+        ?? 0.05;
+
+    const workingBatteryConsumption =
+        selectedSpec.workingBatteryConsumptionRate
+        ?? selectedSpec.workBatteryConsumptionRate
+        ?? selectedSpec.loadedBatteryConsumptionRate
+        ?? selectedRobotView?.workingBatteryConsumptionRate
+        ?? 0.15;
+
+    const failureProbability = normalizePercent(
+        selectedSpec.failureProbability
+        ?? selectedSpec.breakdownProbability
+        ?? selectedRobotView?.failureProbability,
+        1
+    );
+
+    const startNodeId =
+        selectedRobotView?.startNodeId
+        ?? selectedRobotView?.initialNodeId
+        ?? selectedRobotView?.nodeId
+        ?? null;
+
+    const startNodeCode =
+        selectedRobotView?.startNodeCode
+        ?? selectedRobotView?.initialNodeCode
+        ?? nodeDetails[startNodeId]?.nodeCode
+        ?? selectedRobotView?.nodeCode
+        ?? null;
+
+    const startNodeLabel = startNodeCode
+        ?? (startNodeId ? `Node #${startNodeId}` : "-");
 
     useEffect(() => {
         const currentTask = findCurrentTask(selectedRobotView, tasks);
@@ -540,10 +650,14 @@ function RobotManagement() {
         };
     }, [selectedRobotView, tasks]);
 
-    // 필터 초기화
-    const handleResetFilter = () => {
+    const handleResetFilter = async () => {
         setSearchText("");
+        setWarehouseFilter("ALL");
         setStatusFilter("ALL");
+        setSelectedRobot(null);
+        setSelectedTask(null);
+        localStorage.removeItem(WAREHOUSE_ID_KEY);
+        await fetchPageData(null, "ALL");
     };
 
     /**
@@ -553,19 +667,18 @@ function RobotManagement() {
      * 상세 선택은 fetchPageData 가 첫 번째 로봇으로 다시 잡는다.
      * 고른 창고는 시뮬레이션 화면과 같은 키로 저장해 두 화면이 같은 창고를 본다.
      */
-    const handleWarehouseFilterChange = (value) => {
-        const warehouseId = value ? Number(value) : null;
+    const handleWarehouseFilterChange = async (value) => {
+        setWarehouseFilter(value);
 
-        setWarehouseFilter(warehouseId);
-
-        if (warehouseId) {
-            localStorage.setItem(WAREHOUSE_ID_KEY, String(warehouseId));
+        if (value === "ALL") {
+            localStorage.removeItem(WAREHOUSE_ID_KEY);
+        } else {
+            localStorage.setItem(WAREHOUSE_ID_KEY, String(value));
         }
 
         setSelectedRobot(null);
         setSelectedTask(null);
-
-        fetchPageData(null, warehouseId);
+        await fetchPageData(null, value);
     };
 
     // 로봇 등록 폼 입력값 변경 공통 함수
@@ -625,14 +738,12 @@ function RobotManagement() {
     const handleOpenAddModal = () => {
         setIsAddModalOpen(true);
 
-        if (warehouseFilter) {
+        if (warehouseFilter && warehouseFilter !== "ALL") {
             handleWarehouseChange(String(warehouseFilter));
         }
     };
 
-    // 로봇 등록 (POST /api/robots)
     const handleAddRobot = async () => {
-
         if (!newRobot.robotSpecId) {
             alert("로봇 스펙을 선택해주세요.");
             return;
@@ -665,7 +776,12 @@ function RobotManagement() {
             setIsLoading(true);
 
             const createdRobot = await robotApi.create(robotData);
-            await fetchPageData(createdRobot.id);
+            const createdWarehouseId = String(newRobot.warehouseId);
+
+            setWarehouseFilter(createdWarehouseId);
+            localStorage.setItem(WAREHOUSE_ID_KEY, createdWarehouseId);
+
+            await fetchPageData(createdRobot.id, createdWarehouseId);
             handleCloseModal();
         } catch (error) {
             console.error("로봇 등록 실패:", error);
@@ -677,16 +793,11 @@ function RobotManagement() {
 
     return (
         <div className="robot-management-wrapper">
-
-            {/* Header */}
             <header className="robot-management-header">
                 <div>
-                    <h1 className="robot-management-title">
-                        로봇 관리
-                    </h1>
-
+                    <h1 className="robot-management-title">로봇 관리</h1>
                     <p className="robot-management-description">
-                        창고에 등록된 로봇 상태, 현재 위치, 작업 확인
+                        창고에 등록된 로봇 상태, 현재 위치, 작업 현황
                     </p>
                 </div>
 
@@ -695,7 +806,9 @@ function RobotManagement() {
                         type="button"
                         className="robot-management-button"
                         disabled={isLoading}
-                        onClick={() => fetchPageData()}
+                        onClick={() =>
+                            fetchPageData(selectedRobot?.id ?? null, warehouseFilter)
+                        }
                     >
                         {isLoading ? "조회 중..." : "새로고침"}
                     </button>
@@ -710,63 +823,66 @@ function RobotManagement() {
                 </div>
             </header>
 
-            {/* 로봇 요약 */}
             <section className="robot-summary">
-                <div className="robot-summary-card">
-
-                    <span className="robot-summary-label">
-                        전체 로봇
-                    </span>
-
-                    <strong className="robot-summary-value">
-                        {robots.length}
-                    </strong>
-
-                </div>
-
-                {statusSummary.map(({ key, label, count }) => (
-                    <div
-                        key={key}
-                        className="robot-summary-card"
-                    >
-                        <span className="robot-summary-label">
-                            {label}
-                        </span>
-
+                <button
+                    type="button"
+                    className={`robot-summary-card tone-total ${statusFilter === "ALL" ? "active" : ""}`}
+                    onClick={() => setStatusFilter("ALL")}
+                >
+                    <span className="robot-summary-icon">▣</span>
+                    <span className="robot-summary-copy">
+                        <span className="robot-summary-label">전체 로봇</span>
                         <strong className="robot-summary-value">
-                            {count}
+                            {warehouseFilteredRobotViews.length}
                         </strong>
-                    </div>
+                    </span>
+                </button>
+
+                {statusSummary.map(({ key, label, count, tone }) => (
+                    <button
+                        type="button"
+                        key={key}
+                        className={`robot-summary-card tone-${tone} ${statusFilter === key ? "active" : ""}`}
+                        onClick={() => setStatusFilter(key)}
+                    >
+                        <span className="robot-summary-icon">
+                            {key === "AVAILABLE" && "✓"}
+                            {key === "WORKING" && "▶"}
+                            {key === "CHARGING" && "⚡"}
+                            {key === "UNAVAILABLE" && "−"}
+                            {key === "OFFLINE" && "⌁"}
+                            {key === "ERROR" && "!"}
+                        </span>
+                        <span className="robot-summary-copy">
+                            <span className="robot-summary-label">{label}</span>
+                            <strong className="robot-summary-value">{count}</strong>
+                        </span>
+                    </button>
                 ))}
             </section>
 
-            <div className="robot-filter-row">
-                {/* 검색 */}
-                <section className="robot-filter">
+            <section className="robot-filter-panel">
+                <div className="robot-filter">
                     <input
                         type="text"
                         className="robot-filter-search"
                         placeholder="로봇 이름 또는 ID 검색"
                         value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)
-                        }
+                        onChange={(event) => setSearchText(event.target.value)}
                     />
 
                     {/* 창고 필터 */}
                     <select
                         className="robot-filter-select"
-                        value={warehouseFilter ?? ""}
-                        onChange={(e) =>
-                            handleWarehouseFilterChange(e.target.value)
-                        }
+                        value={warehouseFilter}
                         disabled={isLoading}
+                        onChange={(event) =>
+                            handleWarehouseFilterChange(event.target.value)
+                        }
                     >
-                        <option value="">전체 창고</option>
+                        <option value="ALL">전체 창고</option>
                         {warehouses.map((warehouse) => (
-                            <option
-                                key={warehouse.id}
-                                value={warehouse.id}
-                            >
+                            <option key={warehouse.id} value={warehouse.id}>
                                 {warehouse.name}
                             </option>
                         ))}
@@ -775,15 +891,11 @@ function RobotManagement() {
                     <select
                         className="robot-filter-select"
                         value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
+                        onChange={(event) => setStatusFilter(event.target.value)}
                     >
-
                         <option value="ALL">전체 상태</option>
                         {SUMMARY_GROUPS.map(({ key, label }) => (
-                            <option
-                                key={key}
-                                value={key}
-                            >
+                            <option key={key} value={key}>
                                 {label}
                             </option>
                         ))}
@@ -796,78 +908,66 @@ function RobotManagement() {
                     >
                         초기화
                     </button>
-                </section>
-
-                <section className="robot-info">
-                    내용 추가
-                </section>
-            </div>
-
-
-            {/* 로봇 목록 */}
-            <section className="robot-list">
-                <div className="robot-section-header">
-                    <h2>로봇 목록</h2>
-
-                    <span>총 {filteredRobots.length}대</span>
                 </div>
 
-                <div className="robot-table-wrapper">
-                    <table className="robot-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>이름</th>
-                                <th>상태</th>
-                                <th>배터리</th>
-                                <th>현재 위치</th>
-                                <th>현재 작업</th>
-                                <th>내용 추가</th>
-                            </tr>
-                        </thead>
+                <div className="robot-filter-guide">
+                    {warehouseFilter === "ALL"
+                        ? "전체 창고의 로봇을 조회하고 있습니다."
+                        : `${warehouseNames[Number(warehouseFilter)] ?? "선택한 창고"}의 로봇을 조회하고 있습니다.`}
+                </div>
+            </section>
 
-                        <tbody>
-                            {isLoading ? (
+            <main className="robot-content-grid">
+                <section className="robot-list">
+                    <div className="robot-section-header">
+                        <h2>로봇 목록</h2>
+                        <span>총 {filteredRobots.length}대</span>
+                    </div>
+
+                    <div className="robot-table-wrapper">
+                        <table className="robot-table">
+                            <thead>
                                 <tr>
-                                    <td
-                                        colSpan="7"
-                                        className="robot-table-message"
-                                    >
-                                        로봇 정보를 불러오는 중입니다.
-                                    </td>
+                                    <th>로봇 번호</th>
+                                    <th>로봇 모델</th>
+                                    <th>현재 상태</th>
+                                    <th>배터리</th>
+                                    <th>현재 위치</th>
+                                    <th>위치 노드</th>
+                                    <th>담당 작업 유형</th>
                                 </tr>
-
-                            ) : filteredRobots.length === 0 ? (
-                                <tr>
-                                    <td
-                                        colSpan="7"
-                                        className="robot-table-message"
-                                    >
-                                        조건에 맞는 로봇이 없습니다.
-                                    </td>
-                                </tr>
-
-                            ) : (
-                                filteredRobots.map((robot) => {
-                                    const currentTask = findCurrentTask(robot, tasks);
-
-                                    return (
+                            </thead>
+                            <tbody>
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan="7" className="robot-table-message">
+                                            로봇 정보를 불러오는 중입니다.
+                                        </td>
+                                    </tr>
+                                ) : filteredRobots.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="7" className="robot-table-message">
+                                            조건에 맞는 로봇이 없습니다.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredRobots.map((robot) => (
                                         <tr
                                             key={robot.id}
-                                            className={selectedRobot
-                                                ?.id === robot.id
-                                                ? "selected"
-                                                : ""
+                                            className={
+                                                selectedRobot?.id === robot.id
+                                                    ? "selected"
+                                                    : ""
                                             }
                                             onClick={() => handleSelectRobot(robot.id)}
                                         >
-                                            <td>{robot.id}</td>
-
-                                            <td className="robot-name">
-                                                {robotSpecCodes[robot.robotSpecId]
-                                                    ?? `Spec #${robot.robotSpecId}`}
+                                            <td className="robot-number-cell">
+                                                <span className="robot-row-icon">◉</span>
+                                                {getRobotDisplayName(robot)}
                                             </td>
-
+                                            <td className="robot-model-cell">
+                                                {getRobotModel(robot)}
+                                            </td>
                                             <td>
                                                 <span
                                                     className={`robot-status ${getRobotStatus(robot.status).className}`}
@@ -875,206 +975,177 @@ function RobotManagement() {
                                                     {getRobotStatus(robot.status).label}
                                                 </span>
                                             </td>
-
                                             <td>
                                                 <div className="robot-battery">
-                                                    <span>{robot.battery}%</span>
+                                                    <span>{robot.battery ?? 0}%</span>
                                                     <div className="robot-battery-track">
                                                         <div
                                                             className="robot-battery-fill"
                                                             style={{
-                                                                width: `${Math.max(0,
-                                                                    Math.min(100,
+                                                                width: `${Math.max(
+                                                                    0,
+                                                                    Math.min(
+                                                                        100,
                                                                         Number(robot.battery ?? 0)
-                                                                    ))}%`,
+                                                                    )
+                                                                )}%`,
                                                             }}
                                                         />
                                                     </div>
                                                 </div>
                                             </td>
-
-                                            <td>
-                                                {robot.nodeCode
-                                                    ?? `Node #${robot.nodeId}`}
-                                            </td>
-
-                                            <td>
-                                                {currentTask ? (
-                                                    <div className="robot-current-task">
-                                                        <strong>
-                                                            Task #{currentTask.id}
-                                                        </strong>
-
-                                                        <span>
-                                                            {getTaskTypeLabel(
-                                                                currentTask.taskType
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    "-"
-                                                )}
-                                            </td>
-
+                                            <td>{getLocationLabel(robot)}</td>
+                                            <td>{robot.nodeId ?? "-"}</td>
+                                            <td>{getTaskLabelForRobot(robot)}</td>
                                         </tr>
-                                    );
-                                }
-                                )
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
 
-
-            {/* 로봇 상세 정보 조회 */}
-            <aside className="robot-detail">
-                <div className="robot-section-header">
-                    <h2>로봇 상세</h2>
-                </div>
-
-                {isDetailLoading ? (
-                    <div className="robot-detail-empty">
-                        로봇 정보를 불러오는 중입니다.
+                <aside className="robot-detail">
+                    <div className="robot-section-header">
+                        <h2>로봇 상세</h2>
                     </div>
 
-                ) : !selectedRobot ? (
-                    <div className="robot-detail-empty">
-                        로봇을 선택해주세요.
-                    </div>
-
-                ) : (
-                    <div className="robot-detail-content">
-
-                        {/* 로봇 이름 / 상태 */}
-                        <div className="robot-detail-main">
-                            <div>
-                                <span className="robot-detail-id">
-                                    Robot ID {selectedRobotView.id}
+                    {isDetailLoading ? (
+                        <div className="robot-detail-empty">
+                            로봇 정보를 불러오는 중입니다.
+                        </div>
+                    ) : !selectedRobotView ? (
+                        <div className="robot-detail-empty">
+                            로봇을 선택해주세요.
+                        </div>
+                    ) : (
+                        <div className="robot-detail-content">
+                            <div className="robot-detail-main">
+                                <div>
+                                    <span className="robot-detail-id">
+                                        Robot ID {selectedRobotView.id}
+                                    </span>
+                                    <div className="robot-detail-name">
+                                        {getRobotDisplayName(selectedRobotView)}
+                                    </div>
+                                    <div className="robot-detail-model">
+                                        {getRobotModel(selectedRobotView)}
+                                    </div>
+                                </div>
+                                <span
+                                    className={`robot-status ${getRobotStatus(selectedRobotView.status).className}`}
+                                >
+                                    {getRobotStatus(selectedRobotView.status).label}
                                 </span>
+                            </div>
 
-                                <div className="robot-detail-name">
-                                    {robotSpecCodes[selectedRobotView.robotSpecId]
-                                        ?? `Spec #${selectedRobotView.robotSpecId}`}
+                            <div className="robot-detail-section">
+                                <h3>A. 현재 상태</h3>
+                                <div className="robot-detail-item">
+                                    <span>상태</span>
+                                    <strong>
+                                        {getRobotStatus(selectedRobotView.status).label}
+                                    </strong>
+                                </div>
+                                <div className="robot-detail-item">
+                                    <span>배터리</span>
+                                    <strong>{selectedRobotView.battery ?? 0}%</strong>
+                                </div>
+                                <div className="robot-detail-battery-track">
+                                    <div
+                                        className="robot-detail-battery-fill"
+                                        style={{
+                                            width: `${Math.max(
+                                                0,
+                                                Math.min(
+                                                    100,
+                                                    Number(selectedRobotView.battery ?? 0)
+                                                )
+                                            )}%`,
+                                        }}
+                                    />
+                                </div>
+                                <div className="robot-detail-item">
+                                    <span>현재 위치</span>
+                                    <strong>{getLocationLabel(selectedRobotView)}</strong>
+                                </div>
+                                <div className="robot-detail-item">
+                                    <span>위치 노드</span>
+                                    <strong>{selectedRobotView.nodeId ?? "-"}</strong>
                                 </div>
                             </div>
 
-                            <span
-                                className={`robot-status ${getRobotStatus(selectedRobotView.status).className}`}
-                            >
-                                {getRobotStatus(selectedRobotView.status).label}
-                            </span>
-                        </div>
-
-                        {/* 현재 상태 */}
-                        <div className="robot-detail-section">
-                            <h3>현재 상태</h3>
-
-                            <div className="robot-detail-item">
-                                <span>상태</span>
-                                <strong>{getRobotStatus(selectedRobotView.status).label}</strong>
-                            </div>
-
-                            <div className="robot-detail-item">
-                                <span>배터리</span>
-                                <strong>{selectedRobotView.battery}%</strong>
-                            </div>
-
-                            <div className="robot-detail-battery-track">
-                                <div
-                                    className="robot-detail-battery-fill"
-                                    style={{
-                                        width: `${Math.max(0,
-                                            Math.min(100,
-                                                Number(selectedRobotView.battery ?? 0)
-                                            ))}%`,
-                                    }}
-                                />
-                            </div>
-
-                            <div className="robot-detail-item">
-                                <span>현재 노드</span>
-                                <strong>
-                                    {selectedRobotView.nodeCode
-                                        ?? `Node #${selectedRobotView.nodeId}`}
-                                </strong>
-                            </div>
-                        </div>
-
-                        {/* 현재 작업 */}
-                        <div className="robot-detail-section">
-                            <h3>현재 작업</h3>
-
-                            {!selectedTask ? (
-                                <div className="robot-detail-no-task">
-                                    현재 수행 중인 작업이 없습니다.
+                            <div className="robot-detail-section">
+                                <h3>B. 현재 작업</h3>
+                                <div className="robot-detail-item">
+                                    <span>담당 작업 유형</span>
+                                    <strong>
+                                        {getTaskTypeLabel(
+                                            selectedTask?.taskType
+                                            ?? selectedRobotView.taskCode
+                                            ?? selectedRobotView.taskType
+                                            ?? "GENERAL"
+                                        )}
+                                    </strong>
                                 </div>
-                            ) : (
-                                <>
-                                    <div className="robot-task-title">
-                                        <strong>Task #{selectedTask.id}</strong>
 
-                                        <span
-                                            className={`task-status task-${selectedTask.status
-                                                ?.toLowerCase()
-                                                .replaceAll("_", "-")
-                                                }`}
-                                        >
-                                            {getTaskStatusLabel(selectedTask.status)}
-                                        </span>
-                                    </div>
-
-                                    <div className="robot-detail-item">
-                                        <span>작업 유형</span>
-                                        <strong>{getTaskTypeLabel(selectedTask.taskType)}</strong>
-                                    </div>
-
-                                    <div className="robot-detail-item">
-                                        <span>출발 노드</span>
-                                        <strong>{selectedTask.startNodeId ?? "-"}</strong>
-                                    </div>
-
-                                    <div className="robot-detail-item">
-                                        <span>도착 노드</span>
-                                        <strong>{selectedTask.endNodeId ?? "-"}</strong>
-                                    </div>
-
-                                    <div className="robot-detail-item">
-                                        <span>작업 상태</span>
-                                        <strong>{getTaskStatusLabel(selectedTask.status)}</strong>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
-                        {/* 기본 정보 */}
-                        <div className="robot-detail-section">
-                            <h3>기본 정보</h3>
-
-                            <div className="robot-detail-item">
-                                <span>로봇 ID</span>
-                                <strong>{selectedRobotView.id}</strong>
+                                {selectedTask && (
+                                    <>
+                                        <div className="robot-task-title">
+                                            <strong>Task #{selectedTask.id}</strong>
+                                            <span
+                                                className={`task-status task-${selectedTask.status
+                                                    ?.toLowerCase()
+                                                    .replaceAll("_", "-")}`}
+                                            >
+                                                {getTaskStatusLabel(selectedTask.status)}
+                                            </span>
+                                        </div>
+                                        <div className="robot-detail-item">
+                                            <span>출발 노드</span>
+                                            <strong>{selectedTask.startNodeId ?? "-"}</strong>
+                                        </div>
+                                        <div className="robot-detail-item">
+                                            <span>도착 노드</span>
+                                            <strong>{selectedTask.endNodeId ?? "-"}</strong>
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
-                            <div className="robot-detail-item">
-                                <span>로봇 이름</span>
-                                <strong>
-                                    {robotSpecCodes[selectedRobotView.robotSpecId]
-                                        ?? `Spec #${selectedRobotView.robotSpecId}`}
-                                </strong>
+                            <div className="robot-detail-section">
+                                <h3>C. 기본 정보</h3>
+                                <div className="robot-detail-item">
+                                    <span>기본 배터리 소모율</span>
+                                    <strong>{baseBatteryConsumption}</strong>
+                                </div>
+                                <div className="robot-detail-item">
+                                    <span>작업 중 배터리 소모율</span>
+                                    <strong>{workingBatteryConsumption}</strong>
+                                </div>
+                                <div className="robot-detail-item">
+                                    <span>고장 확률</span>
+                                    <strong>{failureProbability}%</strong>
+                                </div>
+                                <div className="robot-detail-item">
+                                    <span>소속 창고</span>
+                                    <strong>{selectedWarehouseName}</strong>
+                                </div>
+                                <div className="robot-detail-item">
+                                    <span>시작 위치 노드</span>
+                                    <strong>{startNodeLabel}</strong>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
-            </aside>
+                    )}
+                </aside>
+            </main>
 
-            {/* 로봇 등록 팝업창 */}
             {isAddModalOpen && (
                 <div className="robot-modal-overlay">
                     <div className="robot-modal">
                         <div className="robot-modal-header">
                             <h2>로봇 등록</h2>
-
                             <button
                                 type="button"
                                 className="robot-modal-close"
@@ -1082,17 +1153,16 @@ function RobotManagement() {
                             >
                                 ×
                             </button>
-
                         </div>
+
                         <div className="robot-modal-content">
                             <label className="robot-modal-field">
                                 <span>로봇 스펙</span>
-
                                 <select
                                     value={newRobot.robotSpecId}
-                                    onChange={(e) => handleNewRobotChange(
+                                    onChange={(event) => handleNewRobotChange(
                                         "robotSpecId",
-                                        e.target.value
+                                        event.target.value
                                     )}
                                 >
                                     <option value="">로봇 스펙 선택</option>
@@ -1106,10 +1176,11 @@ function RobotManagement() {
 
                             <label className="robot-modal-field">
                                 <span>창고</span>
-
                                 <select
                                     value={newRobot.warehouseId}
-                                    onChange={(e) => handleWarehouseChange(e.target.value)}
+                                    onChange={(event) =>
+                                        handleWarehouseChange(event.target.value)
+                                    }
                                 >
                                     <option value="">창고 선택</option>
                                     {warehouses.map((warehouse) => (
@@ -1122,16 +1193,15 @@ function RobotManagement() {
 
                             <label className="robot-modal-field">
                                 <span>초기 배터리</span>
-
                                 <div className="robot-modal-input-unit">
                                     <input
                                         type="number"
                                         min="0"
                                         max="100"
                                         value={newRobot.battery}
-                                        onChange={(e) => handleNewRobotChange(
+                                        onChange={(event) => handleNewRobotChange(
                                             "battery",
-                                            e.target.value
+                                            event.target.value
                                         )}
                                     />
                                     <span>%</span>
@@ -1140,13 +1210,12 @@ function RobotManagement() {
 
                             <label className="robot-modal-field">
                                 <span>초기 노드 (충전 자리)</span>
-
                                 <select
                                     value={newRobot.nodeId}
                                     disabled={!newRobot.warehouseId}
-                                    onChange={(e) => handleNewRobotChange(
+                                    onChange={(event) => handleNewRobotChange(
                                         "nodeId",
-                                        e.target.value
+                                        event.target.value
                                     )}
                                 >
                                     <option value="">
@@ -1169,12 +1238,11 @@ function RobotManagement() {
 
                             <label className="robot-modal-field">
                                 <span>초기 상태</span>
-
                                 <select
                                     value={newRobot.status}
-                                    onChange={(e) => handleNewRobotChange(
+                                    onChange={(event) => handleNewRobotChange(
                                         "status",
-                                        e.target.value
+                                        event.target.value
                                     )}
                                 >
                                     <option value="AVAILABLE">사용 가능</option>
@@ -1182,11 +1250,9 @@ function RobotManagement() {
                                 </select>
                             </label>
                         </div>
+
                         <div className="robot-modal-actions">
-                            <button
-                                type="button"
-                                onClick={handleCloseModal}
-                            >
+                            <button type="button" onClick={handleCloseModal}>
                                 취소
                             </button>
                             <button

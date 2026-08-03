@@ -200,3 +200,52 @@ export const warehouseApi = {
     remove: (warehouseId) =>
         api.delete(`/warehouses/${warehouseId}`),
 };
+
+export const operationApi = {
+    /**
+     * 운영 관리 화면 지표를 한 번에 받아온다.
+     *
+     * warehouseId 를 안 넘기면 전체 창고 기준으로 집계한다.
+     */
+    getDashboard: ({ warehouseId, startDate, endDate } = {}) => {
+        const params = new URLSearchParams();
+
+        if (warehouseId) {
+            params.set("warehouseId", warehouseId);
+        }
+        if (startDate) {
+            params.set("startDate", startDate);
+        }
+        if (endDate) {
+            params.set("endDate", endDate);
+        }
+
+        const query = params.toString();
+
+        return api.get(`/operations/dashboard${query ? `?${query}` : ""}`);
+    },
+
+    /**
+     * 같은 조건의 작업을 자르지 않고 전부 받아온다.
+     *
+     * 대시보드는 최근 10건만 담기 때문에
+     * 「전체 보기」 팝업을 열 때만 부른다.
+     */
+    getTasks: ({ warehouseId, startDate, endDate } = {}) => {
+        const params = new URLSearchParams();
+
+        if (warehouseId) {
+            params.set("warehouseId", warehouseId);
+        }
+        if (startDate) {
+            params.set("startDate", startDate);
+        }
+        if (endDate) {
+            params.set("endDate", endDate);
+        }
+
+        const query = params.toString();
+
+        return api.get(`/operations/tasks${query ? `?${query}` : ""}`);
+    },
+};
