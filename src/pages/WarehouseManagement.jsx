@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/warehouseManagement.css";
 
 import WarehouseSVG from "./WarehouseSVG";
@@ -285,7 +286,7 @@ const initialForm = {
     status: "운영 준비",
 };
 
-function WarehouseMapPreview({ mapData, compact = false }) {
+export function WarehouseMapPreview({ mapData, compact = false }) {
     const nodes = Array.isArray(mapData?.nodes)
         ? mapData.nodes.filter(
               (node) =>
@@ -428,6 +429,9 @@ function WarehouseMapPreview({ mapData, compact = false }) {
 }
 
 function WarehouseManagement() {
+    const navigate = useNavigate();
+    const location = useLocation();
+
     // 목록은 백엔드에서 불러온다. 목업은 조회 실패 시에만 쓴다.
     const [warehouseList, setWarehouseList] = useState([]);
 
@@ -488,8 +492,14 @@ function WarehouseManagement() {
     };
 
     useEffect(() => {
-        reloadWarehouses();
-    }, []);
+        const requestedId = Number(location.state?.selectedWarehouseId);
+
+        reloadWarehouses(
+            Number.isSafeInteger(requestedId) && requestedId > 0
+                ? requestedId
+                : null,
+        );
+    }, [location.state?.selectedWarehouseId]);
 
 
     useEffect(() => {
@@ -549,6 +559,10 @@ function WarehouseManagement() {
         setIsWarehouseModalOpen(true);
     };
 
+    const openWarehouseDesigner = () => {
+        navigate("/warehouse/new");
+    };
+
     const openEditModal = () => {
         if (!selectedWarehouse) {
             return;
@@ -575,6 +589,19 @@ function WarehouseManagement() {
         setUploadedMapData(null);
         setJsonError("");
         setIsWarehouseModalOpen(true);
+    };
+
+    const openWarehouseLayoutEditor = () => {
+        if (!selectedWarehouse) {
+            return;
+        }
+
+        if (selectedWarehouse.shared) {
+            window.alert("공용 창고는 지도와 시설을 수정할 수 없습니다.");
+            return;
+        }
+
+        navigate(`/warehouse/${selectedWarehouse.warehouse_id}/edit`);
     };
 
     const closeWarehouseModal = () => {
@@ -743,13 +770,22 @@ function WarehouseManagement() {
                 <div className="warehouse-list-header">
                     <h2>창고 목록</h2>
 
-                    <button
-                        type="button"
-                        className="warehouse-button"
-                        onClick={openCreateModal}
-                    >
-                        + 새 창고
-                    </button>
+                    <div className="warehouse-create-actions">
+                        <button
+                            type="button"
+                            className="warehouse-button"
+                            onClick={openCreateModal}
+                        >
+                            + JSON 등록
+                        </button>
+                        <button
+                            type="button"
+                            className="warehouse-button"
+                            onClick={openWarehouseDesigner}
+                        >
+                            + 직접 설계
+                        </button>
+                    </div>
                 </div>
 
                 <div className="warehouse-list">
@@ -801,13 +837,22 @@ function WarehouseManagement() {
                     <div className="warehouse-empty-detail">
                         <p>표시할 창고가 없습니다.</p>
 
-                        <button
-                            type="button"
-                            className="warehouse-button"
-                            onClick={openCreateModal}
-                        >
-                            새 창고 만들기
-                        </button>
+                        <div className="warehouse-create-actions">
+                            <button
+                                type="button"
+                                className="warehouse-button"
+                                onClick={openCreateModal}
+                            >
+                                JSON으로 창고 생성
+                            </button>
+                            <button
+                                type="button"
+                                className="warehouse-button"
+                                onClick={openWarehouseDesigner}
+                            >
+                                직접 창고 설계
+                            </button>
+                        </div>
                     </div>
                 ) : (
                     <>
@@ -831,7 +876,20 @@ function WarehouseManagement() {
                                             : undefined
                                     }
                                 >
-                                    수정
+                                    정보 수정
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={openWarehouseLayoutEditor}
+                                    disabled={selectedWarehouse.shared}
+                                    title={
+                                        selectedWarehouse.shared
+                                            ? "공용 창고는 지도와 시설을 수정할 수 없습니다."
+                                            : undefined
+                                    }
+                                >
+                                    지도 수정
                                 </button>
 
                                 <button

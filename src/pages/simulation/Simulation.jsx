@@ -995,10 +995,7 @@ function Simulation() {
             {/* 이벤트 목록 (WebSocket 실시간 갱신) */}
             <SimulationEvent events={eventList} />
 
-            {/* 하단 footer */}
-            <footer className="footer">
-                Footer
-            </footer>
+        
         </div>
     );
 }

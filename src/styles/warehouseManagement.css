@@ -49,6 +49,18 @@
     font-weight: 500;
 }
 
+.warehouse-create-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.warehouse-create-actions .warehouse-button {
+    height: 34px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
 .warehouse-button {
     height: 40px;
     padding: 0 12px;
