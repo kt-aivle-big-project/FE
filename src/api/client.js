@@ -115,6 +115,12 @@ export const api = {
             body: body === undefined ? undefined : JSON.stringify(body),
         }),
 
+    put: (path, body) =>
+        request(path, {
+            method: "PUT",
+            body: body === undefined ? undefined : JSON.stringify(body),
+        }),
+
     delete: (path) => request(path, { method: "DELETE" }),
 };
 
@@ -162,6 +168,36 @@ export const optimizationApi = {
             `/optimizations/simulation-runs/${runId}/reoptimize`,
             payload
         ),
+};
+
+export const laroPlanApi = {
+    preflight: (runId) =>
+        api.get(`/laro/simulation-runs/${runId}/plan/preflight`),
+
+    create: (runId, payload) =>
+        api.post(`/laro/simulation-runs/${runId}/plan`, payload),
+};
+
+export const fulfillmentCommandApi = {
+    generate: (runId, payload) =>
+        api.post(
+            `/simulation-runs/${runId}/fulfillment-commands/generate`,
+            payload
+        ),
+
+    getCycleStatus: (runId) =>
+        api.get(`/simulation-runs/${runId}/command-cycle`),
+
+    configureCycle: (runId, expressionMix = {}) =>
+        api.put(`/simulation-runs/${runId}/command-cycle/configuration`, {
+            mode: "AUTO",
+            commandExpressionMode: "AUTO",
+            policyProfile: "AUTO",
+            mixStructuredWithPolicy: Boolean(expressionMix.policyEnabled),
+            mixNaturalLanguage: Boolean(
+                expressionMix.naturalLanguageEnabled
+            ),
+        }),
 };
 
 export const robotApi = {
