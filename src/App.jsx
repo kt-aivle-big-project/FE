@@ -6,7 +6,7 @@ import ForgotPassword from "./pages/login/ForgotPassword";
 import Signup from "./pages/login/Signup";
 import MainLayout from "./pages/MainLayout";
 import Simulation from "./pages/simulation/Simulation";
-import SimulationSetting from "./pages/SimulationSetting";
+import Scenario from "./pages/scenario/Scenario";
 import RobotManagement from "./pages/RobotManagement";
 import WarehouseManagement from "./pages/WarehouseManagement";
 import OperationManagement from "./pages/OperationManagement";
@@ -22,6 +22,7 @@ function App() {
 
                 <Route element={<MainLayout />}>
                     <Route path="/simulation" element={<Simulation />} />
+                    <Route path="/scenario" element={<Scenario />}/>
                     <Route path="/robot" element={<RobotManagement />} />
                     <Route path="/warehouse" element={<WarehouseManagement />} />
                     <Route path="/operation" element={<OperationManagement />} />

@@ -1,413 +1,921 @@
-import {
-    EVENT_TYPE_LABELS,
-    PRIORITY_LABELS,
-    REPLAN_EVENT_LABELS,
-    REPLAN_METHOD_LABELS,
-    STATUS_LABELS,
-    TASK_TYPE_LABELS,
-    formatDateTime,
-    getStatusClassName,
-} from "./scenarioMockData";
+import "../../styles/scenario/ScenarioDetail.css";
+/**
+ * API 연결 전 실행 이력 확인용 임시 데이터
+ *
+ * API 연결 후에는 scenario.executionHistory 또는
+ * 실행 이력 조회 API의 응답으로 교체합니다.
+ */
+const MOCK_EXECUTION_HISTORY = [
+    {
+        id: 5,
+        runId: "RUN-2026-0005",
+        startedAt: "2026-07-28T10:12:35",
+        status: "COMPLETED",
+        duration: "00:04:21",
+        executorName: "심유리",
+    },
+    {
+        id: 4,
+        runId: "RUN-2026-0004",
+        startedAt: "2026-07-28T09:45:10",
+        status: "RUNNING",
+        duration: "00:01:37",
+        executorName: "김도현",
+    },
+    {
+        id: 3,
+        runId: "RUN-2026-0003",
+        startedAt: "2026-07-28T09:30:22",
+        status: "COMPLETED",
+        duration: "00:03:48",
+        executorName: "심유리",
+    },
+    {
+        id: 2,
+        runId: "RUN-2026-0002",
+        startedAt: "2026-07-27T17:18:05",
+        status: "FAILED",
+        duration: "00:02:15",
+        executorName: "이준호",
+    },
+    {
+        id: 1,
+        runId: "RUN-2026-0001",
+        startedAt: "2026-07-27T15:02:41",
+        status: "COMPLETED",
+        duration: "00:03:02",
+        executorName: "박민지",
+    },
+];
 
-import WarehouseSVG from "../WarehouseSVG.jsx";
+/**
+ * API 연결 전 최근 재계획 결과 확인용 임시 데이터
+ */
+const MOCK_REPLAN_RESULT = {
+    requestId: "OPT-REQ-2026-001",
+    warehouseId: "WH-001",
+    simulationRunId: "RUN-2026-0005",
+    status: "SUCCESS",
+    optimizationType: "PARTIAL_REOPTIMIZATION",
+    reoptimizationReason: "ROBOT_FAILURE",
+    triggerRobotId: "ROBOT-003",
+    description:
+        "ROBOT-003 고장으로 인해 영향을 받은 작업을 정상 로봇에 재배정하고 우회 경로를 생성했습니다.",
+};
 
-function WarehouseMapPreview() {
+/**
+ * 실행 상태를 화면에 표시할 정보로 변환합니다.
+ */
+const getExecutionStatus = (status) => {
+    const statusMap = {
+        COMPLETED: {
+            label: "완료",
+            symbol: "✓",
+            className: "is-completed",
+        },
+        RUNNING: {
+            label: "실행 중",
+            symbol: "↻",
+            className: "is-running",
+        },
+        FAILED: {
+            label: "실패",
+            symbol: "!",
+            className: "is-failed",
+        },
+    };
+
     return (
-        <div
-            className="scenarios-map"
-        >
-
-
-            <div className="scenarios-map-preview-content">
-                <WarehouseSVG
-                    robots={[]}
-                    simulationSpeed={1}
-                />
-            </div>
-        </div>
+        statusMap[status] ?? {
+            label: status || "-",
+            symbol: "",
+            className: "is-default",
+        }
     );
-}
+};
 
+/**
+ * 최적화 결과 상태를 화면 표시 정보로 변환합니다.
+ */
+const getOptimizationStatus = (status) => {
+    const statusMap = {
+        SUCCESS: {
+            label: "성공",
+            className: "is-success",
+        },
+        FAILED: {
+            label: "실패",
+            className: "is-failed",
+        },
+        PROCESSING: {
+            label: "처리 중",
+            className: "is-processing",
+        },
+        PENDING: {
+            label: "대기",
+            className: "is-pending",
+        },
+    };
+
+    return (
+        statusMap[status] ?? {
+            label: status || "상태 없음",
+            className: "is-default",
+        }
+    );
+};
+
+/**
+ * 최적화 유형을 화면 표시용 이름으로 변환합니다.
+ */
+const getOptimizationTypeLabel = (type) => {
+    const typeMap = {
+        INITIAL_OPTIMIZATION: "초기 최적화",
+        FULL_REOPTIMIZATION: "전체 재최적화",
+        PARTIAL_REOPTIMIZATION: "부분 재최적화",
+        ROUTE_REOPTIMIZATION: "경로 재최적화",
+        TASK_REASSIGNMENT: "작업 재배정",
+    };
+
+    return typeMap[type] ?? type ?? "-";
+};
+
+/**
+ * 재계획 사유를 화면 표시용 이름으로 변환합니다.
+ */
+const getReoptimizationReasonLabel = (reason) => {
+    const reasonMap = {
+        ROBOT_FAILURE: "로봇 고장",
+        LOW_BATTERY: "배터리 부족",
+        PATH_BLOCKED: "통로 차단",
+        ORDER_INCREASE: "주문 증가",
+        INVENTORY_SHORTAGE: "재고 부족",
+        TASK_DELAY: "작업 지연",
+        MANUAL_REQUEST: "관리자 요청",
+    };
+
+    return reasonMap[reason] ?? reason ?? "-";
+};
+/**
+ * 시나리오 설정 페이지 오른쪽 상세 영역
+ *
+ * 별도 라우팅 없이 Scenario.jsx에서 선택한 시나리오를
+ * props로 전달받아 표시합니다.
+ */
+const getScenarioStatus = (status) => {
+    const statusMap = {
+        DRAFT: {
+            label: "초안",
+            className: "is-draft",
+        },
+        VALIDATING: {
+            label: "검증 중",
+            className: "is-validating",
+        },
+        VALIDATED: {
+            label: "검증 완료",
+            className: "is-validated",
+        },
+        ARCHIVED: {
+            label: "보관됨",
+            className: "is-archived",
+        },
+    };
+
+    return (
+        statusMap[status] ?? {
+            label: status || "상태 없음",
+            className: "is-default",
+        }
+    );
+};
+
+const getReplanMethodLabel = (method) => {
+    const methodMap = {
+        AFFECTED_TASKS_ONLY: "영향받은 작업만 재계획",
+        ALL_TASKS: "전체 작업 재계획",
+        PATH_ONLY: "경로만 재계산",
+    };
+
+    return methodMap[method] ?? method ?? "-";
+};
+
+
+const formatDateTime = (dateTime) => {
+    if (!dateTime) return "-";
+
+    return new Intl.DateTimeFormat("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+    })
+        .format(new Date(dateTime))
+        .replace(/\. /g, ".")
+        .replace(".", "");
+};
 
 function ScenarioDetail({
     scenario,
-    warehouse,
-    onEdit,
     onClose,
-    onRun,
-    onOpenResult,
+    onEdit,
+    onDelete,
 }) {
-    const readinessItems = [
-        {
-            label: "창고 연결 관계 정상",
-            ready: Boolean(warehouse),
-        },
-        {
-            label: "작업 유형 선택 완료",
-            ready: scenario.taskTypes.length > 0,
-        },
-        {
-            label: "배터리 운영 조건 유효",
-            ready:
-                scenario.chargeThresholdPct <
-                scenario.minimumOperationBatteryPct,
-        },
-        {
-            label: "충전 작업 환경 확인",
-            ready:
-                !scenario.taskTypes.includes("CHARGING") ||
-                (warehouse?.chargingStationCount ?? 0) > 0,
-        },
-        {
-            label: "재계획 설정 정상",
-            ready:
-                !scenario.autoReplanEnabled ||
-                scenario.replanEvents.length > 0,
-        },
-    ];
+    /**
+     * 아직 선택한 시나리오가 없는 경우
+     */
+    if (!scenario) {
+        return (
+            <section className="scenario-detail-card scenario-detail-placeholder">
+                <div className="scenario-detail-placeholder-icon">
+                    ◇
+                </div>
 
-    const readyToRun = readinessItems.every((item) => item.ready);
+                <h2>시나리오를 선택해주세요.</h2>
 
+                <p>
+                    왼쪽 목록에서 확인할 시나리오를 선택하면
+                    상세 정보가 표시됩니다.
+                </p>
+            </section>
+        );
+    }
+
+    const status = getScenarioStatus(scenario.status);
+
+    /**
+     * 현재 시나리오의 수정 모달을 엽니다.
+     */
+    const handleEdit = () => {
+        onEdit?.(scenario);
+    };
+
+    /**
+     * 현재 시나리오를 삭제합니다.
+     */
+    const handleDelete = () => {
+        onDelete?.(scenario);
+    };
+
+    /**
+     * 상세 화면을 닫고 목록 화면으로 돌아갑니다.
+     */
+    const handleClose = () => {
+        onClose?.();
+    };
+
+    const handleRun = () => {
+        console.log("실행할 시나리오:", scenario);
+    };
+
+    /**
+ * API 데이터가 있으면 해당 데이터를 사용하고,
+ * 없으면 화면 확인용 목업 데이터를 사용합니다.
+ */
+    const executionHistory =
+        scenario.executionHistory ?? MOCK_EXECUTION_HISTORY;
+
+    const replanResult = Object.prototype.hasOwnProperty.call(
+        scenario,
+        "replanResult"
+    )
+        ? scenario.replanResult
+        : MOCK_REPLAN_RESULT;
+
+    const optimizationStatus = getOptimizationStatus(
+        replanResult?.status
+    );
+
+    const optimizationTypeLabel = getOptimizationTypeLabel(
+        replanResult?.optimizationType
+    );
+
+    const reoptimizationReasonLabel =
+        getReoptimizationReasonLabel(
+            replanResult?.reoptimizationReason
+        );
     return (
-        <aside className="scenario-detail-card">
-            <header className="scenario-detail-header">
-                <div className="scenario-detail-heading">
-                    <div className="scenario-detail-title-row">
-                        <h1>{scenario.name}</h1>
-                        <span
-                            className={`scenario-status ${getStatusClassName(
-                                scenario.status
-                            )}`}
-                        >
-                            {STATUS_LABELS[scenario.status]}
-                        </span>
+        <section className="scenario-detail-card">
+            {/* 상세 상단 */}
+            <header className="scenario-inline-detail-header">
+                <div className="scenario-inline-title-area">
+                    <div className="scenario-detail-title-icon">
+                        ◇
                     </div>
 
-                    <p>
-                        {scenario.description || "등록된 설명이 없습니다."}
-                    </p>
+                    <div className="scenario-inline-title-content">
+                        <div className="scenario-detail-title-row">
+                            <h2>{scenario.name}</h2>
 
-                    <div className="scenario-detail-meta">
-                        <strong>
-                            {warehouse?.name || scenario.warehouseId}
-                        </strong>
-                        <span>·</span>
-                        <span>
-                            최종 수정 {formatDateTime(scenario.updatedAt)}
-                        </span>
+                            <span
+                                className={`scenario-status ${status.className}`}
+                            >
+                                <span className="scenario-status-dot" />
+                                {status.label}
+                            </span>
+                        </div>
+
+                        <div className="scenario-detail-sub-info">
+                            <span>{scenario.scenarioId}</span>
+                            <span>·</span>
+                            <span>
+                                최근 수정{" "}
+                                {formatDateTime(scenario.updatedAt)}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div className="scenario-detail-actions">
+                <div className="scenario-detail-header-actions">
                     <button
                         type="button"
-                        className="scenario-button is-primary"
-                        disabled={!readyToRun}
-                        onClick={onRun}
-                    >
-                        시뮬레이션 실행
-                    </button>
-                    <button
-                        type="button"
-                        className="scenario-button is-secondary"
-                        onClick={onEdit}
+                        className="scenario-button scenario-button-secondary"
+                        onClick={handleEdit}
                     >
                         수정
                     </button>
+
                     <button
                         type="button"
-                        className="scenario-icon-button"
-                        onClick={onClose}
-                        aria-label="상세 닫기"
+                        className="scenario-button scenario-button-danger"
+                        onClick={handleDelete}
+                    >
+                        삭제
+                    </button>
+
+                    <button
+                        type="button"
+                        className="scenario-button scenario-button-primary"
+                        onClick={handleRun}
+                    >
+                        시뮬레이션 실행
+                    </button>
+
+                    <button
+                        type="button"
+                        className="scenario-detail-close-button"
+                        onClick={handleClose}
+                        aria-label="시나리오 상세 닫기"
                     >
                         ×
                     </button>
                 </div>
             </header>
 
-            {/* 창고 맵과 창고 구성 */}
-            <section className="scenario-detail-section">
-                <div className="scenario-section-heading">
-                    <div>
-                        <h2>시뮬레이션 환경</h2>
-                        <p>
-                            선택한 창고 구조를 확인합니다.
-                        </p>
-                    </div>
-                </div>
+            {/* 상세 본문 */}
+            <div className="scenario-inline-detail-body">
+                {/* =========================================================
+    기본 정보
+    적용 창고, 설명, 로봇 유형, 운영 설정을 하나로 표시
+    ========================================================= */}
+                <section className="scenario-detail-section">
+                    <div className="scenario-detail-section-header">
+                        <div>
+                            <h3>기본 정보</h3>
 
-                <div className="scenario-environment-grid">
-                    <WarehouseMapPreview />
-
-                    <div className="scenario-warehouse-summary">
-                        <h3>{warehouse?.name || scenario.warehouseId}</h3>
-
-                        <dl className="scenario-summary-grid">
-
-                            <div>
-                                <dt>창고맵</dt>
-                                <dd>창고맵 타이틀명</dd>
-                            </div>
-                            <div>
-                                <dt>구역</dt>
-                                <dd>{warehouse?.zoneCount ?? "-"}개</dd>
-                            </div>
-                            <div>
-                                <dt>선반</dt>
-                                <dd>
-                                    {warehouse?.storageLocationCount?.toLocaleString() ??
-                                        "-"}
-                                    개
-                                </dd>
-                            </div>
-                            <div>
-                                <dt>충전소</dt>
-                                <dd>
-                                    {warehouse?.chargingStationCount ?? "-"}개
-                                </dd>
-                            </div>
-                            
-                        </dl>
-
-                        <div className="scenario-chip-block">
-                            <strong>활성 작업 유형</strong>
-                            <div className="scenario-chip-list">
-                                {scenario.taskTypes.map((taskType) => (
-                                    <span
-                                        key={taskType}
-                                        className="scenario-chip"
-                                    >
-                                        {TASK_TYPE_LABELS[taskType]}
-                                    </span>
-                                ))}
-                            </div>
                             <p>
-                                실행 시 설정 조건에 맞는 로봇이 자동 배정됩니다.
+                                시나리오의 적용 대상과 핵심 운영 설정을 확인합니다.
                             </p>
                         </div>
                     </div>
-                </div>
-            </section>
 
-            {/* 운영 초기 조건 */}
-            <section className="scenario-detail-section">
-                <div className="scenario-section-heading">
-                    <div>
-                        <h2>운영 초기 조건</h2>
-                        <p>
-                            작업 투입과 충전 전환에 사용하는 기준값입니다.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="scenario-condition-grid">
-                    <article>
-                        <span>작업 투입 최소 배터리</span>
-                        <strong>
-                            {scenario.minimumOperationBatteryPct}%
-                        </strong>
-                        <small>이상인 로봇만 작업 후보에 포함</small>
-                    </article>
-
-                    <article>
-                        <span>충전 임계치</span>
-                        <strong>{scenario.chargeThresholdPct}%</strong>
-                        <small>이하인 로봇은 충전 대상으로 전환</small>
-                    </article>
-
-                    <article>
-                        <span>자동 재계획</span>
-                        <strong>
-                            {scenario.autoReplanEnabled
-                                ? "사용"
-                                : "사용 안 함"}
-                        </strong>
-                        <small>
-                            {scenario.autoReplanEnabled
-                                ? "예외 발생 시 설정 방식으로 재계획"
-                                : "자동 재계획을 수행하지 않음"}
-                        </small>
-                    </article>
-
-                    <article>
-                        <span>우선순위 정책</span>
-                        <strong>
-                            {PRIORITY_LABELS[scenario.priorityPolicy]}
-                        </strong>
-                        <small>작업 정렬과 배정 순서에 적용</small>
-                    </article>
-
-                    <article>
-                        <span>재계획 방식</span>
-                        <strong>
-                            {scenario.autoReplanEnabled
-                                ? REPLAN_METHOD_LABELS[scenario.replanMethod]
-                                : "-"}
-                        </strong>
-                        <small>
-                            {scenario.autoReplanEnabled
-                                ? "선택한 범위만 다시 계산"
-                                : "자동 재계획 미사용"}
-                        </small>
-                    </article>
-                </div>
-            </section>
-
-            {/* 이벤트 및 예외 대응 */}
-            <section className="scenario-detail-section">
-                <div className="scenario-section-heading">
-                    <div>
-                        <h2>이벤트 및 예외 대응</h2>
-                        <p>
-                            시뮬레이션에서 사용할 이벤트와 재계획 조건입니다.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="scenario-event-grid">
-                    <div className="scenario-chip-block is-bordered">
-                        <strong>이벤트 설정</strong>
-                        <div className="scenario-chip-list">
-                            {scenario.eventTypes.length > 0 ? (
-                                scenario.eventTypes.map((eventType) => (
-                                    <span
-                                        key={eventType}
-                                        className="scenario-chip"
-                                    >
-                                        {EVENT_TYPE_LABELS[eventType]}
-                                    </span>
-                                ))
-                            ) : (
-                                <span className="scenario-empty-text">
-                                    선택한 이벤트가 없습니다.
+                    <div className="scenario-overview">
+                        {/* 상단: 적용 창고 + 시나리오 설명 */}
+                        <div className="scenario-overview-primary">
+                            {/* 적용 창고 */}
+                            <article className="scenario-overview-warehouse">
+                                <span className="scenario-overview-label">
+                                    적용 창고
                                 </span>
-                            )}
-                        </div>
-                    </div>
 
-                    <div className="scenario-chip-block is-bordered">
-                        <strong>재계획 적용 이벤트</strong>
-                        <div className="scenario-chip-list">
-                            {scenario.autoReplanEnabled &&
-                            scenario.replanEvents.length > 0 ? (
-                                scenario.replanEvents.map((eventType) => (
+                                <div className="scenario-overview-warehouse-value">
                                     <span
-                                        key={eventType}
-                                        className="scenario-chip"
+                                        className="scenario-overview-warehouse-icon"
+                                        aria-hidden="true"
                                     >
-                                        {REPLAN_EVENT_LABELS[eventType]}
+                                        ▣
                                     </span>
-                                ))
-                            ) : (
-                                <span className="scenario-empty-text">
-                                    자동 재계획을 사용하지 않습니다.
+
+                                    <strong>
+                                        {scenario.warehouseName || "-"}
+                                    </strong>
+                                </div>
+                            </article>
+
+                            {/* 설명 */}
+                            <article className="scenario-overview-description">
+                                <span className="scenario-overview-label">
+                                    설명
                                 </span>
-                            )}
+
+                                <p>
+                                    {scenario.description ||
+                                        "등록된 시나리오 설명이 없습니다."}
+                                </p>
+                            </article>
                         </div>
-                    </div>
-                </div>
-            </section>
 
-            {/* 실행 준비 상태 */}
-            <section className="scenario-detail-section">
-                <div className="scenario-section-heading is-inline">
-                    <div>
-                        <h2>실행 준비 상태</h2>
-                        <p>
-                            시뮬레이션 실행 전에 설정값을 확인합니다.
-                        </p>
-                    </div>
-
-                    <span
-                        className={`scenario-ready-badge ${
-                            readyToRun ? "is-ready" : "is-warning"
-                        }`}
-                    >
-                        {readyToRun ? "실행 가능" : "확인 필요"}
-                    </span>
-                </div>
-
-                <div className="scenario-readiness-grid">
-                    {readinessItems.map((item) => (
-                        <div
-                            key={item.label}
-                            className={item.ready ? "is-ready" : "is-warning"}
-                        >
-                            <span>{item.ready ? "✓" : "!"}</span>
-                            <strong>{item.label}</strong>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* 최근 실행 이력 */}
-            <section className="scenario-detail-section">
-                <div className="scenario-section-heading">
-                    <div>
-                        <h2>최근 실행 이력</h2>
-                        <p>
-                            최근 실행한 시뮬레이션 결과를 확인합니다.
-                        </p>
-                    </div>
-                </div>
-
-                {scenario.runHistory.length > 0 ? (
-                    <div className="scenario-run-table-wrap">
-                        <table className="scenario-run-table">
-                            <thead>
-                                <tr>
-                                    <th>실행 ID</th>
-                                    <th>실행 일시</th>
-                                    <th>상태</th>
-                                    <th>전체 작업</th>
-                                    <th>완료</th>
-                                    <th>실패</th>
-                                    <th>
-                                        <span className="scenario-sr-only">
-                                            결과 보기
+                        {/* 하단: 로봇 유형 + 배터리 및 재계획 설정 */}
+                        <div className="scenario-overview-secondary">
+                            {/* 로봇 유형 */}
+                            <article className="scenario-overview-robot">
+                                <div className="scenario-overview-block-header">
+                                    <div>
+                                        <span className="scenario-overview-label">
+                                            로봇 유형
                                         </span>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {scenario.runHistory.map((run) => (
-                                    <tr key={run.simulationId}>
-                                        <td>{run.simulationId}</td>
-                                        <td>
-                                            {formatDateTime(run.executedAt)}
-                                        </td>
-                                        <td>{run.status}</td>
-                                        <td>{run.totalTasks}건</td>
-                                        <td>{run.completedTasks}건</td>
-                                        <td>{run.failedTasks}건</td>
-                                        <td>
-                                            <button
-                                                type="button"
-                                                className="scenario-text-button"
-                                                onClick={() =>
-                                                    onOpenResult(run)
+
+                                        <p>
+                                            시나리오에서 사용하는 작업 유형입니다.
+                                        </p>
+                                    </div>
+
+                                    <span className="scenario-overview-count">
+                                        {scenario.robotTypes?.length ?? 0}개
+                                    </span>
+                                </div>
+
+                                {scenario.robotTypes?.length > 0 ? (
+                                    <div className="scenario-overview-robot-list">
+                                        {scenario.robotTypes.map((robotType) => (
+                                            <span
+                                                key={robotType}
+                                                className="scenario-overview-robot-tag"
+                                            >
+                                                <span aria-hidden="true">◇</span>
+                                                {robotType}
+                                            </span>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="scenario-overview-empty">
+                                        등록된 로봇 유형이 없습니다.
+                                    </p>
+                                )}
+                            </article>
+
+                            {/* 배터리 및 재계획 설정 */}
+                            <article className="scenario-overview-settings">
+                                <div className="scenario-overview-block-header">
+                                    <div>
+                                        <span className="scenario-overview-label">
+                                            배터리 및 재계획 설정
+                                        </span>
+
+                                        <p>
+                                            로봇 운영 기준과 재계획 방식을 확인합니다.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="scenario-overview-setting-grid">
+                                    {/* 초기 배터리 */}
+                                    <div className="scenario-overview-setting-item">
+                                        <div className="scenario-overview-setting-heading">
+                                            <span>초기 배터리</span>
+
+                                            <strong>
+                                                {scenario.initialBattery ?? 100}%
+                                            </strong>
+                                        </div>
+
+                                        <div className="scenario-overview-progress">
+                                            <span
+                                                style={{
+                                                    width: `${Math.min(
+                                                        Math.max(
+                                                            scenario.initialBattery ??
+                                                            100,
+                                                            0
+                                                        ),
+                                                        100
+                                                    )}%`,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* 충전 전환 기준 */}
+                                    <div className="scenario-overview-setting-item">
+                                        <div className="scenario-overview-setting-heading">
+                                            <span>충전 전환 기준</span>
+
+                                            <strong>
+                                                {scenario.chargeThreshold ?? 20}%
+                                            </strong>
+                                        </div>
+
+                                        <div className="scenario-overview-progress is-warning">
+                                            <span
+                                                style={{
+                                                    width: `${Math.min(
+                                                        Math.max(
+                                                            scenario.chargeThreshold ??
+                                                            20,
+                                                            0
+                                                        ),
+                                                        100
+                                                    )}%`,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* 재계획 방식 */}
+                                    <div className="scenario-overview-setting-item is-replan">
+                                        <span>재계획 방식</span>
+
+                                        <strong>
+                                            {getReplanMethodLabel(
+                                                scenario.replanMethod
+                                            )}
+                                        </strong>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="scenario-detail-section">
+                    <div className="scenario-detail-section-header">
+                        <div>
+                            <h3>시나리오 품목</h3>
+                            <p>시나리오에 포함된 품목을 확인합니다.</p>
+                        </div>
+
+                        <span className="scenario-detail-section-count">
+                            {scenario.items.length}개
+                        </span>
+                    </div>
+
+                    {scenario.items.length > 0 ? (
+                        <div className="scenario-item-card-list">
+                            {scenario.items.map((item) => (
+                                <article
+                                    key={item.id ?? item.itemCode}
+                                    className="scenario-item-card"
+                                >
+                                    <div className="scenario-item-card-icon">
+                                        ▦
+                                    </div>
+
+                                    <div className="scenario-item-card-content">
+                                        <strong>{item.itemName}</strong>
+                                        <span>{item.itemCode}</span>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="scenario-item-empty">
+                            <div className="scenario-item-empty-icon">
+                                ▦
+                            </div>
+
+                            <strong>등록된 품목이 없습니다.</strong>
+
+                            <p>
+                                이 시나리오에 포함된 품목이 아직 없습니다.
+                            </p>
+                        </div>
+                    )}
+                </section>
+
+                {/* 실행 이력 */}
+                <section className="scenario-detail-section">
+                    <div className="scenario-detail-section-header">
+                        <div>
+                            <h3>실행 이력</h3>
+                            <p>
+                                시나리오 실행 기록과 현재 상태를 확인합니다.
+                            </p>
+                        </div>
+
+                        <span className="scenario-history-count">
+                            최근 {executionHistory.length}건
+                        </span>
+                    </div>
+
+                    {executionHistory.length > 0 ? (
+                        <div className="scenario-history-table-wrapper">
+                            <table className="scenario-history-table">
+                                <thead>
+                                    <tr>
+                                        <th>실행 ID</th>
+                                        <th>실행 시각</th>
+                                        <th>상태</th>
+                                        <th>소요 시간</th>
+                                        <th>실행자</th>
+                                        <th aria-label="작업" />
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {executionHistory.map((history, index) => {
+                                        const status = getExecutionStatus(
+                                            history.status
+                                        );
+
+                                        return (
+                                            <tr
+                                                key={history.id ?? history.runId}
+                                                className={
+                                                    index === 0 ? "is-latest" : ""
                                                 }
                                             >
-                                                결과 보기
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                                <td>
+                                                    <strong className="scenario-history-run-id">
+                                                        {history.runId}
+                                                    </strong>
+                                                </td>
+
+                                                <td>
+                                                    <span className="scenario-history-date">
+                                                        {formatDateTime(
+                                                            history.startedAt
+                                                        )}
+                                                    </span>
+                                                </td>
+
+                                                <td>
+                                                    <span
+                                                        className={`scenario-execution-status ${status.className}`}
+                                                    >
+                                                        <span aria-hidden="true">
+                                                            {status.symbol}
+                                                        </span>
+
+                                                        {status.label}
+                                                    </span>
+                                                </td>
+
+                                                <td>
+                                                    <strong className="scenario-history-duration">
+                                                        {history.duration || "-"}
+                                                    </strong>
+                                                </td>
+
+                                                <td>
+                                                    <span className="scenario-history-executor">
+                                                        {history.executorName || "-"}
+                                                    </span>
+                                                </td>
+
+                                                <td>
+                                                    <button
+                                                        type="button"
+                                                        className="scenario-history-more-button"
+                                                        aria-label={`${history.runId} 메뉴 열기`}
+                                                        onClick={() =>
+                                                            console.log(
+                                                                "실행 이력 메뉴:",
+                                                                history
+                                                            )
+                                                        }
+                                                    >
+                                                        ⋮
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="scenario-history-empty">
+                            <div className="scenario-history-empty-icon">
+                                ↻
+                            </div>
+
+                            <strong>실행 이력이 없습니다.</strong>
+
+                            <p>
+                                이 시나리오를 실행하면 실행 기록이 표시됩니다.
+                            </p>
+                        </div>
+                    )}
+                </section>
+
+                {/* 재계획 결과 */}
+                <section className="scenario-detail-section">
+                    <div className="scenario-detail-section-header scenario-replan-section-header">
+                        <div className="scenario-replan-section-title">
+                            <span
+                                className="scenario-replan-section-icon"
+                                aria-hidden="true"
+                            >
+                                ▣
+                            </span>
+
+                            <div>
+                                <h3>재계획 결과</h3>
+
+                                <p>
+                                    이상 상황 발생 후 수행된 최적화 결과를
+                                    확인합니다.
+                                </p>
+                            </div>
+                        </div>
+
+                        <span className="scenario-replan-latest-badge">
+                            <span aria-hidden="true">◷</span>
+                            최근 결과
+                        </span>
                     </div>
-                ) : (
-                    <div className="scenario-empty-state">
-                        <strong>아직 실행 이력이 없습니다.</strong>
-                        <p>
-                            시뮬레이션을 실행하면 결과가 여기에 표시됩니다.
-                        </p>
-                    </div>
-                )}
-            </section>
-        </aside>
+
+                    {replanResult ? (
+                        <div className="scenario-replan-result">
+                            {/* 핵심 결과 요약 */}
+                            <div className="scenario-replan-highlight-grid">
+                                {/* 상태 */}
+                                <article className="scenario-replan-highlight-card">
+                                    <span
+                                        className={`scenario-replan-highlight-icon is-status ${optimizationStatus.className}`}
+                                        aria-hidden="true"
+                                    >
+                                        ✓
+                                    </span>
+
+                                    <div className="scenario-replan-highlight-content">
+                                        <span>상태</span>
+
+                                        <strong
+                                            className={`scenario-replan-highlight-value ${optimizationStatus.className}`}
+                                        >
+                                            {optimizationStatus.label}
+                                        </strong>
+                                    </div>
+                                </article>
+
+                                {/* 최적화 유형 */}
+                                <article className="scenario-replan-highlight-card">
+                                    <span
+                                        className="scenario-replan-highlight-icon is-type"
+                                        aria-hidden="true"
+                                    >
+                                        ⚙
+                                    </span>
+
+                                    <div className="scenario-replan-highlight-content">
+                                        <span>최적화 유형</span>
+
+                                        <strong className="scenario-replan-highlight-value is-primary">
+                                            {optimizationTypeLabel}
+                                        </strong>
+                                    </div>
+                                </article>
+
+                                {/* 재계획 사유 */}
+                                <article className="scenario-replan-highlight-card">
+                                    <span
+                                        className="scenario-replan-highlight-icon is-reason"
+                                        aria-hidden="true"
+                                    >
+                                        !
+                                    </span>
+
+                                    <div className="scenario-replan-highlight-content">
+                                        <span>재계획 사유</span>
+
+                                        <strong className="scenario-replan-highlight-value">
+                                            {reoptimizationReasonLabel}
+                                        </strong>
+                                    </div>
+                                </article>
+
+                                {/* 트리거 로봇 */}
+                                <article className="scenario-replan-highlight-card">
+                                    <span
+                                        className="scenario-replan-highlight-icon is-robot"
+                                        aria-hidden="true"
+                                    >
+                                        ◇
+                                    </span>
+
+                                    <div className="scenario-replan-highlight-content">
+                                        <span>트리거 로봇</span>
+
+                                        <strong className="scenario-replan-highlight-value is-robot">
+                                            {replanResult.triggerRobotId || "-"}
+                                        </strong>
+                                    </div>
+                                </article>
+                            </div>
+
+                            {/* 설명 + 실행 추적 정보 */}
+                            <div className="scenario-replan-detail-grid">
+                                {/* 결과 설명 */}
+                                <article className="scenario-replan-description-card">
+                                    <div className="scenario-replan-card-heading">
+                                        <span
+                                            className="scenario-replan-card-heading-icon"
+                                            aria-hidden="true"
+                                        >
+                                            ≡
+                                        </span>
+
+                                        <h4>결과 설명</h4>
+                                    </div>
+
+                                    <div className="scenario-replan-description-content">
+                                        <p>
+                                            {replanResult.description ||
+                                                "등록된 재계획 결과 설명이 없습니다."}
+                                        </p>
+                                    </div>
+                                </article>
+
+                                {/* 실행 추적 정보 */}
+                                <article className="scenario-replan-trace-card">
+                                    <div className="scenario-replan-card-heading">
+                                        <span
+                                            className="scenario-replan-card-heading-icon"
+                                            aria-hidden="true"
+                                        >
+                                            ⇄
+                                        </span>
+
+                                        <h4>실행 추적 정보</h4>
+                                    </div>
+
+                                    <dl className="scenario-replan-trace-list">
+                                        <div>
+                                            <dt>
+                                                <span
+                                                    className="scenario-replan-trace-icon"
+                                                    aria-hidden="true"
+                                                >
+                                                    ▣
+                                                </span>
+
+                                                요청 ID
+                                            </dt>
+
+                                            <dd>
+                                                {replanResult.requestId || "-"}
+                                            </dd>
+                                        </div>
+
+                                        <div>
+                                            <dt>
+                                                <span
+                                                    className="scenario-replan-trace-icon"
+                                                    aria-hidden="true"
+                                                >
+                                                    ▶
+                                                </span>
+
+                                                시뮬레이션 실행 ID
+                                            </dt>
+
+                                            <dd>
+                                                {replanResult.simulationRunId || "-"}
+                                            </dd>
+                                        </div>
+
+                                        <div>
+                                            <dt>
+                                                <span
+                                                    className="scenario-replan-trace-icon"
+                                                    aria-hidden="true"
+                                                >
+                                                    ⌂
+                                                </span>
+
+                                                창고 ID
+                                            </dt>
+
+                                            <dd>
+                                                {replanResult.warehouseId || "-"}
+                                            </dd>
+                                        </div>
+
+                    
+                                    </dl>
+                                </article>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="scenario-replan-empty">
+                            <div className="scenario-replan-empty-icon">
+                                ↻
+                            </div>
+
+                            <strong>재계획 결과가 없습니다.</strong>
+
+                            <p>
+                                재계획이 실행되면 최적화 결과가 표시됩니다.
+                            </p>
+                        </div>
+                    )}
+                </section>
+            </div>
+        </section>
     );
 }
-
 
 export default ScenarioDetail;

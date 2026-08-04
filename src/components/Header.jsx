@@ -37,7 +37,7 @@ function Sidebar() {
                     </li>
 
                     <li>
-                        <NavLink to="/scenarios">
+                        <NavLink to="/scenario">
                             시나리오 설정
                         </NavLink>
                     </li>
