@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "../styles/WarehouseManagement.css";
 
 import { warehouseApi } from "../api/client";
@@ -18,6 +18,56 @@ const LABEL_TO_STATUS = {
     "운영 중": "ACTIVE",
     "점검 중": "MAINTENANCE",
     비활성: "INACTIVE",
+};
+
+/**
+ * 레이아웃 응답을 미리보기가 이해하는 지도 형태로 바꾼다.
+ *
+ * 서버는 노드를 숫자 ID 로 주고 간선은 그 ID 로 양끝을 가리킨다.
+ * 미리보기는 노드 코드(K0_1, R0_0 ...)를 쓰므로 한 번 갈아끼운다.
+ *
+ * 노드 종류도 표기가 다르다. (RACK_STORAGE -> rack_access)
+ * 색을 칠하는 데만 쓰이므로 화면 규칙에 맞춰 준다.
+ */
+const NODE_TYPE_TO_PREVIEW = {
+    ROUTE: "route",
+    ROUTE_CHARGE_JUNCTION: "route_charge_junction",
+    RACK_STORAGE: "rack_access",
+    INBOUND: "inbound",
+    OUTBOUND: "outbound",
+    CHARGING_SLOT: "charging_slot",
+};
+
+const toPreviewMap = (layout, warehouseName) => {
+    const nodes = Array.isArray(layout?.nodes) ? layout.nodes : [];
+    const edges = Array.isArray(layout?.edges) ? layout.edges : [];
+
+    if (nodes.length === 0) {
+        return null;
+    }
+
+    // 간선이 가리키는 숫자 ID 를 노드 코드로 바꾸기 위한 표
+    const codeById = new Map(
+        nodes.map((node) => [node.id, node.nodeCode ?? String(node.id)])
+    );
+
+    return {
+        title: `${warehouseName ?? "창고"} 지도`,
+        nodes: nodes.map((node) => ({
+            id: node.nodeCode ?? String(node.id),
+            type: NODE_TYPE_TO_PREVIEW[node.nodeType] ?? "route",
+            x: node.x,
+            y: node.y,
+        })),
+        edges: edges
+            .map((edge) => ({
+                id: String(edge.id),
+                source: codeById.get(edge.fromNodeId),
+                target: codeById.get(edge.toNodeId),
+            }))
+            // 한쪽 끝이 없는 간선은 그릴 수 없으니 버린다.
+            .filter((edge) => edge.source && edge.target),
+    };
 };
 
 // 백엔드 응답 -> 화면에서 쓰던 형태
@@ -291,6 +341,10 @@ function WarehouseManagement() {
      * @param keepId 새로고침 후에도 선택을 유지할 창고 ID
      */
     const reloadWarehouses = async (keepId = null) => {
+        // 창고를 만들거나 고치면 지도도 바뀐다. 받아둔 것을 버리고 다시 받는다.
+        requestedMapIds.current.clear();
+        setMapCache({});
+
         try {
             const list = await warehouseApi.getAll();
             const views = (Array.isArray(list) ? list : []).map(toWarehouseView);
@@ -315,6 +369,78 @@ function WarehouseManagement() {
     useEffect(() => {
         reloadWarehouses();
     }, []);
+
+    /* =========================================================
+       선택한 창고의 지도
+
+       목록 응답에는 노드·간선이 없다. 창고를 고를 때마다
+       레이아웃을 따로 받아 미리보기에 넘긴다.
+       한 번 받은 창고는 다시 부르지 않는다.
+    ========================================================= */
+
+    const [mapCache, setMapCache] = useState({});
+
+    // 이미 요청한 창고를 기억한다. 상태로 두면 캐시가 바뀔 때마다
+    // 아래 useEffect 가 다시 돌아 불필요한 렌더가 생긴다.
+    const requestedMapIds = useRef(new Set());
+
+    const selectedWarehouseId = selectedWarehouse?.warehouse_id ?? null;
+
+    useEffect(() => {
+        if (selectedWarehouseId === null) {
+            return;
+        }
+
+        // 목업으로 떨어진 경우엔 이미 지도를 들고 있다.
+        if (selectedWarehouse?.mapData) {
+            return;
+        }
+
+        if (requestedMapIds.current.has(selectedWarehouseId)) {
+            return;
+        }
+
+        requestedMapIds.current.add(selectedWarehouseId);
+
+        let cancelled = false;
+
+        const loadMap = async () => {
+            try {
+                const layout = await warehouseApi.getLayout(selectedWarehouseId);
+                const preview = toPreviewMap(layout, selectedWarehouse?.name);
+
+                if (!cancelled) {
+                    setMapCache((previous) => ({
+                        ...previous,
+                        [selectedWarehouseId]: preview,
+                    }));
+                }
+            } catch (error) {
+                console.warn("창고 지도 조회 실패:", error.message);
+
+                // 실패해도 기록은 남긴다. 다시 눌러야 재시도한다.
+                if (!cancelled) {
+                    setMapCache((previous) => ({
+                        ...previous,
+                        [selectedWarehouseId]: null,
+                    }));
+                }
+            }
+        };
+
+        loadMap();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedWarehouseId, selectedWarehouse?.mapData, selectedWarehouse?.name]);
+
+    // 목업 지도가 있으면 그것을, 없으면 서버에서 받은 것을 쓴다.
+    const selectedMapData =
+        selectedWarehouse?.mapData
+        ?? (selectedWarehouseId === null
+            ? null
+            : mapCache[selectedWarehouseId] ?? null);
 
     const openCreateModal = () => {
         setModalMode("CREATE");
@@ -628,12 +754,10 @@ function WarehouseManagement() {
 
                         <div className="warehouse-detail-content">
                             <div className="warehouse-preview">
-                                {selectedWarehouse.mapData ? (
+                                {selectedMapData ? (
                                     <div className="warehouse-preview-content">
                                         <WarehouseMapPreview
-                                            mapData={
-                                                selectedWarehouse.mapData
-                                            }
+                                            mapData={selectedMapData}
                                         />
                                     </div>
                                 ) : (
