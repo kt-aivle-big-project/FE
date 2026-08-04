@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "../styles/WarehouseManagement.css";
+import "../styles/warehouseManagement.css";
 
 import WarehouseSVG from "./WarehouseSVG";
 import { warehouseApi } from "../api/client";
