@@ -1,60 +1,17 @@
 import { useEffect, useState } from "react";
+import { warehouseApi } from "../../api/client";
 import "../../styles/scenario/ScenarioCreateModal.css";
 
-/**
- * API 연결 전 창고 선택용 임시 데이터
- *
- * 추후 창고 조회 API 응답으로 교체합니다.
- */
-const WAREHOUSE_OPTIONS = [
-    {
-        value: "WH-001",
-        label: "A-1 센터 (서울)",
-    },
-    {
-        value: "WH-002",
-        label: "B-1 센터 (대전)",
-    },
-    {
-        value: "WH-003",
-        label: "C-1 센터 (광주)",
-    },
-];
-
-/**
- * 시나리오에 포함할 수 있는 로봇 유형입니다.
- */
+/** 시나리오에서 사용할 수 있는 로봇 유형 */
 const ROBOT_TYPE_OPTIONS = [
-    {
-        value: "입고",
-        label: "입고",
-        symbol: "⇩",
-    },
-    {
-        value: "출고",
-        label: "출고",
-        symbol: "⇧",
-    },
-    {
-        value: "보충",
-        label: "보충",
-        symbol: "◇",
-    },
-    {
-        value: "충전",
-        label: "충전",
-        symbol: "ϟ",
-    },
-    {
-        value: "재배치",
-        label: "재배치",
-        symbol: "↻",
-    },
+    { value: "입고", label: "입고", symbol: "⇩" },
+    { value: "출고", label: "출고", symbol: "⇧" },
+    { value: "보충", label: "보충", symbol: "◇" },
+    { value: "충전", label: "충전", symbol: "ϟ" },
+    { value: "재배치", label: "재배치", symbol: "↻" },
 ];
 
-/**
- * 예외 발생 시 사용할 재계획 방식입니다.
- */
+/** 예외 발생 시 적용할 재계획 방식 */
 const REPLAN_METHOD_OPTIONS = [
     {
         value: "AFFECTED_TASKS_ONLY",
@@ -71,42 +28,68 @@ const REPLAN_METHOD_OPTIONS = [
 ];
 
 /**
- * 품목 데이터에 화면 입력용 고유 ID를 추가합니다.
+ * 상품 입력값에 화면 렌더링용 고유 ID를 추가합니다.
+ *
+ * productCode는 백엔드에서 생성하거나 조회한 값을 사용할 수 있도록
+ * 기존 값이 있을 때만 유지합니다. 새 상품은 productName만 입력합니다.
  */
-const createItemField = (item = {}, index = 0) => ({
-    ...item,
-    fieldId: `${item.id ?? "new"}-${index}-${Date.now()}-${Math.random()}`,
-    itemName: item.itemName ?? "",
+const createProductField = (product = {}, index = 0) => ({
+    ...product,
+    fieldId: `${
+        product.productCode ?? product.id ?? "new"
+    }-${index}-${Date.now()}-${Math.random()}`,
+    productName: product.productName ?? "",
+    productCode: product.productCode ?? null,
 });
 
-/**
- * 생성/수정 모드에 맞는 초기 입력값을 만듭니다.
- */
-const createInitialFormData = (initialScenario) => {
-    const matchedWarehouse = WAREHOUSE_OPTIONS.find(
-        (warehouse) =>
-            warehouse.value === initialScenario?.warehouseId ||
-            warehouse.label === initialScenario?.warehouseName
-    );
+/** 생성 또는 수정 모드의 초기 입력값을 만듭니다. */
+const createInitialFormData = (initialScenario) => ({
+    name: initialScenario?.name ?? "",
+    description: initialScenario?.description ?? "",
+    warehouseId:
+        initialScenario?.warehouseId != null
+            ? String(initialScenario.warehouseId)
+            : "",
+    robotTypes: initialScenario?.robotTypes ?? [
+        "입고",
+        "출고",
+        "보충",
+        "재배치",
+    ],
+    initialBattery: initialScenario?.initialBattery ?? 100,
+    chargeThreshold: initialScenario?.chargeThreshold ?? 20,
+    replanMethod:
+        initialScenario?.replanMethod ?? "AFFECTED_TASKS_ONLY",
+    products: (initialScenario?.products ?? []).map(
+        createProductField
+    ),
+});
+
+/** 백엔드 창고 응답을 select 옵션 형태로 변환합니다. */
+const createWarehouseOption = (warehouse) => {
+    if (warehouse?.id == null) {
+        return null;
+    }
+
+    const name = warehouse.name?.trim() || `창고 ${warehouse.id}`;
+    const location = warehouse.location?.trim() || "위치 미지정";
 
     return {
-        name: initialScenario?.name ?? "",
-        description: initialScenario?.description ?? "",
-        warehouseId:
-            matchedWarehouse?.value ?? WAREHOUSE_OPTIONS[0].value,
-        robotTypes:
-            initialScenario?.robotTypes ?? [
-                "입고",
-                "출고",
-                "보충",
-                "재배치",
-            ],
-        initialBattery: initialScenario?.initialBattery ?? 100,
-        chargeThreshold: initialScenario?.chargeThreshold ?? 20,
-        replanMethod:
-            initialScenario?.replanMethod ?? "AFFECTED_TASKS_ONLY",
-        items: (initialScenario?.items ?? []).map(createItemField),
+        value: String(warehouse.id),
+        label: `${name} (${location})`,
+        name,
+        location,
+        status: warehouse.status,
     };
+};
+
+/** 숫자형 창고 ID는 숫자로, 그 외 ID는 문자열로 유지합니다. */
+const normalizeWarehouseId = (warehouseId) => {
+    const numericWarehouseId = Number(warehouseId);
+
+    return Number.isNaN(numericWarehouseId)
+        ? warehouseId
+        : numericWarehouseId;
 };
 
 function ScenarioCreateModal({
@@ -117,18 +100,17 @@ function ScenarioCreateModal({
 }) {
     const isEditMode = mode === "edit";
 
-    const [itemInput, setItemInput] = useState("");
-
     const [formData, setFormData] = useState(() =>
         createInitialFormData(initialScenario)
     );
-
+    const [productInput, setProductInput] = useState("");
     const [errors, setErrors] = useState({});
 
-    /**
-     * 팝업이 열려 있는 동안 배경 스크롤을 막고,
-     * ESC 키를 누르면 팝업을 닫습니다.
-     */
+    const [warehouseOptions, setWarehouseOptions] = useState([]);
+    const [isWarehouseLoading, setIsWarehouseLoading] = useState(true);
+    const [warehouseLoadError, setWarehouseLoadError] = useState("");
+
+    /** 모달이 열려 있는 동안 배경 스크롤을 막고 ESC로 닫습니다. */
     useEffect(() => {
         const previousOverflow = document.body.style.overflow;
 
@@ -147,6 +129,96 @@ function ScenarioCreateModal({
             window.removeEventListener("keydown", handleKeyDown);
         };
     }, [onClose]);
+
+    /** 모달이 열리면 백엔드에 등록된 창고 목록을 조회합니다. */
+    useEffect(() => {
+        let isCancelled = false;
+
+        const loadWarehouses = async () => {
+            try {
+                setIsWarehouseLoading(true);
+                setWarehouseLoadError("");
+
+                const response = await warehouseApi.getAll();
+                const options = (Array.isArray(response) ? response : [])
+                    .map(createWarehouseOption)
+                    .filter(Boolean);
+
+                const existingWarehouseId =
+                    initialScenario?.warehouseId != null
+                        ? String(initialScenario.warehouseId)
+                        : "";
+
+                // 목업 시나리오의 창고 ID가 API 목록에 없더라도
+                // 수정 화면에서는 기존 창고 정보를 유지합니다.
+                if (
+                    existingWarehouseId &&
+                    !options.some(
+                        (warehouse) =>
+                            warehouse.value === existingWarehouseId
+                    )
+                ) {
+                    const existingWarehouseName =
+                        initialScenario?.warehouseName ?? "기존 창고";
+                    const existingWarehouseLocation =
+                        initialScenario?.warehouseLocation ?? "";
+
+                    options.unshift({
+                        value: existingWarehouseId,
+                        label: existingWarehouseLocation
+                            ? `${existingWarehouseName} (${existingWarehouseLocation})`
+                            : existingWarehouseName,
+                        name: existingWarehouseName,
+                        location: existingWarehouseLocation,
+                        status: null,
+                    });
+                }
+
+                if (isCancelled) {
+                    return;
+                }
+
+                setWarehouseOptions(options);
+
+                // 생성 모드에서는 조회된 첫 번째 활성 창고를 기본값으로 사용합니다.
+                const firstAvailableWarehouse = options.find(
+                    (warehouse) => warehouse.status !== "INACTIVE"
+                );
+
+                setFormData((previousData) => ({
+                    ...previousData,
+                    warehouseId:
+                        previousData.warehouseId ||
+                        firstAvailableWarehouse?.value ||
+                        "",
+                }));
+            } catch (error) {
+                if (isCancelled) {
+                    return;
+                }
+
+                console.error("창고 목록 조회 실패:", error);
+                setWarehouseOptions([]);
+                setWarehouseLoadError(
+                    "창고 목록을 불러오지 못했습니다."
+                );
+            } finally {
+                if (!isCancelled) {
+                    setIsWarehouseLoading(false);
+                }
+            }
+        };
+
+        loadWarehouses();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [
+        initialScenario?.warehouseId,
+        initialScenario?.warehouseName,
+        initialScenario?.warehouseLocation,
+    ]);
 
     /**
      * 일반 입력값을 변경합니다.
@@ -206,58 +278,57 @@ function ScenarioCreateModal({
         }));
     };
 
-
     /**
- * 입력한 품목을 목록에 추가합니다.
- */
-    const handleAddItem = () => {
-        const trimmedItemName = itemInput.trim();
+     * 입력한 상품명을 시나리오 상품 목록에 추가합니다.
+     *
+     * 사용자는 상품명만 입력하며 productCode는 만들지 않습니다.
+     * 상품 코드는 백엔드에서 상품을 조회하거나 생성한 뒤 결정합니다.
+     */
+    const handleAddProduct = () => {
+        const trimmedProductName = productInput.trim();
 
-        if (!trimmedItemName) {
+        if (!trimmedProductName) {
             return;
         }
 
-        const duplicatedItem = formData.items.some(
-            (item) =>
-                item.itemName.toLowerCase() ===
-                trimmedItemName.toLowerCase()
+        const duplicatedProduct = formData.products.some(
+            (product) =>
+                product.productName.toLowerCase() ===
+                trimmedProductName.toLowerCase()
         );
 
-        if (duplicatedItem) {
+        if (duplicatedProduct) {
             setErrors((previousErrors) => ({
                 ...previousErrors,
-                items: "이미 등록된 품목입니다.",
+                products: "이미 등록된 상품입니다.",
             }));
-
             return;
         }
 
         setFormData((previousData) => ({
             ...previousData,
-            items: [
-                ...previousData.items,
-                createItemField({
-                    itemName: trimmedItemName,
+            products: [
+                ...previousData.products,
+                createProductField({
+                    productName: trimmedProductName,
                 }),
             ],
         }));
 
-        setItemInput("");
+        setProductInput("");
 
         setErrors((previousErrors) => ({
             ...previousErrors,
-            items: "",
+            products: "",
         }));
     };
 
-    /**
-     * 선택한 품목 입력 행을 삭제합니다.
-     */
-    const handleRemoveItem = (fieldId) => {
+    /** 선택한 상품을 시나리오 상품 목록에서 제거합니다. */
+    const handleRemoveProduct = (fieldId) => {
         setFormData((previousData) => ({
             ...previousData,
-            items: previousData.items.filter(
-                (item) => item.fieldId !== fieldId
+            products: previousData.products.filter(
+                (product) => product.fieldId !== fieldId
             ),
         }));
     };
@@ -312,12 +383,13 @@ function ScenarioCreateModal({
                 "재계획 방식을 선택해주세요.";
         }
 
-        const validItems = formData.items.filter((item) =>
-            item.itemName.trim()
+        const validProducts = formData.products.filter(
+            (product) => product.productName.trim()
         );
 
-        if (validItems.length === 0) {
-            nextErrors.items = "품목을 한 개 이상 입력해주세요.";
+        if (validProducts.length === 0) {
+            nextErrors.products =
+                "상품을 한 개 이상 입력해주세요.";
         }
 
         setErrors(nextErrors);
@@ -325,9 +397,7 @@ function ScenarioCreateModal({
         return Object.keys(nextErrors).length === 0;
     };
 
-    /**
-     * 입력한 시나리오 정보를 부모 컴포넌트로 전달합니다.
-     */
+    /** 검증된 시나리오 정보를 부모 컴포넌트로 전달합니다. */
     const handleSubmit = (event) => {
         event.preventDefault();
 
@@ -335,42 +405,53 @@ function ScenarioCreateModal({
             return;
         }
 
-        const selectedWarehouse =
-            WAREHOUSE_OPTIONS.find(
-                (warehouse) =>
-                    warehouse.value === formData.warehouseId
-            ) ?? WAREHOUSE_OPTIONS[0];
+        const selectedWarehouse = warehouseOptions.find(
+            (warehouse) =>
+                warehouse.value === String(formData.warehouseId)
+        );
 
-        const validItems = formData.items
-            .filter((item) => item.itemName.trim())
-            .map((item, index) => {
-                const { fieldId, ...itemData } = item;
+        if (!selectedWarehouse) {
+            setErrors((previousErrors) => ({
+                ...previousErrors,
+                warehouseId: "유효한 창고를 선택해주세요.",
+            }));
+            return;
+        }
 
-                return {
-                    ...itemData,
-                    id: item.id ?? index + 1,
-
-                    /**
-                     * 기존 품목은 코드를 유지하고,
-                     * 새 품목만 화면 확인용 임시 코드를 생성합니다.
-                     */
-                    itemCode:
-                        item.itemCode ??
-                        `ITEM-${String(index + 1).padStart(3, "0")}`,
-                    itemName: item.itemName.trim(),
+        /**
+         * 입력 화면의 fieldId는 제거하고 상품명만 필수로 전달합니다.
+         *
+         * 수정 중인 상품에 productCode가 이미 존재하면 화면 데이터 유지를
+         * 위해 함께 전달하지만, 새 상품에는 임시 코드를 생성하지 않습니다.
+         */
+        const validProducts = formData.products
+            .filter((product) => product.productName.trim())
+            .map((product) => {
+                const normalizedProduct = {
+                    productName: product.productName.trim(),
                 };
+
+                return product.productCode
+                    ? {
+                        ...normalizedProduct,
+                        productCode: product.productCode,
+                    }
+                    : normalizedProduct;
             });
 
         onSubmit({
             name: formData.name.trim(),
             description: formData.description.trim(),
-            warehouseId: selectedWarehouse.value,
-            warehouseName: selectedWarehouse.label,
+            // 백엔드 관계 연결 기준은 warehouseId입니다.
+            warehouseId: normalizeWarehouseId(selectedWarehouse.value),
+            // 현재 목록과 상세 화면 표시에 필요한 창고 정보입니다.
+            warehouseName: selectedWarehouse.name,
+            warehouseLocation: selectedWarehouse.location,
             robotTypes: formData.robotTypes,
             initialBattery: Number(formData.initialBattery),
             chargeThreshold: Number(formData.chargeThreshold),
             replanMethod: formData.replanMethod,
-            items: validItems,
+            products: validProducts,
         });
     };
 
@@ -478,11 +559,11 @@ function ScenarioCreateModal({
 
                                         <select
                                             name="warehouseId"
-                                            value={
-                                                formData.warehouseId
-                                            }
-                                            onChange={
-                                                handleInputChange
+                                            value={formData.warehouseId}
+                                            onChange={handleInputChange}
+                                            disabled={
+                                                isWarehouseLoading ||
+                                                warehouseOptions.length === 0
                                             }
                                             className={
                                                 errors.warehouseId
@@ -490,21 +571,43 @@ function ScenarioCreateModal({
                                                     : ""
                                             }
                                         >
-                                            {WAREHOUSE_OPTIONS.map(
-                                                (warehouse) => (
-                                                    <option
-                                                        key={
-                                                            warehouse.value
-                                                        }
-                                                        value={
-                                                            warehouse.value
-                                                        }
-                                                    >
-                                                        {
-                                                            warehouse.label
-                                                        }
-                                                    </option>
-                                                )
+                                            <option value="">
+                                                {isWarehouseLoading
+                                                    ? "창고 목록 불러오는 중..."
+                                                    : warehouseOptions.length === 0
+                                                      ? "등록된 창고가 없습니다."
+                                                      : "창고를 선택해주세요."}
+                                            </option>
+
+                                            {warehouseOptions.map(
+                                                (warehouse) => {
+                                                    const isInactive =
+                                                        warehouse.status ===
+                                                        "INACTIVE";
+                                                    const isCurrentWarehouse =
+                                                        warehouse.value ===
+                                                        formData.warehouseId;
+
+                                                    return (
+                                                        <option
+                                                            key={
+                                                                warehouse.value
+                                                            }
+                                                            value={
+                                                                warehouse.value
+                                                            }
+                                                            disabled={
+                                                                isInactive &&
+                                                                !isCurrentWarehouse
+                                                            }
+                                                        >
+                                                            {warehouse.label}
+                                                            {isInactive
+                                                                ? " - 비활성"
+                                                                : ""}
+                                                        </option>
+                                                    );
+                                                }
                                             )}
                                         </select>
                                     </div>
@@ -512,6 +615,12 @@ function ScenarioCreateModal({
                                     {errors.warehouseId && (
                                         <small className="scenario-create-error">
                                             {errors.warehouseId}
+                                        </small>
+                                    )}
+
+                                    {warehouseLoadError && (
+                                        <small className="scenario-create-error">
+                                            {warehouseLoadError}
                                         </small>
                                     )}
                                 </label>
@@ -559,10 +668,9 @@ function ScenarioCreateModal({
                                     <button
                                         type="button"
                                         key={robotType.value}
-                                        className={`scenario-create-robot-option ${isSelected
-                                            ? "is-selected"
-                                            : ""
-                                            }`}
+                                        className={`scenario-create-robot-option ${
+                                            isSelected ? "is-selected" : ""
+                                        }`}
                                         onClick={() =>
                                             handleRobotTypeToggle(
                                                 robotType.value
@@ -732,7 +840,7 @@ function ScenarioCreateModal({
                         </div>
                     </section>
 
-                    {/* 4. 시나리오 품목 */}
+                    {/* 4. 시나리오 상품 */}
                     <section className="scenario-create-section">
                         <div className="scenario-create-section-heading">
                             <span className="scenario-create-step-number">
@@ -740,28 +848,28 @@ function ScenarioCreateModal({
                             </span>
 
                             <div>
-                                <h3>시나리오 품목 입력</h3>
+                                <h3>시나리오 상품 입력</h3>
 
                                 <p>
-                                    시뮬레이션에서 사용할 품목명을 등록합니다.
+                                    시뮬레이션에서 사용할 상품명을 등록합니다.
                                 </p>
                             </div>
                         </div>
 
                         <div className="scenario-create-item-area">
-                            {/* 품목 입력 */}
+                            {/* 상품명 입력 */}
                             <div className="scenario-create-item-input-row">
                                 <input
                                     type="text"
-                                    value={itemInput}
-                                    placeholder="품목명을 입력해주세요."
+                                    value={productInput}
+                                    placeholder="상품명을 입력해주세요."
                                     onChange={(event) =>
-                                        setItemInput(event.target.value)
+                                        setProductInput(event.target.value)
                                     }
                                     onKeyDown={(event) => {
                                         if (event.key === "Enter") {
                                             event.preventDefault();
-                                            handleAddItem();
+                                            handleAddProduct();
                                         }
                                     }}
                                 />
@@ -769,35 +877,35 @@ function ScenarioCreateModal({
                                 <button
                                     type="button"
                                     className="scenario-create-item-add-button"
-                                    onClick={handleAddItem}
+                                    onClick={handleAddProduct}
                                 >
-                                    ＋ 품목 추가
+                                    ＋ 상품 추가
                                 </button>
                             </div>
 
-                            {/* 등록된 품목 */}
+                            {/* 등록된 상품 */}
                             <div className="scenario-create-item-result">
                                 <div className="scenario-create-item-result-header">
-                                    <span>등록 품목</span>
+                                    <span>등록 상품</span>
 
-                                    <strong>{formData.items.length}개</strong>
+                                    <strong>{formData.products.length}개</strong>
                                 </div>
 
-                                {formData.items.length > 0 ? (
+                                {formData.products.length > 0 ? (
                                     <div className="scenario-create-item-chip-list">
-                                        {formData.items.map((item) => (
+                                        {formData.products.map((product) => (
                                             <div
-                                                key={item.fieldId}
+                                                key={product.fieldId}
                                                 className="scenario-create-item-chip"
                                             >
-                                                <span>{item.itemName}</span>
+                                                <span>{product.productName}</span>
 
                                                 <button
                                                     type="button"
                                                     onClick={() =>
-                                                        handleRemoveItem(item.fieldId)
+                                                        handleRemoveProduct(product.fieldId)
                                                     }
-                                                    aria-label={`${item.itemName} 삭제`}
+                                                    aria-label={`${product.productName} 삭제`}
                                                 >
                                                     ×
                                                 </button>
@@ -806,15 +914,15 @@ function ScenarioCreateModal({
                                     </div>
                                 ) : (
                                     <p className="scenario-create-item-empty-text">
-                                        등록된 품목이 없습니다.
+                                        등록된 상품이 없습니다.
                                     </p>
                                 )}
                             </div>
                         </div>
 
-                        {errors.items && (
+                        {errors.products && (
                             <small className="scenario-create-error scenario-create-section-error">
-                                {errors.items}
+                                {errors.products}
                             </small>
                         )}
                     </section>
@@ -839,6 +947,10 @@ function ScenarioCreateModal({
                         <button
                             type="submit"
                             className="scenario-create-submit-button"
+                            disabled={
+                                isWarehouseLoading ||
+                                warehouseOptions.length === 0
+                            }
                         >
                             {isEditMode ? "수정 저장" : "저장"}
                         </button>

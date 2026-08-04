@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "../../styles/scenario/ScenarioDetail.css";
 /**
  * API 연결 전 실행 이력 확인용 임시 데이터
@@ -8,43 +9,43 @@ import "../../styles/scenario/ScenarioDetail.css";
 const MOCK_EXECUTION_HISTORY = [
     {
         id: 5,
-        runId: "RUN-2026-0005",
+        simulationRunId: "RUN-2026-0005",
         startedAt: "2026-07-28T10:12:35",
         status: "COMPLETED",
         duration: "00:04:21",
-        executorName: "심유리",
+        executorName: "",
     },
     {
         id: 4,
-        runId: "RUN-2026-0004",
+        simulationRunId: "RUN-2026-0004",
         startedAt: "2026-07-28T09:45:10",
         status: "RUNNING",
         duration: "00:01:37",
-        executorName: "김도현",
+        executorName: "",
     },
     {
         id: 3,
-        runId: "RUN-2026-0003",
+        simulationRunId: "RUN-2026-0003",
         startedAt: "2026-07-28T09:30:22",
         status: "COMPLETED",
         duration: "00:03:48",
-        executorName: "심유리",
+        executorName: "",
     },
     {
         id: 2,
-        runId: "RUN-2026-0002",
+        simulationRunId: "RUN-2026-0002",
         startedAt: "2026-07-27T17:18:05",
         status: "FAILED",
         duration: "00:02:15",
-        executorName: "이준호",
+        executorName: "",
     },
     {
         id: 1,
-        runId: "RUN-2026-0001",
+        simulationRunId: "RUN-2026-0001",
         startedAt: "2026-07-27T15:02:41",
         status: "COMPLETED",
         duration: "00:03:02",
-        executorName: "박민지",
+        executorName: "",
     },
 ];
 
@@ -176,10 +177,6 @@ const getScenarioStatus = (status) => {
             label: "검증 완료",
             className: "is-validated",
         },
-        ARCHIVED: {
-            label: "보관됨",
-            className: "is-archived",
-        },
     };
 
     return (
@@ -189,6 +186,15 @@ const getScenarioStatus = (status) => {
         }
     );
 };
+
+/**
+ * 상세 화면에서 선택할 수 있는 시나리오 상태입니다.
+ */
+const SCENARIO_STATUS_OPTIONS = [
+    { value: "DRAFT", label: "초안" },
+    { value: "VALIDATING", label: "검증 중" },
+    { value: "VALIDATED", label: "검증 완료" },
+];
 
 const getReplanMethodLabel = (method) => {
     const methodMap = {
@@ -222,7 +228,17 @@ function ScenarioDetail({
     onClose,
     onEdit,
     onDelete,
+    onStatusChange,
 }) {
+    /**
+     * 상세 상단의 상태 선택 메뉴 열림 여부입니다.
+     *
+     * Hooks는 조건문보다 먼저 호출해야 하므로
+     * scenario 존재 여부를 확인하기 전에 선언합니다.
+     */
+    const [isStatusMenuOpen, setIsStatusMenuOpen] =
+        useState(false);
+
     /**
      * 아직 선택한 시나리오가 없는 경우
      */
@@ -246,6 +262,16 @@ function ScenarioDetail({
     const status = getScenarioStatus(scenario.status);
 
     /**
+     * 시나리오 조회 응답에 포함된 상품 목록입니다.
+     *
+     * 새로 입력한 상품은 백엔드 저장 전까지 productCode가 없을 수 있으므로
+     * 빈 배열과 코드 미생성 상태를 모두 안전하게 처리합니다.
+     */
+    const products = Array.isArray(scenario.products)
+        ? scenario.products
+        : [];
+
+    /**
      * 현재 시나리오의 수정 모달을 엽니다.
      */
     const handleEdit = () => {
@@ -257,6 +283,24 @@ function ScenarioDetail({
      */
     const handleDelete = () => {
         onDelete?.(scenario);
+    };
+
+    /**
+     * 상태 선택 메뉴를 열거나 닫습니다.
+     */
+    const handleToggleStatusMenu = () => {
+        setIsStatusMenuOpen((previousOpen) => !previousOpen);
+    };
+
+    /**
+     * 사용자가 선택한 상태로 시나리오 상태를 변경합니다.
+     */
+    const handleSelectStatus = (nextStatus) => {
+        if (nextStatus !== scenario.status) {
+            onStatusChange?.(scenario, nextStatus);
+        }
+
+        setIsStatusMenuOpen(false);
     };
 
     /**
@@ -309,12 +353,75 @@ function ScenarioDetail({
                         <div className="scenario-detail-title-row">
                             <h2>{scenario.name}</h2>
 
-                            <span
-                                className={`scenario-status ${status.className}`}
+                            <div
+                                className="scenario-detail-status-control"
+                                onBlur={(event) => {
+                                    if (
+                                        !event.currentTarget.contains(
+                                            event.relatedTarget
+                                        )
+                                    ) {
+                                        setIsStatusMenuOpen(false);
+                                    }
+                                }}
                             >
-                                <span className="scenario-status-dot" />
-                                {status.label}
-                            </span>
+                                <button
+                                    type="button"
+                                    className={`scenario-status scenario-status-button ${status.className}`}
+                                    onClick={handleToggleStatusMenu}
+                                    aria-haspopup="listbox"
+                                    aria-expanded={isStatusMenuOpen}
+                                    aria-label={`현재 상태 ${status.label}. 상태 변경`}
+                                >
+                                    <span className="scenario-status-dot" />
+                                    {status.label}
+                                    <span
+                                        className="scenario-status-arrow"
+                                        aria-hidden="true"
+                                    >
+                                        ▾
+                                    </span>
+                                </button>
+
+                                {isStatusMenuOpen && (
+                                    <div
+                                        className="scenario-status-menu"
+                                        role="listbox"
+                                        aria-label="시나리오 상태 선택"
+                                    >
+                                        {SCENARIO_STATUS_OPTIONS.map(
+                                            (option) => {
+                                                const isSelected =
+                                                    scenario.status ===
+                                                    option.value;
+
+                                                return (
+                                                    <button
+                                                        key={option.value}
+                                                        type="button"
+                                                        className={`scenario-status-menu-option ${
+                                                            isSelected
+                                                                ? "is-selected"
+                                                                : ""
+                                                        }`}
+                                                        role="option"
+                                                        aria-selected={
+                                                            isSelected
+                                                        }
+                                                        onClick={() =>
+                                                            handleSelectStatus(
+                                                                option.value
+                                                            )
+                                                        }
+                                                    >
+                                                        {option.label}
+                                                    </button>
+                                                );
+                                            }
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="scenario-detail-sub-info">
@@ -542,20 +649,23 @@ function ScenarioDetail({
                 <section className="scenario-detail-section">
                     <div className="scenario-detail-section-header">
                         <div>
-                            <h3>시나리오 품목</h3>
-                            <p>시나리오에 포함된 품목을 확인합니다.</p>
+                            <h3>시나리오 상품</h3>
+                            <p>시나리오에 포함된 상품을 확인합니다.</p>
                         </div>
 
                         <span className="scenario-detail-section-count">
-                            {scenario.items.length}개
+                            {products.length}개
                         </span>
                     </div>
 
-                    {scenario.items.length > 0 ? (
+                    {products.length > 0 ? (
                         <div className="scenario-item-card-list">
-                            {scenario.items.map((item) => (
+                            {products.map((product, index) => (
                                 <article
-                                    key={item.id ?? item.itemCode}
+                                    key={
+                                        product.productCode ??
+                                        `${product.productName}-${index}`
+                                    }
                                     className="scenario-item-card"
                                 >
                                     <div className="scenario-item-card-icon">
@@ -563,8 +673,14 @@ function ScenarioDetail({
                                     </div>
 
                                     <div className="scenario-item-card-content">
-                                        <strong>{item.itemName}</strong>
-                                        <span>{item.itemCode}</span>
+                                        <strong>
+                                            {product.productName}
+                                        </strong>
+
+                                        <span>
+                                            {product.productCode ??
+                                                "상품 코드 생성 예정"}
+                                        </span>
                                     </div>
                                 </article>
                             ))}
@@ -575,10 +691,10 @@ function ScenarioDetail({
                                 ▦
                             </div>
 
-                            <strong>등록된 품목이 없습니다.</strong>
+                            <strong>등록된 상품이 없습니다.</strong>
 
                             <p>
-                                이 시나리오에 포함된 품목이 아직 없습니다.
+                                이 시나리오에 포함된 상품이 아직 없습니다.
                             </p>
                         </div>
                     )}
@@ -621,14 +737,14 @@ function ScenarioDetail({
 
                                         return (
                                             <tr
-                                                key={history.id ?? history.runId}
+                                                key={history.id ?? history.simulationRunId}
                                                 className={
                                                     index === 0 ? "is-latest" : ""
                                                 }
                                             >
                                                 <td>
                                                     <strong className="scenario-history-run-id">
-                                                        {history.runId}
+                                                        {history.simulationRunId}
                                                     </strong>
                                                 </td>
 
@@ -668,7 +784,7 @@ function ScenarioDetail({
                                                     <button
                                                         type="button"
                                                         className="scenario-history-more-button"
-                                                        aria-label={`${history.runId} 메뉴 열기`}
+                                                        aria-label={`${history.simulationRunId} 메뉴 열기`}
                                                         onClick={() =>
                                                             console.log(
                                                                 "실행 이력 메뉴:",
