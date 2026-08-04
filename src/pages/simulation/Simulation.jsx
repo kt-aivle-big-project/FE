@@ -18,8 +18,6 @@ import {
     robotApi,
 } from "../../api/client";
 
-import scenariosData from "../../data/scenarios.json";
-import productsData from "../../data/products.json";
 import inbound from "../../data/inbound.json";
 import outbound from "../../data/outbound.json";
 
@@ -106,11 +104,24 @@ function Simulation() {
         setSelectedWarehouseIdState(warehouseId);
     };
 
-    // 시나리오 설정 (백엔드 조회 실패 시 목업 데이터로 폴백)
-    const [scenarioSettings, setScenarioSettings] = useState(scenariosData);
-    const [selectedScenario, setSelectedScenario] = useState(
-        scenariosData[0]?.scenario_id ?? ""
-    );
+    /**
+     * 백엔드에서 조회한 시나리오 목록입니다.
+     *
+     * Scenario에서 저장한 camelCase 필드명을 그대로 사용하며,
+     * Simulation 내부에서 별도의 시나리오 변환 객체를 만들지 않습니다.
+     */
+    const [scenarios, setScenarios] = useState([]);
+    const [selectedScenarioId, setSelectedScenarioId] = useState("");
+
+    /**
+     * 현재 선택한 시나리오입니다.
+     * 선택 ID와 백엔드 시나리오 ID를 비교해 원본 객체를 그대로 사용합니다.
+     */
+    const selectedScenario =
+        scenarios.find(
+            (scenario) =>
+                String(scenario.id) === String(selectedScenarioId)
+        ) ?? null;
     const [simulationSpeed, setSimulationSpeed] = useState(1);
     const [simulationStatus, setSimulationStatus] = useState("대기");
     const [simulationTime, setSimulationTime] = useState(0);
@@ -137,7 +148,7 @@ function Simulation() {
     // 시작하면 그 실행의 작업으로 채워지고, 이후 WebSocket 으로 갱신된다.
     const [taskList, setTaskList] = useState([]);
     const [eventList, setEventList] = useState([]);
-    const [products, setProducts] = useState(productsData);
+    const [products, setProducts] = useState([]);
 
     /* =========================================================
        백엔드 초기 데이터 로딩
@@ -171,57 +182,78 @@ function Simulation() {
         loadWarehouses();
     }, []);
 
-    // 창고를 바꾸면 그 창고의 시나리오를 다시 불러온다
+    // 창고를 바꾸면 해당 창고의 시나리오와 상품 목록을 다시 불러온다.
     useEffect(() => {
+        let isCancelled = false;
+
         const loadInitialData = async () => {
             try {
-                const scenarioList = await scenarioApi.getAll(
+                const response = await scenarioApi.getAll(
                     selectedWarehouseId
                 );
 
-                if (Array.isArray(scenarioList) && scenarioList.length > 0) {
-                    // 백엔드 응답을 화면에서 쓰던 형태로 변환
-                    const mapped = scenarioList.map((scenario) => ({
-                        scenario_id: scenario.id,
-                        scenario_name: scenario.scenarioName,
-                        robot_count: scenario.robotCount,
-                        simulation_speed: scenario.simulationSpeed,
-                        initial_battery: scenario.initialBattery,
-                        charging_threshold: scenario.chargingThreshold,
-                        auto_replan: scenario.autoReplan,
-                        obstacle_enabled: scenario.obstacleEnabled,
-                    }));
+                /**
+                 * 시나리오 응답은 별도 변환 함수 없이 원본 필드명을 유지합니다.
+                 * 배열 또는 페이징 응답에서 실제 목록만 꺼내 상태에 저장합니다.
+                 */
+                const scenarioList = Array.isArray(response)
+                    ? response
+                    : Array.isArray(response?.content)
+                        ? response.content
+                        : Array.isArray(response?.data)
+                            ? response.data
+                            : Array.isArray(response?.data?.content)
+                                ? response.data.content
+                                : [];
 
-                    setScenarioSettings(mapped);
-                    setSelectedScenario(mapped[0].scenario_id);
+                if (!isCancelled) {
+                    setScenarios(scenarioList);
+                    setSelectedScenarioId(
+                        scenarioList[0]?.id ?? ""
+                    );
                 }
             } catch (error) {
-                console.warn(
-                    "시나리오 조회 실패 - 목업 데이터를 사용합니다.",
-                    error.message
+                console.error(
+                    "시나리오 목록 조회 실패:",
+                    error
                 );
+
+                if (!isCancelled) {
+                    setScenarios([]);
+                    setSelectedScenarioId("");
+                }
             }
 
             try {
                 const productList = await productApi.getAll();
 
-                if (Array.isArray(productList) && productList.length > 0) {
+                if (!isCancelled) {
                     setProducts(
-                        productList.map((product) => ({
-                            product_code: product.productCode,
-                            product_name: product.productName,
-                        }))
+                        Array.isArray(productList)
+                            ? productList.map((product) => ({
+                                product_code: product.productCode,
+                                product_name: product.productName,
+                            }))
+                            : []
                     );
                 }
             } catch (error) {
-                console.warn(
-                    "품목 조회 실패 - 목업 데이터를 사용합니다.",
-                    error.message
+                console.error(
+                    "상품 목록 조회 실패:",
+                    error
                 );
+
+                if (!isCancelled) {
+                    setProducts([]);
+                }
             }
         };
 
         loadInitialData();
+
+        return () => {
+            isCancelled = true;
+        };
     }, [selectedWarehouseId]);
 
     // 시작 전에도 창고에 등록된 로봇을 지도에 보여준다.
@@ -257,6 +289,27 @@ function Simulation() {
         return [hours, minutes, seconds]
             .map((value) => String(value).padStart(2, "0"))
             .join(":");
+    };
+
+    /**
+     * 실행할 시나리오 변경.
+     *
+     * 실행이 생성된 뒤에는 해당 실행이 기존 시나리오 ID와 연결되어 있으므로
+     * 중지하거나 새 작업을 만들기 전까지 시나리오 변경을 막는다.
+     */
+    const handleScenarioChange = (scenarioId) => {
+        if (simulationRunId) {
+            alert(
+                "진행 중인 시뮬레이션을 중지한 뒤 시나리오를 변경해주세요."
+            );
+            return;
+        }
+
+        setSelectedScenarioId(scenarioId);
+        setTaskList([]);
+        setEventList([]);
+        setSimulationTime(0);
+        setSimulationStatus("대기");
     };
 
     /**
@@ -416,53 +469,75 @@ function Simulation() {
     }, [simulationRunId]);
 
     /**
-     * 화면 설정값을 백엔드 요청 형태로 변환한다. (SimulationRunCreateRequest)
-     * 이 값으로 백엔드가 입고/출고 작업을 자동 생성한다.
+     * 현재 선택한 시나리오와 화면 설정을
+     * SimulationRunCreateRequest 형태로 한 번에 구성합니다.
+     *
+     * 시나리오 조회 응답의 camelCase 필드명을 그대로 사용하므로
+     * 별도의 시나리오 변환 함수나 중간 데이터 객체가 필요하지 않습니다.
      */
-    const buildCreatePayload = () => {
-        // 시나리오 ID는 숫자여야 한다.
-        // 백엔드 조회 실패로 목업("S1")이 선택된 경우 null로 보낸다.
-        const scenarioIdNumber = Number(selectedScenario);
-        const scenarioId = Number.isFinite(scenarioIdNumber)
-            ? scenarioIdNumber
-            : null;
+    const buildCreatePayload = () => ({
+        warehouseId: selectedWarehouseId,
+        scenarioId: selectedScenario?.id ?? null,
+        name: selectedScenario?.name ?? "",
+        description: selectedScenario?.description ?? "",
+        robotTypes: selectedScenario?.robotTypes ?? [],
+        initialBattery: selectedScenario?.initialBattery ?? 100,
+        chargeThreshold: selectedScenario?.chargeThreshold ?? 20,
+        replanMethod:
+            selectedScenario?.replanMethod ??
+            "AFFECTED_TASKS_ONLY",
 
-        if (scenarioId === null) {
-            console.warn(
-                "시나리오가 백엔드에서 조회되지 않아 프리셋 없이 실행합니다."
-            );
-        }
+        /**
+         * Scenario에서는 상품명만 입력합니다.
+         * 백엔드 조회 후 productCode가 존재하면 함께 전달하고,
+         * 아직 코드가 없다면 productName만 전달합니다.
+         */
+        products: (selectedScenario?.products ?? []).map(
+            (product) => ({
+                productName: product.productName,
+                ...(product.productCode
+                    ? { productCode: product.productCode }
+                    : {}),
+            })
+        ),
 
-        return {
-            warehouseId: selectedWarehouseId,
-            scenarioId: scenarioId,
-            simulationSpeed: Number(simulationSpeed),
-            inbound: {
-                inboundCount: inboundSettings.inbound_count,
-                totalQuantity: inboundSettings.total_quantity,
-                arrivalPattern: inboundSettings.arrival_pattern,
-                products: inboundSettings.products.map((product) => ({
-                    productCode: product.product_code,
-                    ratio: product.ratio,
-                })),
-            },
-            outbound: {
-                orderCount: outboundSettings.order_count,
-                totalQuantity: outboundSettings.total_quantity,
-                arrivalPattern: outboundSettings.arrival_pattern,
-                processingDeadlineMinutes:
-                    outboundSettings.processing_deadline_minutes,
-                allowPartialShipment: outboundSettings.allow_partial_shipment,
-            },
-        };
-    };
+        simulationSpeed: Number(simulationSpeed),
+        inbound: {
+            inboundCount: inboundSettings.inbound_count,
+            totalQuantity: inboundSettings.total_quantity,
+            arrivalPattern: inboundSettings.arrival_pattern,
+            products: inboundSettings.products.map((product) => ({
+                productName: product.product_name,
+                ratio: product.ratio,
+            })),
+        },
+        outbound: {
+            orderCount: outboundSettings.order_count,
+            totalQuantity: outboundSettings.total_quantity,
+            arrivalPattern: outboundSettings.arrival_pattern,
+            processingDeadlineMinutes:
+                outboundSettings.processing_deadline_minutes,
+            allowPartialShipment:
+                outboundSettings.allow_partial_shipment,
+        },
+    });
 
     /**
      * 설정값이 유효한지 검사한다.
      */
     const validateSettings = () => {
-        if (!selectedScenario) {
+        if (!selectedScenarioId || !selectedScenario) {
             alert("시나리오를 선택해주세요.");
+            return false;
+        }
+
+        if ((selectedScenario.robotTypes ?? []).length === 0) {
+            alert("선택한 시나리오에 로봇 유형이 없습니다.");
+            return false;
+        }
+
+        if ((selectedScenario.products ?? []).length === 0) {
+            alert("선택한 시나리오에 등록된 상품이 없습니다.");
             return false;
         }
 
@@ -925,6 +1000,20 @@ function Simulation() {
         }
     };
 
+    /**
+     * 선택한 시나리오에 상품이 있으면 해당 상품만 패널에 전달합니다.
+     *
+     * 시나리오 상품을 아직 받지 못한 경우에만 전체 상품 조회 결과를
+     * 폴백 데이터로 사용합니다.
+     */
+    const panelProducts =
+        selectedScenario?.products?.length > 0
+            ? selectedScenario.products.map((product) => ({
+                product_code: product.productCode ?? null,
+                product_name: product.productName,
+            }))
+            : products;
+
     /* =========================================================
        화면
     ========================================================= */
@@ -961,6 +1050,41 @@ function Simulation() {
                                         value={warehouse.id}
                                     >
                                         {warehouse.name}
+                                    </option>
+                                ))
+                            )}
+                        </select>
+                    </div>
+
+                    {/* 실행할 시나리오 선택 */}
+                    <div className="simulation-header-info-item simulation-scenario">
+                        <span className="simulation-header-label">
+                            시나리오
+                        </span>
+
+                        <select
+                            value={selectedScenarioId}
+                            onChange={(event) =>
+                                handleScenarioChange(
+                                    event.target.value
+                                )
+                            }
+                            disabled={
+                                scenarios.length === 0 ||
+                                Boolean(simulationRunId)
+                            }
+                        >
+                            {scenarios.length === 0 ? (
+                                <option value="">
+                                    등록된 시나리오 없음
+                                </option>
+                            ) : (
+                                scenarios.map((scenario) => (
+                                    <option
+                                        key={scenario.id}
+                                        value={scenario.id}
+                                    >
+                                        {scenario.name}
                                     </option>
                                 ))
                             )}
@@ -1085,7 +1209,7 @@ function Simulation() {
                 setInboundSettings={setInboundSettings}
                 outboundSettings={outboundSettings}
                 setOutboundSettings={setOutboundSettings}
-                products={products}
+                products={panelProducts}
                 inboundRatioTotal={inboundRatioTotal}
                 naturalCommand={naturalCommand}
                 setNaturalCommand={setNaturalCommand}
@@ -1098,7 +1222,7 @@ function Simulation() {
             {/* 이벤트 목록 (WebSocket 실시간 갱신) */}
             <SimulationEvent events={eventList} />
 
-            
+
         </div>
     );
 }
