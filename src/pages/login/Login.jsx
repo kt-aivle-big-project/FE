@@ -10,21 +10,21 @@ const API_URL = "http://localhost:8080/api";
 function Login() {
     const navigate = useNavigate();
 
-    const [userid, setUserid] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
 
-        if (!userid.trim() || !password.trim()) {
+        if (!email.trim() || !password.trim()) {
             alert("아이디와 비밀번호를 입력해주세요.");
             return;
         }
 
         // 백엔드로 전달
         const loginData = {
-            userid: userid.trim(),
+            email: email.trim(),
             password: password,
         };
 
@@ -51,9 +51,9 @@ function Login() {
 
             // 저장
             localStorage.setItem("accessToken", data.accessToken);
-            localStorage.setItem("userid", String(data.userid));
+            localStorage.setItem("userId", String(data.userId));
             localStorage.setItem("name", data.name);
-            localStorage.setItem("userid", data.userid);
+            localStorage.setItem("userid", String(data.userId));
 
             console.log("로그인 사용자:", data);
 
@@ -101,8 +101,8 @@ function Login() {
                         onSubmit={handleLogin}
                     >
                         <div className="login-field">
-                            <label htmlFor="userid">
-                                아이디
+                            <label htmlFor="email">
+                                이메일
                             </label>
 
                             <div className="login-input-wrapper">
@@ -111,11 +111,11 @@ function Login() {
                                 </span>
 
                                 <input
-                                    id="userid"
-                                    type="userid"
-                                    value={userid}
-                                    placeholder="아이디를 입력하세요"
-                                    onChange={(e) => setUserid(e.target.value)}
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    placeholder="이메일을 입력하세요"
+                                    onChange={(e) => setEmail(e.target.value)}
                                     autoComplete="off"
                                 />
                             </div>

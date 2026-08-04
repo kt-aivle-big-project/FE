@@ -1,7 +1,7 @@
 {
-  "title": "자동창고 선반별 3개 층 빈 재고",
+  "title": "자동창고 선반별 3개 층 샘플 재고",
   "source_graph_file": "warehouse_graph.json",
-  "updated_at": "2026-07-21T06:29:03.259140Z",
+  "updated_at": "2026-07-21T09:00:00Z",
   "level_rule": {
     "1": "하단",
     "2": "중단",
@@ -15,14 +15,14 @@
   "summary": {
     "rack_count": 48,
     "level_count": 144,
-    "occupied_level_count": 0,
-    "empty_level_count": 144,
-    "partial_level_count": 0,
-    "full_level_count": 0
+    "occupied_level_count": 8,
+    "empty_level_count": 136,
+    "partial_level_count": 8,
+    "full_level_count": 0,
+    "handling_unit_count": 8
   },
   "racks": [
     {
-      "rack_node_id": "K0_1",
       "levels": [
         {
           "level": 1,
@@ -39,10 +39,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K0_1",
+      "access_node_ids": [
+        "K0_1_ACCESS_A",
+        "K0_1_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K0_2",
       "levels": [
         {
           "level": 1,
@@ -59,10 +63,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K0_2",
+      "access_node_ids": [
+        "K0_2_ACCESS_A",
+        "K0_2_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K0_3",
       "levels": [
         {
           "level": 1,
@@ -76,13 +84,28 @@
         },
         {
           "level": 3,
-          "status": "EMPTY",
-          "item": null
+          "status": "PARTIAL",
+          "item": {
+            "item_id": "ITEM_SENSOR",
+            "item_name": "근접 센서",
+            "category": "ELECTRONICS",
+            "quantity": 18,
+            "capacity": 24,
+            "unit": "EA",
+            "handling_unit_id": "HU-K0_3-L3-ITEM_SENSOR",
+            "handling_unit_status": "stored",
+            "home_rack_id": "K0_3",
+            "home_rack_level": 3
+          }
         }
+      ],
+      "rack_id": "K0_3",
+      "access_node_ids": [
+        "K0_3_ACCESS_A",
+        "K0_3_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K0_4",
       "levels": [
         {
           "level": 1,
@@ -99,10 +122,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K0_4",
+      "access_node_ids": [
+        "K0_4_ACCESS_A",
+        "K0_4_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K0_6",
       "levels": [
         {
           "level": 1,
@@ -119,10 +146,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K0_6",
+      "access_node_ids": [
+        "K0_6_ACCESS_A",
+        "K0_6_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K0_7",
       "levels": [
         {
           "level": 1,
@@ -139,15 +170,30 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K0_7",
+      "access_node_ids": [
+        "K0_7_ACCESS_A",
+        "K0_7_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K0_8",
       "levels": [
         {
           "level": 1,
-          "status": "EMPTY",
-          "item": null
+          "status": "PARTIAL",
+          "item": {
+            "item_id": "ITEM_BATTERY",
+            "item_name": "AMR 교체 배터리",
+            "category": "ENERGY",
+            "quantity": 4,
+            "capacity": 8,
+            "unit": "EA",
+            "handling_unit_id": "HU-K0_8-L1-ITEM_BATTERY",
+            "handling_unit_status": "stored",
+            "home_rack_id": "K0_8",
+            "home_rack_level": 1
+          }
         },
         {
           "level": 2,
@@ -159,10 +205,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K0_8",
+      "access_node_ids": [
+        "K0_8_ACCESS_A",
+        "K0_8_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K0_9",
       "levels": [
         {
           "level": 1,
@@ -179,10 +229,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K0_9",
+      "access_node_ids": [
+        "K0_9_ACCESS_A",
+        "K0_9_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K1_1",
       "levels": [
         {
           "level": 1,
@@ -199,10 +253,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K1_1",
+      "access_node_ids": [
+        "K1_1_ACCESS_A",
+        "K1_1_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K1_2",
       "levels": [
         {
           "level": 1,
@@ -219,10 +277,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K1_2",
+      "access_node_ids": [
+        "K1_2_ACCESS_A",
+        "K1_2_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K1_3",
       "levels": [
         {
           "level": 1,
@@ -239,10 +301,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K1_3",
+      "access_node_ids": [
+        "K1_3_ACCESS_A",
+        "K1_3_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K1_4",
       "levels": [
         {
           "level": 1,
@@ -259,10 +325,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K1_4",
+      "access_node_ids": [
+        "K1_4_ACCESS_A",
+        "K1_4_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K1_6",
       "levels": [
         {
           "level": 1,
@@ -279,15 +349,30 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K1_6",
+      "access_node_ids": [
+        "K1_6_ACCESS_A",
+        "K1_6_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K1_7",
       "levels": [
         {
           "level": 1,
-          "status": "EMPTY",
-          "item": null
+          "status": "PARTIAL",
+          "item": {
+            "item_id": "ITEM_BEARING",
+            "item_name": "산업용 베어링",
+            "category": "MECHANICAL_PART",
+            "quantity": 5,
+            "capacity": 20,
+            "unit": "EA",
+            "handling_unit_id": "HU-K1_7-L1-ITEM_BEARING",
+            "handling_unit_status": "stored",
+            "home_rack_id": "K1_7",
+            "home_rack_level": 1
+          }
         },
         {
           "level": 2,
@@ -299,10 +384,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K1_7",
+      "access_node_ids": [
+        "K1_7_ACCESS_A",
+        "K1_7_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K1_8",
       "levels": [
         {
           "level": 1,
@@ -319,10 +408,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K1_8",
+      "access_node_ids": [
+        "K1_8_ACCESS_A",
+        "K1_8_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K1_9",
       "levels": [
         {
           "level": 1,
@@ -339,10 +432,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K1_9",
+      "access_node_ids": [
+        "K1_9_ACCESS_A",
+        "K1_9_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K2_1",
       "levels": [
         {
           "level": 1,
@@ -359,10 +456,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K2_1",
+      "access_node_ids": [
+        "K2_1_ACCESS_A",
+        "K2_1_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K2_2",
       "levels": [
         {
           "level": 1,
@@ -379,10 +480,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K2_2",
+      "access_node_ids": [
+        "K2_2_ACCESS_A",
+        "K2_2_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K2_3",
       "levels": [
         {
           "level": 1,
@@ -399,10 +504,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K2_3",
+      "access_node_ids": [
+        "K2_3_ACCESS_A",
+        "K2_3_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K2_4",
       "levels": [
         {
           "level": 1,
@@ -419,10 +528,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K2_4",
+      "access_node_ids": [
+        "K2_4_ACCESS_A",
+        "K2_4_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K2_6",
       "levels": [
         {
           "level": 1,
@@ -439,10 +552,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K2_6",
+      "access_node_ids": [
+        "K2_6_ACCESS_A",
+        "K2_6_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K2_7",
       "levels": [
         {
           "level": 1,
@@ -451,18 +568,33 @@
         },
         {
           "level": 2,
-          "status": "EMPTY",
-          "item": null
+          "status": "PARTIAL",
+          "item": {
+            "item_id": "ITEM_BEARING",
+            "item_name": "산업용 베어링",
+            "category": "MECHANICAL_PART",
+            "quantity": 12,
+            "capacity": 20,
+            "unit": "EA",
+            "handling_unit_id": "HU-K2_7-L2-ITEM_BEARING",
+            "handling_unit_status": "stored",
+            "home_rack_id": "K2_7",
+            "home_rack_level": 2
+          }
         },
         {
           "level": 3,
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K2_7",
+      "access_node_ids": [
+        "K2_7_ACCESS_A",
+        "K2_7_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K2_8",
       "levels": [
         {
           "level": 1,
@@ -479,10 +611,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K2_8",
+      "access_node_ids": [
+        "K2_8_ACCESS_A",
+        "K2_8_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K2_9",
       "levels": [
         {
           "level": 1,
@@ -499,10 +635,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K2_9",
+      "access_node_ids": [
+        "K2_9_ACCESS_A",
+        "K2_9_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K3_1",
       "levels": [
         {
           "level": 1,
@@ -519,10 +659,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K3_1",
+      "access_node_ids": [
+        "K3_1_ACCESS_A",
+        "K3_1_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K3_2",
       "levels": [
         {
           "level": 1,
@@ -539,10 +683,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K3_2",
+      "access_node_ids": [
+        "K3_2_ACCESS_A",
+        "K3_2_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K3_3",
       "levels": [
         {
           "level": 1,
@@ -559,15 +707,30 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K3_3",
+      "access_node_ids": [
+        "K3_3_ACCESS_A",
+        "K3_3_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K3_4",
       "levels": [
         {
           "level": 1,
-          "status": "EMPTY",
-          "item": null
+          "status": "PARTIAL",
+          "item": {
+            "item_id": "ITEM_BOLT_KIT",
+            "item_name": "볼트 키트",
+            "category": "FASTENER",
+            "quantity": 30,
+            "capacity": 40,
+            "unit": "BOX",
+            "handling_unit_id": "HU-K3_4-L1-ITEM_BOLT_KIT",
+            "handling_unit_status": "stored",
+            "home_rack_id": "K3_4",
+            "home_rack_level": 1
+          }
         },
         {
           "level": 2,
@@ -579,10 +742,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K3_4",
+      "access_node_ids": [
+        "K3_4_ACCESS_A",
+        "K3_4_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K3_6",
       "levels": [
         {
           "level": 1,
@@ -591,18 +758,33 @@
         },
         {
           "level": 2,
-          "status": "EMPTY",
-          "item": null
+          "status": "PARTIAL",
+          "item": {
+            "item_id": "ITEM_MOTOR",
+            "item_name": "서보 모터",
+            "category": "ELECTROMECHANICAL",
+            "quantity": 6,
+            "capacity": 10,
+            "unit": "EA",
+            "handling_unit_id": "HU-K3_6-L2-ITEM_MOTOR",
+            "handling_unit_status": "stored",
+            "home_rack_id": "K3_6",
+            "home_rack_level": 2
+          }
         },
         {
           "level": 3,
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K3_6",
+      "access_node_ids": [
+        "K3_6_ACCESS_A",
+        "K3_6_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K3_7",
       "levels": [
         {
           "level": 1,
@@ -619,10 +801,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K3_7",
+      "access_node_ids": [
+        "K3_7_ACCESS_A",
+        "K3_7_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K3_8",
       "levels": [
         {
           "level": 1,
@@ -639,10 +825,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K3_8",
+      "access_node_ids": [
+        "K3_8_ACCESS_A",
+        "K3_8_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K3_9",
       "levels": [
         {
           "level": 1,
@@ -659,10 +849,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K3_9",
+      "access_node_ids": [
+        "K3_9_ACCESS_A",
+        "K3_9_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K4_1",
       "levels": [
         {
           "level": 1,
@@ -679,10 +873,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K4_1",
+      "access_node_ids": [
+        "K4_1_ACCESS_A",
+        "K4_1_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K4_2",
       "levels": [
         {
           "level": 1,
@@ -699,10 +897,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K4_2",
+      "access_node_ids": [
+        "K4_2_ACCESS_A",
+        "K4_2_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K4_3",
       "levels": [
         {
           "level": 1,
@@ -719,10 +921,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K4_3",
+      "access_node_ids": [
+        "K4_3_ACCESS_A",
+        "K4_3_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K4_4",
       "levels": [
         {
           "level": 1,
@@ -739,10 +945,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K4_4",
+      "access_node_ids": [
+        "K4_4_ACCESS_A",
+        "K4_4_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K4_6",
       "levels": [
         {
           "level": 1,
@@ -759,10 +969,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K4_6",
+      "access_node_ids": [
+        "K4_6_ACCESS_A",
+        "K4_6_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K4_7",
       "levels": [
         {
           "level": 1,
@@ -779,10 +993,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K4_7",
+      "access_node_ids": [
+        "K4_7_ACCESS_A",
+        "K4_7_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K4_8",
       "levels": [
         {
           "level": 1,
@@ -799,10 +1017,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K4_8",
+      "access_node_ids": [
+        "K4_8_ACCESS_A",
+        "K4_8_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K4_9",
       "levels": [
         {
           "level": 1,
@@ -816,13 +1038,28 @@
         },
         {
           "level": 3,
-          "status": "EMPTY",
-          "item": null
+          "status": "PARTIAL",
+          "item": {
+            "item_id": "ITEM_CABLE",
+            "item_name": "산업용 케이블",
+            "category": "ELECTRICAL",
+            "quantity": 22,
+            "capacity": 30,
+            "unit": "ROLL",
+            "handling_unit_id": "HU-K4_9-L3-ITEM_CABLE",
+            "handling_unit_status": "stored",
+            "home_rack_id": "K4_9",
+            "home_rack_level": 3
+          }
         }
+      ],
+      "rack_id": "K4_9",
+      "access_node_ids": [
+        "K4_9_ACCESS_A",
+        "K4_9_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K5_1",
       "levels": [
         {
           "level": 1,
@@ -839,10 +1076,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K5_1",
+      "access_node_ids": [
+        "K5_1_ACCESS_A",
+        "K5_1_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K5_2",
       "levels": [
         {
           "level": 1,
@@ -851,18 +1092,33 @@
         },
         {
           "level": 2,
-          "status": "EMPTY",
-          "item": null
+          "status": "PARTIAL",
+          "item": {
+            "item_id": "ITEM_GEARBOX",
+            "item_name": "감속기",
+            "category": "MECHANICAL_PART",
+            "quantity": 9,
+            "capacity": 12,
+            "unit": "EA",
+            "handling_unit_id": "HU-K5_2-L2-ITEM_GEARBOX",
+            "handling_unit_status": "stored",
+            "home_rack_id": "K5_2",
+            "home_rack_level": 2
+          }
         },
         {
           "level": 3,
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K5_2",
+      "access_node_ids": [
+        "K5_2_ACCESS_A",
+        "K5_2_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K5_3",
       "levels": [
         {
           "level": 1,
@@ -879,10 +1135,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K5_3",
+      "access_node_ids": [
+        "K5_3_ACCESS_A",
+        "K5_3_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K5_4",
       "levels": [
         {
           "level": 1,
@@ -899,10 +1159,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K5_4",
+      "access_node_ids": [
+        "K5_4_ACCESS_A",
+        "K5_4_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K5_6",
       "levels": [
         {
           "level": 1,
@@ -919,10 +1183,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K5_6",
+      "access_node_ids": [
+        "K5_6_ACCESS_A",
+        "K5_6_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K5_7",
       "levels": [
         {
           "level": 1,
@@ -939,10 +1207,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K5_7",
+      "access_node_ids": [
+        "K5_7_ACCESS_A",
+        "K5_7_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K5_8",
       "levels": [
         {
           "level": 1,
@@ -959,10 +1231,14 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K5_8",
+      "access_node_ids": [
+        "K5_8_ACCESS_A",
+        "K5_8_ACCESS_B"
       ]
     },
     {
-      "rack_node_id": "K5_9",
       "levels": [
         {
           "level": 1,
@@ -979,7 +1255,32 @@
           "status": "EMPTY",
           "item": null
         }
+      ],
+      "rack_id": "K5_9",
+      "access_node_ids": [
+        "K5_9_ACCESS_A",
+        "K5_9_ACCESS_B"
       ]
     }
-  ]
+  ],
+  "routing_contract": {
+    "rack_id_is_inventory_entity": true,
+    "rack_id_is_graph_node": false,
+    "service_access_field": "access_node_ids"
+  },
+  "rack_access_contract": {
+    "rack_is_inventory_entity_only": true,
+    "route_graph_contains_rack_access_nodes": true,
+    "access_node_field": "access_node_ids",
+    "rack_through_travel_allowed": false
+  },
+  "handling_unit_contract": {
+    "occupied_rack_level_is_handling_unit": true,
+    "station_removes_requested_quantity": true,
+    "return_to_home_only_when_remainder_positive": true,
+    "multi_handling_unit_cycles_supported": true,
+    "each_handling_unit_is_a_separate_amr_cycle": true,
+    "depleted_handling_unit_moves_to_empty_tote_buffer": true
+  },
+  "warehouse_id": "WH-001"
 }

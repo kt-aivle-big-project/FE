@@ -287,6 +287,10 @@
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
 }
 
+.warehouse-modal.warehouse-modal-layout-editor {
+    width: min(1320px, 100%);
+}
+
 .warehouse-modal-header {
     display: flex;
     align-items: center;
@@ -386,25 +390,44 @@
 
 .warehouse-create-tabs {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
 
     margin-bottom: 24px;
 
     background: #f3f4f6;
 }
 
-.warehouse-create-tabs span {
+.warehouse-create-tabs.single {
+    grid-template-columns: 1fr;
+}
+
+.warehouse-create-tabs span,
+.warehouse-create-tabs button {
     padding: 12px;
+
+    border: 0;
+    background: transparent;
 
     text-align: center;
     color: #777777;
+    font: inherit;
 }
 
-.warehouse-create-tabs span.active {
+.warehouse-create-tabs button {
+    cursor: pointer;
+}
+
+.warehouse-create-tabs span.active,
+.warehouse-create-tabs button.active {
     color: #2563eb;
     background: #ffffff;
 
     font-weight: 600;
+}
+
+.warehouse-create-tabs button:hover {
+    color: #1d4ed8;
+    background: #eff6ff;
 }
 
 /* =========================
@@ -448,6 +471,52 @@
     min-height: 85px;
 
     resize: vertical;
+}
+
+/* =========================
+   지도 직접 설계
+========================= */
+
+.warehouse-layout-editor-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    margin-top: 24px;
+}
+
+.warehouse-layout-editor-section[hidden] {
+    display: none;
+}
+
+.warehouse-layout-editor-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.warehouse-layout-editor-heading > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.warehouse-layout-editor-heading strong {
+    font-size: 17px;
+}
+
+.warehouse-layout-editor-heading span {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.warehouse-layout-editor-heading > span {
+    padding: 6px 9px;
+
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    white-space: nowrap;
 }
 
 /* =========================
@@ -571,6 +640,15 @@
 
     .warehouse-modal {
         padding: 20px;
+    }
+
+    .warehouse-create-tabs {
+        grid-template-columns: 1fr;
+    }
+
+    .warehouse-layout-editor-heading {
+        align-items: flex-start;
+        flex-direction: column;
     }
 
     .warehouse-modal-actions {

@@ -1,10 +1,10 @@
 {
-  "title": "자동창고 노드-엣지 구조",
+  "title": "자동창고 노드-엣지 구조 - 확장 입출고 접근형",
   "coordinate_unit": "PowerPoint inches",
   "summary": {
     "node_count": 220,
     "edge_count": 356,
-    "route_grid_nodes": 83,
+    "route_grid_nodes": 77,
     "route_charge_junction_nodes": 10,
     "inbound_nodes": 7,
     "outbound_nodes": 7,
@@ -14,10 +14,11 @@
     "rack_storage_nodes": 0,
     "rack_entity_count": 48,
     "routing_projection_excludes_racks": true,
-    "inbound_access_nodes": 6,
-    "outbound_access_nodes": 3,
-    "outbound_station_count": 2,
-    "station_robot_count": 2,
+    "inbound_handoff_access_nodes": 6,
+    "inbound_handoff_count": 3,
+    "outbound_station_access_nodes": 6,
+    "outbound_station_count": 3,
+    "station_robot_count": 3,
     "return_perimeter_edges": 16,
     "empty_tote_buffer_access_nodes": 1,
     "logical_outbound_destinations": 7
@@ -640,60 +641,6 @@
       "col": 10
     },
     {
-      "id": "I_0",
-      "type": "inbound_access",
-      "x": 3.75,
-      "y": 1.105
-    },
-    {
-      "id": "I_1",
-      "type": "inbound_access",
-      "x": 3.75,
-      "y": 1.875
-    },
-    {
-      "id": "I_2",
-      "type": "inbound_access",
-      "x": 3.75,
-      "y": 2.645
-    },
-    {
-      "id": "I_3",
-      "type": "inbound_access",
-      "x": 3.75,
-      "y": 3.415
-    },
-    {
-      "id": "I_4",
-      "type": "inbound_access",
-      "x": 3.75,
-      "y": 4.185
-    },
-    {
-      "id": "I_5",
-      "type": "inbound_access",
-      "x": 3.75,
-      "y": 4.955
-    },
-    {
-      "id": "O_0",
-      "type": "outbound_access",
-      "x": 11.5,
-      "y": 1.49
-    },
-    {
-      "id": "O_1",
-      "type": "outbound_access",
-      "x": 11.5,
-      "y": 3.03
-    },
-    {
-      "id": "O_2",
-      "type": "outbound_access",
-      "x": 11.5,
-      "y": 4.57
-    },
-    {
       "id": "RJ01",
       "type": "route_charge_junction",
       "x": 4.55,
@@ -770,7 +717,13 @@
       "y": 1.63,
       "label": "a",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "I_b",
@@ -779,7 +732,13 @@
       "y": 2.04,
       "label": "b",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "I_c",
@@ -788,7 +747,13 @@
       "y": 2.45,
       "label": "c",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "I_d",
@@ -797,7 +762,13 @@
       "y": 3.03,
       "label": "d",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "I_e",
@@ -806,7 +777,13 @@
       "y": 3.45,
       "label": "e",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "I_f",
@@ -815,7 +792,13 @@
       "y": 3.86,
       "label": "f",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "I_g",
@@ -824,7 +807,13 @@
       "y": 4.27,
       "label": "g",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "O_A",
@@ -833,7 +822,13 @@
       "y": 1.6,
       "label": "A",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "O_B",
@@ -842,7 +837,13 @@
       "y": 2.03,
       "label": "B",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "O_C",
@@ -851,7 +852,13 @@
       "y": 2.46,
       "label": "C",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "O_D",
@@ -860,7 +867,13 @@
       "y": 3.03,
       "label": "D",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "O_E",
@@ -869,7 +882,13 @@
       "y": 3.47,
       "label": "E",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "O_F",
@@ -878,7 +897,13 @@
       "y": 3.9,
       "label": "F",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "O_G",
@@ -887,7 +912,13 @@
       "y": 4.34,
       "label": "G",
       "legacy_direct_route": true,
-      "active_for_new_work": false
+      "active_for_new_work": false,
+      "mobile_robot_destination": false,
+      "mobile_routing_excluded": true,
+      "routing_role": "logical_facility_port",
+      "service_only": false,
+      "transit_allowed": true,
+      "holding_allowed": false
     },
     {
       "id": "C01",
@@ -2014,6 +2045,243 @@
       "service_only": true,
       "adjacent_route_node": "R6_9",
       "transit_allowed": false
+    },
+    {
+      "id": "IN_HANDOFF_1_ACCESS_A",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_1",
+      "handoff_id": "IN_HANDOFF_1",
+      "side": "A",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R1_0",
+      "display_port_ids": [
+        "I_a"
+      ],
+      "x": 3.75,
+      "y": 1.105
+    },
+    {
+      "id": "IN_HANDOFF_1_ACCESS_B",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_1",
+      "handoff_id": "IN_HANDOFF_1",
+      "side": "B",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R2_0",
+      "display_port_ids": [
+        "I_a",
+        "I_b",
+        "I_c"
+      ],
+      "x": 3.75,
+      "y": 1.875
+    },
+    {
+      "id": "IN_HANDOFF_2_ACCESS_A",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_2",
+      "handoff_id": "IN_HANDOFF_2",
+      "side": "A",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R3_0",
+      "display_port_ids": [
+        "I_b",
+        "I_c",
+        "I_d"
+      ],
+      "x": 3.75,
+      "y": 2.645
+    },
+    {
+      "id": "IN_HANDOFF_2_ACCESS_B",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_2",
+      "handoff_id": "IN_HANDOFF_2",
+      "side": "B",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R4_0",
+      "display_port_ids": [
+        "I_d",
+        "I_e",
+        "I_f"
+      ],
+      "x": 3.75,
+      "y": 3.415
+    },
+    {
+      "id": "IN_HANDOFF_3_ACCESS_A",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_3",
+      "handoff_id": "IN_HANDOFF_3",
+      "side": "A",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R5_0",
+      "display_port_ids": [
+        "I_e",
+        "I_f",
+        "I_g"
+      ],
+      "x": 3.75,
+      "y": 4.185
+    },
+    {
+      "id": "IN_HANDOFF_3_ACCESS_B",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_3",
+      "handoff_id": "IN_HANDOFF_3",
+      "side": "B",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R6_0",
+      "display_port_ids": [
+        "I_g"
+      ],
+      "x": 3.75,
+      "y": 4.955
+    },
+    {
+      "id": "OUT_STATION_1_ACCESS_A",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_1",
+      "station_id": "OUT_STATION_1",
+      "side": "A",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R1_10",
+      "display_chute_ids": [
+        "O_A",
+        "O_B",
+        "O_C"
+      ],
+      "x": 11.5,
+      "y": 1.33
+    },
+    {
+      "id": "OUT_STATION_1_ACCESS_B",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_1",
+      "station_id": "OUT_STATION_1",
+      "side": "B",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R2_10",
+      "display_chute_ids": [
+        "O_A",
+        "O_B",
+        "O_C"
+      ],
+      "x": 11.5,
+      "y": 1.65
+    },
+    {
+      "id": "OUT_STATION_2_ACCESS_A",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_2",
+      "station_id": "OUT_STATION_2",
+      "side": "A",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R3_10",
+      "display_chute_ids": [
+        "O_C",
+        "O_D",
+        "O_E"
+      ],
+      "x": 11.5,
+      "y": 2.87
+    },
+    {
+      "id": "OUT_STATION_2_ACCESS_B",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_2",
+      "station_id": "OUT_STATION_2",
+      "side": "B",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R4_10",
+      "display_chute_ids": [
+        "O_C",
+        "O_D",
+        "O_E"
+      ],
+      "x": 11.5,
+      "y": 3.19
+    },
+    {
+      "id": "OUT_STATION_3_ACCESS_A",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_3",
+      "station_id": "OUT_STATION_3",
+      "side": "A",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R5_10",
+      "display_chute_ids": [
+        "O_E",
+        "O_F",
+        "O_G"
+      ],
+      "x": 11.5,
+      "y": 4.41
+    },
+    {
+      "id": "OUT_STATION_3_ACCESS_B",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_3",
+      "station_id": "OUT_STATION_3",
+      "side": "B",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R6_10",
+      "display_chute_ids": [
+        "O_E",
+        "O_F",
+        "O_G"
+      ],
+      "x": 11.5,
+      "y": 4.73
+    },
+    {
+      "id": "EMPTY_TOTE_BUFFER_1_ACCESS",
+      "type": "empty_tote_buffer_access",
+      "resource_id": "EMPTY_TOTE_BUFFER_1",
+      "buffer_id": "EMPTY_TOTE_BUFFER_1",
+      "service_only": true,
+      "transit_allowed": false,
+      "holding_allowed": false,
+      "node_capacity": 1,
+      "adjacent_route_node": "R6_10",
+      "x": 11.5,
+      "y": 5.34
     }
   ],
   "edges": [
@@ -2998,66 +3266,6 @@
       "cost": 1.925
     },
     {
-      "id": "IV0",
-      "source": "I_0",
-      "target": "I_1",
-      "type": "spine",
-      "distance_m": 1.925,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1925,
-      "cost": 1.925
-    },
-    {
-      "id": "IV1",
-      "source": "I_1",
-      "target": "I_2",
-      "type": "spine",
-      "distance_m": 1.925,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1925,
-      "cost": 1.925
-    },
-    {
-      "id": "IV2",
-      "source": "I_2",
-      "target": "I_3",
-      "type": "spine",
-      "distance_m": 1.925,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1925,
-      "cost": 1.925
-    },
-    {
-      "id": "IV3",
-      "source": "I_3",
-      "target": "I_4",
-      "type": "spine",
-      "distance_m": 1.925,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1925,
-      "cost": 1.925
-    },
-    {
-      "id": "IV4",
-      "source": "I_4",
-      "target": "I_5",
-      "type": "spine",
-      "distance_m": 1.925,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1925,
-      "cost": 1.925
-    },
-    {
-      "id": "IV5",
-      "source": "I_5",
-      "target": "I_6",
-      "type": "spine",
-      "distance_m": 1.925,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1925,
-      "cost": 1.925
-    },
-    {
       "id": "IN0",
       "source": "I_a",
       "target": "I_b",
@@ -3065,7 +3273,11 @@
       "distance_m": 1.025,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 1025,
-      "cost": 1.025
+      "cost": 1.025,
+      "mobile_robot_traversable": false,
+      "active_for_new_work": false,
+      "facility_transport_traversable": true,
+      "legacy_direct_route": true
     },
     {
       "id": "IN1",
@@ -3075,7 +3287,11 @@
       "distance_m": 1.025,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 1025,
-      "cost": 1.025
+      "cost": 1.025,
+      "mobile_robot_traversable": false,
+      "active_for_new_work": false,
+      "facility_transport_traversable": true,
+      "legacy_direct_route": true
     },
     {
       "id": "IN2",
@@ -3085,7 +3301,11 @@
       "distance_m": 1.45,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 1450,
-      "cost": 1.45
+      "cost": 1.45,
+      "mobile_robot_traversable": false,
+      "active_for_new_work": false,
+      "facility_transport_traversable": true,
+      "legacy_direct_route": true
     },
     {
       "id": "IN3",
@@ -3095,7 +3315,11 @@
       "distance_m": 1.05,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 1050,
-      "cost": 1.05
+      "cost": 1.05,
+      "mobile_robot_traversable": false,
+      "active_for_new_work": false,
+      "facility_transport_traversable": true,
+      "legacy_direct_route": true
     },
     {
       "id": "IN4",
@@ -3105,7 +3329,11 @@
       "distance_m": 1.025,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 1025,
-      "cost": 1.025
+      "cost": 1.025,
+      "mobile_robot_traversable": false,
+      "active_for_new_work": false,
+      "facility_transport_traversable": true,
+      "legacy_direct_route": true
     },
     {
       "id": "IN5",
@@ -3115,7 +3343,11 @@
       "distance_m": 1.025,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 1025,
-      "cost": 1.025
+      "cost": 1.025,
+      "mobile_robot_traversable": false,
+      "active_for_new_work": false,
+      "facility_transport_traversable": true,
+      "legacy_direct_route": true
     },
     {
       "id": "OUT0",
@@ -3125,7 +3357,11 @@
       "distance_m": 1.075,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 1075,
-      "cost": 1.075
+      "cost": 1.075,
+      "mobile_robot_traversable": false,
+      "active_for_new_work": false,
+      "station_robot_traversable": true,
+      "legacy_direct_route": true
     },
     {
       "id": "OUT1",
@@ -3135,7 +3371,11 @@
       "distance_m": 1.075,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 1075,
-      "cost": 1.075
+      "cost": 1.075,
+      "mobile_robot_traversable": false,
+      "active_for_new_work": false,
+      "station_robot_traversable": true,
+      "legacy_direct_route": true
     },
     {
       "id": "OUT2",
@@ -3145,7 +3385,11 @@
       "distance_m": 1.425,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 1425,
-      "cost": 1.425
+      "cost": 1.425,
+      "mobile_robot_traversable": false,
+      "active_for_new_work": false,
+      "station_robot_traversable": true,
+      "legacy_direct_route": true
     },
     {
       "id": "OUT3",
@@ -3155,7 +3399,11 @@
       "distance_m": 1.1,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 1100,
-      "cost": 1.1
+      "cost": 1.1,
+      "mobile_robot_traversable": false,
+      "active_for_new_work": false,
+      "station_robot_traversable": true,
+      "legacy_direct_route": true
     },
     {
       "id": "OUT4",
@@ -3165,7 +3413,11 @@
       "distance_m": 1.075,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 1075,
-      "cost": 1.075
+      "cost": 1.075,
+      "mobile_robot_traversable": false,
+      "active_for_new_work": false,
+      "station_robot_traversable": true,
+      "legacy_direct_route": true
     },
     {
       "id": "OUT5",
@@ -3175,7 +3427,11 @@
       "distance_m": 1.1,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 1100,
-      "cost": 1.1
+      "cost": 1.1,
+      "mobile_robot_traversable": false,
+      "active_for_new_work": false,
+      "station_robot_traversable": true,
+      "legacy_direct_route": true
     },
     {
       "id": "CH1",
@@ -3185,7 +3441,10 @@
       "distance_m": 0.75,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 750,
-      "cost": 0.75
+      "cost": 0.75,
+      "mobile_robot_traversable": true,
+      "movement_role": "charging_entry_exit",
+      "direction": "BOTH"
     },
     {
       "id": "CH2",
@@ -3195,7 +3454,10 @@
       "distance_m": 0.75,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 750,
-      "cost": 0.75
+      "cost": 0.75,
+      "mobile_robot_traversable": true,
+      "movement_role": "charging_entry_exit",
+      "direction": "BOTH"
     },
     {
       "id": "CH3",
@@ -3205,7 +3467,10 @@
       "distance_m": 0.75,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 750,
-      "cost": 0.75
+      "cost": 0.75,
+      "mobile_robot_traversable": true,
+      "movement_role": "charging_entry_exit",
+      "direction": "BOTH"
     },
     {
       "id": "CH4",
@@ -3215,7 +3480,10 @@
       "distance_m": 0.75,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 750,
-      "cost": 0.75
+      "cost": 0.75,
+      "mobile_robot_traversable": true,
+      "movement_role": "charging_entry_exit",
+      "direction": "BOTH"
     },
     {
       "id": "CH5",
@@ -3225,7 +3493,10 @@
       "distance_m": 0.75,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 750,
-      "cost": 0.75
+      "cost": 0.75,
+      "mobile_robot_traversable": true,
+      "movement_role": "charging_entry_exit",
+      "direction": "BOTH"
     },
     {
       "id": "CH6",
@@ -3235,7 +3506,10 @@
       "distance_m": 0.75,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 750,
-      "cost": 0.75
+      "cost": 0.75,
+      "mobile_robot_traversable": true,
+      "movement_role": "charging_entry_exit",
+      "direction": "BOTH"
     },
     {
       "id": "CH7",
@@ -3245,7 +3519,10 @@
       "distance_m": 0.75,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 750,
-      "cost": 0.75
+      "cost": 0.75,
+      "mobile_robot_traversable": true,
+      "movement_role": "charging_entry_exit",
+      "direction": "BOTH"
     },
     {
       "id": "CH8",
@@ -3255,7 +3532,10 @@
       "distance_m": 0.75,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 750,
-      "cost": 0.75
+      "cost": 0.75,
+      "mobile_robot_traversable": true,
+      "movement_role": "charging_entry_exit",
+      "direction": "BOTH"
     },
     {
       "id": "CH9",
@@ -3265,7 +3545,10 @@
       "distance_m": 0.75,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 750,
-      "cost": 0.75
+      "cost": 0.75,
+      "mobile_robot_traversable": true,
+      "movement_role": "charging_entry_exit",
+      "direction": "BOTH"
     },
     {
       "id": "CH10",
@@ -3275,7 +3558,10 @@
       "distance_m": 0.75,
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 750,
-      "cost": 0.75
+      "cost": 0.75,
+      "mobile_robot_traversable": true,
+      "movement_role": "charging_entry_exit",
+      "direction": "BOTH"
     },
     {
       "id": "RA_K0_1_A_IN",
@@ -5198,974 +5484,6 @@
       "cost": 0.539
     },
     {
-      "id": "I0_R0_IN",
-      "source": "R0_0",
-      "target": "I_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I0_R0_OUT",
-      "source": "I_0",
-      "target": "R0_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I0_R1_IN",
-      "source": "R1_0",
-      "target": "I_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I0_R1_OUT",
-      "source": "I_0",
-      "target": "R1_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I1_R1_IN",
-      "source": "R1_0",
-      "target": "I_1",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I1_R1_OUT",
-      "source": "I_1",
-      "target": "R1_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I1_R2_IN",
-      "source": "R2_0",
-      "target": "I_1",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I1_R2_OUT",
-      "source": "I_1",
-      "target": "R2_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I2_R2_IN",
-      "source": "R2_0",
-      "target": "I_2",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I2_R2_OUT",
-      "source": "I_2",
-      "target": "R2_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I2_R3_IN",
-      "source": "R3_0",
-      "target": "I_2",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I2_R3_OUT",
-      "source": "I_2",
-      "target": "R3_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I3_R3_IN",
-      "source": "R3_0",
-      "target": "I_3",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I3_R3_OUT",
-      "source": "I_3",
-      "target": "R3_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I3_R4_IN",
-      "source": "R4_0",
-      "target": "I_3",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I3_R4_OUT",
-      "source": "I_3",
-      "target": "R4_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I4_R4_IN",
-      "source": "R4_0",
-      "target": "I_4",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I4_R4_OUT",
-      "source": "I_4",
-      "target": "R4_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I4_R5_IN",
-      "source": "R5_0",
-      "target": "I_4",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I4_R5_OUT",
-      "source": "I_4",
-      "target": "R5_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I5_R5_IN",
-      "source": "R5_0",
-      "target": "I_5",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I5_R5_OUT",
-      "source": "I_5",
-      "target": "R5_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I5_R6_IN",
-      "source": "R6_0",
-      "target": "I_5",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "I5_R6_OUT",
-      "source": "I_5",
-      "target": "R6_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ia_I0_IN",
-      "source": "I_0",
-      "target": "I_a",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ia_I0_OUT",
-      "source": "I_a",
-      "target": "I_0",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ia_I1_IN",
-      "source": "I_1",
-      "target": "I_a",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ia_I1_OUT",
-      "source": "I_a",
-      "target": "I_1",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ib_I1_IN",
-      "source": "I_1",
-      "target": "I_b",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ib_I1_OUT",
-      "source": "I_b",
-      "target": "I_1",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ib_I2_IN",
-      "source": "I_2",
-      "target": "I_b",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ib_I2_OUT",
-      "source": "I_b",
-      "target": "I_2",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ic_I1_IN",
-      "source": "I_1",
-      "target": "I_c",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ic_I1_OUT",
-      "source": "I_c",
-      "target": "I_1",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ic_I2_IN",
-      "source": "I_2",
-      "target": "I_c",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ic_I2_OUT",
-      "source": "I_c",
-      "target": "I_2",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Id_I2_IN",
-      "source": "I_2",
-      "target": "I_d",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Id_I2_OUT",
-      "source": "I_d",
-      "target": "I_2",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Id_I3_IN",
-      "source": "I_3",
-      "target": "I_d",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Id_I3_OUT",
-      "source": "I_d",
-      "target": "I_3",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ie_I3_IN",
-      "source": "I_3",
-      "target": "I_e",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ie_I3_OUT",
-      "source": "I_e",
-      "target": "I_3",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ie_I4_IN",
-      "source": "I_4",
-      "target": "I_e",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ie_I4_OUT",
-      "source": "I_e",
-      "target": "I_4",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "If_I3_IN",
-      "source": "I_3",
-      "target": "I_f",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "If_I3_OUT",
-      "source": "I_f",
-      "target": "I_3",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "If_I4_IN",
-      "source": "I_4",
-      "target": "I_f",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "If_I4_OUT",
-      "source": "I_f",
-      "target": "I_4",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ig_I4_IN",
-      "source": "I_4",
-      "target": "I_g",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ig_I4_OUT",
-      "source": "I_g",
-      "target": "I_4",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ig_I5_IN",
-      "source": "I_5",
-      "target": "I_g",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "Ig_I5_OUT",
-      "source": "I_g",
-      "target": "I_5",
-      "type": "inbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 0.875,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 875,
-      "cost": 0.875
-    },
-    {
-      "id": "O0_R0_IN",
-      "source": "R0_10",
-      "target": "O_0",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O0_R0_OUT",
-      "source": "O_0",
-      "target": "R0_10",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O0_R1_IN",
-      "source": "R1_10",
-      "target": "O_0",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O0_R1_OUT",
-      "source": "O_0",
-      "target": "R1_10",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O0_R2_IN",
-      "source": "R2_10",
-      "target": "O_0",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O0_R2_OUT",
-      "source": "O_0",
-      "target": "R2_10",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O1_R2_IN",
-      "source": "R2_10",
-      "target": "O_1",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O1_R2_OUT",
-      "source": "O_1",
-      "target": "R2_10",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O1_R3_IN",
-      "source": "R3_10",
-      "target": "O_1",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O1_R3_OUT",
-      "source": "O_1",
-      "target": "R3_10",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O1_R4_IN",
-      "source": "R4_10",
-      "target": "O_1",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O1_R4_OUT",
-      "source": "O_1",
-      "target": "R4_10",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O2_R4_IN",
-      "source": "R4_10",
-      "target": "O_2",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O2_R4_OUT",
-      "source": "O_2",
-      "target": "R4_10",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O2_R5_IN",
-      "source": "R5_10",
-      "target": "O_2",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O2_R5_OUT",
-      "source": "O_2",
-      "target": "R5_10",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O2_R6_IN",
-      "source": "R6_10",
-      "target": "O_2",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "O2_R6_OUT",
-      "source": "O_2",
-      "target": "R6_10",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OA_O0_IN",
-      "source": "O_0",
-      "target": "O_A",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OA_O0_OUT",
-      "source": "O_0",
-      "target": "O_A",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OB_O0_IN",
-      "source": "O_0",
-      "target": "O_B",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OB_O0_OUT",
-      "source": "O_0",
-      "target": "O_B",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OC_O0_IN",
-      "source": "O_0",
-      "target": "O_C",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OC_O0_OUT",
-      "source": "O_0",
-      "target": "O_C",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OC_O1_IN",
-      "source": "O_1",
-      "target": "O_C",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OC_O1_OUT",
-      "source": "O_1",
-      "target": "O_C",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OD_O1_IN",
-      "source": "O_1",
-      "target": "O_D",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OD_O1_OUT",
-      "source": "O_1",
-      "target": "O_D",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OE_O1_IN",
-      "source": "O_1",
-      "target": "O_E",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OE_O1_OUT",
-      "source": "O_1",
-      "target": "O_E",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OE_O2_IN",
-      "source": "O_2",
-      "target": "O_E",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OE_O2_OUT",
-      "source": "O_2",
-      "target": "O_E",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OF_O2_IN",
-      "source": "O_2",
-      "target": "O_F",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OF_O2_OUT",
-      "source": "O_2",
-      "target": "O_F",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OG_O2_IN",
-      "source": "O_2",
-      "target": "O_G",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
-      "id": "OG_O2_OUT",
-      "source": "O_2",
-      "target": "O_G",
-      "type": "outbound_access",
-      "mobile_robot_traversable": true,
-      "distance_m": 1.05,
-      "speed_limit_mps": 1.0,
-      "nominal_travel_time_ms": 1050,
-      "cost": 1.05
-    },
-    {
       "id": "RETURN_V10_5",
       "source": "R6_10",
       "target": "R5_10",
@@ -6340,6 +5658,394 @@
       "speed_limit_mps": 1.0,
       "nominal_travel_time_ms": 2250,
       "cost": 2.25
+    },
+    {
+      "id": "ETB_R6_IN",
+      "source": "R6_10",
+      "target": "EMPTY_TOTE_BUFFER_1_ACCESS",
+      "type": "empty_tote_buffer_access",
+      "mobile_robot_traversable": true,
+      "speed_limit_mps": 1.0,
+      "distance_m": 1.625,
+      "nominal_travel_time_ms": 1625,
+      "cost": 1.625,
+      "movement_role": "buffer_entry"
+    },
+    {
+      "id": "ETB_R6_OUT",
+      "source": "EMPTY_TOTE_BUFFER_1_ACCESS",
+      "target": "R6_10",
+      "type": "empty_tote_buffer_access",
+      "mobile_robot_traversable": true,
+      "speed_limit_mps": 1.0,
+      "distance_m": 1.625,
+      "nominal_travel_time_ms": 1625,
+      "cost": 1.625,
+      "movement_role": "buffer_exit"
+    },
+    {
+      "id": "IN_CONNECT",
+      "source": "I_d",
+      "target": "R3_0",
+      "type": "inbound_connector",
+      "service_only": false,
+      "mobile_robot_traversable": true,
+      "active_for_new_work": false,
+      "legacy_direct_route": true,
+      "distance_m": 2.475,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 2475,
+      "cost": 2.475
+    },
+    {
+      "id": "OUT_CONNECT",
+      "source": "R3_10",
+      "target": "O_D",
+      "type": "outbound_connector",
+      "service_only": false,
+      "mobile_robot_traversable": true,
+      "active_for_new_work": false,
+      "legacy_direct_route": true,
+      "distance_m": 3.95,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 3950,
+      "cost": 3.95
+    },
+    {
+      "id": "IH_IN_HANDOFF_1_ACCESS_A_IN",
+      "source": "R1_0",
+      "target": "IN_HANDOFF_1_ACCESS_A",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_1",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.300781,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1301,
+      "cost": 1.300781,
+      "movement_role": "handoff_entry"
+    },
+    {
+      "id": "IH_IN_HANDOFF_1_ACCESS_A_OUT",
+      "source": "IN_HANDOFF_1_ACCESS_A",
+      "target": "R1_0",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_1",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.300781,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1301,
+      "cost": 1.300781,
+      "movement_role": "handoff_exit"
+    },
+    {
+      "id": "IH_IN_HANDOFF_1_ACCESS_B_IN",
+      "source": "R2_0",
+      "target": "IN_HANDOFF_1_ACCESS_B",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_1",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.300781,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1301,
+      "cost": 1.300781,
+      "movement_role": "handoff_entry"
+    },
+    {
+      "id": "IH_IN_HANDOFF_1_ACCESS_B_OUT",
+      "source": "IN_HANDOFF_1_ACCESS_B",
+      "target": "R2_0",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_1",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.300781,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1301,
+      "cost": 1.300781,
+      "movement_role": "handoff_exit"
+    },
+    {
+      "id": "IH_IN_HANDOFF_2_ACCESS_A_IN",
+      "source": "R3_0",
+      "target": "IN_HANDOFF_2_ACCESS_A",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_2",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.300781,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1301,
+      "cost": 1.300781,
+      "movement_role": "handoff_entry"
+    },
+    {
+      "id": "IH_IN_HANDOFF_2_ACCESS_A_OUT",
+      "source": "IN_HANDOFF_2_ACCESS_A",
+      "target": "R3_0",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_2",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.300781,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1301,
+      "cost": 1.300781,
+      "movement_role": "handoff_exit"
+    },
+    {
+      "id": "IH_IN_HANDOFF_2_ACCESS_B_IN",
+      "source": "R4_0",
+      "target": "IN_HANDOFF_2_ACCESS_B",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_2",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.300781,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1301,
+      "cost": 1.300781,
+      "movement_role": "handoff_entry"
+    },
+    {
+      "id": "IH_IN_HANDOFF_2_ACCESS_B_OUT",
+      "source": "IN_HANDOFF_2_ACCESS_B",
+      "target": "R4_0",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_2",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.300781,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1301,
+      "cost": 1.300781,
+      "movement_role": "handoff_exit"
+    },
+    {
+      "id": "IH_IN_HANDOFF_3_ACCESS_A_IN",
+      "source": "R5_0",
+      "target": "IN_HANDOFF_3_ACCESS_A",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_3",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.300781,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1301,
+      "cost": 1.300781,
+      "movement_role": "handoff_entry"
+    },
+    {
+      "id": "IH_IN_HANDOFF_3_ACCESS_A_OUT",
+      "source": "IN_HANDOFF_3_ACCESS_A",
+      "target": "R5_0",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_3",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.300781,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1301,
+      "cost": 1.300781,
+      "movement_role": "handoff_exit"
+    },
+    {
+      "id": "IH_IN_HANDOFF_3_ACCESS_B_IN",
+      "source": "R6_0",
+      "target": "IN_HANDOFF_3_ACCESS_B",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_3",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.300781,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1301,
+      "cost": 1.300781,
+      "movement_role": "handoff_entry"
+    },
+    {
+      "id": "IH_IN_HANDOFF_3_ACCESS_B_OUT",
+      "source": "IN_HANDOFF_3_ACCESS_B",
+      "target": "R6_0",
+      "type": "inbound_handoff_access",
+      "resource_id": "IN_HANDOFF_3",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.300781,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1301,
+      "cost": 1.300781,
+      "movement_role": "handoff_exit"
+    },
+    {
+      "id": "OS_OUT_STATION_1_ACCESS_A_IN",
+      "source": "R1_10",
+      "target": "OUT_STATION_1_ACCESS_A",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_1",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.673507,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1674,
+      "cost": 1.673507,
+      "movement_role": "station_entry"
+    },
+    {
+      "id": "OS_OUT_STATION_1_ACCESS_A_OUT",
+      "source": "OUT_STATION_1_ACCESS_A",
+      "target": "R1_10",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_1",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.673507,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1674,
+      "cost": 1.673507,
+      "movement_role": "station_exit"
+    },
+    {
+      "id": "OS_OUT_STATION_1_ACCESS_B_IN",
+      "source": "R2_10",
+      "target": "OUT_STATION_1_ACCESS_B",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_1",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 2.228508,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 2229,
+      "cost": 2.228508,
+      "movement_role": "station_entry"
+    },
+    {
+      "id": "OS_OUT_STATION_1_ACCESS_B_OUT",
+      "source": "OUT_STATION_1_ACCESS_B",
+      "target": "R2_10",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_1",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 2.228508,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 2229,
+      "cost": 2.228508,
+      "movement_role": "station_exit"
+    },
+    {
+      "id": "OS_OUT_STATION_2_ACCESS_A_IN",
+      "source": "R3_10",
+      "target": "OUT_STATION_2_ACCESS_A",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_2",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.673507,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1674,
+      "cost": 1.673507,
+      "movement_role": "station_entry"
+    },
+    {
+      "id": "OS_OUT_STATION_2_ACCESS_A_OUT",
+      "source": "OUT_STATION_2_ACCESS_A",
+      "target": "R3_10",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_2",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.673507,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1674,
+      "cost": 1.673507,
+      "movement_role": "station_exit"
+    },
+    {
+      "id": "OS_OUT_STATION_2_ACCESS_B_IN",
+      "source": "R4_10",
+      "target": "OUT_STATION_2_ACCESS_B",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_2",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 2.228508,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 2229,
+      "cost": 2.228508,
+      "movement_role": "station_entry"
+    },
+    {
+      "id": "OS_OUT_STATION_2_ACCESS_B_OUT",
+      "source": "OUT_STATION_2_ACCESS_B",
+      "target": "R4_10",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_2",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 2.228508,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 2229,
+      "cost": 2.228508,
+      "movement_role": "station_exit"
+    },
+    {
+      "id": "OS_OUT_STATION_3_ACCESS_A_IN",
+      "source": "R5_10",
+      "target": "OUT_STATION_3_ACCESS_A",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_3",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.673507,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1674,
+      "cost": 1.673507,
+      "movement_role": "station_entry"
+    },
+    {
+      "id": "OS_OUT_STATION_3_ACCESS_A_OUT",
+      "source": "OUT_STATION_3_ACCESS_A",
+      "target": "R5_10",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_3",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 1.673507,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 1674,
+      "cost": 1.673507,
+      "movement_role": "station_exit"
+    },
+    {
+      "id": "OS_OUT_STATION_3_ACCESS_B_IN",
+      "source": "R6_10",
+      "target": "OUT_STATION_3_ACCESS_B",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_3",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 2.228508,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 2229,
+      "cost": 2.228508,
+      "movement_role": "station_entry"
+    },
+    {
+      "id": "OS_OUT_STATION_3_ACCESS_B_OUT",
+      "source": "OUT_STATION_3_ACCESS_B",
+      "target": "R6_10",
+      "type": "outbound_station_access",
+      "resource_id": "OUT_STATION_3",
+      "service_only": true,
+      "mobile_robot_traversable": true,
+      "distance_m": 2.228508,
+      "speed_limit_mps": 1.0,
+      "nominal_travel_time_ms": 2229,
+      "cost": 2.228508,
+      "movement_role": "station_exit"
     }
   ],
   "routing_model": {
@@ -6350,9 +6056,9 @@
   },
   "facility_routing_model": {
     "inbound_business_ports_in_facility_catalog": true,
-    "inbound_access_node_type": "inbound_access",
+    "inbound_handoff_access_node_type": "inbound_handoff_access",
     "outbound_business_chutes_in_facility_catalog": true,
-    "outbound_access_node_type": "outbound_access",
+    "outbound_station_access_node_type": "outbound_station_access",
     "mobile_robot_delivers_handling_unit_to_station": true,
     "station_robot_sorts_to_order_chutes": true,
     "legacy_direct_io_nodes_active_for_new_work": false,
@@ -6370,15 +6076,37 @@
     "station_is_mandatory_processing_waypoint": true,
     "amr_physical_destination_is_station_access": true,
     "station_robot_routes_to_logical_destination": true,
-    "all_stations_serve_all_destinations": true,
-    "empty_tote_buffer_access_node_type": "empty_tote_buffer_access"
+    "all_stations_serve_all_destinations": false,
+    "destination_assignment_mode": "zoned_with_overlap",
+    "station_destination_map": {
+      "OUT_STATION_1": [
+        "O_A",
+        "O_B",
+        "O_C"
+      ],
+      "OUT_STATION_2": [
+        "O_C",
+        "O_D",
+        "O_E"
+      ],
+      "OUT_STATION_3": [
+        "O_E",
+        "O_F",
+        "O_G"
+      ]
+    },
+    "empty_tote_buffer_access_node_type": "empty_tote_buffer_access",
+    "charging_slot_connectors_bidirectional": true,
+    "exclude_inactive_legacy_nodes_from_mobile_graph": true
   },
   "physical_distance_unit": "meters",
   "fallback_meters_per_coordinate_unit": 2.5,
   "default_robot_speed_mps": 1.0,
   "warehouse_id": "WH-001",
-  "distance_source": "explicit_edge_metrics_v13_19",
+  "distance_source": "euclidean_from_node_coordinates_v1_contract_adapted",
   "render_coordinate_unit": "PowerPoint inches",
-  "coordinate_system": "METERS",
-  "meters_per_coordinate_unit": 2.5
+  "coordinate_system": "LOCAL_CARTESIAN_2D",
+  "meters_per_coordinate_unit": 2.5,
+  "coordinate_values_unit": "PowerPoint inches",
+  "previous_seed_edge_count": 356
 }

@@ -1,7 +1,0 @@
-{
-    "order_count": 30,
-    "total_quantity": 120,
-    "arrival_pattern": "RANDOM",
-    "processing_deadline_minutes": 10,
-    "allow_partial_shipment": true
-}

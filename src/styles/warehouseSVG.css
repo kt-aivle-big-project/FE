@@ -75,6 +75,108 @@
     stroke-dasharray: 4 3;
 }
 
+.warehouse-layout-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 320px;
+    color: #555555;
+}
+
+.warehouse-layout-error {
+    color: #b42318;
+}
+
+.warehouse-layout-error button {
+    padding: 7px 14px;
+    border: 1px solid #333333;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+/* 실제 통로에서 핸드오프/출고 스테이션으로 들어가는 서비스 스퍼 */
+.edge-inbound_handoff_access {
+    stroke: #7c4db3;
+}
+
+.edge-outbound_station_access {
+    stroke: #2c8a52;
+}
+
+/* 포트·슈트와 처리 설비 사이의 논리 관계. 로봇 이동 경로가 아니다. */
+.warehouse-logical-edge {
+    fill: none;
+    stroke-width: 1.5;
+    stroke-dasharray: 5 4;
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+.logical-inbound {
+    stroke: #8754c7;
+}
+
+.logical-outbound {
+    stroke: #269653;
+}
+
+.warehouse-box-transfer {
+    pointer-events: none;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.28));
+}
+
+.warehouse-box-transfer rect {
+    stroke-width: 2;
+}
+
+.warehouse-box-transfer path {
+    fill: none;
+    stroke-width: 1;
+}
+
+.transfer-inbound rect,
+.transfer-inbound path {
+    stroke: #6d3fac;
+}
+
+.transfer-outbound rect,
+.transfer-outbound path {
+    stroke: #1f7540;
+}
+
+.warehouse-waiting-box,
+.warehouse-robot-load {
+    pointer-events: none;
+    filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.3));
+}
+
+.warehouse-waiting-box rect,
+.warehouse-robot-load rect {
+    stroke: #334155;
+    stroke-width: 1.3;
+}
+
+.warehouse-waiting-box path,
+.warehouse-robot-load path {
+    fill: none;
+    stroke: rgba(30, 41, 59, 0.7);
+    stroke-width: 0.8;
+}
+
+.warehouse-waiting-count circle {
+    fill: #ffffff;
+    stroke: #6d3fac;
+    stroke-width: 1.2;
+}
+
+.warehouse-waiting-count text {
+    fill: #4c1d95;
+    font-size: 7px;
+    font-weight: 700;
+}
+
 /* =========================
    Route Node
 ========================= */
@@ -114,6 +216,16 @@
     stroke-width: 1;
 }
 
+.warehouse-inbound-access {
+    fill: #8754c7;
+    stroke: #6d3fac;
+}
+
+.warehouse-outbound-access {
+    fill: #269653;
+    stroke: #1f7540;
+}
+
 /* =========================
    Rack
 ========================= */
@@ -143,6 +255,11 @@
 /* 가득 참 */
 .rack-level-full {
     fill: #777777;
+}
+
+.rack-level-occupied {
+    stroke: rgba(30, 41, 59, 0.45);
+    stroke-width: 0.6;
 }
 
 /* 랙 ID */
@@ -242,10 +359,6 @@
 ========================= */
 .warehouse-robot {
     cursor: pointer;
-
-    transition-property: transform;
-    transition-timing-function: linear;
-
     will-change: transform;
 }
 
@@ -263,4 +376,56 @@
     stroke-width: 3px;
 
     pointer-events: none;
+}
+
+.warehouse-fixed-station-robot {
+    pointer-events: none;
+    filter: drop-shadow(0 2px 2px rgb(15 35 65 / 24%));
+}
+
+.warehouse-fixed-station-robot .station-robot-platform,
+.warehouse-fixed-station-robot .station-robot-body,
+.warehouse-fixed-station-robot .station-robot-head {
+    fill: #edf5ff;
+    stroke: #174f9e;
+    stroke-width: 2;
+}
+
+.warehouse-fixed-station-robot .station-robot-arm {
+    fill: none;
+    stroke: #174f9e;
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.warehouse-fixed-station-robot .station-robot-joint {
+    fill: #73a9f5;
+    stroke: #174f9e;
+    stroke-width: 1.5;
+}
+
+.warehouse-fixed-station-robot .station-robot-eye {
+    fill: #174f9e;
+    stroke: none;
+}
+
+.warehouse-fixed-station-robot.working .station-robot-body,
+.warehouse-fixed-station-robot.working .station-robot-head {
+    fill: #e9fff1;
+    stroke: #21894b;
+}
+
+.warehouse-fixed-station-robot.working .station-robot-arm {
+    stroke: #21894b;
+    animation: station-arm-working 0.8s ease-in-out infinite alternate;
+}
+
+.warehouse-fixed-station-robot.releasing .station-robot-arm.right {
+    stroke: #ef8b22;
+}
+
+@keyframes station-arm-working {
+    from { transform: rotate(-3deg); }
+    to { transform: rotate(3deg); }
 }
