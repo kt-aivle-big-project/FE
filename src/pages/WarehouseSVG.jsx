@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "../styles/WarehouseSVG.css";
+import "../styles/warehouseSVG.css";
 
 import rackInventory from "../data/rack_inventory.json";
 
@@ -26,6 +26,50 @@ import robotPicking from "../assets/robots/robot_picking.png";
 import robotPutaway from "../assets/robots/robot_putaway.png";
 import robotRelocation from "../assets/robots/robot_relocation.png";
 import robotReplenish from "../assets/robots/robot_replenish.png";
+
+// JSON의 node.type을 기준으로 창고 구성요소 색상을 통일한다.
+// 백엔드 레이아웃도 nodeType을 소문자로 변환해 type에 넣으므로
+// 폴백 JSON과 API 응답 모두 같은 색상 규칙을 사용한다.
+const MAP_THEME = {
+    route: {
+        fill: "#ffffff",
+        stroke: "#64748b",
+        text: "#475569",
+        label: "일반 노드",
+    },
+    rack: {
+        fill: "#e2e8f0",
+        stroke: "#475569",
+        text: "#334155",
+        label: "선반",
+    },
+    inbound: {
+        fill: "#dcfce7",
+        stroke: "#16a34a",
+        text: "#166534",
+        label: "입고지",
+    },
+    outbound: {
+        fill: "#ffedd5",
+        stroke: "#f97316",
+        text: "#9a3412",
+        label: "출고지",
+    },
+    charging: {
+        fill: "#dbeafe",
+        stroke: "#2563eb",
+        text: "#1d4ed8",
+        label: "충전 슬롯",
+    },
+};
+
+const LEGEND_ITEMS = [
+    { key: "rack", shape: "rect" },
+    { key: "route", shape: "circle" },
+    { key: "inbound", shape: "rect" },
+    { key: "outbound", shape: "rect" },
+    { key: "charging", shape: "rect" },
+];
 
 function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
     // 노드 표시 ON / OFF
@@ -128,11 +172,13 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
     }, [warehouseId]);
 
     // SVG 크기
+    // 아래쪽에 범례 공간을 따로 확보해 충전 슬롯·로봇과 겹치지 않게 한다.
     const SVG_WIDTH = 1200;
-    const SVG_HEIGHT = 600;
+    const SVG_HEIGHT = 680;
 
     const PADDING_X = 40;
-    const PADDING_Y = 30;
+    const PADDING_TOP = 50;
+    const PADDING_BOTTOM = 135;
 
     // warehouse_graph.json 좌표 범위 계산
     // JSON의 x, y 좌표를 SVG 좌표로 자동 변환하기 위해 최소/최대 좌표를 구함
@@ -156,9 +202,11 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
     };
 
     const convertY = (y) => {
-        const availableHeight = SVG_HEIGHT - PADDING_Y * 2;
+        const availableHeight =
+            SVG_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
+
         return (
-            PADDING_Y +
+            PADDING_TOP +
             ((y - minY) / (maxY - minY)) *
             availableHeight
         );
@@ -223,6 +271,12 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
             <button
                 type="button"
                 className="warehouse-node-toggle"
+                style={{
+                    top: "10px",
+                    left: "50%",
+                    right: "auto",
+                    transform: "translateX(-50%)",
+                }}
                 onClick={() => setShowNodeLabels((prev) => !prev)}
             >
                 {showNodeLabels ? "노드 번호 숨기기" : "노드 번호 보기"}
@@ -327,6 +381,10 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     cy={convertY(node.y)}
                                     r="3"
                                     className="warehouse-route-node"
+                                    style={{
+                                        fill: MAP_THEME.route.fill,
+                                        stroke: MAP_THEME.route.stroke,
+                                    }}
                                 >
                                     <title>{node.id}</title>
                                 </circle>
@@ -360,6 +418,10 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     cy={convertY(node.y)}
                                     r="4"
                                     className="warehouse-inbound-access"
+                                    style={{
+                                        fill: MAP_THEME.inbound.fill,
+                                        stroke: MAP_THEME.inbound.stroke,
+                                    }}
                                 >
                                     <title>{node.id}</title>
                                 </circle>
@@ -392,6 +454,10 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     cy={convertY(node.y)}
                                     r="4"
                                     className="warehouse-outbound-access"
+                                    style={{
+                                        fill: MAP_THEME.outbound.fill,
+                                        stroke: MAP_THEME.outbound.stroke,
+                                    }}
                                 >
                                     <title>{node.id}</title>
                                 </circle>
@@ -425,6 +491,10 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                 cy={convertY(node.y)}
                                 r="4"
                                 className="warehouse-charge-junction"
+                                style={{
+                                    fill: MAP_THEME.charging.fill,
+                                    stroke: MAP_THEME.charging.stroke,
+                                }}
                             >
                                 <title>{node.id}</title>
                             </circle>
@@ -469,6 +539,10 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                         width="44"
                                         height="34"
                                         className="warehouse-rack"
+                                        style={{
+                                            fill: MAP_THEME.rack.fill,
+                                            stroke: MAP_THEME.rack.stroke,
+                                        }}
                                     />
 
                                     {/* 선반 3단 */}
@@ -495,6 +569,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                         y="27"
                                         textAnchor="middle"
                                         className="warehouse-rack-label"
+                                        style={{ fill: MAP_THEME.rack.text }}
                                     >
                                         {node.id}
                                     </text>
@@ -516,7 +591,12 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     y={convertY(node.y) - 10}
                                     width="28"
                                     height="20"
+                                    rx="3"
                                     className="warehouse-inbound-node"
+                                    style={{
+                                        fill: MAP_THEME.inbound.fill,
+                                        stroke: MAP_THEME.inbound.stroke,
+                                    }}
                                 />
 
                                 <text
@@ -524,6 +604,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     y={convertY(node.y) + 4}
                                     textAnchor="middle"
                                     className="warehouse-station-label"
+                                    style={{ fill: MAP_THEME.inbound.text }}
                                 >
                                     {node.label}
                                 </text>
@@ -559,7 +640,12 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                         y={convertY(node.y) - 10}
                                         width="28"
                                         height="20"
+                                        rx="3"
                                         className="warehouse-outbound-node"
+                                        style={{
+                                            fill: MAP_THEME.outbound.fill,
+                                            stroke: MAP_THEME.outbound.stroke,
+                                        }}
                                     />
 
                                     <text
@@ -567,6 +653,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                         y={convertY(node.y) + 4}
                                         textAnchor="middle"
                                         className="warehouse-station-label"
+                                        style={{ fill: MAP_THEME.outbound.text }}
                                     >
                                         {node.label}
                                     </text>
@@ -599,7 +686,12 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     y={convertY(node.y) - 10}
                                     width="36"
                                     height="20"
+                                    rx="3"
                                     className="warehouse-charging-slot"
+                                    style={{
+                                        fill: MAP_THEME.charging.fill,
+                                        stroke: MAP_THEME.charging.stroke,
+                                    }}
                                 >
                                     <title>{node.id}</title>
                                 </rect>
@@ -609,6 +701,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     y={convertY(node.y) + 4}
                                     textAnchor="middle"
                                     className="warehouse-charging-label"
+                                    style={{ fill: MAP_THEME.charging.text }}
                                 >
                                     {node.index}
                                 </text>
@@ -628,33 +721,153 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                         ))}
                 </g>
 
-                {/* 영역 이름 */}
-                <text
-                    x="40"
-                    y="100"
-                    className="warehouse-area-title"
-                    textAnchor="middle"
-                >
-                    입고지
-                </text>
+                {/* 주요 구역 이름: 지도의 실제 구성요소와 겹치지 않도록 배지로 표시 */}
+                <g className="warehouse-area-badges">
+                    <g transform="translate(16, 12)">
+                        <rect
+                            width="88"
+                            height="28"
+                            rx="8"
+                            fill={MAP_THEME.inbound.fill}
+                            stroke={MAP_THEME.inbound.stroke}
+                        />
+                        <circle
+                            cx="15"
+                            cy="14"
+                            r="4"
+                            fill={MAP_THEME.inbound.stroke}
+                        />
+                        <text
+                            x="50"
+                            y="19"
+                            textAnchor="middle"
+                            className="warehouse-area-title"
+                            style={{ fill: MAP_THEME.inbound.text }}
+                        >
+                            입고지
+                        </text>
+                    </g>
 
-                <text
-                    x={SVG_WIDTH - 40}
-                    y="100"
-                    className="warehouse-area-title"
-                    textAnchor="middle"
-                >
-                    출고지
-                </text>
+                    <g transform={`translate(${SVG_WIDTH - 104}, 12)`}>
+                        <rect
+                            width="88"
+                            height="28"
+                            rx="8"
+                            fill={MAP_THEME.outbound.fill}
+                            stroke={MAP_THEME.outbound.stroke}
+                        />
+                        <circle
+                            cx="15"
+                            cy="14"
+                            r="4"
+                            fill={MAP_THEME.outbound.stroke}
+                        />
+                        <text
+                            x="50"
+                            y="19"
+                            textAnchor="middle"
+                            className="warehouse-area-title"
+                            style={{ fill: MAP_THEME.outbound.text }}
+                        >
+                            출고지
+                        </text>
+                    </g>
 
-                <text
-                    x={SVG_WIDTH / 2}
-                    y={SVG_HEIGHT - 8}
-                    className="warehouse-area-title"
-                    textAnchor="middle"
+                    <g transform={`translate(16, ${SVG_HEIGHT - PADDING_BOTTOM + 12})`}>
+                        <rect
+                            width="96"
+                            height="28"
+                            rx="8"
+                            fill={MAP_THEME.charging.fill}
+                            stroke={MAP_THEME.charging.stroke}
+                        />
+                        <circle
+                            cx="15"
+                            cy="14"
+                            r="4"
+                            fill={MAP_THEME.charging.stroke}
+                        />
+                        <text
+                            x="54"
+                            y="19"
+                            textAnchor="middle"
+                            className="warehouse-area-title"
+                            style={{ fill: MAP_THEME.charging.text }}
+                        >
+                            충전소
+                        </text>
+                    </g>
+                </g>
+
+                {/* 색상 범례 */}
+                <g
+                    className="warehouse-map-legend"
+                    transform={`translate(${SVG_WIDTH / 2 - 420}, ${SVG_HEIGHT - 48})`}
                 >
-                    충전소
-                </text>
+                    <rect
+                        x="0"
+                        y="0"
+                        width="840"
+                        height="38"
+                        rx="10"
+                        fill="#f8fafc"
+                        stroke="#cbd5e1"
+                    />
+
+                    <text
+                        x="22"
+                        y="24"
+                        fontSize="13"
+                        fontWeight="700"
+                        fill="#334155"
+                    >
+                        범례
+                    </text>
+
+                    {LEGEND_ITEMS.map((item, index) => {
+                        const theme = MAP_THEME[item.key];
+                        const itemX = 86 + index * 145;
+
+                        return (
+                            <g
+                                key={item.key}
+                                transform={`translate(${itemX}, 0)`}
+                            >
+                                {item.shape === "circle" ? (
+                                    <circle
+                                        cx="10"
+                                        cy="19"
+                                        r="6"
+                                        fill={theme.fill}
+                                        stroke={theme.stroke}
+                                        strokeWidth="2"
+                                    />
+                                ) : (
+                                    <rect
+                                        x="2"
+                                        y="11"
+                                        width="18"
+                                        height="16"
+                                        rx="3"
+                                        fill={theme.fill}
+                                        stroke={theme.stroke}
+                                        strokeWidth="2"
+                                    />
+                                )}
+
+                                <text
+                                    x="28"
+                                    y="24"
+                                    fontSize="12"
+                                    fontWeight="600"
+                                    fill={theme.text}
+                                >
+                                    {theme.label}
+                                </text>
+                            </g>
+                        );
+                    })}
+                </g>
 
                 {/* 로봇 */}
                 <g className="warehouse-robots">

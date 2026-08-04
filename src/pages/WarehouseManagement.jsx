@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "../styles/WarehouseManagement.css";
 
+import WarehouseSVG from "./WarehouseSVG";
 import { warehouseApi } from "../api/client";
 
 import warehouseGraph1 from "../assets/warehouse-maps/warehouse_graph_1.json";
@@ -49,6 +50,174 @@ const getShelfCount = (mapData) =>
     mapData?.summary?.rack_entity_count ??
     mapData?.summary?.rack_entities_external ??
     0;
+
+
+const normalizeNodeType = (node) =>
+    String(
+        node?.nodeType ??
+        node?.type ??
+        node?.category ??
+        node?.role ??
+        "",
+    )
+        .trim()
+        .toLowerCase();
+
+const createEmptyWarehouseStats = () => ({
+    shelfCount: 0,
+    inboundCount: 0,
+    outboundCount: 0,
+    chargingStationCount: 0,
+});
+
+const firstFiniteNumber = (...values) => {
+    const found = values.find(
+        (value) =>
+            value !== null &&
+            value !== undefined &&
+            Number.isFinite(Number(value)),
+    );
+
+    return found === undefined ? null : Number(found);
+};
+
+const createWarehouseStats = (layout) => {
+    const nodes = Array.isArray(layout?.nodes) ? layout.nodes : [];
+    const summary = layout?.summary ?? {};
+
+    const nodesByType = (targetTypes) =>
+        nodes.filter((node) =>
+            targetTypes.includes(normalizeNodeType(node)),
+        );
+
+    const rackCollection = [
+        layout?.racks,
+        layout?.rackEntities,
+        layout?.shelves,
+        layout?.storageLocations,
+    ].find(Array.isArray);
+
+    // 기본 JSON은 선반 하나당 rack_access 노드가 A/B 두 개씩 있으므로
+    // "_ACCESS_A", "_ACCESS_B"를 제거해 실제 선반 수로 중복 제거한다.
+    const rackIdsFromAccessNodes = new Set(
+        nodesByType(["rack_access"]).map((node) =>
+            String(node.id ?? node.nodeCode ?? "")
+                .replace(/_ACCESS_[AB]$/i, "")
+                .replace(/_ACCESS$/i, ""),
+        ),
+    );
+
+    const shelfCount =
+        firstFiniteNumber(
+            summary.rackEntityCount,
+            summary.rack_entity_count,
+            summary.rackEntitiesExternal,
+            summary.rack_entities_external,
+            summary.rackCount,
+            summary.rack_count,
+            rackCollection?.length,
+        ) ??
+        (rackIdsFromAccessNodes.size > 0
+            ? rackIdsFromAccessNodes.size
+            : nodesByType([
+                  "rack_storage",
+                  "rack",
+                  "shelf",
+                  "storage",
+                  "storage_location",
+              ]).length);
+
+    const inboundCount =
+        firstFiniteNumber(
+            summary.inboundNodes,
+            summary.inbound_nodes,
+            summary.inboundCount,
+            summary.inbound_count,
+            summary.inboundStationCount,
+            summary.inbound_station_count,
+        ) ??
+        nodesByType([
+            "inbound",
+            "inbound_station",
+        ]).length;
+
+    const outboundCount =
+        firstFiniteNumber(
+            summary.outboundNodes,
+            summary.outbound_nodes,
+            summary.logicalOutboundDestinations,
+            summary.logical_outbound_destinations,
+            summary.outboundCount,
+            summary.outbound_count,
+        ) ??
+        nodesByType([
+            "outbound",
+            "outbound_station",
+        ]).length;
+
+    const chargingStationCount =
+        firstFiniteNumber(
+            summary.chargingSlotNodes,
+            summary.charging_slot_nodes,
+            summary.chargingStationCount,
+            summary.charging_station_count,
+            summary.chargingSlotCount,
+            summary.charging_slot_count,
+            summary.chargerCount,
+            summary.charger_count,
+            Array.isArray(layout?.chargingStations)
+                ? layout.chargingStations.length
+                : null,
+        ) ??
+        nodesByType([
+            "charging_station",
+            "charging_slot",
+            "charger_slot",
+            "charger",
+        ]).length;
+
+    return {
+        shelfCount,
+        inboundCount,
+        outboundCount,
+        chargingStationCount,
+    };
+};
+
+function WarehouseConfigIcon({ type }) {
+    if (type === "shelf") {
+        return (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 3v18M19 3v18M5 7h14M5 12h14M5 17h14" />
+            </svg>
+        );
+    }
+
+    if (type === "inbound") {
+        return (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v10M8 9l4 4 4-4" />
+                <path d="M5 14v6h14v-6" />
+            </svg>
+        );
+    }
+
+    if (type === "outbound") {
+        return (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 15V5M8 9l4-4 4 4" />
+                <path d="M5 14v6h14v-6" />
+            </svg>
+        );
+    }
+
+    return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 3v5M16 3v5M7 8h10v4a5 5 0 0 1-10 0V8Z" />
+            <path d="M12 17v4M9 21h6" />
+        </svg>
+    );
+}
 
 const initialWarehouses = [
     {
@@ -268,6 +437,12 @@ function WarehouseManagement() {
 
     const [saveError, setSaveError] = useState("");
 
+    const [warehouseStats, setWarehouseStats] = useState(
+        createEmptyWarehouseStats,
+    );
+
+    const [isStatsLoading, setIsStatsLoading] = useState(false);
+
     const [
         isWarehouseModalOpen,
         setIsWarehouseModalOpen,
@@ -315,6 +490,55 @@ function WarehouseManagement() {
     useEffect(() => {
         reloadWarehouses();
     }, []);
+
+
+    useEffect(() => {
+        const warehouseId = selectedWarehouse?.warehouse_id;
+
+        if (!warehouseId) {
+            setWarehouseStats(createEmptyWarehouseStats());
+            return undefined;
+        }
+
+        let cancelled = false;
+
+        const loadWarehouseStats = async () => {
+            setIsStatsLoading(true);
+
+            try {
+                const layout = await warehouseApi.getLayout(warehouseId);
+
+                if (!cancelled) {
+                    setWarehouseStats(createWarehouseStats(layout));
+                }
+            } catch (error) {
+                console.warn(
+                    "창고 구성 정보 조회 실패",
+                    error.message,
+                );
+
+                if (!cancelled) {
+                    setWarehouseStats(
+                        selectedWarehouse?.mapData
+                            ? createWarehouseStats(
+                                  selectedWarehouse.mapData,
+                              )
+                            : createEmptyWarehouseStats(),
+                    );
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsStatsLoading(false);
+                }
+            }
+        };
+
+        loadWarehouseStats();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedWarehouse?.warehouse_id]);
 
     const openCreateModal = () => {
         setModalMode("CREATE");
@@ -627,72 +851,221 @@ function WarehouseManagement() {
                         </div>
 
                         <div className="warehouse-detail-content">
-                            <div className="warehouse-preview">
-                                {selectedWarehouse.mapData ? (
+                            <section className="warehouse-map-card">
+                                <div className="warehouse-card-heading">
+                                    <div>
+                                        <h2>창고 맵</h2>
+                                        <p>
+                                            창고의 선반과 주요 작업 지점 배치를
+                                            확인할 수 있습니다.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="warehouse-preview">
                                     <div className="warehouse-preview-content">
-                                        <WarehouseMapPreview
-                                            mapData={
-                                                selectedWarehouse.mapData
+                                        <WarehouseSVG
+                                            key={
+                                                selectedWarehouse.warehouse_id
                                             }
+                                            warehouseId={
+                                                selectedWarehouse.warehouse_id
+                                            }
+                                            robots={[]}
+                                            simulationSpeed={1}
                                         />
                                     </div>
-                                ) : (
-                                    <div className="warehouse-preview-placeholder">
-                                        창고 미리보기
+                                </div>
+                            </section>
+
+                            <div className="warehouse-detail-bottom">
+                                <section className="warehouse-configuration">
+                                    <div className="warehouse-configuration-header">
+                                        <div>
+                                            <h2>시설 구성</h2>
+                                            <p>
+                                                창고 맵에 등록된 시설별 수량과
+                                                용도를 확인할 수 있습니다.
+                                            </p>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
 
-                            <div className="warehouse-info">
-                                <div className="warehouse-info-row">
-                                    <span>위치</span>
-                                    <strong>
-                                        {selectedWarehouse.location}
-                                    </strong>
-                                </div>
+                                    <div className="warehouse-facility-list">
+                                        <article className="warehouse-facility-item shelf">
+                                            <div className="warehouse-facility-icon">
+                                                <WarehouseConfigIcon type="shelf" />
+                                            </div>
 
-                                <div className="warehouse-info-row">
-                                    <span>크기</span>
-                                    <strong>
-                                        {selectedWarehouse.width}m ×{" "}
-                                        {selectedWarehouse.height}m
-                                    </strong>
-                                </div>
+                                            <div className="warehouse-facility-main">
+                                                <div className="warehouse-facility-title-row">
+                                                    <strong>선반</strong>
+                                                    <span className="warehouse-facility-badge">
+                                                        맵 표시 · 회색
+                                                    </span>
+                                                </div>
 
-                                <div className="warehouse-info-row">
-                                    <span>등록 로봇 수</span>
-                                    <strong>
-                                        {selectedWarehouse.robotCount}대
-                                    </strong>
-                                </div>
+                                                <p>
+                                                    상품을 적재하고 보관하는
+                                                    랙 시설입니다.
+                                                </p>
+                                            </div>
 
-                                <div className="warehouse-info-row">
-                                    <span>선반 수</span>
-                                    <strong>
-                                        {selectedWarehouse.shelfCount}개
-                                    </strong>
-                                </div>
+                                            <div className="warehouse-facility-count">
+                                                <strong>
+                                                    {isStatsLoading
+                                                        ? "-"
+                                                        : warehouseStats.shelfCount}
+                                                </strong>
+                                                <span>개</span>
+                                            </div>
+                                        </article>
 
-                                <div className="warehouse-info-row">
-                                    <span>생성일</span>
-                                    <strong>
-                                        {selectedWarehouse.createdAt}
-                                    </strong>
-                                </div>
+                                        <article className="warehouse-facility-item inbound">
+                                            <div className="warehouse-facility-icon">
+                                                <WarehouseConfigIcon type="inbound" />
+                                            </div>
 
-                                <div className="warehouse-info-row">
-                                    <span>최근 업데이트</span>
-                                    <strong>
-                                        {selectedWarehouse.updatedAt}
-                                    </strong>
-                                </div>
+                                            <div className="warehouse-facility-main">
+                                                <div className="warehouse-facility-title-row">
+                                                    <strong>입고장</strong>
+                                                    <span className="warehouse-facility-badge">
+                                                        맵 표시 · 초록
+                                                    </span>
+                                                </div>
 
-                                <div className="warehouse-info-row">
-                                    <span>설명</span>
-                                    <strong>
-                                        {selectedWarehouse.description}
-                                    </strong>
-                                </div>
+                                                <p>
+                                                    상품의 입고 작업이 시작되는
+                                                    작업 지점입니다.
+                                                </p>
+                                            </div>
+
+                                            <div className="warehouse-facility-count">
+                                                <strong>
+                                                    {isStatsLoading
+                                                        ? "-"
+                                                        : warehouseStats.inboundCount}
+                                                </strong>
+                                                <span>개</span>
+                                            </div>
+                                        </article>
+
+                                        <article className="warehouse-facility-item outbound">
+                                            <div className="warehouse-facility-icon">
+                                                <WarehouseConfigIcon type="outbound" />
+                                            </div>
+
+                                            <div className="warehouse-facility-main">
+                                                <div className="warehouse-facility-title-row">
+                                                    <strong>출고장</strong>
+                                                    <span className="warehouse-facility-badge">
+                                                        맵 표시 · 주황
+                                                    </span>
+                                                </div>
+
+                                                <p>
+                                                    상품의 출고 작업이 완료되는
+                                                    작업 지점입니다.
+                                                </p>
+                                            </div>
+
+                                            <div className="warehouse-facility-count">
+                                                <strong>
+                                                    {isStatsLoading
+                                                        ? "-"
+                                                        : warehouseStats.outboundCount}
+                                                </strong>
+                                                <span>개</span>
+                                            </div>
+                                        </article>
+
+                                        <article className="warehouse-facility-item charging">
+                                            <div className="warehouse-facility-icon">
+                                                <WarehouseConfigIcon type="charging" />
+                                            </div>
+
+                                            <div className="warehouse-facility-main">
+                                                <div className="warehouse-facility-title-row">
+                                                    <strong>충전소</strong>
+                                                    <span className="warehouse-facility-badge">
+                                                        맵 표시 · 파랑
+                                                    </span>
+                                                </div>
+
+                                                <p>
+                                                    로봇이 대기하거나 배터리를
+                                                    충전하는 시설입니다.
+                                                </p>
+                                            </div>
+
+                                            <div className="warehouse-facility-count">
+                                                <strong>
+                                                    {isStatsLoading
+                                                        ? "-"
+                                                        : warehouseStats.chargingStationCount}
+                                                </strong>
+                                                <span>개</span>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+
+                                <section className="warehouse-info-section">
+                                    <div className="warehouse-info-header">
+                                        <h2>기본 정보</h2>
+                                    </div>
+
+                                    <div className="warehouse-info">
+                                        <div className="warehouse-info-row">
+                                            <span>위치</span>
+                                            <strong>
+                                                {
+                                                    selectedWarehouse.location
+                                                }
+                                            </strong>
+                                        </div>
+
+                                        <div className="warehouse-info-row">
+                                            <span>크기</span>
+                                            <strong>
+                                                {
+                                                    selectedWarehouse.width
+                                                }
+                                                m ×{" "}
+                                                {
+                                                    selectedWarehouse.height
+                                                }
+                                                m
+                                            </strong>
+                                        </div>
+
+                                        <div className="warehouse-info-row">
+                                            <span>생성일</span>
+                                            <strong>
+                                                {
+                                                    selectedWarehouse.createdAt
+                                                }
+                                            </strong>
+                                        </div>
+
+                                        <div className="warehouse-info-row">
+                                            <span>최근 업데이트</span>
+                                            <strong>
+                                                {
+                                                    selectedWarehouse.updatedAt
+                                                }
+                                            </strong>
+                                        </div>
+
+                                        <div className="warehouse-info-row warehouse-info-description">
+                                            <span>설명</span>
+                                            <strong>
+                                                {
+                                                    selectedWarehouse.description
+                                                }
+                                            </strong>
+                                        </div>
+                                    </div>
+                                </section>
                             </div>
                         </div>
                     </>
