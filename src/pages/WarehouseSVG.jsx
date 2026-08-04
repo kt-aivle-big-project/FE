@@ -140,10 +140,8 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
         const rackCrossingPairKeys = new Set(
             racks
                 .map((rack) => {
-                    const routeA =
-                        rack.accessA.adjacent_route_node;
-                    const routeB =
-                        rack.accessB.adjacent_route_node;
+                    const routeA = rack.accessA.adjacent_route_node;
+                    const routeB = rack.accessB.adjacent_route_node;
 
                     if (!routeA || !routeB || routeA === routeB) {
                         return null;
@@ -154,8 +152,12 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                 .filter(Boolean)
         );
 
-        // 실제 SVG에는 랙 관통 엣지를 제외한 선만 전달한다.
-        const edges = (layoutGraph?.edges ?? []).filter((edge) =>
+        // 원본 노드·엣지 구조는 로봇 이동과 기존 그래프 동작을 위해 그대로 유지한다.
+        const edges = layoutGraph?.edges ?? [];
+
+        // 랙을 관통하는 것으로 판단되는 엣지는 화면에서만 숨긴다.
+        // 원본 edges에서는 제거하지 않는다.
+        const renderedEdges = edges.filter((edge) =>
             !rackCrossingPairKeys.has(
                 makeUndirectedEdgeKey(edge.source, edge.target)
             )
@@ -163,7 +165,8 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
 
         return {
             nodes,
-            edges,
+            edges, // 기존 로봇 이동과 그래프 구조에서 사용하는 원본 엣지
+            renderedEdges, // SVG 화면에 선을 그릴 때만 사용하는 엣지 
             nodeMap,
             routeNodes,
             rackAccessNodes,
@@ -237,12 +240,12 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
     const renderEdges = useMemo(() => {
         // source → target 형식으로 모든 방향 엣지를 빠르게 조회한다.
         const directedEdgeKeys = new Set(
-            warehouseView.edges.map(
+            warehouseView.renderedEdges.map(
                 (edge) => `${edge.source}->${edge.target}`
             )
         );
 
-        return warehouseView.edges.map((edge) => {
+        return warehouseView.renderedEdges.map((edge) => {
             const source = warehouseView.nodeMap.get(edge.source);
             const target = warehouseView.nodeMap.get(edge.target);
 
@@ -255,7 +258,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
             const originalX2 = convertX(target.x);
             const originalY2 = convertY(target.y);
 
-            // target → source 엣지가 있으면 이 연결은 양방향이다.
+            // target → source 엣지가 있으면 양방향으로 판단한다.
             const isBidirectional = directedEdgeKeys.has(
                 `${edge.target}->${edge.source}`
             );
@@ -331,7 +334,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
             };
         }).filter(Boolean);
     }, [
-        warehouseView.edges,
+        warehouseView.renderedEdges,
         warehouseView.nodeMap,
         minX,
         maxX,
@@ -616,7 +619,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                 {/* 랙 몸체만 회전시킨다.
                                     ID 텍스트는 바깥 그룹에 두어 항상 수평으로 표시한다. */}
                                 <g transform={`rotate(${rack.rotation})`}>
-                                    
+
                                     {/* 선반 외곽 */}
                                     <rect
                                         x="-22"
@@ -818,7 +821,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                         const robotImage = robotImages[robot.status] ?? robotHero;
                         const robotX = convertX(currentNode.x);
                         const robotY = convertY(currentNode.y);
-                        const ROBOT_SIZE = 46;
+                        const ROBOT_SIZE = 45;
 
                         return (
                             <g
@@ -838,10 +841,10 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                 <defs>
                                     <clipPath id="robot-rounded">
                                         <rect
-                                            x="-23"
+                                            x="-20"
                                             y="-23"
-                                            width="50"
-                                            height="50"
+                                            width="40"
+                                            height="40"
                                             rx="50"
                                             ry="50"
                                         />
@@ -849,10 +852,10 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                 </defs>
                                 <image
                                     href={robotImage}
-                                    x="-23"
-                                    y="-23"
-                                    width="50"
-                                    height="50"
+                                    x="-20"
+                                    y="-20"
+                                    width="40"
+                                    height="40"
                                     clipPath="url(#robot-rounded)"
                                 />
 

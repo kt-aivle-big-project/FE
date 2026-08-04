@@ -48,70 +48,64 @@
 /* 랙 접근 경로 */
 
 .edge-rack_access {
-    stroke: #b5b5b5;
+    stroke: #c5c5c5;
 }
 
 /* 입고 엘리베이터 내부 */
 
 .edge-inbound_stations {
-    stroke: #b5b5b5;
+    stroke: #c5c5c5;
 }
 
 /* 입고 접근 경로 */
 
 .edge-inbound_access {
-    stroke: #999999;
+    stroke: #c5c5c5;
 }
 
 /* 기존 입고 연결 타입 호환 */
 
 .edge-inbound_connector {
-    stroke: #999999;
+    stroke: #c5c5c5;
 }
 
 /* 출고 엘리베이터 내부 */
 
 .edge-outbound_stations {
-    stroke: #b5b5b5;
+    stroke: #c5c5c5;
 }
 
 /* 출고 접근 경로 */
 
 .edge-outbound_access {
-    stroke: #999999;
+    stroke: #c5c5c5;
 }
 
 /* 기존 출고 연결 타입 호환 */
 
 .edge-outbound_connector {
-    stroke: #999999;
+    stroke: #c5c5c5;
 }
 
 /* 충전소 연결 */
 
 .edge-charging_connector {
-    stroke: #999999;
+    stroke: #c5c5c5;
     stroke-dasharray: 4 3;
 }
 
-/* 빈 토트 버퍼 연결 */
-
-.edge-empty_tote_buffer_access {
-    stroke: #999999;
-    stroke-dasharray: 4 3;
-}
 
 /* 렌더링된 엣지가 노드와 로봇 클릭을 방해하지 않도록 한다. */
 
 .warehouse-rendered-edges {
     pointer-events: none;
+    stroke: #c5c5c5;
 }
 
 /* 단방향과 양방향 엣지 모두 기존 선 스타일을 그대로 사용한다. */
 
 .warehouse-rendered-edge {
-    fill: none;
-    vector-effect: non-scaling-stroke;
+    stroke: #c5c5c5;
 }
 
 /* ========================= Route Node ========================= */
@@ -251,11 +245,10 @@
 /* ========================= Robot ========================= */
 
 .warehouse-robot {
-    cursor: pointer;
-    transition-property: transform;
-    transition-timing-function: linear;
-    will-change: transform;
+    transition: none;
+    will-change: auto;
 }
+
 
 .warehouse-robot-image {
     pointer-events: none;
@@ -276,3 +269,4 @@
     stroke: #333333;
     stroke-width: 4;
 }
+
