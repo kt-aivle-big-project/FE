@@ -3,7 +3,7 @@ import laroLogo from "../../assets/laro/laro_logo.png";
 import laroBackground from "../../assets/laro/laro_background.png";
 import "../../styles/login/LoginCommon.css";
 import "../../styles/login/LoginSelect.css";
-import { EmailIcon, LockIcon, GoogleIcon } from "../../components/icon";
+import { EmailIcon, LockIcon, GoogleIcon } from "../../components/common/icon";
 import { API_URL } from "../../api/config";
 
 function LoginSelect() {

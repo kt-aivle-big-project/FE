@@ -323,7 +323,7 @@ textarea:focus {
    로그아웃
 ========================= */
 
-.sidebar-logout {
+.header-logout {
     margin-left: auto;
 }
 
@@ -362,7 +362,7 @@ textarea:focus {
 ========================= */
 
 @media (max-width: 768px) {
-    .sidebar {
+    .header {
         height: auto;
         min-height: 68px;
         flex-wrap: wrap;
