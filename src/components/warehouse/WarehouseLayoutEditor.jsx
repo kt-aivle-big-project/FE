@@ -242,7 +242,43 @@ function WarehouseLayoutEditor({
         Number.isFinite(numericHeight) && numericHeight > 0;
     const editorGridSize = existingMapMode ? EXISTING_MAP_GRID_SIZE : GRID_SIZE;
     const visualGridSize = existingMapMode ? EXISTING_MAP_MAJOR_GRID_SIZE : GRID_SIZE;
-    const activeViewport = viewport ?? {
+    /**
+     * 기본 화면 범위.
+     *
+     * 새로 그리는 창고는 입력한 폭·높이가 곧 도면 크기다.
+     * 반면 지도를 올려 만든 창고는 좌표가 파워포인트 인치라
+     * 폭·높이와 전혀 다른 값이다. 그대로 쓰면 도면이 화면 한구석에
+     * 아주 작게 박히므로, 실제 노드가 차지하는 범위를 재서 맞춘다.
+     */
+    const contentViewport = useMemo(() => {
+        if (!existingMapMode || objects.length === 0) {
+            return null;
+        }
+
+        const xValues = objects.map((object) => Number(object.x)).filter(Number.isFinite);
+        const yValues = objects.map((object) => Number(object.y)).filter(Number.isFinite);
+
+        if (xValues.length === 0 || yValues.length === 0) {
+            return null;
+        }
+
+        const left = Math.min(...xValues);
+        const right = Math.max(...xValues);
+        const top = Math.min(...yValues);
+        const bottom = Math.max(...yValues);
+        const spanX = Math.max(right - left, 1);
+        const spanY = Math.max(bottom - top, 1);
+        const margin = Math.max(spanX, spanY) * 0.06;
+
+        return {
+            x: left - margin,
+            y: top - margin,
+            width: spanX + margin * 2,
+            height: spanY + margin * 2,
+        };
+    }, [existingMapMode, objects]);
+
+    const activeViewport = viewport ?? contentViewport ?? {
         x: 0,
         y: 0,
         width: numericWidth || 1,
@@ -1082,9 +1118,12 @@ function WarehouseLayoutEditor({
                         id: rawIdentity.id,
                         label: rawIdentity.label,
                         resource_id: rawIdentity.id,
-                        ...(anchor.kind === "inbound"
+                        // 설비 코드 필드는 접근 자리로 표현된 지도에만 붙인다.
+                        // inbound/outbound 로 표현된 지도에 이 필드를 넣으면
+                        // 원래 있던 노드와 계약이 달라진다.
+                        ...(anchor.rawNode.type === "inbound_handoff_access"
                             ? { handoff_id: rawIdentity.id }
-                            : anchor.kind === "outbound"
+                            : anchor.rawNode.type === "outbound_station_access"
                                 ? { station_id: rawIdentity.id }
                                 : {}),
                     },
