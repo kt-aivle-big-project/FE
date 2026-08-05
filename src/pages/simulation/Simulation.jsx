@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "../../styles/simulation/Simulation.css";
 
-import WarehouseSVG from "../WarehouseSVG";
+import WarehouseSVG from "../../components/warehouse/viewer/WarehouseSVG";
 import SimulationPanel from "./SimulationPanel";
 import SimulationTask from "./SimulationTask";
 import SimulationEvent from "./SimulationEvent";
