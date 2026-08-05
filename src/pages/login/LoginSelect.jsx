@@ -4,8 +4,7 @@ import laroBackground from "../../assets/laro/laro_background.png";
 import "../../styles/login/LoginCommon.css";
 import "../../styles/login/LoginSelect.css";
 import { EmailIcon, LockIcon, GoogleIcon } from "../../components/icon";
-
-const API_URL = "http://localhost:8080/api";
+import { API_URL } from "../../api/config";
 
 function LoginSelect() {
     const navigate = useNavigate();
@@ -17,7 +16,7 @@ function LoginSelect() {
     const handleGuestLogin = async () => {
         try {
             const response = await fetch(
-                "/api/auth/guest",
+                `${API_URL}/auth/guest`,
                 {
                     method: "POST",
                     headers: {
