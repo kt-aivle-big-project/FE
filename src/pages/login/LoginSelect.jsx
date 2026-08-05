@@ -90,8 +90,8 @@ function LoginSelect() {
                             className="login-button login-button-secondary"
                             onClick={handleGuestLogin}
                         >
-                            <span className="login-button-icon login-select-google-icon">
-                                <GoogleIcon />
+                            <span className="login-button-icon login-select-email-icon">
+                                <EmailIcon />
                             </span>
 
                             게스트로 둘러보기

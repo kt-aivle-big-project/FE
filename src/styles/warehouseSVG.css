@@ -1,51 +1,28 @@
-/* ========================= Warehouse SVG Wrapper ========================= */
+/* =========================
+   Warehouse SVG Wrapper
+========================= */
 
 .warehouse-svg-wrapper {
     position: relative;
+
     width: 100%;
     height: 100%;
 
     min-width: 0;
     box-sizing: border-box;
     overflow: hidden;
-<<<<<<< HEAD
-    background: var(--background-color);
-=======
 
-<<<<<<< HEAD
-    background: #ffffff;
->>>>>>> 81d89ae1171ff6032df6ebba517bcc88c83b17fa
-=======
     background: var(--background-color);
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 }
 
-/* ========================= Warehouse SVG ========================= */
+/* =========================
+   Warehouse SVG
+========================= */
 
 .warehouse-svg {
     display: block;
     width: 100%;
     height: 100%;
-<<<<<<< HEAD
-<<<<<<< HEAD
-    background: #ffffff;
-}
-
-/* ========================= Edge ========================= */
-
-.warehouse-edge {
-    fill: none;
-    stroke: #c5c5c5;
-    stroke-width: 2;
-}
-
-/* 일반 이동 경로 */
-
-=======
-    min-width: 0;
-    min-height: 0;
-=======
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 
     background: #ffffff;
 }
@@ -61,102 +38,12 @@
     stroke-width: 2;
 }
 
-<<<<<<< HEAD
->>>>>>> 81d89ae1171ff6032df6ebba517bcc88c83b17fa
-=======
 /* 일반 이동 경로 */
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 .edge-lane {
     stroke: #c5c5c5;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-/* 주요 이동 경로 */
-
-.edge-spine {
-    stroke: #c5c5c5;
-}
-
-/* 외곽 복귀 경로 */
-
-.edge-return_perimeter {
-    stroke: #c5c5c5;
-}
-
 /* 랙 접근 경로 */
-
-.edge-rack_access {
-    stroke: #c5c5c5;
-}
-
-/* 입고 엘리베이터 내부 */
-
-.edge-inbound_stations {
-    stroke: #c5c5c5;
-}
-
-/* 입고 접근 경로 */
-
-.edge-inbound_access {
-    stroke: #c5c5c5;
-}
-
-/* 기존 입고 연결 타입 호환 */
-
-.edge-inbound_connector {
-    stroke: #c5c5c5;
-}
-
-/* 출고 엘리베이터 내부 */
-
-.edge-outbound_stations {
-    stroke: #c5c5c5;
-}
-
-/* 출고 접근 경로 */
-
-.edge-outbound_access {
-    stroke: #c5c5c5;
-}
-
-/* 기존 출고 연결 타입 호환 */
-
-.edge-outbound_connector {
-    stroke: #c5c5c5;
-}
-
-/* 충전소 연결 */
-
-.edge-charging_connector {
-    stroke: #c5c5c5;
-    stroke-dasharray: 4 3;
-}
-
-
-/* 렌더링된 엣지가 노드와 로봇 클릭을 방해하지 않도록 한다. */
-
-.warehouse-rendered-edges {
-    pointer-events: none;
-    stroke: #c5c5c5;
-}
-
-/* 단방향과 양방향 엣지 모두 기존 선 스타일을 그대로 사용한다. */
-
-.warehouse-rendered-edge {
-    stroke: #c5c5c5;
-}
-
-/* ========================= Route Node ========================= */
-
-.warehouse-route-node {
-    fill: #ffffff;
-    stroke: #777777;
-    stroke-width: 1;
-=======
-=======
-/* 랙 접근 경로 */
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 .edge-rack_access {
     stroke: #b5b5b5;
 }
@@ -294,42 +181,25 @@
    Route Node
 ========================= */
 .warehouse-route-node {
-<<<<<<< HEAD
-    stroke-width: 1.2;
->>>>>>> 81d89ae1171ff6032df6ebba517bcc88c83b17fa
-=======
     fill: #ffffff;
 
     stroke: #777777;
     stroke-width: 1;
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 }
 
 .warehouse-route-label {
     font-size: 8px;
     fill: #555555;
     pointer-events: none;
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
     
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 }
 
 .warehouse-node-toggle {
     position: absolute;
     top: 10px;
     right: 10px;
-<<<<<<< HEAD
-    z-index: 10;
-}
-
-/* ========================= Route Access Nodes ========================= */
-=======
-=======
 
     z-index: 10;
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 }
 
 /* =========================
@@ -337,39 +207,15 @@
    Route ↔ inbound
    Route ↔ outbound
 ========================= */
-<<<<<<< HEAD
->>>>>>> 81d89ae1171ff6032df6ebba517bcc88c83b17fa
-
-.warehouse-charge-junction,
-.warehouse-inbound-access,
-.warehouse-outbound-access {
-<<<<<<< HEAD
-    fill: #ffffff;
-=======
 .warehouse-charge-junction,
 .warehouse-inbound-access,
 .warehouse-outbound-access {
     fill: #ffffff;
 
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
     stroke: #333333;
     stroke-width: 1;
 }
 
-<<<<<<< HEAD
-/* ========================= Rack ========================= */
-
-.warehouse-rack {
-    fill: #ffffff;
-    stroke: #333333;
-    stroke-width: 1.5;
-}
-
-/* 랙 내부 각 층 */
-
-=======
-    stroke-width: 1.5;
-=======
 .warehouse-inbound-access {
     fill: #8754c7;
     stroke: #6d3fac;
@@ -378,7 +224,6 @@
 .warehouse-outbound-access {
     fill: #269653;
     stroke: #1f7540;
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 }
 
 /* =========================
@@ -391,118 +236,33 @@
     stroke-width: 1.5;
 }
 
-<<<<<<< HEAD
->>>>>>> 81d89ae1171ff6032df6ebba517bcc88c83b17fa
-=======
 /* 랙 내부 각 층 */
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 .warehouse-rack-level {
     stroke: #777777;
     stroke-width: 0.5;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 /* 비어 있음 */
-
-=======
->>>>>>> 81d89ae1171ff6032df6ebba517bcc88c83b17fa
-=======
-/* 비어 있음 */
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 .rack-level-empty {
     fill: #ffffff;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 /* 일부 적재 */
-
-=======
->>>>>>> 81d89ae1171ff6032df6ebba517bcc88c83b17fa
-=======
-/* 일부 적재 */
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 .rack-level-partial {
     fill: #cccccc;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 /* 가득 참 */
-
-=======
->>>>>>> 81d89ae1171ff6032df6ebba517bcc88c83b17fa
-=======
-/* 가득 참 */
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 .rack-level-full {
     fill: #777777;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-/* 랙 ID */
-
-.warehouse-rack-label {
-    font-size: 9px;
-    fill: #333333;
-    pointer-events: none;
-}
-
-/* ========================= Inbound ========================= */
-
-.warehouse-inbound-node {
-    fill: #ffffff;
-    stroke: #333333;
-    stroke-width: 1.5;
-}
-
-/* ========================= Outbound ========================= */
-
-.warehouse-outbound-node {
-    fill: #ffffff;
-    stroke: #333333;
-    stroke-width: 1.5;
-}
-
-/* 입출고 노드 글자 */
-
-.warehouse-station-label {
-    font-size: 10px;
-    fill: #333333;
-    pointer-events: none;
-}
-
-/* ========================= Charging ========================= */
-
-.warehouse-charging-slot {
-    fill: #ffffff;
-    stroke: #333333;
-    stroke-width: 1.5;
-}
-
-.warehouse-charging-label {
-    font-size: 9px;
-    fill: #333333;
-    pointer-events: none;
-}
-
-/* ========================= Area Label ========================= */
-
-.warehouse-area-title {
-    font-size: 14px;
-    font-weight: 600;
-    fill: #333333;
-=======
-=======
 .rack-level-occupied {
     stroke: rgba(30, 41, 59, 0.45);
     stroke-width: 0.6;
 }
 
 /* 랙 ID */
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 .warehouse-rack-label {
     font-size: 9px;
 
@@ -572,7 +332,6 @@
 
     fill: #333333;
 
->>>>>>> 81d89ae1171ff6032df6ebba517bcc88c83b17fa
     pointer-events: none;
 }
 
@@ -582,24 +341,13 @@
     pointer-events: none;
 }
 
-/* ========================= Aisle Label ========================= */
+/* =========================
+   Aisle Label
+========================= */
 
 .warehouse-aisle-label {
     font-size: 11px;
-<<<<<<< HEAD
-<<<<<<< HEAD
     font-weight: 600;
-    fill: #555555;
-    pointer-events: none;
-}
-
-/* ========================= Robot ========================= */
-=======
-    font-weight: 700;
-    fill: #475569;
-=======
-    font-weight: 600;
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 
     fill: #555555;
 
@@ -609,19 +357,10 @@
 /* =========================
    Robot
 ========================= */
-<<<<<<< HEAD
->>>>>>> 81d89ae1171ff6032df6ebba517bcc88c83b17fa
-
-.warehouse-robot {
-    transition: none;
-    will-change: auto;
-=======
 .warehouse-robot {
     cursor: pointer;
     will-change: transform;
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 }
-
 
 .warehouse-robot-image {
     pointer-events: none;
@@ -629,48 +368,16 @@
 
 .warehouse-robot-id {
     font-size: 12px;
-<<<<<<< HEAD
-<<<<<<< HEAD
-    fill: #222222;
-=======
-    font-weight: 700;
-    fill: #0f172a;
-=======
 
     fill: #222222;
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 
->>>>>>> 81d89ae1171ff6032df6ebba517bcc88c83b17fa
     paint-order: stroke;
     stroke: #ffffff;
     stroke-width: 3px;
+
     pointer-events: none;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-/* ========================= Active Path Edge ========================= */
-
-.warehouse-edge-active {
-    stroke: #333333;
-    stroke-width: 4;
-}
-
-=======
-/* =========================
-   작은 화면
-========================= */
-
-@media (max-width: 1000px) {
-    .warehouse-node-toggle {
-        min-width: 104px;
-        height: 31px;
-        padding: 0 10px;
-        font-size: 12px;
-    }
-}
->>>>>>> 81d89ae1171ff6032df6ebba517bcc88c83b17fa
-=======
 .warehouse-fixed-station-robot {
     pointer-events: none;
     filter: drop-shadow(0 2px 2px rgb(15 35 65 / 24%));
@@ -722,4 +429,3 @@
     from { transform: rotate(-3deg); }
     to { transform: rotate(3deg); }
 }
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b

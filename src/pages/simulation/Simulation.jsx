@@ -16,12 +16,6 @@ import {
     fulfillmentCommandApi,
 } from "../../api/client";
 
-<<<<<<< HEAD
-import inbound from "../../data/inbound.json";
-import outbound from "../../data/outbound.json";
-
-=======
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 // 창고 목록을 못 불러왔을 때 쓸 기본 창고
 const DEFAULT_WAREHOUSE_ID = 1;
 
@@ -132,27 +126,6 @@ function Simulation() {
         setSelectedWarehouseIdState(warehouseId);
     };
 
-<<<<<<< HEAD
-    /**
-     * 백엔드에서 조회한 시나리오 목록입니다.
-     *
-     * Scenario에서 저장한 camelCase 필드명을 그대로 사용하며,
-     * Simulation 내부에서 별도의 시나리오 변환 객체를 만들지 않습니다.
-     */
-    const [scenarios, setScenarios] = useState([]);
-    const [selectedScenarioId, setSelectedScenarioId] = useState("");
-
-    /**
-     * 현재 선택한 시나리오입니다.
-     * 선택 ID와 백엔드 시나리오 ID를 비교해 원본 객체를 그대로 사용합니다.
-     */
-    const selectedScenario =
-        scenarios.find(
-            (scenario) =>
-                String(scenario.id) === String(selectedScenarioId)
-        ) ?? null;
-=======
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
     const [simulationSpeed, setSimulationSpeed] = useState(1);
     const [simulationStatus, setSimulationStatus] = useState("대기");
     const [simulationTime, setSimulationTime] = useState(0);
@@ -191,15 +164,11 @@ function Simulation() {
     // 시작하면 그 실행의 작업으로 채워지고, 이후 WebSocket 으로 갱신된다.
     const [taskList, setTaskList] = useState([]);
     const [eventList, setEventList] = useState([]);
-<<<<<<< HEAD
-    const [products, setProducts] = useState([]);
-=======
     const [generatedCommands, setGeneratedCommands] = useState([]);
 
     useEffect(() => {
         setGeneratedCommands([]);
     }, [simulationRunId, selectedWarehouseId]);
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 
     /* =========================================================
        백엔드 초기 데이터 로딩
@@ -233,83 +202,6 @@ function Simulation() {
         loadWarehouses();
     }, []);
 
-<<<<<<< HEAD
-    // 창고를 바꾸면 해당 창고의 시나리오와 상품 목록을 다시 불러온다.
-    useEffect(() => {
-        let isCancelled = false;
-
-        const loadInitialData = async () => {
-            try {
-                const response = await scenarioApi.getAll(
-                    selectedWarehouseId
-                );
-
-                /**
-                 * 시나리오 응답은 별도 변환 함수 없이 원본 필드명을 유지합니다.
-                 * 배열 또는 페이징 응답에서 실제 목록만 꺼내 상태에 저장합니다.
-                 */
-                const scenarioList = Array.isArray(response)
-                    ? response
-                    : Array.isArray(response?.content)
-                        ? response.content
-                        : Array.isArray(response?.data)
-                            ? response.data
-                            : Array.isArray(response?.data?.content)
-                                ? response.data.content
-                                : [];
-
-                if (!isCancelled) {
-                    setScenarios(scenarioList);
-                    setSelectedScenarioId(
-                        scenarioList[0]?.id ?? ""
-                    );
-                }
-            } catch (error) {
-                console.error(
-                    "시나리오 목록 조회 실패:",
-                    error
-                );
-
-                if (!isCancelled) {
-                    setScenarios([]);
-                    setSelectedScenarioId("");
-                }
-            }
-
-            try {
-                const productList = await productApi.getAll();
-
-                if (!isCancelled) {
-                    setProducts(
-                        Array.isArray(productList)
-                            ? productList.map((product) => ({
-                                product_code: product.productCode,
-                                product_name: product.productName,
-                            }))
-                            : []
-                    );
-                }
-            } catch (error) {
-                console.error(
-                    "상품 목록 조회 실패:",
-                    error
-                );
-
-                if (!isCancelled) {
-                    setProducts([]);
-                }
-            }
-        };
-
-        loadInitialData();
-
-        return () => {
-            isCancelled = true;
-        };
-    }, [selectedWarehouseId]);
-
-=======
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
     // 시작 전에도 창고에 등록된 로봇을 지도에 보여준다.
     // 실행 중이면 실시간 상태가 우선이므로 건드리지 않는다.
     useEffect(() => {
@@ -330,27 +222,6 @@ function Simulation() {
         return [hours, minutes, seconds]
             .map((value) => String(value).padStart(2, "0"))
             .join(":");
-    };
-
-    /**
-     * 실행할 시나리오 변경.
-     *
-     * 실행이 생성된 뒤에는 해당 실행이 기존 시나리오 ID와 연결되어 있으므로
-     * 중지하거나 새 작업을 만들기 전까지 시나리오 변경을 막는다.
-     */
-    const handleScenarioChange = (scenarioId) => {
-        if (simulationRunId) {
-            alert(
-                "진행 중인 시뮬레이션을 중지한 뒤 시나리오를 변경해주세요."
-            );
-            return;
-        }
-
-        setSelectedScenarioId(scenarioId);
-        setTaskList([]);
-        setEventList([]);
-        setSimulationTime(0);
-        setSimulationStatus("대기");
     };
 
     /**
@@ -515,60 +386,6 @@ function Simulation() {
     }, [simulationRunId]);
 
     /**
-<<<<<<< HEAD
-     * 현재 선택한 시나리오와 화면 설정을
-     * SimulationRunCreateRequest 형태로 한 번에 구성합니다.
-     *
-     * 시나리오 조회 응답의 camelCase 필드명을 그대로 사용하므로
-     * 별도의 시나리오 변환 함수나 중간 데이터 객체가 필요하지 않습니다.
-     */
-    const buildCreatePayload = () => ({
-        warehouseId: selectedWarehouseId,
-        scenarioId: selectedScenario?.id ?? null,
-        name: selectedScenario?.name ?? "",
-        description: selectedScenario?.description ?? "",
-        robotTypes: selectedScenario?.robotTypes ?? [],
-        initialBattery: selectedScenario?.initialBattery ?? 100,
-        chargeThreshold: selectedScenario?.chargeThreshold ?? 20,
-        replanMethod:
-            selectedScenario?.replanMethod ??
-            "AFFECTED_TASKS_ONLY",
-
-        /**
-         * Scenario에서는 상품명만 입력합니다.
-         * 백엔드 조회 후 productCode가 존재하면 함께 전달하고,
-         * 아직 코드가 없다면 productName만 전달합니다.
-         */
-        products: (selectedScenario?.products ?? []).map(
-            (product) => ({
-                productName: product.productName,
-                ...(product.productCode
-                    ? { productCode: product.productCode }
-                    : {}),
-            })
-        ),
-
-        simulationSpeed: Number(simulationSpeed),
-        inbound: {
-            inboundCount: inboundSettings.inbound_count,
-            totalQuantity: inboundSettings.total_quantity,
-            arrivalPattern: inboundSettings.arrival_pattern,
-            products: inboundSettings.products.map((product) => ({
-                productName: product.product_name,
-                ratio: product.ratio,
-            })),
-        },
-        outbound: {
-            orderCount: outboundSettings.order_count,
-            totalQuantity: outboundSettings.total_quantity,
-            arrivalPattern: outboundSettings.arrival_pattern,
-            processingDeadlineMinutes:
-                outboundSettings.processing_deadline_minutes,
-            allowPartialShipment:
-                outboundSettings.allow_partial_shipment,
-        },
-    });
-=======
      * 실행 컨테이너만 만든다. 입출고 명령은 시작 후 0분·5분·10분에
      * 백엔드 command cycle이 재고를 읽어 자동 생성한다.
      */
@@ -578,37 +395,12 @@ function Simulation() {
             simulationSpeed: Number(simulationSpeed),
         };
     };
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
 
     /**
      * 설정값이 유효한지 검사한다.
      */
     const validateSettings = () => {
-<<<<<<< HEAD
-        if (!selectedScenarioId || !selectedScenario) {
-            alert("시나리오를 선택해주세요.");
-            return false;
-        }
-
-        if ((selectedScenario.robotTypes ?? []).length === 0) {
-            alert("선택한 시나리오에 로봇 유형이 없습니다.");
-            return false;
-        }
-
-        if ((selectedScenario.products ?? []).length === 0) {
-            alert("선택한 시나리오에 등록된 상품이 없습니다.");
-            return false;
-        }
-
-        if (inboundRatioTotal !== 100) {
-            alert("입고 품목 구성 비율의 합계가 100%가 되어야 합니다.");
-            return false;
-        }
-
-        return true;
-=======
         return Boolean(selectedWarehouseId);
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
     };
 
     /**
@@ -1029,68 +821,6 @@ function Simulation() {
     );
 
     /* =========================================================
-<<<<<<< HEAD
-       입출고 설정 패널
-    ========================================================= */
-
-    const [inboundSettings, setInboundSettings] = useState(inbound);
-    const [outboundSettings, setOutboundSettings] = useState(outbound);
-
-    // 입고 품목 비율 합계
-    const inboundRatioTotal = inboundSettings.products.reduce(
-        (total, product) => total + Number(product.ratio),
-        0
-    );
-
-    // 자연어 명령 처리
-    const [naturalCommand, setNaturalCommand] = useState("");
-
-    const handleNaturalCommand = async () => {
-        const command = naturalCommand.trim();
-
-        if (!command) {
-            alert("명령을 입력해주세요.");
-            return;
-        }
-
-        if (!simulationRunId) {
-            alert("먼저 시뮬레이션을 실행해주세요.");
-            return;
-        }
-
-        try {
-            console.log("자연어 명령:", { command: command });
-
-            const data = await api.post(
-                `/simulation-runs/${simulationRunId}/commands`,
-                { command: command }
-            );
-
-            console.log("자연어 명령 응답:", data);
-            setNaturalCommand("");
-        } catch (error) {
-            console.error("자연어 명령 처리 실패:", error);
-            alert(error.message ?? "명령을 처리하지 못했습니다.");
-        }
-    };
-
-    /**
-     * 선택한 시나리오에 상품이 있으면 해당 상품만 패널에 전달합니다.
-     *
-     * 시나리오 상품을 아직 받지 못한 경우에만 전체 상품 조회 결과를
-     * 폴백 데이터로 사용합니다.
-     */
-    const panelProducts =
-        selectedScenario?.products?.length > 0
-            ? selectedScenario.products.map((product) => ({
-                product_code: product.productCode ?? null,
-                product_name: product.productName,
-            }))
-            : products;
-
-    /* =========================================================
-=======
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
        화면
     ========================================================= */
 
@@ -1126,41 +856,6 @@ function Simulation() {
                                         value={warehouse.id}
                                     >
                                         {warehouse.name}
-                                    </option>
-                                ))
-                            )}
-                        </select>
-                    </div>
-
-                    {/* 실행할 시나리오 선택 */}
-                    <div className="simulation-header-info-item simulation-scenario">
-                        <span className="simulation-header-label">
-                            시나리오
-                        </span>
-
-                        <select
-                            value={selectedScenarioId}
-                            onChange={(event) =>
-                                handleScenarioChange(
-                                    event.target.value
-                                )
-                            }
-                            disabled={
-                                scenarios.length === 0 ||
-                                Boolean(simulationRunId)
-                            }
-                        >
-                            {scenarios.length === 0 ? (
-                                <option value="">
-                                    등록된 시나리오 없음
-                                </option>
-                            ) : (
-                                scenarios.map((scenario) => (
-                                    <option
-                                        key={scenario.id}
-                                        value={scenario.id}
-                                    >
-                                        {scenario.name}
                                     </option>
                                 ))
                             )}
@@ -1286,24 +981,12 @@ function Simulation() {
 
             {/* 입출고 설정 / 자연어 명령 패널 */}
             <SimulationPanel
-<<<<<<< HEAD
-                inboundSettings={inboundSettings}
-                setInboundSettings={setInboundSettings}
-                outboundSettings={outboundSettings}
-                setOutboundSettings={setOutboundSettings}
-                products={panelProducts}
-                inboundRatioTotal={inboundRatioTotal}
-                naturalCommand={naturalCommand}
-                setNaturalCommand={setNaturalCommand}
-                handleNaturalCommand={handleNaturalCommand}
-=======
                 simulationRunId={simulationRunId}
                 onSimulatedTimeChange={setSimulationTime}
                 tasks={taskList}
                 commandExpressionMix={commandExpressionMix}
                 onCommandExpressionMixChange={setCommandExpressionMix}
                 onGeneratedCommandsChange={setGeneratedCommands}
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
             />
 
             {/* 작업 목록 (WebSocket 실시간 갱신) */}
@@ -1312,14 +995,10 @@ function Simulation() {
             {/* 이벤트 목록 (WebSocket 실시간 갱신) */}
             <SimulationEvent events={eventList} />
 
-<<<<<<< HEAD
-
-=======
             {/* 하단 footer */}
             <footer className="footer">
                 Footer
             </footer>
->>>>>>> 6076e7e8ba5244fac37d09f51b6d5aeeedbeec8b
         </div>
     );
 }

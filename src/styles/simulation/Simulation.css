@@ -3,19 +3,20 @@
 ========================= */
 
 .simulation-wrapper {
-    width: 100%;
+    width: 1500px;
     min-height: 100vh;
 
     display: grid;
     margin-left: 5px;
 
     grid-template-areas:
-        "simulation-header simulation-header simulation-header"
-        "simulation-view simulation-view simulation-panel"
-        "simulation-task simulation-robot simulation-event"
-        ;
+        "simulation-header simulation-header"
+        "simulation-view   simulation-panel"
+        "simulation-task   simulation-event"
+        "simulation-setting simulation-setting"
+        "footer footer";
 
-    grid-template-columns: minmax(0, 4fr) 250px;
+    grid-template-columns: minmax(0, 1fr) 390px;
     grid-template-rows:
         70px auto auto auto auto 100px;
 
@@ -220,10 +221,6 @@
 
 }
 
-.simulation-robot {
-    grid-area: simulation-robot;
-}
-
 .simulation-event {
     grid-area: simulation-event;
 
@@ -232,7 +229,7 @@
 .simulation-task,
 .simulation-event {
     display: flex;
-    min-height: 100px;
+    min-height: 220px;
 
     width: 100%;
 

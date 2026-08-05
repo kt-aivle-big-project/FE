@@ -1,13 +1,8 @@
-import { useEffect, useState } from "react";
-import "../styles/warehouseSVG.css";
+import { useEffect, useRef, useState } from "react";
+import "../styles/WarehouseSVG.css";
+import { productApi, warehouseApi, warehouseItemApi } from "../api/client";
 
-import rackInventory from "../data/rack_inventory.json";
-
-// 창고별 정적 지도 JSON.
-// 이 데이터는 창고의 고정 구조(노드, 엣지, 시설 위치)를 화면에 그리는 용도로만 사용한다.
-import warehouseGraph1 from "../assets/warehouse-maps/warehouse_graph_1.json";
-import warehouseGraph2 from "../assets/warehouse-maps/warehouse_graph_2.json";
-import warehouseGraph3 from "../assets/warehouse-maps/warehouse_graph_3.json";
+// API 조회 전 또는 실패 시에는 Neo4j 계약과 동일한 기본형 지도 하나만 사용한다.
 
 import robotCharging from "../assets/robots/robot_charging.png";
 import robotHero from "../assets/robots/robot_hero.png";
@@ -16,387 +11,714 @@ import robotPutaway from "../assets/robots/robot_putaway.png";
 import robotRelocation from "../assets/robots/robot_relocation.png";
 import robotReplenish from "../assets/robots/robot_replenish.png";
 
-// JSON의 node.type을 기준으로 창고 구성요소 색상을 통일한다.
-// 백엔드 레이아웃도 nodeType을 소문자로 변환해 type에 넣으므로
-// 폴백 JSON과 API 응답 모두 같은 색상 규칙을 사용한다.
-const MAP_THEME = {
-    route: {
-        fill: "#ffffff",
-        stroke: "#64748b",
-        text: "#475569",
-        label: "일반 노드",
-    },
-    rack: {
-        fill: "#e2e8f0",
-        stroke: "#475569",
-        text: "#334155",
-        label: "선반",
-    },
-    inbound: {
-        fill: "#dcfce7",
-        stroke: "#16a34a",
-        text: "#166534",
-        label: "입고지",
-    },
-    outbound: {
-        fill: "#ffedd5",
-        stroke: "#f97316",
-        text: "#9a3412",
-        label: "출고지",
-    },
-    charging: {
-        fill: "#dbeafe",
-        stroke: "#2563eb",
-        text: "#1d4ed8",
-        label: "충전 슬롯",
-    },
-};
-
-const LEGEND_ITEMS = [
-    { key: "rack", shape: "rect" },
-    { key: "route", shape: "circle" },
-    { key: "inbound", shape: "rect" },
-    { key: "outbound", shape: "rect" },
-    { key: "charging", shape: "rect" },
-];
-
-function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
-    // 노드 ID 표시 ON / OFF
-    const [showNodeLabels, setShowNodeLabels] = useState(false);
-
-    /*
-     * 정적 지도와 동적 시뮬레이션 결과 분리
-     * layoutGraph: JSON에서 읽어오는 창고의 고정 구조
-     * - 창고가 바뀔 때만 교체된다.
-     * simulationData: 백엔드 또는 상위 컴포넌트에서 전달하는 동적 결과
-     * - 현재 단계에서는 로봇 상태만 보관한다.
-     * - 이후 activePaths, blockedEdges, tasks 등을 이 객체에 추가할 수 있다.
-     */
-    const layoutGraph = useMemo(() =>
-        fallbackGraphOf(warehouseId),
-        [warehouseId]
+const withRackStorageNodes = (graph) => {
+    const nodes = Array.isArray(graph?.nodes) ? graph.nodes : [];
+    const existingRackIds = new Set(
+        nodes
+            .filter((node) => node.type === "rack_storage")
+            .map((node) => node.id),
     );
+    const accessNodesByRack = new Map();
 
-    const simulationData = useMemo(() => ({
-        robots,
-    }),
-        [robots]
-    );
-
-    // JSON 원본을 화면 렌더링에 필요한 형태로 분류한다.
-    const warehouseView = useMemo(() => {
-        const nodes = layoutGraph?.nodes ?? [];
-
-        // 노드 타입별 배열을 미리 만들어 렌더링 코드의 중복 filter를 제거한다.
-        const routeNodes = nodes.filter((node) => node.type === "route");
-        const rackAccessNodes = nodes.filter(
-            (node) => node.type === "rack_access"
-        );
-        const inboundAccessNodes = nodes.filter(
-            (node) => node.type === "inbound_access"
-        );
-        const outboundAccessNodes = nodes.filter(
-            (node) => node.type === "outbound_access"
-        );
-        const chargeJunctionNodes = nodes.filter(
-            (node) => node.type === "route_charge_junction"
-        );
-        const chargingNodes = nodes.filter(
-            (node) => node.type === "charging_slot"
-        );
-        const inboundNodes = nodes.filter(
-            (node) => node.type === "inbound"
-        );
-        const outboundNodes = nodes.filter(
-            (node) => node.type === "outbound"
-        );
-        const emptyToteBufferNodes = nodes.filter(
-            (node) => node.type === "empty_tote_buffer_access"
-        );
-
-        // edge.source / edge.target의 ID를 실제 노드 좌표로 찾을 때 사용한다.
-        const nodeMap = new Map(nodes.map((node) => [node.id, node]));
-
-        // rack_access A/B의 가운데 좌표를 실제 랙의 화면 위치로 사용한다.
-        const rackMap = new Map();
-
-        rackAccessNodes.forEach((accessNode) => {
-            if (!accessNode.rack_id) {
-                return;
-            }
-
-            if (!rackMap.has(accessNode.rack_id)) {
-                rackMap.set(accessNode.rack_id, {
-                    id: accessNode.rack_id,
-                    accessA: null,
-                    accessB: null,
-                });
-            }
-
-            const rack = rackMap.get(accessNode.rack_id);
-
-            if (accessNode.side === "A") {
-                rack.accessA = accessNode;
-            } else if (accessNode.side === "B") {
-                rack.accessB = accessNode;
-            }
+    nodes
+        .filter((node) => node.type === "rack_access")
+        .forEach((node) => {
+            const rackId =
+                node.rack_id ??
+                node.resourceCode ??
+                node.id?.replace(/_ACCESS_[A-Z]$/, "");
+            if (!rackId) return;
+            const accessNodes = accessNodesByRack.get(rackId) ?? [];
+            accessNodes.push(node);
+            accessNodesByRack.set(rackId, accessNodes);
         });
 
-        const racks = [...rackMap.values()]
-            // A/B 접근점이 모두 있는 정상 랙만 화면에 표시한다.
-            .filter((rack) => rack.accessA && rack.accessB)
-            .map((rack) => {
-                const deltaX = rack.accessB.x - rack.accessA.x;
-                const deltaY = rack.accessB.y - rack.accessA.y;
+    const derivedRacks = [...accessNodesByRack.entries()]
+        .filter(([rackId]) => !existingRackIds.has(rackId))
+        .map(([rackId, accessNodes]) => ({
+            id: rackId,
+            type: "rack_storage",
+            x:
+                accessNodes.reduce((sum, node) => sum + Number(node.x), 0) /
+                accessNodes.length,
+            y:
+                accessNodes.reduce((sum, node) => sum + Number(node.y), 0) /
+                accessNodes.length,
+            visualOnly: true,
+        }));
 
-                return {
-                    ...rack,
+    return {
+        ...graph,
+        nodes: [...nodes, ...derivedRacks],
+    };
+};
 
-                    // A/B 접근점의 중간을 실제 랙 중심으로 사용한다.
-                    x: (rack.accessA.x + rack.accessB.x) / 2,
-                    y: (rack.accessA.y + rack.accessB.y) / 2,
+const clamp01 = (value) => Math.max(0, Math.min(1, Number(value) || 0));
 
-                    // 접근점이 좌우로 놓이면 랙은 세로 방향, 접근점이 위아래로 놓이면 랙은 가로 방향으로 표시한다.
-                    rotation: Math.abs(deltaX) > Math.abs(deltaY) ? 90 : 0,
-                };
-            });
+const productColor = (itemId) => {
+    const numericId = Number(itemId);
+    const stableNumber = Number.isFinite(numericId)
+        ? numericId
+        : String(itemId ?? "")
+            .split("")
+            .reduce((sum, character) => sum + character.charCodeAt(0), 0);
+    const hue = ((stableNumber - 1) * 137.508 + 210) % 360;
+    return `hsl(${hue.toFixed(1)} 68% 62%)`;
+};
 
-        // 랙 관통 엣지 렌더링 방지
-        // 화면상 랙을 뚫고 지나가는 엣지가 있다면 제외한다.
-        // 잘못된 JSON이 들어와도 관통선을 표시하지 않도록 JSX에서 한 번 더 방어한다.
-        const rackCrossingPairKeys = new Set(
-            racks
-                .map((rack) => {
-                    const routeA = rack.accessA.adjacent_route_node;
-                    const routeB = rack.accessB.adjacent_route_node;
+const robotPositionAt = (
+    robot,
+    fromX,
+    fromY,
+    toX,
+    toY,
+    now,
+    isRunning,
+) => {
+    if (!robot.movement_step_id || !Number.isFinite(robot.movement_progress)) {
+        return { x: fromX, y: fromY };
+    }
 
-                    if (!routeA || !routeB || routeA === routeB) {
-                        return null;
-                    }
+    const baseProgress = clamp01(robot.movement_progress);
+    let progress = baseProgress;
+    const remainingMillis = Number(robot.arrival_in_seconds) * 1000;
+    const receivedAt = Number(robot.movement_snapshot_received_at);
 
-                    return makeUndirectedEdgeKey(routeA, routeB);
-                })
-                .filter(Boolean)
-        );
+    // BE progress is authoritative. requestAnimationFrame only predicts the
+    // small interval until the next BE snapshot and never accumulates time.
+    if (
+        isRunning
+        && baseProgress < 1
+        && Number.isFinite(remainingMillis)
+        && remainingMillis > 0
+        && Number.isFinite(receivedAt)
+    ) {
+        const elapsed = Math.max(0, now - receivedAt);
+        const remainingRatio = Math.min(1, elapsed / remainingMillis);
+        progress = baseProgress + (1 - baseProgress) * remainingRatio;
+    }
 
-        // 원본 노드·엣지 구조는 로봇 이동과 기존 그래프 동작을 위해 그대로 유지한다.
-        const edges = layoutGraph?.edges ?? [];
+    return {
+        x: fromX + (toX - fromX) * progress,
+        y: fromY + (toY - fromY) * progress,
+    };
+};
 
-        // 랙을 관통하는 것으로 판단되는 엣지는 화면에서만 숨긴다.
-        // 원본 edges에서는 제거하지 않는다.
-        const renderedEdges = edges.filter((edge) =>
-            !rackCrossingPairKeys.has(
-                makeUndirectedEdgeKey(edge.source, edge.target)
-            )
-        );
+function AnimatedRobotMarker({
+    robot,
+    fromX,
+    fromY,
+    toX,
+    toY,
+    robotImage,
+    isRunning,
+    loadColor,
+    loadTitle,
+    hideLoad,
+}) {
+    const elementRef = useRef(null);
 
-        return {
-            nodes,
-            edges, // 기존 로봇 이동과 그래프 구조에서 사용하는 원본 엣지
-            renderedEdges, // SVG 화면에 선을 그릴 때만 사용하는 엣지 
-            nodeMap,
-            routeNodes,
-            rackAccessNodes,
-            inboundAccessNodes,
-            outboundAccessNodes,
-            chargeJunctionNodes,
-            chargingNodes,
-            inboundNodes,
-            outboundNodes,
-            emptyToteBufferNodes,
-            racks,
+    useEffect(() => {
+        let frameId = null;
+        const renderPosition = (now) => {
+            const position = robotPositionAt(
+                robot,
+                fromX,
+                fromY,
+                toX,
+                toY,
+                now,
+                isRunning,
+            );
+            if (elementRef.current) {
+                elementRef.current.style.transform =
+                    `translate(${position.x}px, ${position.y}px)`;
+            }
+
+            const shouldContinue = isRunning
+                && robot.movement_step_id
+                && clamp01(robot.movement_progress) < 1
+                && Number(robot.arrival_in_seconds) > 0;
+            if (shouldContinue) {
+                frameId = window.requestAnimationFrame(renderPosition);
+            }
         };
-    }, [layoutGraph]);
+
+        renderPosition(performance.now());
+        return () => {
+            if (frameId !== null) {
+                window.cancelAnimationFrame(frameId);
+            }
+        };
+    }, [
+        robot,
+        fromX,
+        fromY,
+        toX,
+        toY,
+        isRunning,
+    ]);
+
+    const initialPosition = robotPositionAt(
+        robot,
+        fromX,
+        fromY,
+        toX,
+        toY,
+        performance.now(),
+        isRunning,
+    );
+    const robotSize = 46;
+
+    return (
+        <g
+            ref={elementRef}
+            className="warehouse-robot"
+            style={{
+                transform: `translate(${initialPosition.x}px, ${initialPosition.y}px)`,
+            }}
+        >
+            <defs>
+                <clipPath id={`robot-rounded-${robot.robot_id}`}>
+                    <rect x="-23" y="-23" width="50" height="50" rx="50" ry="50" />
+                </clipPath>
+            </defs>
+            <image
+                href={robotImage}
+                x="-23"
+                y="-23"
+                width="50"
+                height="50"
+                clipPath={`url(#robot-rounded-${robot.robot_id})`}
+            />
+            {robot.carrying_load && !hideLoad && (
+                <g className="warehouse-robot-load" transform="translate(14, -18)">
+                    <rect width="16" height="12" x="-8" y="-6" rx="2" style={{ fill: loadColor }} />
+                    <path d="M -8 -1 H 8 M 0 -6 V 6" />
+                    <title>{loadTitle ?? "운반 중인 BOX"}</title>
+                </g>
+            )}
+            <text
+                x="3"
+                y={robotSize / 2 + 10}
+                textAnchor="middle"
+                className="warehouse-robot-id"
+            >
+                {robot.robot_code}
+            </text>
+            <title>
+                {`${robot.robot_code}\nstatus: ${robot.status}\nbattery: ${robot.battery}%\nnode: ${robot.node_id}`}
+            </title>
+        </g>
+    );
+}
+
+function WarehouseSVG({
+    warehouseId = 1,
+    robots = [],
+    tasks = [],
+    generatedCommands = [],
+    isRunning = false,
+}) {
+    // 노드 표시 ON / OFF
+    const [showNodeLabels, setShowNodeLabels] = useState(false);
+
+    // 처음에는 고른 창고의 JSON 지도를 보여주고,
+    // API 조회 성공 후 백엔드 데이터로 교체
+    const [graphData, setGraphData] = useState(null);
+    const [layoutLoading, setLayoutLoading] = useState(true);
+    const [layoutError, setLayoutError] = useState(null);
+    const [layoutReloadKey, setLayoutReloadKey] = useState(0);
+    const [warehouseItems, setWarehouseItems] = useState([]);
+    const [products, setProducts] = useState([]);
+
+    useEffect(() => {
+        let cancelled = false;
+        setGraphData(null);
+        setLayoutError(null);
+        setLayoutLoading(true);
+        // 창고를 바꾸면 API 응답이 오기 전까지 그 창고의 폴백 지도를 보여준다
+
+        const fetchWarehouseLayout = async () => {
+            try {
+                const data = await warehouseApi.getLayout(warehouseId);
+                if (cancelled) return;
+
+                const nodeCodeMap = new Map(
+                    data.nodes
+                        .filter((node) => node.nodeCode)
+                        .map((node) => [node.id, node.nodeCode])
+                );
+
+                const convertedNodes = data.nodes
+                    .filter((node) => node.nodeCode && node.nodeType)
+                    .map((node) => {
+                        const routeMatch = node.nodeCode.match(/^R(\d+)_(\d+)$/);
+                        const chargingMatch = node.nodeCode.match(/^C(\d+)$/);
+
+                        return {
+                            ...(node.routeAttributes ?? {}),
+                            databaseId: node.id,
+                            id: node.nodeCode,
+                            type: node.nodeType.toLowerCase(),
+                            x: node.x,
+                            y: node.y,
+                            rack_id:
+                                node.nodeType === "RACK_ACCESS"
+                                    ? node.resourceCode
+                                    : undefined,
+                            handoff_id:
+                                node.nodeType === "INBOUND_HANDOFF_ACCESS"
+                                    ? node.resourceCode
+                                    : undefined,
+                            station_id:
+                                node.nodeType === "OUTBOUND_STATION_ACCESS"
+                                    ? node.resourceCode
+                                    : undefined,
+                            side: node.side,
+                            service_only: node.serviceOnly,
+                            transit_allowed: node.transitAllowed,
+                            holding_allowed: node.holdingAllowed,
+                            node_capacity: node.nodeCapacity,
+
+                            row: routeMatch
+                                ? Number(routeMatch[1])
+                                : undefined,
+
+                            col: routeMatch
+                                ? Number(routeMatch[2])
+                                : undefined,
+
+                            label:
+                                node.nodeType === "INBOUND"
+                                    ? node.nodeCode.replace("I_", "")
+                                    : node.nodeType === "OUTBOUND"
+                                        ? node.nodeCode.replace("O_", "")
+                                        : undefined,
+
+                            index: chargingMatch
+                                ? Number(chargingMatch[1])
+                                : undefined,
+                        };
+                    });
+
+                const convertedEdges = data.edges
+                    .map((edge) => ({
+                        ...(edge.routeAttributes ?? {}),
+                        id: edge.edgeCode ?? String(edge.id),
+                        source: nodeCodeMap.get(edge.fromNodeId),
+                        target: nodeCodeMap.get(edge.toNodeId),
+                        type: edge.edgeType ?? "lane",
+                        distance_m: edge.distance,
+                        speed_limit_mps: edge.speedLimitMps,
+                        service_only: edge.serviceOnly,
+                        mobile_robot_traversable:
+                            edge.mobileRobotTraversable,
+                    }))
+                    .filter((edge) => edge.source && edge.target);
+
+                setGraphData(withRackStorageNodes({
+                    nodes: convertedNodes,
+                    edges: convertedEdges,
+                }));
+                setLayoutLoading(false);
+
+                console.log("변환된 창고 지도:", {
+                    warehouseId,
+                    nodes: convertedNodes.length,
+                    edges: convertedEdges.length,
+                });
+            } catch (error) {
+                if (cancelled) return;
+                console.error("창고 레이아웃 조회 오류:", error);
+                setGraphData(null);
+                setLayoutError(error.message ?? "창고 지도를 불러오지 못했습니다.");
+                setLayoutLoading(false);
+            }
+        };
+
+        if (warehouseId) {
+            fetchWarehouseLayout();
+        } else {
+            setLayoutError("선택된 창고가 없습니다.");
+            setLayoutLoading(false);
+        }
+        return () => {
+            cancelled = true;
+        };
+    }, [warehouseId, layoutReloadKey]);
+
+    useEffect(() => {
+        let cancelled = false;
+        productApi.getAll()
+            .then((data) => {
+                if (!cancelled) setProducts(Array.isArray(data) ? data : []);
+            })
+            .catch((error) => {
+                if (!cancelled) {
+                    console.warn("상품 목록 조회 실패", error.message);
+                    setProducts([]);
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        let timerId = null;
+
+        const refreshInventory = async () => {
+            if (!warehouseId) return;
+            try {
+                const data = await warehouseItemApi.getAll(warehouseId);
+                if (!cancelled) {
+                    setWarehouseItems(Array.isArray(data) ? data : []);
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    console.warn("창고 재고 조회 실패", error.message);
+                }
+            }
+        };
+
+        setWarehouseItems([]);
+        refreshInventory();
+        if (isRunning) {
+            timerId = window.setInterval(refreshInventory, 1500);
+        }
+        return () => {
+            cancelled = true;
+            if (timerId !== null) window.clearInterval(timerId);
+        };
+    }, [warehouseId, isRunning]);
+
+    if (layoutLoading) {
+        return (
+            <div className="warehouse-svg-wrapper warehouse-layout-state">
+                <span>창고 지도를 불러오는 중입니다.</span>
+            </div>
+        );
+    }
+
+    if (layoutError || !graphData) {
+        return (
+            <div className="warehouse-svg-wrapper warehouse-layout-state warehouse-layout-error">
+                <strong>창고 지도를 불러오지 못했습니다.</strong>
+                <span>{layoutError}</span>
+                <button type="button" onClick={() => setLayoutReloadKey((value) => value + 1)}>
+                    다시 시도
+                </button>
+            </div>
+        );
+    }
 
     // SVG 크기
-    // 아래쪽에 범례 공간을 따로 확보해 충전 슬롯·로봇과 겹치지 않게 한다.
     const SVG_WIDTH = 1200;
-    const SVG_HEIGHT = 680;
+    const SVG_HEIGHT = 600;
 
     const PADDING_X = 40;
-    const PADDING_TOP = 50;
-    const PADDING_BOTTOM = 135;
+    const PADDING_Y = 30;
 
-    // JSON 좌표를 SVG 좌표로 바꾸기 위해 전체 노드의 좌표 범위를 계산한다.
-    // 창고 지도마다 좌표 체계가 달라도 같은 SVG 영역에 자동으로 맞춰진다.
-    const coordinateBounds = useMemo(() => {
-        const xValues = warehouseView.nodes.map((node) => node.x);
-        const yValues = warehouseView.nodes.map((node) => node.y);
+    // warehouse_graph.json 좌표 범위 계산
+    // JSON의 x, y 좌표를 SVG 좌표로 자동 변환하기 위해 최소/최대 좌표를 구함
+    const xValues = graphData.nodes.map((node) => node.x);
+    const yValues = graphData.nodes.map((node) => node.y);
 
-        // 비어 있는 지도나 동일 좌표만 있는 예외 상황에서도 0으로 나누지 않도록 보호한다.
-        const rawMinX = xValues.length ? Math.min(...xValues) : 0;
-        const rawMaxX = xValues.length ? Math.max(...xValues) : 1;
-        const rawMinY = yValues.length ? Math.min(...yValues) : 0;
-        const rawMaxY = yValues.length ? Math.max(...yValues) : 1;
+    const minX = Math.min(...xValues);
+    const maxX = Math.max(...xValues);
 
-        return {
-            minX: rawMinX,
-            maxX: rawMaxX === rawMinX ? rawMinX + 1 : rawMaxX,
-            minY: rawMinY,
-            maxY: rawMaxY === rawMinY ? rawMinY + 1 : rawMaxY,
-        };
-    }, [warehouseView.nodes]);
+    const minY = Math.min(...yValues);
+    const maxY = Math.max(...yValues);
 
-    const { minX, maxX, minY, maxY } = coordinateBounds;
-
-    // JSON X 좌표 → SVG X 좌표
+    // JSON 좌표 → SVG 좌표 변환
     const convertX = (x) => {
         const availableWidth = SVG_WIDTH - PADDING_X * 2;
-
         return (
-            PADDING_X + ((x - minX) / (maxX - minX)) * availableWidth
+            PADDING_X +
+            ((x - minX) / (maxX - minX)) *
+            availableWidth
         );
     };
 
-    // JSON Y 좌표 → SVG Y 좌표
     const convertY = (y) => {
-        const availableHeight =
-            SVG_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
-
+        const availableHeight = SVG_HEIGHT - PADDING_Y * 2;
         return (
-            PADDING_TOP +
+            PADDING_Y +
             ((y - minY) / (maxY - minY)) *
             availableHeight
         );
     };
 
+    // 노드 ID → 노드 정보
+    // edge.source / edge.target를 좌표로 변환할 때 사용
+    const nodeMap = new Map(
+        graphData.nodes.map((node) => [node.id, node])
+    );
 
-    /*
-     * 화면에 표시할 엣지 좌표를 계산한다.
-     * 1. 반대 방향 엣지가 없으면 기존 좌표 그대로 한 줄을 그린다.
-     * 2. 반대 방향 엣지가 있으면 같은 두 노드 사이의 선을
-     *    중심 기준 양쪽으로 조금씩 이동해 평행한 두 줄로 그린다.
-     * 3. 엣지 ID의 _IN / _OUT 여부나 엣지 type과 상관없이
-     *    실제 source → target의 반대 엣지가 존재하는지만 확인한다.
-     */
-    const renderEdges = useMemo(() => {
-        // source → target 형식으로 모든 방향 엣지를 빠르게 조회한다.
-        const directedEdgeKeys = new Set(
-            warehouseView.renderedEdges.map(
-                (edge) => `${edge.source}->${edge.target}`
+    const edgesByNode = new Map();
+    graphData.edges.forEach((edge) => {
+        [edge.source, edge.target].forEach((nodeId) => {
+            const values = edgesByNode.get(nodeId) ?? [];
+            values.push(edge);
+            edgesByNode.set(nodeId, values);
+        });
+    });
+    const peerNodeId = (edge, nodeId) => (
+        edge.source === nodeId
+            ? edge.target
+            : edge.target === nodeId
+                ? edge.source
+                : null
+    );
+    const isOutboundServiceEdge = (edge) => (
+        edge.service_only === true
+        || ["outbound_service", "station_service"].includes(
+            String(edge.type ?? "").toLowerCase(),
+        )
+    );
+
+    // 포트/슈트는 로봇 경로 노드가 아니므로 실제 TRAVERSES와 분리해 표시한다.
+    const inboundLogicalEdges = graphData.nodes
+        .filter((node) => node.type === "inbound_handoff_access")
+        .flatMap((accessNode) =>
+            (accessNode.display_port_ids ?? []).map((portId) => ({
+                id: `logical-inbound-${accessNode.id}-${portId}`,
+                source: nodeMap.get(portId),
+                target: accessNode,
+            })),
+        )
+        .filter((edge) => edge.source && edge.target);
+
+    const inboundAccessNodes = graphData.nodes.filter(
+        (node) => node.type === "inbound_handoff_access",
+    );
+    const inboundAccessForMobileNode = (nodeCode, robotKey = 0) => {
+        const candidates = inboundAccessNodes.filter((accessNode) => (
+            accessNode.id === nodeCode
+            || accessNode.adjacent_route_node === nodeCode
+            || (edgesByNode.get(accessNode.id) ?? []).some(
+                (edge) => peerNodeId(edge, accessNode.id) === nodeCode,
+            )
+        ));
+        if (candidates.length === 0) return null;
+        const numericKey = Number(robotKey ?? 0);
+        const index = Math.abs(Number.isFinite(numericKey) ? numericKey : 0)
+            % candidates.length;
+        return candidates[index];
+    };
+
+    const outboundStationGroups = new Map();
+    graphData.nodes
+        .filter((node) => node.type === "outbound_station_access")
+        .forEach((node) => {
+            const stationId = node.station_id ?? node.resourceCode ?? node.id;
+            const group = outboundStationGroups.get(stationId) ?? {
+                id: stationId,
+                accessNodes: [],
+                chuteIds: new Set(),
+            };
+            group.accessNodes.push(node);
+            (node.display_chute_ids ?? []).forEach((id) => group.chuteIds.add(id));
+            outboundStationGroups.set(stationId, group);
+        });
+
+    const fixedHubNodesForAccess = (accessNode) => {
+        const routeNodeIds = new Set();
+        if (accessNode.adjacent_route_node) {
+            routeNodeIds.add(accessNode.adjacent_route_node);
+        }
+        (edgesByNode.get(accessNode.id) ?? []).forEach((edge) => {
+            if (!isOutboundServiceEdge(edge)) return;
+            const peer = nodeMap.get(peerNodeId(edge, accessNode.id));
+            if (peer?.type === "route") routeNodeIds.add(peer.id);
+        });
+        return [...routeNodeIds].map((id) => nodeMap.get(id)).filter(Boolean);
+    };
+
+    const outboundLogicalGroups = [...outboundStationGroups.values()].map((group) => {
+        const hubs = [...new Map(
+            group.accessNodes
+                .flatMap(fixedHubNodesForAccess)
+                .map((node) => [node.id, node]),
+        ).values()];
+        return {
+            ...group,
+            x:
+                group.accessNodes.reduce((sum, node) => sum + Number(node.x), 0) /
+                group.accessNodes.length,
+            y:
+                group.accessNodes.reduce((sum, node) => sum + Number(node.y), 0) /
+                group.accessNodes.length,
+            hubs,
+            chutes: [...group.chuteIds]
+                .map((id) => nodeMap.get(id))
+                .filter(Boolean),
+        };
+    });
+
+    const fixedOutboundHubs = [...new Map(
+        outboundLogicalGroups
+            .flatMap((group) => group.hubs)
+            .filter((hub) => {
+                const fixedEndpointCount = new Set((edgesByNode.get(hub.id) ?? [])
+                    .filter(isOutboundServiceEdge)
+                    .map((edge) => nodeMap.get(peerNodeId(edge, hub.id)))
+                    .filter((node) => node?.type === "outbound_station_access")
+                    .map((node) => node.id)).size;
+                return fixedEndpointCount >= 2;
+            })
+            .map((node) => [node.id, node]),
+    ).values()];
+    const fixedHubIds = new Set(fixedOutboundHubs.map((node) => node.id));
+
+    const mobileBoundaryNodesForHub = (hub) => (edgesByNode.get(hub?.id) ?? [])
+        .filter((edge) => !isOutboundServiceEdge(edge))
+        .filter((edge) => edge.mobile_robot_traversable !== false)
+        .map((edge) => nodeMap.get(peerNodeId(edge, hub.id)))
+        .filter((node) => node?.type === "route" && !fixedHubIds.has(node.id));
+
+    const closestNodeByY = (nodes, targetY) => nodes.reduce(
+        (best, node) => (
+            !best || Math.abs(Number(node.y) - Number(targetY))
+                < Math.abs(Number(best.y) - Number(targetY))
+                ? node
+                : best
+        ),
+        null,
+    );
+
+    const stationGroupForMobileNode = (nodeCode) =>
+        outboundLogicalGroups.find((group) =>
+            group.id === nodeCode
+            || group.chuteIds.has(nodeCode)
+            || group.accessNodes.some((node) =>
+                node.id === nodeCode
+                || node.adjacent_route_node === nodeCode
+            )
+            || group.hubs.some((hub) => hub.id === nodeCode)
+            || group.hubs.some((hub) =>
+                mobileBoundaryNodesForHub(hub).some((node) => node.id === nodeCode)
             )
         );
 
-        return warehouseView.renderedEdges.map((edge) => {
-            const source = warehouseView.nodeMap.get(edge.source);
-            const target = warehouseView.nodeMap.get(edge.target);
+    const stationAccessForMobileNode = (nodeCode, robotKey = 0) => {
+        const group = stationGroupForMobileNode(nodeCode);
+        if (!group || group.accessNodes.length === 0) return null;
 
-            if (!source || !target) {
-                return null;
-            }
-
-            const originalX1 = convertX(source.x);
-            const originalY1 = convertY(source.y);
-            const originalX2 = convertX(target.x);
-            const originalY2 = convertY(target.y);
-
-            // target → source 엣지가 있으면 양방향으로 판단한다.
-            const isBidirectional = directedEdgeKeys.has(
-                `${edge.target}->${edge.source}`
-            );
-
-            // 단방향 연결은 기존 중앙선 위치를 그대로 사용한다.
-            if (!isBidirectional) {
-                return {
-                    ...edge,
-                    x1: originalX1,
-                    y1: originalY1,
-                    x2: originalX2,
-                    y2: originalY2,
-                    isBidirectional: false,
-                };
-            }
-
-            // 노드 ID를 정렬해 양방향 엣지의 공통 기준 방향을 만든다.
-            const [canonicalSourceId, canonicalTargetId] =
-                [edge.source, edge.target].sort();
-
-            const canonicalSource = warehouseView.nodeMap.get(
-                canonicalSourceId
-            );
-            const canonicalTarget = warehouseView.nodeMap.get(
-                canonicalTargetId
-            );
-
-            if (!canonicalSource || !canonicalTarget) {
-                return null;
-            }
-
-            const canonicalX1 = convertX(canonicalSource.x);
-            const canonicalY1 = convertY(canonicalSource.y);
-            const canonicalX2 = convertX(canonicalTarget.x);
-            const canonicalY2 = convertY(canonicalTarget.y);
-
-            const deltaX = canonicalX2 - canonicalX1;
-            const deltaY = canonicalY2 - canonicalY1;
-            const edgeLength = Math.hypot(deltaX, deltaY);
-
-            // 시작점과 끝점이 같은 비정상 엣지는 기존 위치로 표시한다.
-            if (edgeLength === 0) {
-                return {
-                    ...edge,
-                    x1: originalX1,
-                    y1: originalY1,
-                    x2: originalX2,
-                    y2: originalY2,
-                    isBidirectional: true,
-                };
-            }
-
-            // 공통 기준선에 수직인 단위 벡터
-            const normalX = -deltaY / edgeLength;
-            const normalY = deltaX / edgeLength;
-
-            // 정렬된 기준 방향과 같은 방향이면 +offset, 반대 방향이면 -offset을 적용한다.
-            const followsCanonicalDirection =
-                edge.source === canonicalSourceId
-                && edge.target === canonicalTargetId;
-
-            const offsetSign = followsCanonicalDirection ? 1 : -1;
-            const offsetX = normalX * BIDIRECTIONAL_EDGE_OFFSET * offsetSign;
-            const offsetY = normalY * BIDIRECTIONAL_EDGE_OFFSET * offsetSign;
-
-            return {
-                ...edge,
-                x1: originalX1 + offsetX,
-                y1: originalY1 + offsetY,
-                x2: originalX2 + offsetX,
-                y2: originalY2 + offsetY,
-                isBidirectional: true,
-            };
-        }).filter(Boolean);
-    }, [
-        warehouseView.renderedEdges,
-        warehouseView.nodeMap,
-        minX,
-        maxX,
-        minY,
-        maxY,
-    ]);
-
-    // 랙 ID → 랙 재고 정보
-    // rack_access에서 만든 화면용 랙 ID와 rack_inventory.json을 연결한다.
-    const rackInventoryMap = useMemo(() => new Map(
-        rackInventory.racks.map((rack) => [rack.rack_node_id, rack])
-    ),
-        []
-    );
-
-    // 랙 재고 상태에 따라 사용할 CSS class를 반환한다.
-    const getRackLevelClass = (status) => {
-        switch (status) {
-            case "FULL":
-                return "rack-level-full";
-            case "PARTIAL":
-                return "rack-level-partial";
-            default:
-                return "rack-level-empty";
-        }
+        const directlyConnected = group.accessNodes.filter(
+            (node) => node.adjacent_route_node === nodeCode || node.id === nodeCode
+        );
+        const candidates = directlyConnected.length > 0
+            ? directlyConnected
+            : group.accessNodes;
+        const numericKey = Number(robotKey ?? 0);
+        const index = Math.abs(Number.isFinite(numericKey) ? numericKey : 0)
+            % candidates.length;
+        return candidates[index];
     };
 
-    // 로봇 상태별 이미지 매핑
+    const fixedHubForStationAccess = (accessNode, mobileNode) => {
+        const candidates = fixedHubNodesForAccess(accessNode)
+            .filter((node) => fixedHubIds.has(node.id));
+        if (candidates.length === 0) return null;
+        if (!mobileNode) return candidates[0];
+        return candidates.find((hub) =>
+            mobileBoundaryNodesForHub(hub).some((node) => node.id === mobileNode.id)
+        ) ?? closestNodeByY(candidates, mobileNode.y) ?? candidates[0];
+    };
+
+    /**
+     * 로봇은 실제로 OUTBOUND_STATION_ACCESS까지만 주행한다.
+     * 다만 외부 상태가 논리 출고지/슈트 코드를 가리키는 경우에도 화면에서
+     * 사라지지 않도록 해당 출고 설비의 실제 접근 노드 좌표로 보정한다.
+     */
+    const resolveRobotDisplayNode = (robot, requestedNodeCode = robot.node_id) => {
+        const nodeCode = requestedNodeCode;
+        const exactNode = nodeMap.get(nodeCode);
+        if (exactNode?.type === "outbound_station_access") {
+            const hub = fixedHubForStationAccess(exactNode, exactNode);
+            return closestNodeByY(mobileBoundaryNodesForHub(hub), exactNode.y)
+                ?? nodeMap.get(exactNode.adjacent_route_node)
+                ?? exactNode;
+        }
+        if (fixedHubIds.has(exactNode?.id)) {
+            return closestNodeByY(mobileBoundaryNodesForHub(exactNode), exactNode.y)
+                ?? exactNode;
+        }
+        if (exactNode && exactNode.type !== "outbound") {
+            return exactNode;
+        }
+
+        const matchingGroup = [...outboundStationGroups.values()].find((group) =>
+            group.id === nodeCode
+            || group.chuteIds.has(nodeCode)
+            || group.accessNodes.some((node) => node.id === nodeCode)
+        );
+        if (!matchingGroup || matchingGroup.accessNodes.length === 0) {
+            return exactNode;
+        }
+
+        const stationAccess = stationAccessForMobileNode(
+            nodeCode,
+            robot.current_task_id ?? robot.robot_id
+        );
+        const hub = fixedHubForStationAccess(stationAccess, exactNode);
+        return closestNodeByY(
+            mobileBoundaryNodesForHub(hub),
+            stationAccess?.y ?? exactNode?.y ?? 0,
+        ) ?? nodeMap.get(stationAccess?.adjacent_route_node)
+            ?? stationAccess
+            ?? exactNode;
+    };
+
+    const productById = new Map(
+        products.map((product) => [Number(product.id), product]),
+    );
+    const taskById = new Map(tasks.map((task) => [Number(task.id), task]));
+    const taskByOperationId = new Map(
+        tasks
+            .filter((task) => task.externalOperationId)
+            .map((task) => [task.externalOperationId, task]),
+    );
+
+    // PostgreSQL warehouse_items를 실제 3층 선반에 연결한다.
+    // quantity=0인 행은 슬롯 이력일 뿐 물리 BOX가 아니므로 빈 칸으로 표시한다.
+    const inventoryByNodeId = new Map();
+    warehouseItems
+        .filter((item) => Number(item.quantity ?? 0) > 0)
+        .forEach((item) => {
+            const levels = inventoryByNodeId.get(Number(item.nodeId)) ?? new Map();
+            levels.set(Number(item.rackLevel), item);
+            inventoryByNodeId.set(Number(item.nodeId), levels);
+        });
+    const rackInventoryMap = new Map(
+        graphData.nodes
+            .filter((node) => node.type === "rack_storage")
+            .map((node) => {
+                const storedLevels = inventoryByNodeId.get(Number(node.databaseId)) ?? new Map();
+                return [
+                    node.id,
+                    {
+                        levels: [1, 2, 3].map((level) => {
+                            const item = storedLevels.get(level) ?? null;
+                            const product = item
+                                ? productById.get(Number(item.itemId)) ?? null
+                                : null;
+                            return { level, item, product };
+                        }),
+                    },
+                ];
+            }),
+    );
+
+    // 로봇 이미지 매핑
     const robotImages = {
         IDLE: robotHero,
+        ASSIGNED: robotHero,
+        MOVING: robotHero,
+        WORKING: robotHero,
         CHARGING: robotCharging,
         PICKING: robotPicking,
         PUTAWAY: robotPutaway,
@@ -404,24 +726,210 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
         REPLENISH: robotReplenish,
     };
 
-    // 로봇 이동 속도/시간 조절
-    const getRobotTransitionDuration = (speed) => {
-        const baseDuration = 500 / Number(speed);
-
-        switch (Number(speed)) {
-            case 0.5:
-                return baseDuration * 2;
-            case 1:
-                return baseDuration;
-            case 2:
-                return baseDuration * 0.5;
-            case 3:
-                return baseDuration * 0.2;
-            default:
-                return baseDuration;
+    const transferBoxes = robots.flatMap((robot) => {
+        const serviceNode = resolveRobotDisplayNode(robot);
+        const serviceKind = robot.service_kind?.toUpperCase();
+        const taskType = robot.task_type?.toUpperCase();
+        if (!serviceNode || robot.service_progress === null
+            || robot.service_progress === undefined) {
+            return [];
         }
-    };
 
+        let facilityNodeIds = [];
+        let direction = null;
+        let transferStartNode = serviceNode;
+        if (
+            taskType === "INBOUND"
+            && serviceKind === "PICKUP"
+        ) {
+            const inboundAccess = serviceNode.type === "inbound_handoff_access"
+                ? serviceNode
+                : inboundAccessForMobileNode(
+                    serviceNode.id,
+                    robot.current_task_id ?? robot.robot_id,
+                );
+            if (!inboundAccess) return [];
+            facilityNodeIds = inboundAccess.display_port_ids ?? [];
+            transferStartNode = inboundAccess;
+            direction = "inbound";
+        } else if (
+            taskType === "OUTBOUND"
+            && ["DROP", "STATION"].includes(serviceKind)
+            && (
+                serviceNode.type === "outbound_station_access"
+                || stationGroupForMobileNode(serviceNode.id)
+            )
+        ) {
+            const stationAccess = stationAccessForMobileNode(
+                serviceNode.id,
+                robot.current_task_id ?? robot.robot_id
+            );
+            if (!stationAccess) return [];
+            facilityNodeIds = stationAccess.display_chute_ids ?? [];
+            transferStartNode = stationAccess;
+            direction = "outbound";
+        } else {
+            return [];
+        }
+
+        const facilityNodes = facilityNodeIds
+            .map((nodeId) => nodeMap.get(nodeId))
+            .filter(Boolean);
+        if (facilityNodes.length === 0) {
+            return [];
+        }
+
+        const numericKey = Number(robot.current_task_id ?? robot.robot_id ?? 0);
+        const facilityNode = facilityNodes[
+            Math.abs(Number.isFinite(numericKey) ? numericKey : 0)
+            % facilityNodes.length
+        ];
+        const progress = Math.max(0, Math.min(1, Number(robot.service_progress)));
+        const serviceX = convertX(serviceNode.x);
+        const serviceY = convertY(serviceNode.y);
+        const facilityX = convertX(facilityNode.x);
+        const facilityY = convertY(facilityNode.y);
+        const fixedHub = direction === "outbound"
+            ? fixedHubForStationAccess(transferStartNode, serviceNode)
+            : null;
+        // Default station timing is roughly 25% input handoff and 75%
+        // fixed-robot sorting/release.  The latter may overlap the next box.
+        const handoffRatio = 0.25;
+        let x;
+        let y;
+        let stage = "facility-to-mobile";
+        if (direction === "inbound") {
+            x = facilityX + (serviceX - facilityX) * progress;
+            y = facilityY + (serviceY - facilityY) * progress;
+        } else if (fixedHub && progress <= handoffRatio) {
+            const stageProgress = progress / handoffRatio;
+            x = serviceX + (convertX(fixedHub.x) - serviceX) * stageProgress;
+            y = serviceY + (convertY(fixedHub.y) - serviceY) * stageProgress;
+            stage = "mobile-to-fixed-robot";
+        } else if (fixedHub) {
+            const stageProgress = (progress - handoffRatio) / (1 - handoffRatio);
+            x = convertX(fixedHub.x) + (facilityX - convertX(fixedHub.x)) * stageProgress;
+            y = convertY(fixedHub.y) + (facilityY - convertY(fixedHub.y)) * stageProgress;
+            stage = "fixed-robot-to-chute";
+        } else {
+            x = serviceX + (facilityX - serviceX) * progress;
+            y = serviceY + (facilityY - serviceY) * progress;
+            stage = "mobile-to-chute";
+        }
+
+        const task = taskById.get(Number(robot.current_task_id));
+        const itemId = task?.itemId ?? null;
+        const product = productById.get(Number(itemId)) ?? null;
+
+        return [{
+            id: `${robot.robot_id}-${robot.current_task_id}-${direction}`,
+            direction,
+            x,
+            y,
+            facilityNodeId: facilityNode.id,
+            fixedHubId: fixedHub?.id,
+            stage,
+            progress,
+            itemId,
+            product,
+            color: productColor(itemId),
+        }];
+    });
+
+    const terminalTaskStatuses = new Set(["DONE", "FAILED", "CANCELLED"]);
+    const robotByTaskId = new Map(
+        robots
+            .filter((robot) => robot.current_task_id != null)
+            .map((robot) => [Number(robot.current_task_id), robot]),
+    );
+    const generatedByOperationId = new Map(
+        generatedCommands
+            .filter((command) => command.operationId)
+            .map((command) => [command.operationId, command]),
+    );
+    const inboundTaskEntries = tasks
+        .filter((task) => task.taskType === "INBOUND")
+        .map((task) => ({
+            key: task.externalOperationId ?? `task-${task.id}`,
+            task,
+            command: generatedByOperationId.get(task.externalOperationId) ?? null,
+            itemId: task.itemId,
+        }));
+    const inboundCommandEntries = generatedCommands
+        .filter((command) => command.operationType === "INBOUND")
+        .filter((command) => !taskByOperationId.has(command.operationId))
+        .map((command) => ({
+            key: command.operationId,
+            task: null,
+            command,
+            itemId: command.productId,
+        }));
+
+    const waitingInboundGroups = new Map();
+    [...inboundTaskEntries, ...inboundCommandEntries].forEach((entry, index) => {
+        const task = entry.task;
+        if (
+            task
+            && (
+                terminalTaskStatuses.has(task.status)
+                || task.inventoryAppliedAt
+            )
+        ) return;
+
+        const robot = task ? robotByTaskId.get(Number(task.id)) : null;
+        const pickupInProgress = robot
+            && robot.task_type?.toUpperCase() === "INBOUND"
+            && robot.service_kind?.toUpperCase() === "PICKUP"
+            && robot.service_progress != null;
+        if (pickupInProgress || robot?.carrying_load) return;
+
+        const requestedNodeId = task?.startNodeId ?? entry.command?.source?.nodeId;
+        const requestedNodeCode = entry.command?.source?.nodeCode
+            ?? entry.command?.source?.facilityCode;
+        const requestedNode = graphData.nodes.find((node) =>
+            Number(node.databaseId) === Number(requestedNodeId)
+            || node.id === requestedNodeCode,
+        );
+        let accessNode = requestedNode?.type === "inbound_handoff_access"
+            ? requestedNode
+            : inboundAccessForMobileNode(requestedNode?.id, task?.id ?? index);
+        if (!accessNode && inboundAccessNodes.length > 0) {
+            accessNode = inboundAccessNodes[index % inboundAccessNodes.length];
+        }
+        if (!accessNode) return;
+
+        const portIds = accessNode.display_port_ids ?? [];
+        const portNode = nodeMap.get(portIds[index % Math.max(1, portIds.length)])
+            ?? accessNode;
+        const product = productById.get(Number(entry.itemId)) ?? null;
+        const group = waitingInboundGroups.get(portNode.id) ?? {
+            portNode,
+            entries: [],
+        };
+        group.entries.push({
+            ...entry,
+            product,
+            color: productColor(entry.itemId),
+        });
+        waitingInboundGroups.set(portNode.id, group);
+    });
+
+    const fixedOutboundRobots = fixedOutboundHubs.map((hub) => {
+        const activeTransfers = transferBoxes.filter((box) => box.fixedHubId === hub.id);
+        const index = fixedOutboundHubs.indexOf(hub);
+        return {
+            id: hub.id,
+            label: `출고로봇 ${index + 1}`,
+            x: convertX(hub.x),
+            y: convertY(hub.y),
+            active: activeTransfers.length > 0,
+            outputActive: activeTransfers.some(
+                (box) => box.stage === "fixed-robot-to-chute",
+            ),
+        };
+    });
+
+    // 로봇 이동 속도/시간 조절
     return (
         <div className="warehouse-svg-wrapper">
 
@@ -429,12 +937,6 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
             <button
                 type="button"
                 className="warehouse-node-toggle"
-                style={{
-                    top: "10px",
-                    left: "50%",
-                    right: "auto",
-                    transform: "translateX(-50%)",
-                }}
                 onClick={() => setShowNodeLabels((prev) => !prev)}
             >
                 {showNodeLabels ? "노드 번호 숨기기" : "노드 번호 보기"}
@@ -480,35 +982,43 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                     fill="url(#warehouse-grid)"
                 />
 
-                {/*  EDGE
-                    - 항상 노드보다 먼저 그려야 선 위에 노드가 올라온다.
-                    - 단방향 연결은 기존처럼 가운데 한 줄로 표시한다.
-                    - 양방향 연결은 같은 스타일의 평행선 두 줄로 표시한다.
-                */}
-                <g className="warehouse-edges warehouse-rendered-edges">
-                    {renderEdges.map((edge) => (
-                        <line
-                            key={edge.id}
-                            x1={edge.x1}
-                            y1={edge.y1}
-                            x2={edge.x2}
-                            y2={edge.y2}
-                            className={`warehouse-edge warehouse-rendered-edge ${edge.isBidirectional
-                                ? "warehouse-bidirectional-edge"
-                                : "warehouse-single-edge"
-                                } edge-${edge.type}`}
-                            data-edge-id={edge.id}
-                            data-bidirectional={edge.isBidirectional}
-                        >
-                            <title>{edge.id}</title>
-                        </line>
-                    ))}
+                {/* EDGE
+                    항상 노드보다 먼저 그려야 선 위에 노드가 올라옴 */}
+                <g className="warehouse-edges">
+                    {graphData.edges.map(
+                        (edge) => {
+                            if (
+                                edge.mobile_robot_traversable === false ||
+                                edge.active_for_new_work === false
+                            ) {
+                                return null;
+                            }
+                            const source = nodeMap.get(edge.source);
+                            const target = nodeMap.get(edge.target);
+
+                            if (!source || !target) {
+                                return null;
+                            }
+
+                            return (
+                                <line
+                                    key={edge.id}
+                                    x1={convertX(source.x)}
+                                    y1={convertY(source.y)}
+                                    x2={convertX(target.x)}
+                                    y2={convertY(target.y)}
+                                    className={`warehouse-edge edge-${edge.type}`}
+                                />
+                            );
+                        })}
                 </g>
 
                 {/* 통로 번호 */}
                 <g className="warehouse-aisle-labels">
-                    {warehouseView.routeNodes
-                        .filter((node) => node.col === 0)
+                    {graphData.nodes
+                        .filter((node) =>
+                            node.type === "route" && node.col === 0
+                        )
                         .map((node) => (
 
                             <text
@@ -525,7 +1035,9 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
 
                 {/* 로봇이 실제로 이동하는 route 노드 */}
                 <g className="warehouse-route-nodes">
-                    {warehouseView.routeNodes
+                    {graphData.nodes
+                        .filter((node) => node.type === "route"
+                        )
                         .map((node) => (
                             <g key={node.id}>
 
@@ -535,10 +1047,6 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     cy={convertY(node.y)}
                                     r="3"
                                     className="warehouse-route-node"
-                                    style={{
-                                        fill: MAP_THEME.route.fill,
-                                        stroke: MAP_THEME.route.stroke,
-                                    }}
                                 >
                                     <title>{node.id}</title>
                                 </circle>
@@ -553,14 +1061,107 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     >
                                         {node.id}
                                     </text>
+                                    )}
+                                </g>
+                        ))}
+                </g>
+
+                {/* 시설 논리 관계: 화면에만 표시하고 경로 탐색에는 포함하지 않는다. */}
+                <g className="warehouse-logical-edges">
+                    {inboundLogicalEdges.map((edge) => (
+                        <line
+                            key={edge.id}
+                            x1={convertX(edge.source.x)}
+                            y1={convertY(edge.source.y)}
+                            x2={convertX(edge.target.x)}
+                            y2={convertY(edge.target.y)}
+                            className="warehouse-logical-edge logical-inbound"
+                        />
+                    ))}
+                    {outboundLogicalGroups.flatMap((group) =>
+                        group.chutes.map((chute) => (
+                            <line
+                                key={`logical-outbound-${group.id}-${chute.id}`}
+                                x1={convertX(group.x)}
+                                y1={convertY(group.y)}
+                                x2={convertX(chute.x)}
+                                y2={convertY(chute.y)}
+                                className="warehouse-logical-edge logical-outbound"
+                            />
+                        )),
+                    )}
+                </g>
+
+                {/* 아직 AMR이 수령하지 않은 입고 BOX 대기열 */}
+                <g className="warehouse-inbound-waiting-boxes">
+                    {[...waitingInboundGroups.values()].map(({ portNode, entries }) => {
+                        const visibleEntries = entries.slice(0, 3);
+                        return (
+                            <g
+                                key={`waiting-${portNode.id}`}
+                                transform={`translate(${convertX(portNode.x) + 22}, ${convertY(portNode.y)})`}
+                            >
+                                {visibleEntries.map((entry, index) => (
+                                    <g
+                                        key={entry.key}
+                                        className="warehouse-waiting-box"
+                                        transform={`translate(${index * 5}, ${-index * 4})`}
+                                    >
+                                        <rect
+                                            x="-8"
+                                            y="-6"
+                                            width="16"
+                                            height="12"
+                                            rx="2"
+                                            style={{ fill: entry.color }}
+                                        />
+                                        <path d="M -8 -1 H 8 M 0 -6 V 6" />
+                                        <title>
+                                            {`${entry.product?.productName ?? entry.command?.productName ?? "입고 상품"} / ${entry.product?.productCode ?? entry.command?.productCode ?? entry.itemId} / 입고 대기`}
+                                        </title>
+                                    </g>
+                                ))}
+                                {entries.length > 3 && (
+                                    <g className="warehouse-waiting-count" transform="translate(14, -14)">
+                                        <circle r="8" />
+                                        <text y="3" textAnchor="middle">{entries.length}</text>
+                                    </g>
                                 )}
                             </g>
-                        ))}
+                        );
+                    })}
+                </g>
+
+                {/* 로봇은 접근 노드에 머물고 BOX만 논리 입·출고 설비와 이동한다. */}
+                <g className="warehouse-box-transfers">
+                    {transferBoxes.map((box) => (
+                        <g
+                            key={box.id}
+                            className={`warehouse-box-transfer transfer-${box.direction}`}
+                            transform={`translate(${box.x}, ${box.y})`}
+                        >
+                            <rect
+                                x="-10"
+                                y="-7"
+                                width="20"
+                                height="14"
+                                rx="2"
+                                style={{ fill: box.color }}
+                            />
+                            <path d="M -10 -2 H 10 M 0 -7 V 7" />
+                            <title>
+                                {`${box.product?.productName ?? "BOX"} / ${box.direction === "inbound" ? "입고" : "출고"} / ${box.facilityNodeId} / ${Math.round(box.progress * 100)}%`}
+                            </title>
+                        </g>
+                    ))}
                 </g>
 
                 {/* 입고지 연결 inbound-access */}
                 <g className="warehouse-inbound-access">
-                    {warehouseView.inboundAccessNodes
+                    {graphData.nodes
+                        .filter((node) =>
+                            node.type === "inbound_handoff_access"
+                        )
                         .map((node) => (
                             <g key={node.id}>
 
@@ -569,10 +1170,6 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     cy={convertY(node.y)}
                                     r="4"
                                     className="warehouse-inbound-access"
-                                    style={{
-                                        fill: MAP_THEME.inbound.fill,
-                                        stroke: MAP_THEME.inbound.stroke,
-                                    }}
                                 >
                                     <title>{node.id}</title>
                                 </circle>
@@ -594,7 +1191,10 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
 
                 {/* 출고지 연결 inbound-access */}
                 <g className="warehouse-outbound-access">
-                    {warehouseView.outboundAccessNodes
+                    {graphData.nodes
+                        .filter((node) =>
+                            node.type === "outbound_station_access"
+                        )
                         .map((node) => (
                             <g key={node.id}>
                                 <circle
@@ -602,10 +1202,6 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     cy={convertY(node.y)}
                                     r="4"
                                     className="warehouse-outbound-access"
-                                    style={{
-                                        fill: MAP_THEME.outbound.fill,
-                                        stroke: MAP_THEME.outbound.stroke,
-                                    }}
                                 >
                                     <title>{node.id}</title>
                                 </circle>
@@ -626,9 +1222,12 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                 </g>
 
                 {/* 충전소 연결 Junction
-                            route ↔ charging slot 연결 지점 */}
+                    route ↔ charging slot 연결 지점 */}
                 <g className="warehouse-charge-junctions">
-                    {warehouseView.chargeJunctionNodes
+                    {graphData.nodes
+                        .filter((node) =>
+                            node.type === "route_charge_junction"
+                        )
                         .map((node) => (
                             <circle
                                 key={node.id}
@@ -636,10 +1235,6 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                 cy={convertY(node.y)}
                                 r="4"
                                 className="warehouse-charge-junction"
-                                style={{
-                                    fill: MAP_THEME.charging.fill,
-                                    stroke: MAP_THEME.charging.stroke,
-                                }}
                             >
                                 <title>{node.id}</title>
                             </circle>
@@ -647,33 +1242,32 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                 </g>
 
                 {/* 선반
-                    - JSON에는 rack_storage 노드가 없다.
-                    - rack_access A/B의 중간 좌표에 실제 랙을 생성한다.
-                    - rack_inventory.json의 3단 재고 상태를 함께 표시한다.
-                */}
+                    rack_inventory.json의 3단 재고 상태까지 표시 */}
                 <g className="warehouse-racks">
-                    {warehouseView.racks.map((rack) => {
-                        const inventory = rackInventoryMap.get(rack.id);
+                    {graphData.nodes
+                        .filter((node) =>
+                            node.type === "rack_storage"
+                        )
+                        .map((node) => {
+                            const inventory = rackInventoryMap.get(node.id);
+                            /*
+                             * 화면에서는 상단 → 중단 → 하단 순서로 보여주기 위해
+                             * level을 역순으로 정렬
+                             */
+                            const levels = inventory?.levels
+                                ? [...inventory.levels].sort((a, b) => b.level - a.level)
+                                : [3, 2, 1].map((level) => ({ level, item: null, product: null }));
 
-                        // 화면에서는 상단 → 중단 → 하단 순서로 보여주기 위해 level을 역순으로 정렬한다.
-                        const levels = inventory?.levels
-                            ? [...inventory.levels].sort(
-                                (a, b) => b.level - a.level
-                            )
-                            : [];
-
-                        return (
-                            <g
-                                key={rack.id}
-                                transform={`translate(
-                                            ${convertX(rack.x)},
-                                            ${convertY(rack.y)}
-                                        )`}
-                            >
-                                {/* 랙 몸체만 회전시킨다.
-                                    ID 텍스트는 바깥 그룹에 두어 항상 수평으로 표시한다. */}
-                                <g transform={`rotate(${rack.rotation})`}>
-
+                            return (
+                                <g
+                                    key={node.id}
+                                    transform={
+                                        `translate(
+                                                ${convertX(node.x)},
+                                                ${convertY(node.y)}
+                                            )`
+                                    }
+                                >
                                     {/* 선반 외곽 */}
                                     <rect
                                         x="-22"
@@ -681,10 +1275,6 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                         width="44"
                                         height="34"
                                         className="warehouse-rack"
-                                        style={{
-                                            fill: MAP_THEME.rack.fill,
-                                            stroke: MAP_THEME.rack.stroke,
-                                        }}
                                     />
 
                                     {/* 선반 3단 */}
@@ -696,10 +1286,15 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                                 y={-15 + index * 10}
                                                 width="40"
                                                 height="9"
-                                                className={`warehouse-rack-level ${getRackLevelClass(level.status)}`}
+                                                className={`warehouse-rack-level ${level.item ? "rack-level-occupied" : "rack-level-empty"}`}
+                                                style={level.item
+                                                    ? { fill: productColor(level.item.itemId) }
+                                                    : undefined}
                                             >
                                                 <title>
-                                                    {`${node.id} / ${level.level}단 / ${level.status}`}
+                                                    {level.item
+                                                        ? `${node.id} / ${level.level}층 / ${level.product?.productName ?? level.item.itemId} / ${level.item.quantity} EA`
+                                                        : `${node.id} / ${level.level}층 / 비어 있음`}
                                                 </title>
                                             </rect>
                                         )
@@ -711,47 +1306,20 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                         y="27"
                                         textAnchor="middle"
                                         className="warehouse-rack-label"
-                                        style={{ fill: MAP_THEME.rack.text }}
                                     >
-                                        <title>
-                                            {`${rack.id} / 접근점: ${rack.accessA.id}, ${rack.accessB.id}`}
-                                        </title>
-                                    </rect>
-
-                                    {/* 선반 3단 재고 상태 */}
-                                    {levels.map((level, index) => (
-                                        <rect
-                                            key={level.level}
-                                            x="-20"
-                                            y={-15 + index * 10}
-                                            width="40"
-                                            height="9"
-                                            className={`warehouse-rack-level ${getRackLevelClass(level.status)}`}
-                                        >
-                                            <title>
-                                                {`${rack.id} / ${level.level}단 / ${level.status}`}
-                                            </title>
-                                        </rect>
-                                    ))}
+                                        {node.id}
+                                    </text>
                                 </g>
-
-                                {/* 랙 ID는 회전하지 않고 항상 읽기 쉽게 표시한다. */}
-                                <text
-                                    x="0"
-                                    y="27"
-                                    textAnchor="middle"
-                                    className="warehouse-rack-label"
-                                >
-                                    {rack.id}
-                                </text>
-                            </g>
-                        );
-                    })}
+                            );
+                        })}
                 </g>
 
                 {/* 입고 엘리베이터 IA ~ IG  */}
                 <g className="warehouse-inbound">
-                    {warehouseView.inboundNodes
+                    {graphData.nodes
+                        .filter((node) =>
+                            node.type === "inbound"
+                        )
                         .map((node) => (
                             <g key={node.id}>
                                 <rect
@@ -759,12 +1327,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     y={convertY(node.y) - 10}
                                     width="28"
                                     height="20"
-                                    rx="3"
                                     className="warehouse-inbound-node"
-                                    style={{
-                                        fill: MAP_THEME.inbound.fill,
-                                        stroke: MAP_THEME.inbound.stroke,
-                                    }}
                                 />
 
                                 <text
@@ -772,7 +1335,6 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     y={convertY(node.y) + 4}
                                     textAnchor="middle"
                                     className="warehouse-station-label"
-                                    style={{ fill: MAP_THEME.inbound.text }}
                                 >
                                     {node.label}
                                 </text>
@@ -794,7 +1356,12 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
 
                 {/* 출고 엘리베이터 OA ~ OG */}
                 <g className="warehouse-outbound">
-                    {warehouseView.outboundNodes
+                    {graphData.nodes
+                        .filter(
+                            (node) =>
+                                node.type ===
+                                "outbound"
+                        )
                         .map(
                             (node) => (
                                 <g key={node.id}>
@@ -803,12 +1370,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                         y={convertY(node.y) - 10}
                                         width="28"
                                         height="20"
-                                        rx="3"
                                         className="warehouse-outbound-node"
-                                        style={{
-                                            fill: MAP_THEME.outbound.fill,
-                                            stroke: MAP_THEME.outbound.stroke,
-                                        }}
                                     />
 
                                     <text
@@ -816,7 +1378,6 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                         y={convertY(node.y) + 4}
                                         textAnchor="middle"
                                         className="warehouse-station-label"
-                                        style={{ fill: MAP_THEME.outbound.text }}
                                     >
                                         {node.label}
                                     </text>
@@ -838,7 +1399,10 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
 
                 {/* 충전소 C01 ~ C10 */}
                 <g className="warehouse-charging">
-                    {warehouseView.chargingNodes
+                    {graphData.nodes
+                        .filter((node) =>
+                            node.type === "charging_slot"
+                        )
                         .map((node) => (
                             <g key={node.id}>
                                 <rect
@@ -846,12 +1410,7 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     y={convertY(node.y) - 10}
                                     width="36"
                                     height="20"
-                                    rx="3"
                                     className="warehouse-charging-slot"
-                                    style={{
-                                        fill: MAP_THEME.charging.fill,
-                                        stroke: MAP_THEME.charging.stroke,
-                                    }}
                                 >
                                     <title>{node.id}</title>
                                 </rect>
@@ -861,7 +1420,6 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                                     y={convertY(node.y) + 4}
                                     textAnchor="middle"
                                     className="warehouse-charging-label"
-                                    style={{ fill: MAP_THEME.charging.text }}
                                 >
                                     {node.index}
                                 </text>
@@ -881,223 +1439,103 @@ function WarehouseSVG({ warehouseId = 1, robots = [], simulationSpeed = 1 }) {
                         ))}
                 </g>
 
-                {/* 주요 구역 이름: 지도의 실제 구성요소와 겹치지 않도록 배지로 표시 */}
-                <g className="warehouse-area-badges">
-                    <g transform="translate(16, 12)">
-                        <rect
-                            width="88"
-                            height="28"
-                            rx="8"
-                            fill={MAP_THEME.inbound.fill}
-                            stroke={MAP_THEME.inbound.stroke}
-                        />
-                        <circle
-                            cx="15"
-                            cy="14"
-                            r="4"
-                            fill={MAP_THEME.inbound.stroke}
-                        />
-                        <text
-                            x="50"
-                            y="19"
-                            textAnchor="middle"
-                            className="warehouse-area-title"
-                            style={{ fill: MAP_THEME.inbound.text }}
-                        >
-                            입고지
-                        </text>
-                    </g>
-
-                    <g transform={`translate(${SVG_WIDTH - 104}, 12)`}>
-                        <rect
-                            width="88"
-                            height="28"
-                            rx="8"
-                            fill={MAP_THEME.outbound.fill}
-                            stroke={MAP_THEME.outbound.stroke}
-                        />
-                        <circle
-                            cx="15"
-                            cy="14"
-                            r="4"
-                            fill={MAP_THEME.outbound.stroke}
-                        />
-                        <text
-                            x="50"
-                            y="19"
-                            textAnchor="middle"
-                            className="warehouse-area-title"
-                            style={{ fill: MAP_THEME.outbound.text }}
-                        >
-                            출고지
-                        </text>
-                    </g>
-
-                    <g transform={`translate(16, ${SVG_HEIGHT - PADDING_BOTTOM + 12})`}>
-                        <rect
-                            width="96"
-                            height="28"
-                            rx="8"
-                            fill={MAP_THEME.charging.fill}
-                            stroke={MAP_THEME.charging.stroke}
-                        />
-                        <circle
-                            cx="15"
-                            cy="14"
-                            r="4"
-                            fill={MAP_THEME.charging.stroke}
-                        />
-                        <text
-                            x="54"
-                            y="19"
-                            textAnchor="middle"
-                            className="warehouse-area-title"
-                            style={{ fill: MAP_THEME.charging.text }}
-                        >
-                            충전소
-                        </text>
-                    </g>
-                </g>
-
-                {/* 색상 범례 */}
-                <g
-                    className="warehouse-map-legend"
-                    transform={`translate(${SVG_WIDTH / 2 - 420}, ${SVG_HEIGHT - 48})`}
+                {/* 영역 이름 */}
+                <text
+                    x="40"
+                    y="100"
+                    className="warehouse-area-title"
+                    textAnchor="middle"
                 >
-                    <rect
-                        x="0"
-                        y="0"
-                        width="840"
-                        height="38"
-                        rx="10"
-                        fill="#f8fafc"
-                        stroke="#cbd5e1"
-                    />
+                    입고지
+                </text>
 
-                    <text
-                        x="22"
-                        y="24"
-                        fontSize="13"
-                        fontWeight="700"
-                        fill="#334155"
-                    >
-                        범례
-                    </text>
+                <text
+                    x={SVG_WIDTH - 40}
+                    y="100"
+                    className="warehouse-area-title"
+                    textAnchor="middle"
+                >
+                    출고지
+                </text>
 
-                    {LEGEND_ITEMS.map((item, index) => {
-                        const theme = MAP_THEME[item.key];
-                        const itemX = 86 + index * 145;
-
-                        return (
-                            <g
-                                key={item.key}
-                                transform={`translate(${itemX}, 0)`}
-                            >
-                                {item.shape === "circle" ? (
-                                    <circle
-                                        cx="10"
-                                        cy="19"
-                                        r="6"
-                                        fill={theme.fill}
-                                        stroke={theme.stroke}
-                                        strokeWidth="2"
-                                    />
-                                ) : (
-                                    <rect
-                                        x="2"
-                                        y="11"
-                                        width="18"
-                                        height="16"
-                                        rx="3"
-                                        fill={theme.fill}
-                                        stroke={theme.stroke}
-                                        strokeWidth="2"
-                                    />
-                                )}
-
-                                <text
-                                    x="28"
-                                    y="24"
-                                    fontSize="12"
-                                    fontWeight="600"
-                                    fill={theme.text}
-                                >
-                                    {theme.label}
-                                </text>
-                            </g>
-                        );
-                    })}
-                </g>
+                <text
+                    x={SVG_WIDTH / 2}
+                    y={SVG_HEIGHT - 8}
+                    className="warehouse-area-title"
+                    textAnchor="middle"
+                >
+                    충전소
+                </text>
 
                 {/* 로봇 */}
-                <g className="warehouse-robots">
-                    {simulationData.robots.map((robot) => {
-                        // robots.json의 node_id를 이용해서
-                        // warehouse_graph.json에서 현재 위치 찾기
-                        const currentNode = warehouseView.nodeMap.get(robot.node_id);
+                {/* Fixed outbound robots own the blue station nodes. */}
+                <g className="warehouse-fixed-station-robots">
+                    {fixedOutboundRobots.map((stationRobot) => (
+                        <g
+                            key={stationRobot.id}
+                            className={`warehouse-fixed-station-robot ${stationRobot.active ? "working" : "idle"} ${stationRobot.outputActive ? "releasing" : ""}`}
+                            transform={`translate(${stationRobot.x}, ${stationRobot.y})`}
+                        >
+                            <rect className="station-robot-platform" x="-18" y="13" width="36" height="8" rx="3" />
+                            <rect className="station-robot-body" x="-9" y="-3" width="18" height="18" rx="5" />
+                            <circle className="station-robot-head" cx="0" cy="-12" r="8" />
+                            <circle className="station-robot-eye" cx="-3" cy="-13" r="1.5" />
+                            <circle className="station-robot-eye" cx="3" cy="-13" r="1.5" />
+                            <path className="station-robot-arm left" d="M -8 1 L -18 -5 L -22 4" />
+                            <path className="station-robot-arm right" d="M 8 1 L 18 -5 L 22 4" />
+                            <circle className="station-robot-joint" cx="-18" cy="-5" r="3" />
+                            <circle className="station-robot-joint" cx="18" cy="-5" r="3" />
+                            <title>
+                                {`${stationRobot.label} / ${stationRobot.active ? "작업 중" : "대기"}`}
+                            </title>
+                        </g>
+                    ))}
+                </g>
 
-                        if (!currentNode) {
+                <g className="warehouse-robots">
+                    {robots.map((robot) => {
+                        const fromNode = resolveRobotDisplayNode(
+                            robot,
+                            robot.from_node_code ?? robot.node_id,
+                        );
+                        const toNode = robot.movement_step_id
+                            ? resolveRobotDisplayNode(
+                                robot,
+                                robot.to_node_code ?? robot.node_id,
+                            )
+                            : fromNode;
+
+                        if (!fromNode || !toNode) {
                             return null;
                         }
 
                         // 현재 상태에 맞는 로봇 이미지
-                        const robotImage = robotImages[robot.status] ?? robotHero;
-                        const robotX = convertX(currentNode.x);
-                        const robotY = convertY(currentNode.y);
-                        const ROBOT_SIZE = 45;
+                        const robotImage =
+                            robotImages[robot.activity]
+                            ?? robotImages[robot.status]
+                            ?? robotHero;
+                        const activeTask = taskById.get(Number(robot.current_task_id));
+                        const activeProduct = productById.get(Number(activeTask?.itemId));
+                        const hasFacilityTransfer = transferBoxes.some(
+                            (box) => String(box.id).startsWith(`${robot.robot_id}-`),
+                        );
 
                         return (
-                            <g
+                            <AnimatedRobotMarker
                                 key={robot.robot_id}
-                                className="warehouse-robot"
-                                style={{
-                                    transform: `translate(${robotX}px, ${robotY}px)`,
-
-                                    // 백엔드가 알려준 도착 예정 시간에 맞춰 보간한다.
-                                    // 값이 없으면(목업/정지) 기존 배속 기반 시간을 사용.
-                                    transitionDuration:
-                                        robot.transition_ms !== undefined
-                                            ? `${robot.transition_ms}ms`
-                                            : `${getRobotTransitionDuration(simulationSpeed)}ms`,
-                                }}
-                            >
-                                <defs>
-                                    <clipPath id="robot-rounded">
-                                        <rect
-                                            x="-20"
-                                            y="-23"
-                                            width="40"
-                                            height="40"
-                                            rx="50"
-                                            ry="50"
-                                        />
-                                    </clipPath>
-                                </defs>
-                                <image
-                                    href={robotImage}
-                                    x="-20"
-                                    y="-20"
-                                    width="40"
-                                    height="40"
-                                    clipPath="url(#robot-rounded)"
-                                />
-
-                                <text
-                                    x="3"
-                                    y={ROBOT_SIZE / 2 + 10}
-                                    textAnchor="middle"
-                                    className="warehouse-robot-id"
-                                >
-                                    {robot.robot_code}
-                                </text>
-
-                                <title>
-                                    {`${robot.robot_code}
-                                                상태: ${robot.status}
-                                                배터리: ${robot.battery}%
-                                                현재 노드: ${robot.node_id}`}
-                                </title>
-                            </g>
+                                robot={robot}
+                                fromX={convertX(fromNode.x)}
+                                fromY={convertY(fromNode.y)}
+                                toX={convertX(toNode.x)}
+                                toY={convertY(toNode.y)}
+                                robotImage={robotImage}
+                                isRunning={isRunning}
+                                loadColor={productColor(activeTask?.itemId)}
+                                loadTitle={activeProduct
+                                    ? `${activeProduct.productName} (${activeProduct.productCode}) BOX 운반 중`
+                                    : "BOX 운반 중"}
+                                hideLoad={hasFacilityTransfer}
+                            />
                         );
                     })}
                 </g>
