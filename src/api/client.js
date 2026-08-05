@@ -115,6 +115,12 @@ export const api = {
             body: body === undefined ? undefined : JSON.stringify(body),
         }),
 
+    put: (path, body) =>
+        request(path, {
+            method: "PUT",
+            body: body === undefined ? undefined : JSON.stringify(body),
+        }),
+
     delete: (path) => request(path, { method: "DELETE" }),
 };
 
@@ -156,12 +162,43 @@ export const productApi = {
     getAll: () => api.get("/products"),
 };
 
+export const warehouseItemApi = {
+    getAll: (warehouseId) =>
+        api.get(
+            warehouseId
+                ? `/warehouse-items?warehouseId=${warehouseId}`
+                : "/warehouse-items"
+        ),
+};
+
 export const optimizationApi = {
     reoptimize: (runId, payload) =>
         api.post(
             `/optimizations/simulation-runs/${runId}/reoptimize`,
             payload
         ),
+};
+
+export const laroPlanApi = {
+    preflight: (runId) =>
+        api.get(`/laro/simulation-runs/${runId}/plan/preflight`),
+    create: (runId, payload) =>
+        api.post(`/laro/simulation-runs/${runId}/plan`, payload),
+};
+
+export const fulfillmentCommandApi = {
+    generate: (runId, payload) =>
+        api.post(`/simulation-runs/${runId}/fulfillment-commands/generate`, payload),
+    getCycleStatus: (runId) =>
+        api.get(`/simulation-runs/${runId}/command-cycle`),
+    configureCycle: (runId, expressionMix = {}) =>
+        api.put(`/simulation-runs/${runId}/command-cycle/configuration`, {
+            mode: "AUTO",
+            commandExpressionMode: "AUTO",
+            policyProfile: "AUTO",
+            mixStructuredWithPolicy: Boolean(expressionMix.policyEnabled),
+            mixNaturalLanguage: Boolean(expressionMix.naturalLanguageEnabled),
+        }),
 };
 
 export const robotApi = {
@@ -185,14 +222,32 @@ export const robotSpecApi = {
 };
 
 export const warehouseApi = {
-    getAll: () => api.get("/warehouses"),
+    getAll: async () => {
+        const warehouses = await api.get("/warehouses");
+
+        if (!Array.isArray(warehouses)) {
+            return warehouses;
+        }
+
+        // 공용 데모는 Neo4j 계약의 기본형 창고(id=1)만 노출한다.
+        // 사용자가 새로 만든 개인 창고는 계속 목록에 표시한다.
+        return warehouses.filter(
+            (warehouse) => Number(warehouse.id) === 1 || !warehouse.shared,
+        );
+    },
     getLayout: (warehouseId) =>
         api.get(`/warehouses/${warehouseId}/layout`),
+
+    get: (warehouseId) =>
+        api.get(`/warehouses/${warehouseId}`),
 
     // 지도 JSON 과 함께 창고를 만든다.
     // 노드·간선뿐 아니라 랙·충전소·로봇까지 백엔드가 만들어준다.
     importWarehouse: (payload) =>
         api.post("/warehouses/import", payload),
+
+    updateLayout: (warehouseId, payload) =>
+        api.put(`/warehouses/${warehouseId}/layout`, payload),
 
     update: (warehouseId, payload) =>
         api.patch(`/warehouses/${warehouseId}`, payload),

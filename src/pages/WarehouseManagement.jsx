@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import "../styles/warehouseManagement.css";
+import { useLocation, useNavigate } from "react-router-dom";
+import "../styles/WarehouseManagement.css";
 
-import WarehouseSVG from "./WarehouseSVG";
 import { warehouseApi } from "../api/client";
+import { layoutResponseToMapData } from "../utils/warehouseLayoutAdapter";
 
 import warehouseGraph1 from "../assets/warehouse-maps/warehouse_graph_1.json";
-import warehouseGraph2 from "../assets/warehouse-maps/warehouse_graph_2.json";
-import warehouseGraph3 from "../assets/warehouse-maps/warehouse_graph_3.json";
 
 // 백엔드 상태값 <-> 화면 표기
 const STATUS_TO_LABEL = {
@@ -50,7 +49,6 @@ const getShelfCount = (mapData) =>
     mapData?.summary?.rack_entity_count ??
     mapData?.summary?.rack_entities_external ??
     0;
-
 
 const normalizeNodeType = (node) =>
     String(
@@ -97,8 +95,6 @@ const createWarehouseStats = (layout) => {
         layout?.storageLocations,
     ].find(Array.isArray);
 
-    // 기본 JSON은 선반 하나당 rack_access 노드가 A/B 두 개씩 있으므로
-    // "_ACCESS_A", "_ACCESS_B"를 제거해 실제 선반 수로 중복 제거한다.
     const rackIdsFromAccessNodes = new Set(
         nodesByType(["rack_access"]).map((node) =>
             String(node.id ?? node.nodeCode ?? "")
@@ -135,11 +131,7 @@ const createWarehouseStats = (layout) => {
             summary.inbound_count,
             summary.inboundStationCount,
             summary.inbound_station_count,
-        ) ??
-        nodesByType([
-            "inbound",
-            "inbound_station",
-        ]).length;
+        ) ?? nodesByType(["inbound", "inbound_station"]).length;
 
     const outboundCount =
         firstFiniteNumber(
@@ -149,11 +141,7 @@ const createWarehouseStats = (layout) => {
             summary.logical_outbound_destinations,
             summary.outboundCount,
             summary.outbound_count,
-        ) ??
-        nodesByType([
-            "outbound",
-            "outbound_station",
-        ]).length;
+        ) ?? nodesByType(["outbound", "outbound_station"]).length;
 
     const chargingStationCount =
         firstFiniteNumber(
@@ -219,60 +207,44 @@ function WarehouseConfigIcon({ type }) {
     );
 }
 
+const loadWarehouseLayoutView = async (warehouse) => {
+    try {
+        const layout = await warehouseApi.getLayout(warehouse.warehouse_id);
+        const mapData = layoutResponseToMapData(layout, warehouse);
+
+        return {
+            ...warehouse,
+            robotCount: Array.isArray(layout?.robots) ? layout.robots.length : 0,
+            shelfCount: getShelfCount(mapData),
+            nodeCount: mapData.summary.node_count,
+            edgeCount: mapData.edges.length,
+            mapData,
+        };
+    } catch (error) {
+        console.warn("창고 지도 조회 실패", error.message);
+        return warehouse;
+    }
+};
+
 const initialWarehouses = [
     {
         warehouse_id: 1,
-        name: "창고 A",
-        location: "서울특별시",
+        shared: true,
+        name: "대전 물류센터 A (AI Neo4j)",
+        location: "대전광역시 유성구",
         status: "운영 중",
-        width: 50,
-        height: 50,
+        width: 13,
+        height: 7,
         robotCount: 0,
         shelfCount: getShelfCount(warehouseGraph1),
         createdAt: "2026-07-20 09:00",
         updatedAt: "2026-07-20 09:15",
-        description: "서울 물류센터 창고 A",
+        description: "확장 입출고 접근형 LARO AI Neo4j 맵 (입고 핸드오프 3개 / 출고 스테이션 3개)",
         creationType: "TEMPLATE",
         mapTemplateId: "warehouse_graph_1",
         mapTemplateFileName: "warehouse_graph_1.json",
-        mapTitle: warehouseGraph1.title ?? "창고맵 1",
+        mapTitle: warehouseGraph1.title ?? "LARO AI Neo4j 창고 맵",
         mapData: warehouseGraph1,
-    },
-    {
-        warehouse_id: 2,
-        name: "창고 B",
-        location: "부산광역시",
-        status: "운영 중",
-        width: 50,
-        height: 50,
-        robotCount: 0,
-        shelfCount: getShelfCount(warehouseGraph2),
-        createdAt: "2026-07-20 09:00",
-        updatedAt: "2026-07-20 09:15",
-        description: "부산 물류센터 창고 B",
-        creationType: "TEMPLATE",
-        mapTemplateId: "warehouse_graph_2",
-        mapTemplateFileName: "warehouse_graph_2.json",
-        mapTitle: warehouseGraph2.title ?? "창고맵 2",
-        mapData: warehouseGraph2,
-    },
-    {
-        warehouse_id: 3,
-        name: "창고 C",
-        location: "인천광역시",
-        status: "점검 중",
-        width: 50,
-        height: 50,
-        robotCount: 0,
-        shelfCount: getShelfCount(warehouseGraph3),
-        createdAt: "2026-07-20 09:00",
-        updatedAt: "2026-07-20 09:15",
-        description: "인천 물류센터 창고 C",
-        creationType: "TEMPLATE",
-        mapTemplateId: "warehouse_graph_3",
-        mapTemplateFileName: "warehouse_graph_3.json",
-        mapTitle: warehouseGraph3.title ?? "창고맵 3",
-        mapData: warehouseGraph3,
     },
 ];
 
@@ -285,7 +257,7 @@ const initialForm = {
     status: "운영 준비",
 };
 
-function WarehouseMapPreview({ mapData, compact = false }) {
+export function WarehouseMapPreview({ mapData, compact = false }) {
     const nodes = Array.isArray(mapData?.nodes)
         ? mapData.nodes.filter(
               (node) =>
@@ -359,6 +331,18 @@ function WarehouseMapPreview({ mapData, compact = false }) {
             return "#94a3b8";
         }
 
+        if (type === "rack_storage") {
+            return "#64748b";
+        }
+
+        if (type === "inbound_handoff_access") {
+            return "#16a34a";
+        }
+
+        if (type === "outbound_station_access") {
+            return "#f97316";
+        }
+
         if (type === "empty_tote_buffer_access") {
             return "#eab308";
         }
@@ -418,7 +402,7 @@ function WarehouseMapPreview({ mapData, compact = false }) {
                         vectorEffect="non-scaling-stroke"
                     >
                         <title>
-                            {node.id} / {node.type}
+                            {node.label ?? node.id} / {node.type}
                         </title>
                     </circle>
                 ))}
@@ -428,6 +412,8 @@ function WarehouseMapPreview({ mapData, compact = false }) {
 }
 
 function WarehouseManagement() {
+    const navigate = useNavigate();
+    const location = useLocation();
     // 목록은 백엔드에서 불러온다. 목업은 조회 실패 시에만 쓴다.
     const [warehouseList, setWarehouseList] = useState([]);
 
@@ -437,28 +423,13 @@ function WarehouseManagement() {
 
     const [saveError, setSaveError] = useState("");
 
-    const [warehouseStats, setWarehouseStats] = useState(
-        createEmptyWarehouseStats,
-    );
-
-    const [isStatsLoading, setIsStatsLoading] = useState(false);
-
     const [
         isWarehouseModalOpen,
         setIsWarehouseModalOpen,
     ] = useState(false);
 
-    const [modalMode, setModalMode] = useState("CREATE");
-
     const [warehouseForm, setWarehouseForm] =
         useState(initialForm);
-
-    const [jsonFile, setJsonFile] = useState(null);
-
-    const [uploadedMapData, setUploadedMapData] =
-        useState(null);
-
-    const [jsonError, setJsonError] = useState("");
 
     /**
      * 창고 목록을 다시 불러온다.
@@ -477,7 +448,7 @@ function WarehouseManagement() {
                 views[0] ??
                 null;
 
-            setSelectedWarehouse(next);
+            setSelectedWarehouse(next ? await loadWarehouseLayoutView(next) : null);
         } catch (error) {
             console.warn("창고 목록 조회 실패 - 목업을 사용합니다.", error.message);
             setWarehouseList(initialWarehouses);
@@ -488,102 +459,22 @@ function WarehouseManagement() {
     };
 
     useEffect(() => {
-        reloadWarehouses();
-    }, []);
-
-
-    useEffect(() => {
-        const warehouseId = selectedWarehouse?.warehouse_id;
-
-        if (!warehouseId) {
-            setWarehouseStats(createEmptyWarehouseStats());
-            return undefined;
-        }
-
-        let cancelled = false;
-
-        const loadWarehouseStats = async () => {
-            setIsStatsLoading(true);
-
-            try {
-                const layout = await warehouseApi.getLayout(warehouseId);
-
-                if (!cancelled) {
-                    setWarehouseStats(createWarehouseStats(layout));
-                }
-            } catch (error) {
-                console.warn(
-                    "창고 구성 정보 조회 실패",
-                    error.message,
-                );
-
-                if (!cancelled) {
-                    setWarehouseStats(
-                        selectedWarehouse?.mapData
-                            ? createWarehouseStats(
-                                  selectedWarehouse.mapData,
-                              )
-                            : createEmptyWarehouseStats(),
-                    );
-                }
-            } finally {
-                if (!cancelled) {
-                    setIsStatsLoading(false);
-                }
-            }
-        };
-
-        loadWarehouseStats();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [selectedWarehouse?.warehouse_id]);
-
-    const openCreateModal = () => {
-        setModalMode("CREATE");
-        setWarehouseForm(initialForm);
-        setJsonFile(null);
-        setUploadedMapData(null);
-        setJsonError("");
-        setIsWarehouseModalOpen(true);
-    };
+        const requestedId = Number(location.state?.selectedWarehouseId);
+        reloadWarehouses(Number.isSafeInteger(requestedId) ? requestedId : null);
+    }, [location.state?.selectedWarehouseId]);
 
     const openEditModal = () => {
         if (!selectedWarehouse) {
             return;
         }
 
-        // 공용 창고는 모두가 함께 쓰므로 고칠 수 없다
-        if (selectedWarehouse.shared) {
-            window.alert("공용 창고는 수정할 수 없습니다.");
-            return;
-        }
-
-        setModalMode("EDIT");
-
-        setWarehouseForm({
-            name: selectedWarehouse.name,
-            location: selectedWarehouse.location,
-            width: String(selectedWarehouse.width),
-            height: String(selectedWarehouse.height),
-            description: selectedWarehouse.description ?? "",
-            status: selectedWarehouse.status,
-        });
-
-        setJsonFile(null);
-        setUploadedMapData(null);
-        setJsonError("");
-        setIsWarehouseModalOpen(true);
+        navigate(`/warehouse/${selectedWarehouse.warehouse_id}/edit`);
     };
 
     const closeWarehouseModal = () => {
         setIsWarehouseModalOpen(false);
-        setModalMode("CREATE");
         setWarehouseForm(initialForm);
-        setJsonFile(null);
-        setUploadedMapData(null);
-        setJsonError("");
+        setSaveError("");
     };
 
     const handleFormChange = (event) => {
@@ -595,75 +486,18 @@ function WarehouseManagement() {
         }));
     };
 
-    const handleJsonFileChange = async (event) => {
-        const file = event.target.files?.[0];
-
-        setJsonError("");
-        setUploadedMapData(null);
-
-        if (!file) {
-            setJsonFile(null);
-            return;
-        }
-
-        if (!file.name.toLowerCase().endsWith(".json")) {
-            setJsonFile(null);
-            setJsonError("JSON 파일만 업로드할 수 있습니다.");
-            event.target.value = "";
-            return;
-        }
-
-        try {
-            const fileText = await file.text();
-            const parsedData = JSON.parse(fileText);
-
-            if (!Array.isArray(parsedData.nodes)) {
-                throw new Error(
-                    "nodes 배열이 존재하지 않습니다.",
-                );
-            }
-
-            if (!Array.isArray(parsedData.edges)) {
-                throw new Error(
-                    "edges 배열이 존재하지 않습니다.",
-                );
-            }
-
-            setJsonFile(file);
-            setUploadedMapData(parsedData);
-        } catch (error) {
-            setJsonFile(null);
-            setUploadedMapData(null);
-            setJsonError(
-                error instanceof Error
-                    ? `JSON 검증 실패: ${error.message}`
-                    : "JSON 파일을 읽을 수 없습니다.",
-            );
-            event.target.value = "";
-        }
-    };
-
-    const removeJsonFile = () => {
-        setJsonFile(null);
-        setUploadedMapData(null);
-        setJsonError("");
-    };
-
     const isBasicFormValid =
         warehouseForm.name.trim() !== "" &&
         warehouseForm.location.trim() !== "" &&
         Number(warehouseForm.width) > 0 &&
         Number(warehouseForm.height) > 0;
 
-    const canSave =
-        isBasicFormValid &&
-        (modalMode === "EDIT" || uploadedMapData !== null);
+    const canSave = isBasicFormValid;
 
     /**
      * 창고 저장.
      *
-     * 생성   지도 JSON 과 함께 보내면 백엔드가 노드·간선·랙·로봇까지 만든다.
-     * 수정   이름·소재지·상태 등만 바꾼다. 지도는 건드리지 않는다.
+     * 이름·소재지·상태 등만 바꾸며 지도는 건드리지 않는다.
      */
     const handleSaveWarehouse = async () => {
         if (!canSave) {
@@ -682,26 +516,12 @@ function WarehouseManagement() {
         };
 
         try {
-            if (modalMode === "EDIT") {
-                await warehouseApi.update(
-                    selectedWarehouse.warehouse_id,
-                    basePayload,
-                );
+            await warehouseApi.update(
+                selectedWarehouse.warehouse_id,
+                basePayload,
+            );
 
-                await reloadWarehouses(selectedWarehouse.warehouse_id);
-                closeWarehouseModal();
-                return;
-            }
-
-            const created = await warehouseApi.importWarehouse({
-                ...basePayload,
-                map: {
-                    nodes: uploadedMapData.nodes,
-                    edges: uploadedMapData.edges,
-                },
-            });
-
-            await reloadWarehouses(created?.warehouseId ?? null);
+            await reloadWarehouses(selectedWarehouse.warehouse_id);
             closeWarehouseModal();
         } catch (error) {
             setSaveError(error.message || "저장에 실패했습니다.");
@@ -733,6 +553,21 @@ function WarehouseManagement() {
         }
     };
 
+    const handleWarehouseSelect = async (warehouse) => {
+        setSelectedWarehouse(warehouse);
+        const hydrated = await loadWarehouseLayoutView(warehouse);
+
+        setSelectedWarehouse((current) =>
+            current?.warehouse_id === warehouse.warehouse_id
+                ? hydrated
+                : current,
+        );
+    };
+
+    const warehouseStats = selectedWarehouse?.mapData
+        ? createWarehouseStats(selectedWarehouse.mapData)
+        : createEmptyWarehouseStats();
+
     return (
         <div className="warehouse-management">
             <div className="management-header">
@@ -746,7 +581,7 @@ function WarehouseManagement() {
                     <button
                         type="button"
                         className="warehouse-button"
-                        onClick={openCreateModal}
+                        onClick={() => navigate("/warehouse/new")}
                     >
                         + 새 창고
                     </button>
@@ -775,9 +610,7 @@ function WarehouseManagement() {
                                     ? "active"
                                     : ""
                             }`}
-                            onClick={() =>
-                                setSelectedWarehouse(warehouse)
-                            }
+                            onClick={() => handleWarehouseSelect(warehouse)}
                         >
                             <div className="warehouse-list-info">
                                 <strong>{warehouse.name}</strong>
@@ -804,7 +637,7 @@ function WarehouseManagement() {
                         <button
                             type="button"
                             className="warehouse-button"
-                            onClick={openCreateModal}
+                            onClick={() => navigate("/warehouse/new")}
                         >
                             새 창고 만들기
                         </button>
@@ -824,12 +657,6 @@ function WarehouseManagement() {
                                 <button
                                     type="button"
                                     onClick={openEditModal}
-                                    disabled={selectedWarehouse.shared}
-                                    title={
-                                        selectedWarehouse.shared
-                                            ? "공용 창고는 수정할 수 없습니다."
-                                            : undefined
-                                    }
                                 >
                                     수정
                                 </button>
@@ -851,43 +678,30 @@ function WarehouseManagement() {
                         </div>
 
                         <div className="warehouse-detail-content">
-                            <section className="warehouse-map-card">
-                                <div className="warehouse-card-heading">
-                                    <div>
-                                        <h2>창고 맵</h2>
-                                        <p>
-                                            창고의 선반과 주요 작업 지점 배치를
-                                            확인할 수 있습니다.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="warehouse-preview">
+                            <div className="warehouse-preview">
+                                {selectedWarehouse.mapData ? (
                                     <div className="warehouse-preview-content">
-                                        <WarehouseSVG
-                                            key={
-                                                selectedWarehouse.warehouse_id
+                                        <WarehouseMapPreview
+                                            mapData={
+                                                selectedWarehouse.mapData
                                             }
-                                            warehouseId={
-                                                selectedWarehouse.warehouse_id
-                                            }
-                                            robots={[]}
-                                            simulationSpeed={1}
                                         />
                                     </div>
-                                </div>
-                            </section>
+                                ) : (
+                                    <div className="warehouse-preview-placeholder">
+                                        창고 미리보기
+                                    </div>
+                                )}
+                            </div>
 
                             <div className="warehouse-detail-bottom">
                                 <section className="warehouse-configuration">
                                     <div className="warehouse-configuration-header">
-                                        <div>
-                                            <h2>시설 구성</h2>
-                                            <p>
-                                                창고 맵에 등록된 시설별 수량과
-                                                용도를 확인할 수 있습니다.
-                                            </p>
-                                        </div>
+                                        <h2>시설 구성</h2>
+                                        <p>
+                                            창고 맵에 등록된 시설별 수량과 용도를
+                                            확인할 수 있습니다.
+                                        </p>
                                     </div>
 
                                     <div className="warehouse-facility-list">
@@ -895,7 +709,6 @@ function WarehouseManagement() {
                                             <div className="warehouse-facility-icon">
                                                 <WarehouseConfigIcon type="shelf" />
                                             </div>
-
                                             <div className="warehouse-facility-main">
                                                 <div className="warehouse-facility-title-row">
                                                     <strong>선반</strong>
@@ -903,18 +716,14 @@ function WarehouseManagement() {
                                                         맵 표시 · 회색
                                                     </span>
                                                 </div>
-
                                                 <p>
-                                                    상품을 적재하고 보관하는
-                                                    랙 시설입니다.
+                                                    상품을 적재하고 보관하는 랙
+                                                    시설입니다.
                                                 </p>
                                             </div>
-
                                             <div className="warehouse-facility-count">
                                                 <strong>
-                                                    {isStatsLoading
-                                                        ? "-"
-                                                        : warehouseStats.shelfCount}
+                                                    {warehouseStats.shelfCount}
                                                 </strong>
                                                 <span>개</span>
                                             </div>
@@ -924,7 +733,6 @@ function WarehouseManagement() {
                                             <div className="warehouse-facility-icon">
                                                 <WarehouseConfigIcon type="inbound" />
                                             </div>
-
                                             <div className="warehouse-facility-main">
                                                 <div className="warehouse-facility-title-row">
                                                     <strong>입고장</strong>
@@ -932,18 +740,14 @@ function WarehouseManagement() {
                                                         맵 표시 · 초록
                                                     </span>
                                                 </div>
-
                                                 <p>
-                                                    상품의 입고 작업이 시작되는
-                                                    작업 지점입니다.
+                                                    상품의 입고 작업이 시작되는 작업
+                                                    지점입니다.
                                                 </p>
                                             </div>
-
                                             <div className="warehouse-facility-count">
                                                 <strong>
-                                                    {isStatsLoading
-                                                        ? "-"
-                                                        : warehouseStats.inboundCount}
+                                                    {warehouseStats.inboundCount}
                                                 </strong>
                                                 <span>개</span>
                                             </div>
@@ -953,7 +757,6 @@ function WarehouseManagement() {
                                             <div className="warehouse-facility-icon">
                                                 <WarehouseConfigIcon type="outbound" />
                                             </div>
-
                                             <div className="warehouse-facility-main">
                                                 <div className="warehouse-facility-title-row">
                                                     <strong>출고장</strong>
@@ -961,18 +764,14 @@ function WarehouseManagement() {
                                                         맵 표시 · 주황
                                                     </span>
                                                 </div>
-
                                                 <p>
-                                                    상품의 출고 작업이 완료되는
-                                                    작업 지점입니다.
+                                                    상품의 출고 작업이 완료되는 작업
+                                                    지점입니다.
                                                 </p>
                                             </div>
-
                                             <div className="warehouse-facility-count">
                                                 <strong>
-                                                    {isStatsLoading
-                                                        ? "-"
-                                                        : warehouseStats.outboundCount}
+                                                    {warehouseStats.outboundCount}
                                                 </strong>
                                                 <span>개</span>
                                             </div>
@@ -982,7 +781,6 @@ function WarehouseManagement() {
                                             <div className="warehouse-facility-icon">
                                                 <WarehouseConfigIcon type="charging" />
                                             </div>
-
                                             <div className="warehouse-facility-main">
                                                 <div className="warehouse-facility-title-row">
                                                     <strong>충전소</strong>
@@ -990,18 +788,16 @@ function WarehouseManagement() {
                                                         맵 표시 · 파랑
                                                     </span>
                                                 </div>
-
                                                 <p>
                                                     로봇이 대기하거나 배터리를
                                                     충전하는 시설입니다.
                                                 </p>
                                             </div>
-
                                             <div className="warehouse-facility-count">
                                                 <strong>
-                                                    {isStatsLoading
-                                                        ? "-"
-                                                        : warehouseStats.chargingStationCount}
+                                                    {
+                                                        warehouseStats.chargingStationCount
+                                                    }
                                                 </strong>
                                                 <span>개</span>
                                             </div>
@@ -1018,50 +814,36 @@ function WarehouseManagement() {
                                         <div className="warehouse-info-row">
                                             <span>위치</span>
                                             <strong>
-                                                {
-                                                    selectedWarehouse.location
-                                                }
+                                                {selectedWarehouse.location}
                                             </strong>
                                         </div>
 
                                         <div className="warehouse-info-row">
                                             <span>크기</span>
                                             <strong>
-                                                {
-                                                    selectedWarehouse.width
-                                                }
-                                                m ×{" "}
-                                                {
-                                                    selectedWarehouse.height
-                                                }
-                                                m
+                                                {selectedWarehouse.width}m ×{" "}
+                                                {selectedWarehouse.height}m
                                             </strong>
                                         </div>
 
                                         <div className="warehouse-info-row">
                                             <span>생성일</span>
                                             <strong>
-                                                {
-                                                    selectedWarehouse.createdAt
-                                                }
+                                                {selectedWarehouse.createdAt}
                                             </strong>
                                         </div>
 
                                         <div className="warehouse-info-row">
                                             <span>최근 업데이트</span>
                                             <strong>
-                                                {
-                                                    selectedWarehouse.updatedAt
-                                                }
+                                                {selectedWarehouse.updatedAt}
                                             </strong>
                                         </div>
 
                                         <div className="warehouse-info-row warehouse-info-description">
                                             <span>설명</span>
                                             <strong>
-                                                {
-                                                    selectedWarehouse.description
-                                                }
+                                                {selectedWarehouse.description}
                                             </strong>
                                         </div>
                                     </div>
@@ -1081,11 +863,7 @@ function WarehouseManagement() {
                         aria-labelledby="warehouse-modal-title"
                     >
                         <div className="warehouse-modal-header">
-                            <h2 id="warehouse-modal-title">
-                                {modalMode === "EDIT"
-                                    ? "창고 수정"
-                                    : "새 창고 생성"}
-                            </h2>
+                            <h2 id="warehouse-modal-title">창고 수정</h2>
 
                             <button
                                 type="button"
@@ -1097,14 +875,8 @@ function WarehouseManagement() {
                             </button>
                         </div>
 
-                        <div className="warehouse-create-tabs">
-                            <span className="active">
-                                기본 정보
-                            </span>
-
-                            {modalMode === "CREATE" && (
-                                <span>JSON 업로드</span>
-                            )}
+                        <div className="warehouse-create-tabs single">
+                            <span className="active">기본 정보</span>
                         </div>
 
                         <div className="warehouse-form-grid">
@@ -1197,73 +969,6 @@ function WarehouseManagement() {
                             </label>
                         </div>
 
-                        {modalMode === "CREATE" && (
-                            <div className="warehouse-json-upload">
-                                <label htmlFor="warehouse-json-file">
-                                    JSON 파일 선택 *
-                                </label>
-
-                                <input
-                                    id="warehouse-json-file"
-                                    type="file"
-                                    accept=".json,application/json"
-                                    onChange={handleJsonFileChange}
-                                />
-
-                                {jsonError && (
-                                    <p className="warehouse-json-error">
-                                        {jsonError}
-                                    </p>
-                                )}
-
-                                {jsonFile && uploadedMapData && (
-                                    <>
-                                        <div className="warehouse-json-file-info">
-                                            <div>
-                                                <strong>
-                                                    {jsonFile.name}
-                                                </strong>
-
-                                                <span>
-                                                    노드{" "}
-                                                    {uploadedMapData
-                                                        .summary
-                                                        ?.node_count ??
-                                                        uploadedMapData
-                                                            .nodes
-                                                            .length}
-                                                    개 · 엣지{" "}
-                                                    {uploadedMapData
-                                                        .summary
-                                                        ?.edge_count ??
-                                                        uploadedMapData
-                                                            .edges
-                                                            .length}
-                                                    개
-                                                </span>
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                onClick={removeJsonFile}
-                                            >
-                                                제거
-                                            </button>
-                                        </div>
-
-                                        <div className="warehouse-selected-map-preview">
-                                            <WarehouseMapPreview
-                                                mapData={
-                                                    uploadedMapData
-                                                }
-                                                compact
-                                            />
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        )}
-
                         {saveError && (
                             <p className="warehouse-json-error">
                                 {saveError}
@@ -1285,9 +990,7 @@ function WarehouseManagement() {
                                 disabled={!canSave}
                                 onClick={handleSaveWarehouse}
                             >
-                                {modalMode === "EDIT"
-                                    ? "수정"
-                                    : "생성"}
+                                수정
                             </button>
                         </div>
                     </section>

@@ -9,6 +9,7 @@ import Simulation from "./pages/simulation/Simulation";
 import Scenario from "./pages/scenario/Scenario";
 import RobotManagement from "./pages/RobotManagement";
 import WarehouseManagement from "./pages/WarehouseManagement";
+import WarehouseCreate from "./pages/WarehouseCreate";
 import OperationManagement from "./pages/OperationManagement";
 
 function App() {
@@ -24,7 +25,10 @@ function App() {
                     <Route path="/simulation" element={<Simulation />} />
                     <Route path="/scenario" element={<Scenario />}/>
                     <Route path="/robot" element={<RobotManagement />} />
+                    <Route path="/setting" element={<SimulationSetting />} />
                     <Route path="/warehouse" element={<WarehouseManagement />} />
+                    <Route path="/warehouse/new" element={<WarehouseCreate />} />
+                    <Route path="/warehouse/:warehouseId/edit" element={<WarehouseCreate />} />
                     <Route path="/operation" element={<OperationManagement />} />
                 </Route>
             </Routes>
