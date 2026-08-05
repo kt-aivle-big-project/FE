@@ -3,7 +3,7 @@
 ========================= */
 
 .simulation-wrapper {
-    width: 1500px;
+    width: 100%;
     min-height: 100vh;
 
     display: grid;

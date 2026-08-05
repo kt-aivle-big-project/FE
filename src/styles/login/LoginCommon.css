@@ -1,12 +1,16 @@
 /* 로그인/회원가입 공통 레이아웃 */
 .login-page {
+    width: 100%;
     min-height: 100vh;
+
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-    background: var(--laro-background);
-    color: var(--laro-text);
+    justify-content: flex-end;
+    padding-right: 150px;
 }
 
 .login-card {

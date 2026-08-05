@@ -1,0 +1,857 @@
+/* =========================================================
+   Scenario page
+   ========================================================= */
+
+.scenario-page {
+    width: 100%;
+    min-height: 100%;
+
+    padding: 10px;
+
+    background: var(--laro-background);
+    color: var(--laro-text);
+}
+
+.scenario-page *,
+.scenario-page *::before,
+.scenario-page *::after {
+    box-sizing: border-box;
+}
+
+.scenario-page button,
+.scenario-page input,
+.scenario-page select {
+    font: inherit;
+}
+
+
+/* =========================================================
+   Scenario workspace
+   왼쪽 목록 + 오른쪽 상세 영역
+   ========================================================= */
+
+.scenario-workspace {
+    display: grid;
+    grid-template-columns:
+        minmax(400px, 600px)
+        minmax(0, 1fr);
+
+    align-items: start;
+    gap: 10px;
+
+    width: 100%;
+    max-width: 1400px;
+
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   Scenario list card
+   ========================================================= */
+
+.scenario-list-card {
+    position: sticky;
+
+    display: flex;
+    min-width: 0;
+    width: 100%;
+    max-width: 600px;
+    flex-direction: column;
+
+    margin: 0;
+
+    overflow: hidden;
+
+    border: 1px solid var(--laro-border);
+    border-radius: 12px;
+
+    background: var(--laro-white);
+}
+
+
+/* =========================================================
+   Header
+   ========================================================= */
+
+.scenario-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+
+    padding: 20px;
+
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-list-heading {
+    min-width: 0;
+}
+
+.scenario-list-heading h1 {
+    margin: 0;
+
+    color: var(--laro-navy);
+
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.scenario-list-heading p {
+    margin: 7px 0 0;
+
+    color: var(--laro-subtext);
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   Shared button
+   ========================================================= */
+
+.scenario-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    flex: 0 0 auto;
+
+    min-height: 40px;
+    padding: 0 14px;
+
+    border: 0;
+    border-radius: 14px;
+
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        color 0.18s ease;
+}
+
+.scenario-button-primary {
+    background: var(--laro-primary);
+    color: var(--laro-white);
+}
+
+.scenario-button-primary:hover {
+    background: var(--laro-primary-hover);
+}
+
+
+/* =========================================================
+   Toolbar
+   검색, 상태, 정렬, 초기화 수평 배치
+   ========================================================= */
+
+.scenario-list-toolbar {
+    display: grid;
+    grid-template-columns:
+        minmax(200px, 1fr)
+        minmax(80px, 1fr)
+        minmax(80px, 1fr)
+        70px;
+
+    align-items: center;
+    gap: 10px;
+
+    padding: 20px;
+}
+
+
+/* 검색창 */
+.scenario-search {
+    position: relative;
+
+    min-width: 0;
+}
+
+.scenario-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 13px;
+    z-index: 1;
+
+    color: var(--laro-subtext);
+
+    font-size: 20px;
+
+    pointer-events: none;
+
+    transform: translateY(-50%);
+}
+
+.scenario-page .scenario-search input {
+    width: 100%;
+    height: 40px;
+
+    padding: 0 14px 0 39px;
+
+    border: 1px solid var(--laro-border);
+    border-radius: 12px;
+    outline: none;
+
+    background: var(--laro-white);
+    color: var(--laro-text);
+
+    font-size: 13px;
+
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.scenario-page .scenario-search input::placeholder {
+    color: var(--laro-subtext);
+}
+
+.scenario-page .scenario-search input:hover {
+    border-color: var(--laro-primary);
+}
+
+.scenario-page .scenario-search input:focus {
+    border-color: var(--laro-primary);
+
+    box-shadow: 0 0 0 3px var(--laro-focus-ring);
+}
+
+
+/* 상태 필터 및 정렬 */
+.scenario-page .scenario-filter-select {
+    width: 100%;
+    min-width: 0;
+    height: 40px;
+
+    padding: 0 30px 0 12px;
+
+    border: 1px solid var(--laro-border);
+    border-radius: 12px;
+    outline: none;
+
+    background: var(--laro-white);
+    color: var(--laro-text);
+
+    font-size: 12px;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.scenario-page .scenario-filter-select:hover {
+    border-color: var(--laro-primary);
+}
+
+.scenario-page .scenario-filter-select:focus {
+    border-color: var(--laro-primary);
+
+    box-shadow: 0 0 0 3px var(--laro-focus-ring);
+}
+
+
+/* 초기화 */
+.scenario-reset-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 40px;
+
+    padding: 0 10px;
+
+    border: 1px solid var(--laro-border);
+    border-radius: 12px;
+
+    background: var(--laro-white);
+    color: var(--laro-subtext);
+
+    font-size: 12px;
+
+    cursor: pointer;
+}
+
+.scenario-reset-button:hover {
+    border-color: var(--laro-primary);
+
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+}
+
+
+/* =========================================================
+   List count
+   ========================================================= */
+
+.scenario-list-count {
+    padding: 0 20px 12px;
+
+    color: var(--laro-subtext);
+
+    font-size: 12px;
+}
+
+.scenario-list-count strong {
+    color: var(--laro-primary);
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   Table
+   ========================================================= */
+
+.scenario-table-wrapper {
+    width: 100%;
+    min-height: 0;
+    flex: 1;
+
+    overflow: auto;
+
+    border-top: 1px solid var(--laro-border);
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-table {
+    width: 100%;
+    min-width: 560px;
+
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+
+/* 열 너비 */
+.scenario-table th:nth-child(1) {
+    width: 40%;
+}
+
+.scenario-table th:nth-child(2) {
+    width: 10%;
+}
+
+.scenario-table th:nth-child(3) {
+    width: 15%;
+}
+
+.scenario-table th:nth-child(4) {
+    width: 5%;
+}
+
+.scenario-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+
+    background: var(--laro-background);
+}
+
+.scenario-table th {
+    height: 3cqw;
+
+    padding: 0 10px;
+
+    border-bottom: 1px solid var(--laro-border);
+
+    color: var(--laro-subtext);
+
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.scenario-table td {
+    height: 50px;
+
+    padding: 10px 10px;
+
+    border-bottom: 1px solid var(--laro-border);
+
+    color: var(--laro-text);
+
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+.scenario-table tbody tr {
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.scenario-table tbody tr:hover {
+    background: var(--laro-surface-hover);
+}
+
+.scenario-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* 현재 선택된 시나리오 */
+.scenario-table tbody tr.is-selected {
+    background: var(--laro-primary-light);
+
+    box-shadow: inset 3px 0 0 var(--laro-primary);
+}
+
+.scenario-table tbody tr.is-selected td {
+    border-bottom-color: var(--laro-primary-light);
+}
+
+.scenario-table
+    tbody
+    tr.is-selected
+    .scenario-name-content
+    strong {
+    color: var(--laro-primary);
+}
+
+
+/* =========================================================
+   Scenario name
+   ========================================================= */
+
+.scenario-name-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: 100%;
+    min-width: 0;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+    color: inherit;
+
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.scenario-name-button:hover {
+    background: transparent;
+}
+
+.scenario-row-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 auto;
+
+    width: 34px;
+    height: 34px;
+
+    border-radius: 9px;
+
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+
+    font-size: 17px;
+}
+
+.scenario-name-content {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.scenario-name-content strong {
+    overflow: hidden;
+
+    color: var(--laro-navy);
+
+    font-size: 13px;
+    font-weight: 800;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-name-content small {
+    overflow: hidden;
+
+    color: var(--laro-subtext);
+
+    font-size: 11px;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-name-button:hover strong {
+    color: var(--laro-primary);
+}
+
+
+/* =========================================================
+   Table contents
+   ========================================================= */
+
+.scenario-table-text,
+.scenario-date {
+    display: block;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-table-text {
+    color: var(--laro-text);
+}
+
+.scenario-date {
+    color: var(--laro-subtext);
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   Status
+   ========================================================= */
+
+.scenario-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 25px;
+
+    padding: 0 10px;
+
+    border-radius: 50px;
+
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+
+/*
+ * JSX에 status-dot 요소가 남아 있어도
+ * 기존 UI처럼 표시되지 않도록 숨깁니다.
+ */
+.scenario-status.is-draft {
+    background: var(--laro-muted-light);
+    color: var(--laro-subtext);
+}
+
+.scenario-status.is-validating {
+    background: var(--laro-warning-light);
+    color: var(--laro-warning);
+}
+
+.scenario-status.is-validated {
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.scenario-status.is-archived {
+    background: var(--laro-muted-light);
+    color: var(--laro-subtext);
+}
+
+.scenario-status.is-default {
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+}
+
+
+/* =========================================================
+   More button
+   ========================================================= */
+
+.scenario-more-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 8px;
+
+    background: transparent;
+    color: var(--laro-subtext);
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        color 0.18s ease;
+}
+
+.scenario-more-button:hover {
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+}
+
+
+/* =========================================================
+   Empty
+   ========================================================= */
+
+.scenario-empty {
+    height: 280px !important;
+
+    text-align: center;
+}
+
+.scenario-empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 46px;
+    height: 46px;
+
+    margin-bottom: 12px;
+
+    border-radius: 12px;
+
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+
+    font-size: 23px;
+}
+
+.scenario-empty strong {
+    display: block;
+
+    color: var(--laro-navy);
+
+    font-size: 14px;
+}
+
+.scenario-empty p {
+    margin: 7px 0 0;
+
+    color: var(--laro-subtext);
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   Footer and pagination
+   ========================================================= */
+
+.scenario-list-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+
+    flex: 0 0 auto;
+
+    min-height: 70px;
+
+    padding: 14px 20px;
+
+    background: var(--laro-white);
+}
+
+.scenario-list-footer > span {
+    color: var(--laro-subtext);
+
+    font-size: 11px;
+}
+
+.scenario-pagination {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.scenario-pagination button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 34px;
+    height: 34px;
+
+    padding: 0 8px;
+
+    border: 1px solid transparent;
+    border-radius: 8px;
+
+    background: transparent;
+    color: var(--laro-subtext);
+
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        color 0.18s ease;
+}
+
+.scenario-pagination button:hover:not(:disabled) {
+    border-color: var(--laro-border);
+
+    background: var(--laro-surface-hover);
+    color: var(--laro-navy);
+}
+
+.scenario-pagination button.is-active {
+    border-color: var(--laro-primary);
+
+    background: var(--laro-primary);
+    color: var(--laro-white);
+}
+
+.scenario-pagination button:disabled {
+    cursor: not-allowed;
+
+    opacity: 0.35;
+}
+
+
+/* =========================================================
+   Focus
+   ========================================================= */
+
+.scenario-page button:focus-visible,
+.scenario-page input:focus-visible,
+.scenario-page select:focus-visible {
+    outline: none;
+
+    box-shadow: 0 0 0 3px var(--laro-focus-ring);
+}
+
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+
+@media (max-width: 1300px) {
+    .scenario-workspace {
+        grid-template-columns:
+            minmax(480px, 540px)
+            minmax(0, 1fr);
+    }
+
+    .scenario-list-toolbar {
+        grid-template-columns:
+            minmax(180px, 1fr)
+            minmax(100px, 115px)
+            minmax(105px, 125px)
+            65px;
+
+        gap: 8px;
+    }
+
+    .scenario-reset-button {
+        min-width: 65px;
+
+        padding: 0 8px;
+    }
+}
+
+@media (max-width: 1050px) {
+    .scenario-workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .scenario-list-card {
+        position: static;
+
+        max-width: none;
+        max-height: none;
+    }
+
+    .scenario-table-wrapper {
+        max-height: 430px;
+    }
+}
+
+@media (max-width: 720px) {
+    .scenario-page {
+        padding: 12px;
+    }
+
+    .scenario-list-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .scenario-list-header .scenario-button {
+        align-self: flex-start;
+    }
+
+    /*
+     * 작은 화면에서만 필터를 두 줄로 변경합니다.
+     * 데스크톱에서는 계속 한 줄 수평 정렬입니다.
+     */
+    .scenario-list-toolbar {
+        grid-template-columns:
+            minmax(0, 1fr)
+            minmax(110px, 130px)
+            70px;
+    }
+
+    .scenario-search {
+        grid-column: 1 / -1;
+    }
+
+    .scenario-filter-select:first-of-type {
+        grid-column: 1;
+    }
+
+    .scenario-filter-select:nth-of-type(2) {
+        grid-column: 2;
+    }
+
+    .scenario-reset-button {
+        grid-column: 3;
+    }
+}
+
+@media (max-width: 520px) {
+    .scenario-list-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .scenario-search,
+    .scenario-filter-select:first-of-type,
+    .scenario-filter-select:nth-of-type(2),
+    .scenario-reset-button {
+        grid-column: auto;
+    }
+
+    .scenario-list-footer {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

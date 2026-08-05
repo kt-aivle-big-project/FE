@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import laroLogo from "../../assets/logo/laro_logo.png";
+import laroLogo from "../../assets/laro/laro_logo.png";
+import laroBackground from "../../assets/laro/laro_background.png";
 import "../../styles/login/LoginCommon.css";
 import "../../styles/login/LoginSelect.css";
 import { EmailIcon, LockIcon, GoogleIcon } from "../../components/icon";
@@ -10,10 +11,6 @@ function LoginSelect() {
 
     const handleEmailLogin = () => {
         navigate("/login");
-    };
-
-    const handleGoogleLogin = () => {
-        alert("Google 로그인 연동 준비 중입니다.");
     };
 
     const handleGuestLogin = async () => {
@@ -43,7 +40,7 @@ function LoginSelect() {
             }
 
             localStorage.setItem("loginType", "guest");
-            navigate("/simulation", {replace: true,});
+            navigate("/simulation", { replace: true, });
 
         } catch (error) {
             console.error("게스트 로그인 실패:", error);
@@ -56,7 +53,10 @@ function LoginSelect() {
     };
 
     return (
-        <div className="login-page">
+        <div
+            className="login-page"
+            style={{ backgroundImage: `url(${laroBackground})`, }}
+        >
             <main className="login-card">
                 <header className="login-header">
                     <img
@@ -87,24 +87,15 @@ function LoginSelect() {
                         <button
                             type="button"
                             className="login-button login-button-secondary"
-                            onClick={handleGoogleLogin}
+                            onClick={handleGuestLogin}
                         >
-                            <span className="login-button-icon login-select-google-icon">
-                                <GoogleIcon />
+                            <span className="login-button-icon login-select-email-icon">
+                                <EmailIcon />
                             </span>
 
-                            Google로 계속하기
+                            게스트로 둘러보기
                         </button>
                     </div>
-
-                    <button
-                        type="button"
-                        className="login-text-button login-select-guest"
-                        onClick={handleGuestLogin}
-                    >
-                        게스트로 둘러보기
-                        <span aria-hidden="true">→</span>
-                    </button>
 
                     <p className="login-select-policy">
                         계속 진행하면 이용약관 및 개인정보 처리방침에 동의하는 것으로 간주됩니다.

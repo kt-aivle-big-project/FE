@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import laroLogo from "../../assets/logo/laro_logo.png";
+import laroLogo from "../../assets/laro/laro_logo.png";
+import laroBackground from "../../assets/laro/laro_background.png";
 import "../../styles/login/LoginCommon.css";
 import "../../styles/login/Login.css";
 import { EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/icon";
@@ -10,21 +11,21 @@ const API_URL = "http://localhost:8080/api";
 function Login() {
     const navigate = useNavigate();
 
-    const [userid, setUserid] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
 
-        if (!userid.trim() || !password.trim()) {
+        if (!email.trim() || !password.trim()) {
             alert("아이디와 비밀번호를 입력해주세요.");
             return;
         }
 
         // 백엔드로 전달
         const loginData = {
-            userid: userid.trim(),
+            email: email.trim(),
             password: password,
         };
 
@@ -51,9 +52,8 @@ function Login() {
 
             // 저장
             localStorage.setItem("accessToken", data.accessToken);
-            localStorage.setItem("userid", String(data.userid));
             localStorage.setItem("name", data.name);
-            localStorage.setItem("userid", data.userid);
+            localStorage.setItem("email", data.email);
 
             console.log("로그인 사용자:", data);
 
@@ -76,7 +76,10 @@ function Login() {
     };
 
     return (
-        <div className="login-page">
+        <div
+            className="login-page"
+            style={{ backgroundImage: `url(${laroBackground})`, }}
+        >
             <main className="login-card">
                 <button
                     type="button"
@@ -101,7 +104,7 @@ function Login() {
                         onSubmit={handleLogin}
                     >
                         <div className="login-field">
-                            <label htmlFor="userid">
+                            <label htmlFor="email">
                                 아이디
                             </label>
 
@@ -111,11 +114,11 @@ function Login() {
                                 </span>
 
                                 <input
-                                    id="userid"
-                                    type="userid"
-                                    value={userid}
+                                    id="email"
+                                    type="email"
+                                    value={email}
                                     placeholder="아이디를 입력하세요"
-                                    onChange={(e) => setUserid(e.target.value)}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     autoComplete="off"
                                 />
                             </div>
