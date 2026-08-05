@@ -492,10 +492,20 @@ const collapseFacilityEndpoints = (sourceNodes, sourceEdges) => {
             .filter((node) => EDITOR_EXCLUDED_NODE_TYPES.has(node.type))
             .map((node) => node.id),
     );
+
+    // inbound/outbound 를 버려도 되는 건 그 자리를 대신할
+    // *_access 설비 노드가 있을 때뿐이다. 그런 노드가 없는 지도에서는
+    // inbound/outbound 자체가 실제 입출고구이므로 그대로 편집 대상으로 둔다.
+    // 조건 없이 버리면 편집 화면에서 입출고 노드와 그 간선이 통째로 사라진다.
+    const hasFacilityAccessNodes = sourceNodes.some(
+        (node) => FACILITY_ACCESS_TYPES.has(node.type),
+    );
     const legacyIds = new Set(
-        sourceNodes
-            .filter((node) => LEGACY_FACILITY_TYPES.has(node.type))
-            .map((node) => node.id),
+        hasFacilityAccessNodes
+            ? sourceNodes
+                  .filter((node) => LEGACY_FACILITY_TYPES.has(node.type))
+                  .map((node) => node.id)
+            : [],
     );
     const accessGroups = new Map();
 
@@ -551,7 +561,7 @@ const collapseFacilityEndpoints = (sourceNodes, sourceEdges) => {
     });
 
     const nodes = sourceNodes.filter((node) =>
-        !LEGACY_FACILITY_TYPES.has(node.type) &&
+        !legacyIds.has(node.id) &&
         !FACILITY_ACCESS_TYPES.has(node.type) &&
         !EDITOR_EXCLUDED_NODE_TYPES.has(node.type),
     ).concat(facilityNodes);
@@ -605,9 +615,20 @@ export const createLayoutDraftFromMap = (map) => {
         };
     });
 
+    // 편집기에서 개수를 늘렸다 줄였다 할 수 있는 설비.
+    //
+    // 지도에 따라 입출고구를 적는 방식이 두 가지다.
+    //   inbound_handoff_access / outbound_station_access - 접근 자리로 표현
+    //   inbound / outbound                               - 설비 자체로 표현
+    // 둘 다 등록해야 어느 지도를 올려도 같은 방식으로 늘릴 수 있다.
+    // 한 지도가 두 표기를 같이 쓰는 경우는 없다.
+    // 접근 자리가 있으면 inbound/outbound 는 collapseFacilityEndpoints 가
+    // 미리 걷어내므로 그룹이 겹치지 않는다.
     const repeatableRawTypes = new Map([
         ["inbound_handoff_access", "inbound"],
         ["outbound_station_access", "outbound"],
+        ["inbound", "inbound"],
+        ["outbound", "outbound"],
         ["charging_slot", "charging"],
     ]);
 
@@ -692,6 +713,46 @@ export const createLayoutDraftFromMap = (map) => {
     });
 
     return { objects, aisles };
+};
+
+/**
+ * 간선 id 를 서로 겹치지 않게 만든다.
+ *
+ * 입출고 설비를 늘리면 새 자리는 새 노드 id 를 받지만, 그 자리에 붙는
+ * 간선은 원본 간선을 복사하면서 id 까지 같이 가져온다. 백엔드는 이미 쓴
+ * 간선 코드를 만나면 조용히 버리므로(WarehouseImportService), 노드만
+ * 저장되고 간선은 안 생긴 것처럼 보인다.
+ *
+ * 겹칠 때는 출발·도착 노드로 새 코드를 만든다. 같은 지도를 다시 저장해도
+ * 같은 코드가 나와야 기존 간선이 지워지고 새로 생기는 일이 없다.
+ * edge_code 컬럼이 50자라 넘치면 잘라 쓴다.
+ */
+const EDGE_CODE_MAX_LENGTH = 50;
+
+const withUniqueEdgeIds = (sourceEdges) => {
+    const used = new Set();
+
+    return sourceEdges.map((edge) => {
+        const original = edge.id == null ? "" : String(edge.id);
+
+        if (original !== "" && !used.has(original)) {
+            used.add(original);
+            return edge;
+        }
+
+        let candidate = `${edge.source}__${edge.target}`.slice(0, EDGE_CODE_MAX_LENGTH);
+        let sequence = 2;
+
+        while (used.has(candidate)) {
+            const suffix = `_${sequence}`;
+            candidate = `${edge.source}__${edge.target}`
+                .slice(0, EDGE_CODE_MAX_LENGTH - suffix.length) + suffix;
+            sequence += 1;
+        }
+
+        used.add(candidate);
+        return { ...edge, id: candidate };
+    });
 };
 
 const edgeType = (left, right) => {
@@ -968,7 +1029,7 @@ export function compileWarehouseLayout({
 
     const persisted = expandFacilityEndpointsForStorage(nodes, edges);
     const persistedNodes = persisted.nodes;
-    const persistedEdges = persisted.edges;
+    const persistedEdges = withUniqueEdgeIds(persisted.edges);
     const graphNodes = persistedNodes.filter((node) => node.type !== "rack_storage");
     const visited = connectedNodeIds(graphNodes, persistedEdges);
     const disconnected = graphNodes.filter((node) => !visited.has(node.id));
