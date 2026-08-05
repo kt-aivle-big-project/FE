@@ -51,7 +51,6 @@ function WarehouseCreate() {
     const [isSaving, setIsSaving] = useState(false);
     const [isDirty, setIsDirty] = useState(Boolean(savedDraft));
     const [isLoadingExisting, setIsLoadingExisting] = useState(isEditMode);
-    const [isSharedWarehouse, setIsSharedWarehouse] = useState(false);
     const ignoreInitialDraftChange = useRef(isEditMode);
 
     useEffect(() => {
@@ -68,18 +67,6 @@ function WarehouseCreate() {
                 if (!active) return;
 
                 const warehouse = layout.warehouse ?? await warehouseApi.get(editWarehouseId);
-
-                if (warehouse.shared) {
-                    setIsSharedWarehouse(true);
-                    window.alert("공용 창고는 수정할 수 없습니다.");
-                    navigate("/warehouse", {
-                        replace: true,
-                        state: { selectedWarehouseId: editWarehouseId },
-                    });
-                    return;
-                }
-
-                setIsSharedWarehouse(false);
                 const map = layoutResponseToMapData(layout, {
                     name: warehouse.name,
                 });
@@ -108,7 +95,7 @@ function WarehouseCreate() {
         return () => {
             active = false;
         };
-    }, [editWarehouseId, isEditMode, navigate]);
+    }, [editWarehouseId, isEditMode]);
 
     const handleDesignedLayoutChange = useCallback((layout) => {
         setDesignedLayout(layout);
@@ -235,11 +222,7 @@ function WarehouseCreate() {
     const isMapValid = creationSource === "DESIGN"
         ? Boolean(designedLayout?.validation?.isValid)
         : Boolean(uploadedMapData);
-    const canSave =
-        isBasicFormValid &&
-        isMapValid &&
-        !isSaving &&
-        !isSharedWarehouse;
+    const canSave = isBasicFormValid && isMapValid && !isSaving;
 
     const leavePage = () => {
         if (isDirty && !window.confirm("저장하지 않은 창고 설계를 버리고 목록으로 돌아갈까요?")) {
@@ -252,15 +235,6 @@ function WarehouseCreate() {
     };
 
     const handleSave = async () => {
-        if (isEditMode && isSharedWarehouse) {
-            window.alert("공용 창고는 수정할 수 없습니다.");
-            navigate("/warehouse", {
-                replace: true,
-                state: { selectedWarehouseId: editWarehouseId },
-            });
-            return;
-        }
-
         if (!canSave) {
             return;
         }

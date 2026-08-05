@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import "../styles/warehouseSVG.css";
+import "../styles/WarehouseSVG.css";
 import { productApi, warehouseApi, warehouseItemApi } from "../api/client";
 
 // API 조회 전 또는 실패 시에는 Neo4j 계약과 동일한 기본형 지도 하나만 사용한다.
@@ -414,17 +414,12 @@ function WarehouseSVG({
         );
     }
 
-    // SVG 내부 캔버스를 넓게 사용해
-    // 선반 ID, 통로 번호, 시설명이 서로 겹치지 않도록 한다.
-    const SVG_WIDTH = 1600;
-    const SVG_HEIGHT = 820;
+    // SVG 크기
+    const SVG_WIDTH = 1200;
+    const SVG_HEIGHT = 600;
 
-    // 상단은 범례·노드 버튼, 좌우는 입출고장,
-    // 하단은 충전소 이름이 들어갈 별도 여백이다.
-    const PADDING_LEFT = 120;
-    const PADDING_RIGHT = 120;
-    const PADDING_TOP = 110;
-    const PADDING_BOTTOM = 150;
+    const PADDING_X = 40;
+    const PADDING_Y = 30;
 
     // warehouse_graph.json 좌표 범위 계산
     // JSON의 x, y 좌표를 SVG 좌표로 자동 변환하기 위해 최소/최대 좌표를 구함
@@ -438,26 +433,21 @@ function WarehouseSVG({
     const maxY = Math.max(...yValues);
 
     // JSON 좌표 → SVG 좌표 변환
-    const xRange = Math.max(1, maxX - minX);
-    const yRange = Math.max(1, maxY - minY);
-
     const convertX = (x) => {
-        const availableWidth =
-            SVG_WIDTH - PADDING_LEFT - PADDING_RIGHT;
-
+        const availableWidth = SVG_WIDTH - PADDING_X * 2;
         return (
-            PADDING_LEFT +
-            ((x - minX) / xRange) * availableWidth
+            PADDING_X +
+            ((x - minX) / (maxX - minX)) *
+            availableWidth
         );
     };
 
     const convertY = (y) => {
-        const availableHeight =
-            SVG_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
-
+        const availableHeight = SVG_HEIGHT - PADDING_Y * 2;
         return (
-            PADDING_TOP +
-            ((y - minY) / yRange) * availableHeight
+            PADDING_Y +
+            ((y - minY) / (maxY - minY)) *
+            availableHeight
         );
     };
 
@@ -943,31 +933,6 @@ function WarehouseSVG({
     return (
         <div className="warehouse-svg-wrapper">
 
-            {/* 시설 색상 범례 */}
-            <div className="warehouse-map-legend" aria-label="창고 시설 색상 범례">
-                <span className="warehouse-map-legend-title">시설 범례</span>
-
-                <span className="warehouse-map-legend-item">
-                    <i className="warehouse-map-legend-color legend-rack" />
-                    선반
-                </span>
-
-                <span className="warehouse-map-legend-item">
-                    <i className="warehouse-map-legend-color legend-inbound" />
-                    입고장
-                </span>
-
-                <span className="warehouse-map-legend-item">
-                    <i className="warehouse-map-legend-color legend-outbound" />
-                    출고장
-                </span>
-
-                <span className="warehouse-map-legend-item">
-                    <i className="warehouse-map-legend-color legend-charging" />
-                    충전소
-                </span>
-            </div>
-
             {/* 노드 표시 ON / OFF */}
             <button
                 type="button"
@@ -1058,7 +1023,7 @@ function WarehouseSVG({
 
                             <text
                                 key={`aisle-${node.row}`}
-                                x={convertX(node.x) - 16}
+                                x={convertX(node.x) - 10}
                                 y={convertY(node.y) + 4}
                                 textAnchor="end"
                                 className="warehouse-aisle-label"
@@ -1338,7 +1303,7 @@ function WarehouseSVG({
                                     {/* 랙 ID */}
                                     <text
                                         x="0"
-                                        y="31"
+                                        y="27"
                                         textAnchor="middle"
                                         className="warehouse-rack-label"
                                     >
@@ -1474,51 +1439,33 @@ function WarehouseSVG({
                         ))}
                 </g>
 
-                {/* 시설 영역 이름 */}
-                <g
-                    className="warehouse-area-label warehouse-area-label-inbound"
-                    transform="translate(66 86)"
+                {/* 영역 이름 */}
+                <text
+                    x="40"
+                    y="100"
+                    className="warehouse-area-title"
+                    textAnchor="middle"
                 >
-                    <rect x="-38" y="-16" width="76" height="30" rx="15" />
-                    <text
-                        x="0"
-                        y="5"
-                        className="warehouse-area-title"
-                        textAnchor="middle"
-                    >
-                        입고장
-                    </text>
-                </g>
+                    입고지
+                </text>
 
-                <g
-                    className="warehouse-area-label warehouse-area-label-outbound"
-                    transform={`translate(${SVG_WIDTH - 66} 86)`}
+                <text
+                    x={SVG_WIDTH - 40}
+                    y="100"
+                    className="warehouse-area-title"
+                    textAnchor="middle"
                 >
-                    <rect x="-38" y="-16" width="76" height="30" rx="15" />
-                    <text
-                        x="0"
-                        y="5"
-                        className="warehouse-area-title"
-                        textAnchor="middle"
-                    >
-                        출고장
-                    </text>
-                </g>
+                    출고지
+                </text>
 
-                <g
-                    className="warehouse-area-label warehouse-area-label-charging"
-                    transform={`translate(78 ${SVG_HEIGHT - 74})`}
+                <text
+                    x={SVG_WIDTH / 2}
+                    y={SVG_HEIGHT - 8}
+                    className="warehouse-area-title"
+                    textAnchor="middle"
                 >
-                    <rect x="-42" y="-16" width="84" height="30" rx="15" />
-                    <text
-                        x="0"
-                        y="5"
-                        className="warehouse-area-title"
-                        textAnchor="middle"
-                    >
-                        충전소
-                    </text>
-                </g>
+                    충전소
+                </text>
 
                 {/* 로봇 */}
                 {/* Fixed outbound robots own the blue station nodes. */}

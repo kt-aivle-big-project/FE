@@ -182,30 +182,22 @@ export const optimizationApi = {
 export const laroPlanApi = {
     preflight: (runId) =>
         api.get(`/laro/simulation-runs/${runId}/plan/preflight`),
-
     create: (runId, payload) =>
         api.post(`/laro/simulation-runs/${runId}/plan`, payload),
 };
 
 export const fulfillmentCommandApi = {
     generate: (runId, payload) =>
-        api.post(
-            `/simulation-runs/${runId}/fulfillment-commands/generate`,
-            payload
-        ),
-
+        api.post(`/simulation-runs/${runId}/fulfillment-commands/generate`, payload),
     getCycleStatus: (runId) =>
         api.get(`/simulation-runs/${runId}/command-cycle`),
-
     configureCycle: (runId, expressionMix = {}) =>
         api.put(`/simulation-runs/${runId}/command-cycle/configuration`, {
             mode: "AUTO",
             commandExpressionMode: "AUTO",
             policyProfile: "AUTO",
             mixStructuredWithPolicy: Boolean(expressionMix.policyEnabled),
-            mixNaturalLanguage: Boolean(
-                expressionMix.naturalLanguageEnabled
-            ),
+            mixNaturalLanguage: Boolean(expressionMix.naturalLanguageEnabled),
         }),
 };
 
@@ -230,7 +222,19 @@ export const robotSpecApi = {
 };
 
 export const warehouseApi = {
-    getAll: () => api.get("/warehouses"),
+    getAll: async () => {
+        const warehouses = await api.get("/warehouses");
+
+        if (!Array.isArray(warehouses)) {
+            return warehouses;
+        }
+
+        // 공용 데모는 Neo4j 계약의 기본형 창고(id=1)만 노출한다.
+        // 사용자가 새로 만든 개인 창고는 계속 목록에 표시한다.
+        return warehouses.filter(
+            (warehouse) => Number(warehouse.id) === 1 || !warehouse.shared,
+        );
+    },
     getLayout: (warehouseId) =>
         api.get(`/warehouses/${warehouseId}/layout`),
 

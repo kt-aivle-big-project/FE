@@ -9,8 +9,6 @@
     height: 100%;
 
     min-width: 0;
-    min-height: 0;
-
     box-sizing: border-box;
     overflow: hidden;
 
@@ -25,9 +23,6 @@
     display: block;
     width: 100%;
     height: 100%;
-    min-height: 0;
-    max-width: 100%;
-    max-height: 100%;
 
     background: #ffffff;
 }
@@ -201,13 +196,10 @@
 
 .warehouse-node-toggle {
     position: absolute;
-    top: 12px;
-    left: 50%;
-    right: auto;
+    top: 10px;
+    right: 10px;
 
-    z-index: 20;
-
-    transform: translateX(-50%);
+    z-index: 10;
 }
 
 /* =========================
@@ -436,247 +428,4 @@
 @keyframes station-arm-working {
     from { transform: rotate(-3deg); }
     to { transform: rotate(3deg); }
-}
-
-.warehouse-map-legend {
-    position: absolute;
-    left: 50%;
-    bottom: 12px;
-    top: auto;
-
-    z-index: 20;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 8px 14px;
-
-    width: min(620px, calc(100% - 210px));
-    max-width: calc(100% - 210px);
-    padding: 9px 16px;
-
-    border: 1px solid #d7e0eb;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.96);
-    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
-
-    transform: translateX(-50%);
-    backdrop-filter: blur(4px);
-}
-
-.warehouse-map-legend-title {
-    padding-right: 4px;
-
-    font-size: 12px;
-    font-weight: 700;
-    color: #1f2937;
-}
-
-.warehouse-map-legend-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-
-    font-size: 12px;
-    font-weight: 600;
-    color: #475569;
-    white-space: nowrap;
-}
-
-.warehouse-map-legend-color {
-    width: 11px;
-    height: 11px;
-
-    display: inline-block;
-
-    border: 1px solid transparent;
-    border-radius: 3px;
-}
-
-.warehouse-map-legend-color.legend-rack {
-    border-color: #52657f;
-    background: #e9eef5;
-}
-
-.warehouse-map-legend-color.legend-inbound {
-    border-color: #16a34a;
-    background: #dcfce7;
-}
-
-.warehouse-map-legend-color.legend-outbound {
-    border-color: #ea580c;
-    background: #ffedd5;
-}
-
-.warehouse-map-legend-color.legend-charging {
-    border-color: #2563eb;
-    background: #dbeafe;
-}
-
-/* 시설 본체도 범례 색상과 일치 */
-.warehouse-rack {
-    fill: #e9eef5;
-    stroke: #52657f;
-}
-
-.warehouse-inbound-node {
-    fill: #dcfce7;
-    stroke: #16a34a;
-}
-
-.warehouse-outbound-node {
-    fill: #ffedd5;
-    stroke: #ea580c;
-}
-
-.warehouse-charging-slot {
-    fill: #dbeafe;
-    stroke: #2563eb;
-}
-
-/* 지도 안의 입고장·출고장·충전소 이름 */
-.warehouse-area-label {
-    pointer-events: none;
-    filter: drop-shadow(0 2px 3px rgba(15, 23, 42, 0.12));
-}
-
-.warehouse-area-label rect {
-    stroke-width: 1.5;
-}
-
-.warehouse-area-label .warehouse-area-title {
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.warehouse-area-label-inbound rect {
-    fill: #ecfdf3;
-    stroke: #16a34a;
-}
-
-.warehouse-area-label-inbound .warehouse-area-title {
-    fill: #15803d;
-}
-
-.warehouse-area-label-outbound rect {
-    fill: #fff7ed;
-    stroke: #ea580c;
-}
-
-.warehouse-area-label-outbound .warehouse-area-title {
-    fill: #c2410c;
-}
-
-.warehouse-area-label-charging rect {
-    fill: #eff6ff;
-    stroke: #2563eb;
-}
-
-.warehouse-area-label-charging .warehouse-area-title {
-    fill: #1d4ed8;
-}
-
-@media (max-width: 820px) {
-    .warehouse-map-legend {
-        left: 50%;
-        bottom: 8px;
-        top: auto;
-
-        width: calc(100% - 150px);
-        max-width: calc(100% - 150px);
-        gap: 6px 9px;
-        padding: 7px 9px;
-
-        transform: translateX(-50%);
-    }
-
-    .warehouse-map-legend-title,
-    .warehouse-map-legend-item {
-        font-size: 11px;
-    }
-}
-
-/* 노드 보기 버튼 */
-.warehouse-node-toggle {
-    min-width: 122px;
-    padding: 8px 12px;
-
-    border: 1px solid #cbd5e1;
-    border-radius: 9px;
-    background: rgba(255, 255, 255, 0.96);
-
-    font-size: 12px;
-    font-weight: 700;
-    color: #334155;
-
-    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
-}
-
-.warehouse-node-toggle:hover {
-    border-color: #94a3b8;
-    background: #f8fafc;
-}
-
-/* 디버그용 라벨을 켰을 때도 최대한 읽기 쉽게 */
-.warehouse-aisle-label,
-.warehouse-rack-label,
-.warehouse-route-label,
-.warehouse-station-id {
-    paint-order: stroke;
-    stroke: #ffffff;
-    stroke-width: 3px;
-    stroke-linejoin: round;
-}
-
-.warehouse-aisle-label {
-    font-size: 10px;
-}
-
-.warehouse-rack-label {
-    font-size: 9px;
-}
-
-/* 시설 이름과 범례가 다른 요소보다 위에 보이도록 유지 */
-.warehouse-map-legend,
-.warehouse-node-toggle {
-    z-index: 20;
-}
-
-/* =========================================================
-   확장 지도 캔버스
-   라벨을 숨기지 않고 지도 내부 간격으로 겹침을 방지
-========================================================= */
-
-.warehouse-svg {
-    shape-rendering: geometricPrecision;
-    text-rendering: geometricPrecision;
-}
-
-.warehouse-rack-label,
-.warehouse-aisle-label {
-    font-weight: 700;
-}
-
-@media (max-width: 1200px) {
-    .warehouse-svg-wrapper,
-    .warehouse-svg {
-        min-height: 0;
-    }
-}
-
-/* =========================================================
-   지도 전체 표시
-   부모 카드보다 SVG가 커져도 잘리지 않고 전체가 보이도록 한다.
-========================================================= */
-
-.warehouse-svg-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.warehouse-svg {
-    flex: 0 1 auto;
-    object-fit: contain;
 }

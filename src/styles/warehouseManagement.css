@@ -49,18 +49,6 @@
     font-weight: 500;
 }
 
-.warehouse-create-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.warehouse-create-actions .warehouse-button {
-    height: 34px;
-    font-size: 13px;
-    white-space: nowrap;
-}
-
 .warehouse-button {
     height: 40px;
     padding: 0 12px;
@@ -202,11 +190,6 @@
    상세 콘텐츠
 ========================= */
 
-.warehouse-management,
-.warehouse-management * {
-    box-sizing: border-box;
-}
-
 .warehouse-detail-content {
     display: flex;
     flex-direction: column;
@@ -215,62 +198,15 @@
     min-width: 0;
 }
 
-.warehouse-map-card,
-.warehouse-configuration,
-.warehouse-info-section {
-    min-width: 0;
-
-    border: 1px solid #dfe4ec;
-    border-radius: 14px;
-    background: #ffffff;
-
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
-}
-
-/* 지도는 항상 상세 영역 최상단 전체 너비 */
-.warehouse-map-card {
-    width: 100%;
-    padding: 18px;
-}
-
-.warehouse-card-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-
-    margin-bottom: 14px;
-}
-
-.warehouse-card-heading h2 {
-    margin: 0 0 5px;
-
-    font-size: 21px;
-    font-weight: 700;
-    color: #14213d;
-}
-
-.warehouse-card-heading p {
-    margin: 0;
-
-    font-size: 14px;
-    line-height: 1.5;
-    color: #6b7280;
-}
-
 .warehouse-preview {
     width: 100%;
-    height: 560px;
-    min-width: 0;
+    min-height: 500px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    overflow: hidden;
-
-    border: 1px solid #e3e8ef;
-    border-radius: 10px;
-    background: #ffffff;
+    border: var(--border);
 }
 
 .warehouse-preview-content {
@@ -292,21 +228,11 @@
     min-width: 0;
 }
 
-.warehouse-preview-content svg {
-    display: block;
-
-    width: 100% !important;
-    height: 100% !important;
-    max-width: 100%;
-    max-height: 100%;
-}
-
 .warehouse-preview-placeholder {
-    font-size: 20px;
-    color: #6b7280;
+    font-size: 24px;
+    color: #555555;
 }
 
-/* 지도 아래: 왼쪽 구성 요약 / 오른쪽 기본 정보 */
 .warehouse-detail-bottom {
     display: grid;
     grid-template-columns:
@@ -318,9 +244,16 @@
     min-width: 0;
 }
 
-/* =========================
-   창고 구성 요약
-========================= */
+.warehouse-configuration,
+.warehouse-info-section {
+    min-width: 0;
+
+    border: 1px solid #dfe4ec;
+    border-radius: 14px;
+    background: #ffffff;
+
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
 
 .warehouse-configuration {
     height: 100%;
@@ -385,7 +318,6 @@
 .warehouse-facility-icon {
     width: 46px;
     height: 46px;
-    flex: 0 0 46px;
 
     display: flex;
     align-items: center;
@@ -472,7 +404,6 @@
     color: #64748b;
 }
 
-/* 선반 */
 .warehouse-facility-item.shelf .warehouse-facility-icon {
     color: #52657f;
     border-color: #cfd8e3;
@@ -484,7 +415,6 @@
     background: #eef2f7;
 }
 
-/* 입고장 */
 .warehouse-facility-item.inbound .warehouse-facility-icon {
     color: #16a34a;
     border-color: #9fdfb6;
@@ -496,7 +426,6 @@
     background: #dcfce7;
 }
 
-/* 출고장 */
 .warehouse-facility-item.outbound .warehouse-facility-icon {
     color: #ea580c;
     border-color: #fdba74;
@@ -508,7 +437,6 @@
     background: #ffedd5;
 }
 
-/* 충전소 */
 .warehouse-facility-item.charging .warehouse-facility-icon {
     color: #2563eb;
     border-color: #93b4ff;
@@ -519,10 +447,6 @@
     color: #1d4ed8;
     background: #dbeafe;
 }
-
-/* =========================
-   창고 기본 정보
-========================= */
 
 .warehouse-info-section {
     height: 100%;
@@ -632,6 +556,10 @@
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
 }
 
+.warehouse-modal.warehouse-modal-layout-editor {
+    width: min(1320px, 100%);
+}
+
 .warehouse-modal-header {
     display: flex;
     align-items: center;
@@ -731,25 +659,44 @@
 
 .warehouse-create-tabs {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
 
     margin-bottom: 24px;
 
     background: #f3f4f6;
 }
 
-.warehouse-create-tabs span {
+.warehouse-create-tabs.single {
+    grid-template-columns: 1fr;
+}
+
+.warehouse-create-tabs span,
+.warehouse-create-tabs button {
     padding: 12px;
+
+    border: 0;
+    background: transparent;
 
     text-align: center;
     color: #777777;
+    font: inherit;
 }
 
-.warehouse-create-tabs span.active {
+.warehouse-create-tabs button {
+    cursor: pointer;
+}
+
+.warehouse-create-tabs span.active,
+.warehouse-create-tabs button.active {
     color: #2563eb;
     background: #ffffff;
 
     font-weight: 600;
+}
+
+.warehouse-create-tabs button:hover {
+    color: #1d4ed8;
+    background: #eff6ff;
 }
 
 /* =========================
@@ -793,6 +740,52 @@
     min-height: 85px;
 
     resize: vertical;
+}
+
+/* =========================
+   지도 직접 설계
+========================= */
+
+.warehouse-layout-editor-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    margin-top: 24px;
+}
+
+.warehouse-layout-editor-section[hidden] {
+    display: none;
+}
+
+.warehouse-layout-editor-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.warehouse-layout-editor-heading > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.warehouse-layout-editor-heading strong {
+    font-size: 17px;
+}
+
+.warehouse-layout-editor-heading span {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.warehouse-layout-editor-heading > span {
+    padding: 6px 9px;
+
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    white-space: nowrap;
 }
 
 /* =========================
@@ -882,29 +875,7 @@
    반응형
 ========================= */
 
-@media (max-width: 1380px) {
-    .warehouse-preview {
-        height: 500px;
-    }
-
-    .warehouse-detail-bottom {
-        grid-template-columns:
-            minmax(0, 1fr)
-            minmax(300px, 0.82fr);
-    }
-
-    .warehouse-facility-item {
-        grid-template-columns:
-            46px
-            minmax(0, 1fr)
-            auto;
-
-        gap: 14px;
-        padding: 15px 16px;
-    }
-}
-
-@media (max-width: 1120px) {
+@media (max-width: 1000px) {
     .warehouse-management {
         grid-template-areas:
             "management-header"
@@ -914,19 +885,12 @@
         grid-template-columns: 1fr;
     }
 
-    .warehouse-preview {
-        height: 500px;
-    }
-}
-
-@media (max-width: 880px) {
     .warehouse-detail-bottom {
         grid-template-columns: 1fr;
     }
 
     .warehouse-preview {
-        height: auto;
-        aspect-ratio: 1200 / 680;
+        min-height: 380px;
     }
 }
 
@@ -936,10 +900,6 @@
         grid-template-columns: 1fr;
     }
 
-    .warehouse-detail {
-        padding: 14px;
-    }
-
     .warehouse-detail-header {
         align-items: flex-start;
         flex-direction: column;
@@ -947,16 +907,6 @@
         gap: 16px;
     }
 
-    .warehouse-action-buttons {
-        width: 100%;
-    }
-
-    .warehouse-action-buttons button {
-        flex: 1;
-        width: auto;
-    }
-
-    .warehouse-map-card,
     .warehouse-configuration {
         padding: 14px;
     }
@@ -996,6 +946,15 @@
 
     .warehouse-modal {
         padding: 20px;
+    }
+
+    .warehouse-create-tabs {
+        grid-template-columns: 1fr;
+    }
+
+    .warehouse-layout-editor-heading {
+        align-items: flex-start;
+        flex-direction: column;
     }
 
     .warehouse-modal-actions {
