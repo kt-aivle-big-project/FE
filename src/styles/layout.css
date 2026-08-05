@@ -11,6 +11,7 @@
 }
 
 :root {
+    /* 기존 색상 변수 */
     --laro-primary: #2F80ED;
     --laro-primary-hover: #1F6FD1;
     --laro-primary-light: #EAF3FF;
@@ -34,7 +35,37 @@
     --laro-warning-light: #FFF6DF;
     --laro-muted-light: #F1F4F8;
     --laro-overlay: rgba(22, 50, 79, 0.45);
+
+    /* 라운드 */
+    --laro-radius-large: 16px;
+    --laro-radius-medium: 14px;
+    --laro-radius-small: 12px;
+    --laro-radius-pill: 999px;
+
+    /* 글자 크기 */
+    --laro-font-page-title: 28px;
+    --laro-font-section-title: 18px;
+    --laro-font-card-title: 16px;
+    --laro-font-body: 14px;
+    --laro-font-caption: 12px;
+    --laro-font-metric: 24px;
+
+    /* 글자 굵기 */
+    --laro-font-weight-regular: 400;
+    --laro-font-weight-medium: 500;
+    --laro-font-weight-semibold: 600;
+    --laro-font-weight-bold: 700;
+
+    /* 패딩 */
+    --laro-padding-large: 20px;
+    --laro-padding-small: 10px;
+
+    /* 요소 사이 간격 */
+    --laro-gap-page: 15px;
+    --laro-gap-content: 10px;
+
 }
+
 /* =========================
    전체 기본 설정
 ========================= */
@@ -55,10 +86,6 @@ body,
     padding: 0;
 }
 
-#root {
-    max-width: none;
-}
-
 body {
     min-height: 100vh;
     overflow-x: hidden;
@@ -67,6 +94,24 @@ body {
     color: var(--laro-text);
 }
 
+h1,
+h2,
+h3,
+p {
+    margin: 0;
+}
+
+button {
+    border: 0;
+}
+
+.grid-child {
+    min-width: 0;
+}
+
+.modal-overlay {
+    inset: 0;
+}
 
 /* =========================
    링크
@@ -156,6 +201,7 @@ textarea:focus {
 
     border-color: var(--border-color);
 }
+
 /* =========================
    전체 레이아웃
 ========================= */
@@ -176,14 +222,13 @@ textarea:focus {
 
 .header {
     position: sticky;
-    top: 0;
     z-index: 100;
     width: 100%;
-    height: 68px;
+    height: 70px;
     display: flex;
     align-items: center;
     flex-shrink: 0;
-    padding: 0 32px;
+    padding: 0 30px;
     border-bottom: 1px solid var(--laro-border);
     background: var(--laro-white);
 }
@@ -203,7 +248,7 @@ textarea:focus {
 }
 
 /* 각 페이지의 최상위 요소가 전체 너비를 사용하도록 설정 */
-.page-content > * {
+.page-content>* {
     width: 100%;
     max-width: none;
     min-width: 0;
@@ -346,6 +391,7 @@ textarea:focus {
         padding: 20px;
     }
 }
+
 /* =========================
     Footer
 ========================= */
@@ -389,4 +435,3 @@ textarea:focus {
     font-size: 16px;
     color: var(--laro-navy);
 }
-
