@@ -2,13 +2,22 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { warehouseApi } from "../api/client";
-import WarehouseLayoutEditor from "../components/warehouse/WarehouseLayoutEditor";
+import WarehouseLayoutEditor from "../components/warehouse-editor/WarehouseLayoutEditor";
 import { WarehouseMapPreview } from "./WarehouseManagement";
 import { layoutResponseToMapData } from "../utils/warehouseLayoutAdapter";
 import { createLayoutDraftFromMap } from "../utils/warehouseLayoutBuilder";
 import "../styles/WarehouseCreate.css";
 
+// ============================================================
+// 1. 상수와 초기값
+// ============================================================
+
 const DRAFT_STORAGE_KEY = "laro.warehouse-create-draft.v1";
+
+const CREATION_SOURCE = {
+    DESIGN: "DESIGN",
+    JSON: "JSON",
+};
 
 const EMPTY_FORM = {
     name: "",
@@ -19,24 +28,86 @@ const EMPTY_FORM = {
     status: "ACTIVE",
 };
 
+// ============================================================
+// 2. 저장소·데이터 변환 함수
+// ============================================================
+
+// sessionStorage 데이터가 손상되었거나 읽을 수 없어도 빈 초안으로 시작할 수 있게 한다.
 const readDraft = () => {
     try {
-        const saved = sessionStorage.getItem(DRAFT_STORAGE_KEY);
-        return saved ? JSON.parse(saved) : null;
+        const savedDraft = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+        return savedDraft ? JSON.parse(savedDraft) : null;
     } catch {
         return null;
     }
 };
 
+// sessionStorage 저장과 JSON 직렬화를 한곳에서 처리한다.
+const saveDraft = (draft) => {
+    try {
+        sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    } catch {
+        // 저장 공간이 부족해도 현재 편집 세션은 계속 사용할 수 있다.
+    }
+};
+
+const clearDraft = () => {
+    sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+};
+
+// 백엔드 창고 응답을 폼 input에서 사용하는 문자열 값으로 변환한다.
+const createFormFromWarehouse = (warehouse) => ({
+    name: warehouse.name ?? "",
+    location: warehouse.location ?? "",
+    width: String(warehouse.width ?? ""),
+    height: String(warehouse.height ?? ""),
+    description: warehouse.description ?? "",
+    status: warehouse.status ?? "ACTIVE",
+});
+
+// 저장 API가 요구하는 형식을 한곳에서 구성해 생성·수정 요청이 같은 계약을 사용하게 한다.
+const createWarehousePayload = (form, selectedMap) => ({
+    name: form.name.trim(),
+    width: Number(form.width),
+    height: Number(form.height),
+    location: form.location.trim(),
+    description: form.description.trim(),
+    status: form.status,
+    map: {
+        nodes: selectedMap.nodes,
+        edges: selectedMap.edges,
+    },
+});
+
+// JSON 업로드 데이터가 지도 렌더링과 저장에 필요한 최소 구조를 갖췄는지 확인한다.
+const validateUploadedMap = (mapData) => {
+    if (!Array.isArray(mapData?.nodes) || !Array.isArray(mapData?.edges)) {
+        throw new Error("nodes와 edges 배열이 필요합니다.");
+    }
+};
+
+// ============================================================
+// 3. 창고 생성·수정 페이지
+// ============================================================
+// 창고 신규 생성과 기존 창고 지도 수정을 함께 처리한다.
+// 직접 설계 또는 JSON 업로드 지도를 저장하며, 신규 생성 모드에서는 sessionStorage의 편집 초안을 복원한다.
 function WarehouseCreate() {
     const navigate = useNavigate();
     const { warehouseId } = useParams();
+
+    // ============================================================
+    // 3-1. 모드와 상태 초기화
+    // ============================================================
+
     const editWarehouseId = Number(warehouseId);
     const isEditMode = Number.isSafeInteger(editWarehouseId) && editWarehouseId > 0;
-    const [savedDraft] = useState(() => isEditMode ? null : readDraft());
+    const [savedDraft] = useState(() => (isEditMode ? null : readDraft()));
+
     const [form, setForm] = useState(savedDraft?.form ?? EMPTY_FORM);
     const [creationSource, setCreationSource] = useState(
-        savedDraft?.creationSource === "JSON" ? "JSON" : "DESIGN",
+        savedDraft?.creationSource === CREATION_SOURCE.JSON
+            ? CREATION_SOURCE.JSON
+            : CREATION_SOURCE.DESIGN,
     );
     const [designedLayout, setDesignedLayout] = useState(null);
     const [layoutDraft, setLayoutDraft] = useState(savedDraft?.layoutDraft ?? null);
@@ -51,7 +122,14 @@ function WarehouseCreate() {
     const [isSaving, setIsSaving] = useState(false);
     const [isDirty, setIsDirty] = useState(Boolean(savedDraft));
     const [isLoadingExisting, setIsLoadingExisting] = useState(isEditMode);
+
+    // 수정 모드에서 불러온 initialDraft가 에디터의 첫 onDraftChange를 발생시켜
+    // 사용자 변경 없이 dirty 상태가 되는 것을 한 번만 막는다.
     const ignoreInitialDraftChange = useRef(isEditMode);
+
+    // ============================================================
+    // 3-2. 기존 창고 데이터 조회
+    // ============================================================
 
     useEffect(() => {
         if (!isEditMode) {
@@ -59,81 +137,77 @@ function WarehouseCreate() {
         }
 
         let active = true;
+
         const loadExistingWarehouse = async () => {
             setIsLoadingExisting(true);
             setSaveError("");
+
             try {
                 const layout = await warehouseApi.getLayout(editWarehouseId);
                 if (!active) return;
 
-                const warehouse = layout.warehouse ?? await warehouseApi.get(editWarehouseId);
+                const warehouse = layout.warehouse
+                    ?? await warehouseApi.get(editWarehouseId);
+                if (!active) return;
+
                 const map = layoutResponseToMapData(layout, {
                     name: warehouse.name,
                 });
-                setForm({
-                    name: warehouse.name ?? "",
-                    location: warehouse.location ?? "",
-                    width: String(warehouse.width ?? ""),
-                    height: String(warehouse.height ?? ""),
-                    description: warehouse.description ?? "",
-                    status: warehouse.status ?? "ACTIVE",
-                });
-                setCreationSource("DESIGN");
+
+                setForm(createFormFromWarehouse(warehouse));
+                setCreationSource(CREATION_SOURCE.DESIGN);
                 setLayoutDraft(createLayoutDraftFromMap(map));
                 setUploadedMapData(null);
                 setIsDirty(false);
             } catch (error) {
                 if (active) {
-                    setSaveError(error.message || "기존 창고 지도를 불러오지 못했습니다.");
+                    setSaveError(
+                        error.message || "기존 창고 지도를 불러오지 못했습니다.",
+                    );
                 }
             } finally {
-                if (active) setIsLoadingExisting(false);
+                if (active) {
+                    setIsLoadingExisting(false);
+                }
             }
         };
 
         loadExistingWarehouse();
+
+        // 창고 ID가 바뀌거나 컴포넌트가 사라진 뒤 늦게 도착한 응답이 상태를 덮어쓰지 않게 한다.
         return () => {
             active = false;
         };
     }, [editWarehouseId, isEditMode]);
 
-    const handleDesignedLayoutChange = useCallback((layout) => {
-        setDesignedLayout(layout);
-    }, []);
-
-    const handleLayoutDraftChange = useCallback((draft) => {
-        setLayoutDraft(draft);
-        if (ignoreInitialDraftChange.current) {
-            ignoreInitialDraftChange.current = false;
-            return;
-        }
-        if (draft.objects.length > 0 || draft.aisles.length > 0) {
-            setIsDirty(true);
-        }
-    }, []);
+    // ============================================================
+    // 3-3. 초안 저장과 페이지 이탈 방지
+    // ============================================================
 
     useEffect(() => {
-        if (!isDirty) {
+        // 수정 모드는 서버 데이터를 기준으로 하므로 신규 생성 초안만 sessionStorage에 저장한다.
+        if (!isDirty || isEditMode) {
             return;
         }
 
-        if (isEditMode) {
-            return;
-        }
+        saveDraft({
+            form,
+            creationSource,
+            layoutDraft,
+            uploadedMapData,
+            jsonFileName,
+        });
+    }, [
+        creationSource,
+        form,
+        isDirty,
+        isEditMode,
+        jsonFileName,
+        layoutDraft,
+        uploadedMapData,
+    ]);
 
-        try {
-            sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({
-                form,
-                creationSource,
-                layoutDraft,
-                uploadedMapData,
-                jsonFileName,
-            }));
-        } catch {
-            // 저장 공간이 부족해도 현재 편집 세션은 계속 사용할 수 있다.
-        }
-    }, [creationSource, form, isDirty, isEditMode, jsonFileName, layoutDraft, uploadedMapData]);
-
+    // 새로고침·탭 닫기는 beforeunload로, 앱 내부 링크 이동은 캡처 단계의 click 이벤트로 감지한다.
     useEffect(() => {
         if (!isDirty) {
             return undefined;
@@ -150,7 +224,11 @@ function WarehouseCreate() {
                 return;
             }
 
-            if (!window.confirm("저장하지 않은 창고 설계가 있습니다. 페이지를 나갈까요?")) {
+            const shouldLeave = window.confirm(
+                "저장하지 않은 창고 설계가 있습니다. 페이지를 나갈까요?",
+            );
+
+            if (!shouldLeave) {
                 event.preventDefault();
                 event.stopPropagation();
             }
@@ -165,17 +243,47 @@ function WarehouseCreate() {
         };
     }, [isDirty]);
 
+    // ============================================================
+    // 3-4. 편집 상태 변경 이벤트
+    // ============================================================
+
+    // 입력값이 변경되면 이전 저장 오류를 지우고 미저장 상태로 표시한다.
+    const markAsChanged = useCallback(() => {
+        setSaveError("");
+        setIsDirty(true);
+    }, []);
+
+    const resetUploadedMap = useCallback(() => {
+        setUploadedMapData(null);
+        setJsonFileName("");
+    }, []);
+
+    const handleDesignedLayoutChange = useCallback((layout) => {
+        setDesignedLayout(layout);
+    }, []);
+
+    const handleLayoutDraftChange = useCallback((draft) => {
+        setLayoutDraft(draft);
+
+        if (ignoreInitialDraftChange.current) {
+            ignoreInitialDraftChange.current = false;
+            return;
+        }
+
+        if (draft.objects.length > 0 || draft.aisles.length > 0) {
+            setIsDirty(true);
+        }
+    }, []);
+
     const handleFormChange = (event) => {
         const { name, value } = event.target;
         setForm((previous) => ({ ...previous, [name]: value }));
-        setSaveError("");
-        setIsDirty(true);
+        markAsChanged();
     };
 
     const changeCreationSource = (source) => {
         setCreationSource(source);
-        setSaveError("");
-        setIsDirty(true);
+        markAsChanged();
     };
 
     const handleJsonFileChange = async (event) => {
@@ -183,8 +291,7 @@ function WarehouseCreate() {
         setJsonError("");
 
         if (!file) {
-            setUploadedMapData(null);
-            setJsonFileName("");
+            resetUploadedMap();
             return;
         }
 
@@ -195,41 +302,65 @@ function WarehouseCreate() {
         }
 
         try {
-            const parsed = JSON.parse(await file.text());
-            if (!Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) {
-                throw new Error("nodes와 edges 배열이 필요합니다.");
-            }
+            const parsedMap = JSON.parse(await file.text());
+            validateUploadedMap(parsedMap);
 
-            setUploadedMapData(parsed);
+            setUploadedMapData(parsedMap);
             setJsonFileName(file.name);
             setIsDirty(true);
         } catch (error) {
-            setUploadedMapData(null);
-            setJsonFileName("");
+            resetUploadedMap();
             setJsonError(`JSON 검증 실패: ${error.message}`);
             event.target.value = "";
         }
     };
 
-    const selectedMap = creationSource === "DESIGN"
+    // ============================================================
+    // 3-5. 저장 가능 여부와 화면 문구
+    // ============================================================
+
+    const selectedMap = creationSource === CREATION_SOURCE.DESIGN
         ? designedLayout?.map
         : uploadedMapData;
+
     const isBasicFormValid =
         form.name.trim() !== "" &&
         form.location.trim() !== "" &&
         Number(form.width) > 0 &&
         Number(form.height) > 0;
-    const isMapValid = creationSource === "DESIGN"
+
+    const isMapValid = creationSource === CREATION_SOURCE.DESIGN
         ? Boolean(designedLayout?.validation?.isValid)
         : Boolean(uploadedMapData);
+
     const canSave = isBasicFormValid && isMapValid && !isSaving;
+    const pageTitle = isEditMode ? "창고 지도 수정" : "새 창고 설계";
+    const pageDescription = isEditMode
+        ? "현재 저장된 시설물·노드·엣지를 불러왔습니다. 아이콘을 옮기거나 연결을 수정하세요."
+        : "창고 크기를 정한 뒤 시설물과 노드를 배치하고 필요한 엣지를 연결하세요.";
+    const saveButtonLabel = isSaving
+        ? "저장 중..."
+        : isEditMode
+            ? "수정 저장"
+            : "창고 생성";
+    const saveGuideMessage = canSave
+        ? "필수 정보와 지도 검증이 완료되었습니다."
+        : "기본 정보 입력과 지도 검증을 완료하면 창고를 생성할 수 있습니다.";
+
+    // ============================================================
+    // 3-6. 페이지 이동과 저장 이벤트
+    // ============================================================
 
     const leavePage = () => {
-        if (isDirty && !window.confirm("저장하지 않은 창고 설계를 버리고 목록으로 돌아갈까요?")) {
+        const shouldLeave = !isDirty || window.confirm(
+            "저장하지 않은 창고 설계를 버리고 목록으로 돌아갈까요?",
+        );
+
+        if (!shouldLeave) {
             return;
         }
 
-        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+        clearDraft();
         setIsDirty(false);
         navigate("/warehouse");
     };
@@ -243,58 +374,59 @@ function WarehouseCreate() {
         setSaveError("");
 
         try {
-            const payload = {
-                name: form.name.trim(),
-                width: Number(form.width),
-                height: Number(form.height),
-                location: form.location.trim(),
-                description: form.description.trim(),
-                status: form.status,
-                map: {
-                    nodes: selectedMap.nodes,
-                    edges: selectedMap.edges,
-                },
-            };
-            const saved = isEditMode
+            const payload = createWarehousePayload(form, selectedMap);
+            const savedWarehouse = isEditMode
                 ? await warehouseApi.updateLayout(editWarehouseId, payload)
                 : await warehouseApi.importWarehouse(payload);
 
-            sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+            clearDraft();
             setIsDirty(false);
             navigate("/warehouse", {
                 replace: true,
                 state: {
                     selectedWarehouseId:
-                        saved?.warehouseId ?? (isEditMode ? editWarehouseId : null),
+                        savedWarehouse?.warehouseId
+                        ?? (isEditMode ? editWarehouseId : null),
                 },
             });
         } catch (error) {
-            setSaveError(error.message || "창고 생성에 실패했습니다.");
+            setSaveError(
+                error.message
+                || (isEditMode ? "창고 수정에 실패했습니다." : "창고 생성에 실패했습니다."),
+            );
         } finally {
             setIsSaving(false);
         }
     };
 
+    // ============================================================
+    // 4. 화면 렌더링
+    // ============================================================
+
     return (
         <div className="warehouse-create-page">
             <header className="warehouse-create-page-header">
                 <div>
-                    <button type="button" className="warehouse-create-back" onClick={leavePage}>
+                    <button
+                        type="button"
+                        className="warehouse-create-back"
+                        onClick={leavePage}
+                    >
                         ← 창고 목록
                     </button>
                     <div className="warehouse-create-title">
                         <span>WAREHOUSE BUILDER</span>
-                        <h1>{isEditMode ? "창고 지도 수정" : "새 창고 설계"}</h1>
-                        <p>
-                            {isEditMode
-                                ? "현재 저장된 시설물·노드·엣지를 불러왔습니다. 아이콘을 옮기거나 연결을 수정하세요."
-                                : "창고 크기를 정한 뒤 시설물과 노드를 배치하고 필요한 엣지를 연결하세요."}
-                        </p>
+                        <h1>{pageTitle}</h1>
+                        <p>{pageDescription}</p>
                     </div>
                 </div>
 
                 <div className="warehouse-create-header-actions">
-                    <button type="button" className="warehouse-create-cancel" onClick={leavePage}>
+                    <button
+                        type="button"
+                        className="warehouse-create-cancel"
+                        onClick={leavePage}
+                    >
                         취소
                     </button>
                     <button
@@ -303,7 +435,7 @@ function WarehouseCreate() {
                         disabled={!canSave}
                         onClick={handleSave}
                     >
-                        {isSaving ? "저장 중..." : isEditMode ? "수정 저장" : "창고 생성"}
+                        {saveButtonLabel}
                     </button>
                 </div>
             </header>
@@ -320,23 +452,51 @@ function WarehouseCreate() {
                 <div className="warehouse-create-form-grid">
                     <label>
                         <span>창고명 *</span>
-                        <input name="name" value={form.name} onChange={handleFormChange} placeholder="예: 수도권 풀필먼트 A" />
+                        <input
+                            name="name"
+                            value={form.name}
+                            onChange={handleFormChange}
+                            placeholder="예: 수도권 풀필먼트 A"
+                        />
                     </label>
                     <label>
                         <span>위치 *</span>
-                        <input name="location" value={form.location} onChange={handleFormChange} placeholder="예: 경기도 성남시" />
+                        <input
+                            name="location"
+                            value={form.location}
+                            onChange={handleFormChange}
+                            placeholder="예: 경기도 성남시"
+                        />
                     </label>
                     <label>
                         <span>가로 (m) *</span>
-                        <input type="number" min="1" name="width" value={form.width} onChange={handleFormChange} placeholder="50" />
+                        <input
+                            type="number"
+                            min="1"
+                            name="width"
+                            value={form.width}
+                            onChange={handleFormChange}
+                            placeholder="50"
+                        />
                     </label>
                     <label>
                         <span>세로 (m) *</span>
-                        <input type="number" min="1" name="height" value={form.height} onChange={handleFormChange} placeholder="30" />
+                        <input
+                            type="number"
+                            min="1"
+                            name="height"
+                            value={form.height}
+                            onChange={handleFormChange}
+                            placeholder="30"
+                        />
                     </label>
                     <label>
                         <span>운영 상태</span>
-                        <select name="status" value={form.status} onChange={handleFormChange}>
+                        <select
+                            name="status"
+                            value={form.status}
+                            onChange={handleFormChange}
+                        >
                             <option value="ACTIVE">운영 중</option>
                             <option value="MAINTENANCE">점검 중</option>
                             <option value="INACTIVE">비활성</option>
@@ -344,7 +504,12 @@ function WarehouseCreate() {
                     </label>
                     <label>
                         <span>설명</span>
-                        <input name="description" value={form.description} onChange={handleFormChange} placeholder="창고 용도나 특징을 입력하세요." />
+                        <input
+                            name="description"
+                            value={form.description}
+                            onChange={handleFormChange}
+                            placeholder="창고 용도나 특징을 입력하세요."
+                        />
                     </label>
                 </div>
             </section>
@@ -355,22 +520,32 @@ function WarehouseCreate() {
                         <span>02</span>
                         <div>
                             <h2>창고 지도</h2>
-                            <p>시설물과 경로 노드를 배치한 뒤 엣지 도구로 연결할 노드 두 개를 선택하세요.</p>
+                            <p>
+                                시설물과 경로 노드를 배치한 뒤 엣지 도구로 연결할 노드 두 개를 선택하세요.
+                            </p>
                         </div>
                     </div>
 
-                    <div className="warehouse-create-source-tabs" role="tablist" aria-label="창고 지도 생성 방식">
+                    <div
+                        className="warehouse-create-source-tabs"
+                        role="tablist"
+                        aria-label="창고 지도 생성 방식"
+                    >
                         <button
                             type="button"
-                            className={creationSource === "DESIGN" ? "active" : ""}
-                            onClick={() => changeCreationSource("DESIGN")}
+                            className={
+                                creationSource === CREATION_SOURCE.DESIGN ? "active" : ""
+                            }
+                            onClick={() => changeCreationSource(CREATION_SOURCE.DESIGN)}
                         >
                             직접 설계
                         </button>
                         <button
                             type="button"
-                            className={creationSource === "JSON" ? "active" : ""}
-                            onClick={() => changeCreationSource("JSON")}
+                            className={
+                                creationSource === CREATION_SOURCE.JSON ? "active" : ""
+                            }
+                            onClick={() => changeCreationSource(CREATION_SOURCE.JSON)}
                         >
                             JSON 가져오기
                         </button>
@@ -381,9 +556,13 @@ function WarehouseCreate() {
                     <div className="warehouse-create-loading">
                         기존 창고 지도와 로봇 위치를 불러오는 중입니다.
                     </div>
-                ) : creationSource === "DESIGN" ? (
+                ) : creationSource === CREATION_SOURCE.DESIGN ? (
                     <WarehouseLayoutEditor
-                        key={isEditMode ? `warehouse-edit-${editWarehouseId}` : "warehouse-create"}
+                        key={
+                            isEditMode
+                                ? `warehouse-edit-${editWarehouseId}`
+                                : "warehouse-create"
+                        }
                         width={form.width}
                         height={form.height}
                         title={form.name}
@@ -394,20 +573,27 @@ function WarehouseCreate() {
                     />
                 ) : (
                     <div className="warehouse-create-json-panel">
-                        <label htmlFor="warehouse-create-json">지도 JSON 파일 선택</label>
+                        <label htmlFor="warehouse-create-json">
+                            지도 JSON 파일 선택
+                        </label>
                         <input
                             id="warehouse-create-json"
                             type="file"
                             accept=".json,application/json"
                             onChange={handleJsonFileChange}
                         />
-                        {jsonError && <p className="warehouse-create-error">{jsonError}</p>}
+                        {jsonError && (
+                            <p className="warehouse-create-error">{jsonError}</p>
+                        )}
                         {uploadedMapData && (
                             <div className="warehouse-create-json-preview">
                                 <div>
-                                    <strong>{jsonFileName || "임시 저장된 JSON 지도"}</strong>
+                                    <strong>
+                                        {jsonFileName || "임시 저장된 JSON 지도"}
+                                    </strong>
                                     <span>
-                                        노드 {uploadedMapData.nodes.length}개 · 엣지 {uploadedMapData.edges.length}개
+                                        노드 {uploadedMapData.nodes.length}개 · 엣지{" "}
+                                        {uploadedMapData.edges.length}개
                                     </span>
                                 </div>
                                 <WarehouseMapPreview mapData={uploadedMapData} compact />
@@ -416,19 +602,30 @@ function WarehouseCreate() {
                     </div>
                 )}
 
-                {saveError && <p className="warehouse-create-error save-error">{saveError}</p>}
+                {saveError && (
+                    <p className="warehouse-create-error save-error">
+                        {saveError}
+                    </p>
+                )}
             </section>
 
             <footer className="warehouse-create-footer">
-                <span>
-                    {canSave
-                        ? "필수 정보와 지도 검증이 완료되었습니다."
-                        : "기본 정보 입력과 지도 검증을 완료하면 창고를 생성할 수 있습니다."}
-                </span>
+                <span>{saveGuideMessage}</span>
                 <div>
-                    <button type="button" className="warehouse-create-cancel" onClick={leavePage}>취소</button>
-                    <button type="button" className="warehouse-create-save" disabled={!canSave} onClick={handleSave}>
-                        {isSaving ? "저장 중..." : isEditMode ? "수정 저장" : "창고 생성"}
+                    <button
+                        type="button"
+                        className="warehouse-create-cancel"
+                        onClick={leavePage}
+                    >
+                        취소
+                    </button>
+                    <button
+                        type="button"
+                        className="warehouse-create-save"
+                        disabled={!canSave}
+                        onClick={handleSave}
+                    >
+                        {saveButtonLabel}
                     </button>
                 </div>
             </footer>
