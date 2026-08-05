@@ -1,427 +1,684 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+    fulfillmentCommandApi,
+    laroPlanApi,
+} from "../../api/client";
 import "../../styles/simulation/SimulationPanel.css";
 
+const PLAN_STATUS_LABEL = {
+    plan_validated: "계획 검증 완료",
+    input_rejected: "명령 확인 필요",
+    workflow_hold: "계획 보류",
+};
+
+const OPERATION_LABEL = {
+    INBOUND: "입고",
+    INBOUND_ITEM: "입고",
+    OUTBOUND: "출고",
+    OUTBOUND_ORDER: "출고",
+    TRANSFER: "이동",
+    RECOVERY: "복구",
+};
+
+const field = (source, snakeCase, camelCase) =>
+    source?.[snakeCase] ?? source?.[camelCase];
+
+const asArray = (value) => (Array.isArray(value) ? value : []);
+
+const CYCLE_TO_WORKFLOW_STATE = {
+    IDLE: "idle",
+    CHECKING: "checking",
+    GENERATING: "generating",
+    PLANNING: "planning",
+    REPLANNING: "planning",
+    COMPLETE: "complete",
+    ERROR: "error",
+    STOPPED: "idle",
+};
+
+const WORKFLOW_BADGE = {
+    idle: "대기",
+    checking: "01 상태 확인",
+    generating: "02 명령 생성",
+    planning: "03 AI 계획",
+    complete: "04 검증 완료",
+    error: "오류",
+};
+
+const COMMAND_EXPRESSION_TOGGLES = [
+    {
+        key: "policyEnabled",
+        label: "LLM 부가 명령",
+        description: "우선순위나 작업 조건을 자연어로 덧붙입니다.",
+        ratio: 30,
+        tone: "policy",
+    },
+    {
+        key: "naturalLanguageEnabled",
+        label: "LLM 자체 명령",
+        description: "사용자가 요청한 문장처럼 작업을 생성합니다.",
+        ratio: 30,
+        tone: "natural",
+    },
+];
+
+const HIDDEN_PREFLIGHT_PROBLEM = "REDIS_RUNTIME_NOT_INITIALIZED";
+
+const isHiddenPreflightProblem = (value) =>
+    String(value ?? "").trim().startsWith(HIDDEN_PREFLIGHT_PROBLEM);
+
+const formatDuration = (milliseconds) => {
+    if (!Number.isFinite(Number(milliseconds))) {
+        return "-";
+    }
+
+    const totalSeconds = Math.round(Number(milliseconds) / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return minutes > 0 ? `${minutes}분 ${seconds}초` : `${seconds}초`;
+};
+
+const formatGeneratedAt = (value) => {
+    if (!value) {
+        return "-";
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleTimeString("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    });
+};
+
+const useElapsedSeconds = (active, serverUpdatedAt) => {
+    const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+    useEffect(() => {
+        if (!active) {
+            setElapsedSeconds(0);
+            return undefined;
+        }
+
+        const parsed = Date.parse(serverUpdatedAt ?? "");
+        const startedAt = Number.isFinite(parsed)
+            ? Math.min(Date.now(), parsed)
+            : Date.now();
+        const update = () => setElapsedSeconds(Math.max(
+            0,
+            Math.floor((Date.now() - startedAt) / 1000)
+        ));
+        update();
+        const timerId = window.setInterval(update, 1000);
+        return () => window.clearInterval(timerId);
+    }, [active, serverUpdatedAt]);
+
+    return elapsedSeconds;
+};
+
+const compactRouteNodes = (robot) => {
+    const steps = asArray(robot?.steps);
+    const nodes = [field(robot, "initial_node", "initialNode")];
+
+    steps.forEach((step) => {
+        const node = field(step, "to_node", "toNode")
+            ?? field(step, "node_id", "nodeId");
+
+        if (node && nodes[nodes.length - 1] !== node) {
+            nodes.push(node);
+        }
+    });
+
+    const filtered = nodes.filter(Boolean);
+    if (filtered.length <= 5) {
+        return filtered;
+    }
+
+    return [...filtered.slice(0, 2), "…", ...filtered.slice(-2)];
+};
+
 function SimulationPanel({
-    inboundSettings,
-    setInboundSettings,
-    outboundSettings,
-    setOutboundSettings,
-    products = [],
-    inboundRatioTotal,
-    naturalCommand,
-    setNaturalCommand,
-    handleNaturalCommand,
+    simulationRunId,
+    onSimulatedTimeChange,
+    commandExpressionMix,
+    onCommandExpressionMixChange,
+    onGeneratedCommandsChange,
 }) {
+    const [preflight, setPreflight] = useState({
+        state: "idle",
+        data: null,
+        error: "",
+    });
+    const [workflow, setWorkflow] = useState({
+        state: "idle",
+        generated: null,
+        planResponse: null,
+        error: "",
+        errorStage: null,
+    });
+    const [selectedOperationId, setSelectedOperationId] = useState(null);
+    const [cycleStatus, setCycleStatus] = useState(null);
+    const [configurationError, setConfigurationError] = useState("");
 
-    /// 입고 품목 추가용 임시 State
+    useEffect(() => {
+        let cancelled = false;
 
-    const [newProductCode, setNewProductCode,] = useState("");
-    const [newProductRatio, setNewProductRatio,] = useState("");
-
-    // 입고 설정
-    const handleInboundChange = (field, value) => {
-        setInboundSettings((prev) => ({
-            ...prev,
-            [field]: value,
-        })
-        );
-    };
-
-    // 품목명 가져오기
-    const getProductName = (productCode) => {
-        const product = products.find((product) =>
-            product.product_code ===
-            productCode
-        );
-
-        return (
-            product?.product_name ?? ""
-        );
-    };
-
-    // 이미 등록한 품목 제외
-    const availableProducts =
-        products.filter((product) =>
-            !inboundSettings.products.some(
-                (inboundProduct) =>
-                    inboundProduct.product_code ===
-                    product.product_code
-            )
-        );
-
-    // 입고 품목 추가
-    const handleAddInboundProduct = () => {
-        if (!newProductCode) {
-            alert("추가할 품목을 선택해주세요.");
-            return;
+        if (!simulationRunId) {
+            setConfigurationError("");
+            return () => {
+                cancelled = true;
+            };
         }
 
-        const ratio = Number(newProductRatio);
-
-        if (!ratio || ratio <= 0) {
-            alert("품목 비율을 입력해주세요.");
-            return;
-        }
-
-        if (inboundRatioTotal + ratio > 100) {
-            alert("품목 구성 비율의 합계는 100%를 초과할 수 없습니다.");
-            return;
-        }
-
-        setInboundSettings((prev) => ({
-            ...prev,
-            products: [...prev.products,
+        fulfillmentCommandApi.configureCycle(
+            simulationRunId,
             {
-                product_code: newProductCode,
-                ratio: ratio,
-            },
-            ],
-        })
-        );
+                policyEnabled: commandExpressionMix?.policyEnabled === true,
+                naturalLanguageEnabled:
+                    commandExpressionMix?.naturalLanguageEnabled === true,
+            }
+        )
+            .then(() => {
+                if (!cancelled) setConfigurationError("");
+            })
+            .catch((error) => {
+                if (!cancelled) {
+                    setConfigurationError(
+                        error.message ?? "명령 표현 방식을 저장하지 못했습니다."
+                    );
+                }
+            });
 
-        setNewProductCode("");
-        setNewProductRatio("");
-    };
+        return () => {
+            cancelled = true;
+        };
+    }, [
+        simulationRunId,
+        commandExpressionMix?.policyEnabled,
+        commandExpressionMix?.naturalLanguageEnabled,
+    ]);
 
-    // 입고 품목 삭제
-    const handleDeleteInboundProduct = (productCode) => {
-        setInboundSettings((prev) => ({
-            ...prev,
-            products:
-                prev.products.filter((product) =>
-                    product.product_code !==
-                    productCode
-                ),
-        })
-        );
-    };
+    useEffect(() => {
+        let cancelled = false;
+        let timerId;
 
-    // 입고 품목 비율 수정
-    const handleInboundRatioChange = (productCode, value) => {
-        const ratio = Math.max(0, Math.min(100, Number(value)));
+        setWorkflow({
+            state: "idle",
+            generated: null,
+            planResponse: null,
+            error: "",
+            errorStage: null,
+        });
+        setSelectedOperationId(null);
 
-        setInboundSettings((prev) => ({
-            ...prev,
-            products:
-                prev.products.map((product) =>
-                    product.product_code ===
-                        productCode
-                        ? {
-                            ...product,
-                            ratio: ratio,
-                        }
-                        : product
-                ),
-        })
-        );
-    };
+        if (!simulationRunId) {
+            setPreflight({ state: "idle", data: null, error: "" });
+            return () => {
+                cancelled = true;
+            };
+        }
 
-    // 출고 설정
-    const handleOutboundChange = (field, value) => {
-        setOutboundSettings((prev) => ({
-            ...prev,
-            [field]: value,
-        })
-        );
-    };
+        const refreshPreflight = async () => {
+            try {
+                const data = await laroPlanApi.preflight(simulationRunId);
+                if (!cancelled) {
+                    setPreflight({
+                        state: data?.ready ? "ready" : "blocked",
+                        data,
+                        error: "",
+                    });
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setPreflight({
+                        state: "error",
+                        data: null,
+                        error: error.message,
+                    });
+                }
+            }
+        };
+
+        setPreflight({ state: "loading", data: null, error: "" });
+        refreshPreflight();
+        timerId = window.setInterval(refreshPreflight, 3000);
+
+        return () => {
+            cancelled = true;
+            window.clearInterval(timerId);
+        };
+    }, [simulationRunId]);
+
+    useEffect(() => {
+        let cancelled = false;
+        let timerId;
+
+        const applyCycleStatus = (status) => {
+            if (cancelled || !status) return;
+
+            setCycleStatus(status);
+            onSimulatedTimeChange?.(
+                Math.floor(Number(status.simulatedTimeMs ?? 0) / 1000)
+            );
+            const generated = status.generated ?? null;
+            const commands = asArray(generated?.frontView?.commands);
+            if (commands.length > 0) {
+                setSelectedOperationId((current) =>
+                    commands.some((command) => command.operationId === current)
+                        ? current
+                        : commands[0].operationId
+                );
+            }
+            setWorkflow({
+                state: CYCLE_TO_WORKFLOW_STATE[status.state] ?? "idle",
+                generated,
+                planResponse: status.planResponse ?? null,
+                error: status.error ?? "",
+                errorStage: status.state === "ERROR" ? "cycle" : null,
+            });
+        };
+
+        const refresh = async () => {
+            if (!simulationRunId) return;
+            try {
+                applyCycleStatus(
+                    await fulfillmentCommandApi.getCycleStatus(simulationRunId)
+                );
+            } catch (error) {
+                if (!cancelled) {
+                    setWorkflow((current) => ({
+                        ...current,
+                        state: "error",
+                        error: error.message ?? "자동 명령 생성 상태를 조회하지 못했습니다.",
+                        errorStage: "cycle",
+                    }));
+                }
+            }
+        };
+
+        if (!simulationRunId) {
+            setCycleStatus(null);
+            return () => {
+                cancelled = true;
+            };
+        }
+
+        refresh();
+        timerId = window.setInterval(refresh, 1000);
+        return () => {
+            cancelled = true;
+            window.clearInterval(timerId);
+        };
+    }, [simulationRunId, onSimulatedTimeChange]);
+
+    const generated = workflow.generated;
+    const frontView = generated?.frontView;
+    const summary = frontView?.summary;
+    const commands = useMemo(
+        () => asArray(frontView?.commands),
+        [frontView?.commands],
+    );
+    const warnings = asArray(frontView?.warnings);
+    const naturalLanguageRequest = String(
+        field(generated?.planRequest, "user_command", "userCommand") ?? ""
+    ).trim();
+
+    useEffect(() => {
+        onGeneratedCommandsChange?.(commands);
+    }, [commands, onGeneratedCommandsChange]);
+
+    const result = workflow.planResponse?.result;
+    const plan = result?.plan;
+    const logicalOperations = asArray(
+        field(plan, "logical_operations", "logicalOperations")
+    );
+    const robotPlans = asArray(plan?.robots);
+    const planErrors = asArray(result?.errors);
+    const frontendSummary = field(result, "frontend_summary", "frontendSummary");
+    const planWarnings = asArray(frontendSummary?.warnings);
+    const preflightProblemText = asArray(preflight.data?.problems)
+        .filter((problem) => !isHiddenPreflightProblem(problem))
+        .join(", ");
+    const distinctWorkflowError = workflow.error
+        && !isHiddenPreflightProblem(workflow.error)
+        && workflow.error !== preflightProblemText
+        ? workflow.error
+        : "";
+
+    const selectedCommand = commands.find(
+        (command) => command.operationId === selectedOperationId
+    ) ?? commands[0];
+    const selectedLogicalOperation = logicalOperations.find(
+        (operation) => field(operation, "operation_id", "operationId")
+            === selectedCommand?.operationId
+    );
+    const selectedRobotId = field(
+        selectedLogicalOperation,
+        "assigned_robot_id",
+        "assignedRobotId"
+    );
+    const selectedRobot = robotPlans.find(
+        (robot) => field(robot, "robot_id", "robotId") === selectedRobotId
+    );
+    const selectedRouteNodes = useMemo(
+        () => compactRouteNodes(selectedRobot),
+        [selectedRobot]
+    );
+
+    const commandIsBusy = ["checking", "generating"].includes(workflow.state);
+    const planIsBusy = workflow.state === "planning";
+    const isBusy = commandIsBusy || planIsBusy;
+    const policyExpressionEnabled = commandExpressionMix?.policyEnabled === true;
+    const naturalLanguageExpressionEnabled = commandExpressionMix?.naturalLanguageEnabled === true;
+    const workflowBadge = WORKFLOW_BADGE[workflow.state] ?? WORKFLOW_BADGE.idle;
+    const workflowBadgeClass = workflow.state === "complete"
+        ? "ready"
+        : isBusy
+            ? "planned"
+            : workflow.state;
+    const commandBusyLabel = workflow.state === "checking"
+        ? "실행 조건을 확인하고 있습니다."
+        : "재고와 빈 선반을 확인해 입출고 명령을 생성하고 있습니다.";
+    const commandElapsedSeconds = useElapsedSeconds(
+        commandIsBusy,
+        cycleStatus?.updatedAt
+    );
+    const planElapsedSeconds = useElapsedSeconds(planIsBusy, cycleStatus?.updatedAt);
 
     return (
-        <aside className="simulation-panel">
-            {/* 입고 설정 */}
-            <section className="simulation-setting-panel">
-                <h2 className="simulation-setting-title">
-                    입고 설정
-                </h2>
-
-                <div className="simulation-setting-row">
-                    <label>입고 예정 건수</label>
-
-                    <div className="simulation-input-unit">
-                        <input
-                            type="number"
-                            min="0"
-                            value={
-                                inboundSettings.inbound_count
-                            }
-                            onChange={(e) =>
-                                handleInboundChange(
-                                    "inbound_count",
-                                    Number(e.target.value)
-                                )
-                            }
-                        />
-
-                        <span>건</span>
+        <aside className="simulation-panel" aria-label="입출고 명령 및 AI 계획 패널">
+            <section className={`simulation-visual-panel inbound-command-panel ${naturalLanguageRequest ? "has-language-request" : ""}`}>
+                <div className="simulation-panel-heading">
+                    <div>
+                        <h2>생성된 입출고 명령</h2>
                     </div>
-                </div>
-
-                <div className="simulation-setting-row">
-                    <label>총 입고 예정량</label>
-
-                    <div className="simulation-input-unit">
-                        <input
-                            type="number"
-                            min="0"
-                            value={
-                                inboundSettings.total_quantity
-                            }
-                            onChange={(e) =>
-                                handleInboundChange(
-                                    "total_quantity",
-                                    Number(e.target.value)
-                                )
-                            }
-                        />
-
-                        <span>BOX</span>
-                    </div>
-                </div>
-
-                <div className="simulation-setting-row">
-                    <label>입고 발생 패턴</label>
-
-                    <select
-                        value={
-                            inboundSettings.arrival_pattern
-                        }
-                        onChange={(e) =>
-                            handleInboundChange(
-                                "arrival_pattern",
-                                e.target.value
-                            )
-                        }
-                    >
-                        <option value="UNIFORM">균등</option>
-                        <option value="RANDOM">랜덤</option>
-                        <option value="PEAK">집중</option>
-                    </select>
-                </div>
-
-                {/* 품목 구성 */}
-                <div className="inbound-product-section">
-                    <div className="inbound-product-header">
-                        <h3>품목 구성</h3>
-
-                        <span
-                            className={inboundRatioTotal === 100
-                                ? "inbound-ratio-valid"
-                                : "inbound-ratio-invalid"
-                            }
-                        >
-                            합계{" "}{inboundRatioTotal}%
+                    <div className="command-heading-actions">
+                        <span className={`simulation-status-chip ${workflowBadgeClass}`}>
+                            {workflowBadge}
                         </span>
+                        <div className="command-expression-toggles" aria-label="LLM 명령 표현 설정">
+                        {COMMAND_EXPRESSION_TOGGLES.map((option) => {
+                            const enabled = commandExpressionMix?.[option.key] === true;
+                            const tooltip = [
+                                `${option.label} · 현재 ${enabled ? "사용 중" : "사용 안 함"}`,
+                                option.description,
+                                `켜면 자동 생성 작업 중 약 ${option.ratio}%에 적용됩니다.`,
+                                `클릭하면 ${enabled ? "사용하지 않도록" : "사용하도록"} 바뀝니다.`,
+                            ].join("\n");
+                            return (
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={enabled}
+                                    aria-label={option.label}
+                                    data-tooltip={tooltip}
+                                    className={`${option.tone} ${enabled ? "selected" : ""}`}
+                                    key={option.key}
+                                    onClick={() => onCommandExpressionMixChange?.({
+                                        policyEnabled: policyExpressionEnabled,
+                                        naturalLanguageEnabled: naturalLanguageExpressionEnabled,
+                                        [option.key]: !enabled,
+                                    })}
+                                    disabled={isBusy}
+                                >
+                                    <span />
+                                </button>
+                            );
+                        })}
+                        </div>
                     </div>
+                </div>
 
-                    {/* 추가된 품목 */}
-                    <div className="inbound-product-list">
-                        {inboundSettings.products.map((product) => (
-                            <div
-                                className="inbound-product-row"
-                                key={product.product_code}
-                            >
-                                <div className="inbound-product-info">
-                                    <strong>{product.product_code}</strong>
-                                    <span>{getProductName(product.product_code)}</span>
-                                </div>
+                {configurationError && (
+                    <div className="command-expression-error">
+                        {configurationError}
+                    </div>
+                )}
 
-                                <div className="inbound-product-control">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        value={product.ratio}
-                                        onChange={(e) =>
-                                            handleInboundRatioChange(
-                                                product.product_code,
-                                                e.target.value
-                                            )
-                                        }
-                                    />
-                                    <span>%</span>
+                {commandIsBusy ? (
+                    <div className="plan-loading command-loading" aria-live="polite">
+                        <div className="plan-loading-dots" aria-hidden="true">
+                            <span />
+                            <span />
+                            <span />
+                        </div>
+                        <div className="plan-loading-copy">
+                            <strong>{commandElapsedSeconds}초 경과</strong>
+                            <p>{commandBusyLabel}</p>
+                            <small>품목 수와 재고 상태에 따라 시간이 더 걸릴 수 있습니다.</small>
+                        </div>
+                    </div>
+                ) : !simulationRunId ? (
+                    <div className="plan-empty-state compact">
+                        <strong>시뮬레이션 실행을 먼저 만들어 주세요.</strong>
+                    </div>
+                ) : !generated ? (
+                    <div className="command-ready-state">
+                        <p>시뮬레이션이 시작되면 입출고 명령을 자동 생성합니다.</p>
+                        <span>목적지 선반과 담당 로봇은 AI 계획에서 결정됩니다.</span>
+                    </div>
+                ) : (
+                    <>
+                        <div className="simulation-metric-grid command-metrics">
+                            <div className="simulation-metric-card">
+                                <span>입고</span>
+                                <strong>{summary?.generatedInboundCommands ?? 0}</strong>
+                                <small>BOX</small>
+                            </div>
+                            <div className="simulation-metric-card">
+                                <span>출고</span>
+                                <strong>{summary?.generatedOutboundCommands ?? 0}</strong>
+                                <small>BOX</small>
+                            </div>
+                            <div className="simulation-metric-card">
+                                <span>빈 선반 칸</span>
+                                <strong>{summary?.emptyStorageSlots ?? 0}</strong>
+                                <small>/ {summary?.totalStorageSlots ?? 0}</small>
+                            </div>
+                        </div>
 
+                        <div className="command-batch-meta">
+                            <span>{frontView?.mode ?? "AUTO"}</span>
+                            <span>{formatGeneratedAt(frontView?.generatedAt)}</span>
+                            <span>{commands.length}건</span>
+                        </div>
+
+                        <div className="compact-operation-list" aria-label="생성된 입출고 명령 목록">
+                            {commands.map((command) => {
+                                const selected = command.operationId === selectedCommand?.operationId;
+                                const operationType = command.operationType;
+                                return (
                                     <button
                                         type="button"
-                                        onClick={() => handleDeleteInboundProduct(product.product_code)}
+                                        className={`compact-operation-row ${selected ? "selected" : ""}`}
+                                        key={command.operationId}
+                                        onClick={() => setSelectedOperationId(command.operationId)}
                                     >
-                                        삭제
+                                        <span className={`operation-type-badge ${operationType?.toLowerCase()}`}>
+                                            {OPERATION_LABEL[operationType] ?? operationType}
+                                        </span>
+                                        <span className="operation-product">
+                                            <strong>{command.productName ?? command.productCode}</strong>
+                                            <small>{command.productCode}</small>
+                                        </span>
+                                        <span className="operation-quantity">
+                                            {command.boxCount ?? 1} BOX
+                                            <small>{command.quantity ?? 0} EA</small>
+                                        </span>
                                     </button>
-                                </div>
+                                );
+                            })}
+                        </div>
+
+                        {naturalLanguageRequest && (
+                            <div className="command-language-request">
+                                <span>자연어 명령·요청</span>
+                                <p>{naturalLanguageRequest}</p>
                             </div>
-                        )
+                        )}
+                    </>
+                )}
+
+                {warnings.length > 0 && (
+                    <div className="plan-alert warning">{warnings.join(" ")}</div>
+                )}
+            </section>
+
+            <section className="simulation-visual-panel outbound-plan-panel">
+                <div className="simulation-panel-heading">
+                    <div>
+                        <span className="simulation-panel-eyebrow">AI EXECUTION PLAN</span>
+                        <h2>AI 실행 계획</h2>
+                    </div>
+                    <span className={`simulation-status-chip ${preflight.state}`}>
+                        {preflight.state === "ready" && "READY"}
+                        {preflight.state === "loading" && "확인 중"}
+                        {preflight.state === "blocked" && "NOT READY"}
+                        {preflight.state === "error" && "연결 오류"}
+                        {preflight.state === "idle" && "실행 대기"}
+                    </span>
+                </div>
+
+                {preflight.state === "blocked" && preflightProblemText && (
+                    <div className="plan-alert warning">
+                        {preflightProblemText}
+                    </div>
+                )}
+                {preflight.state === "error" && (
+                    <div className="plan-alert error">{preflight.error}</div>
+                )}
+                {workflow.state === "error" && distinctWorkflowError && (
+                    <div className="plan-alert error">{distinctWorkflowError}</div>
+                )}
+
+                {planIsBusy && (
+                    <div className="plan-loading" aria-live="polite">
+                        <div className="plan-loading-dots" aria-hidden="true">
+                            <span />
+                            <span />
+                            <span />
+                        </div>
+                        <div className="plan-loading-copy">
+                            <strong>{planElapsedSeconds}초 경과</strong>
+                            <p>생성된 명령과 창고 실시간 상태로 AI 계획을 계산하고 있습니다.</p>
+                            <small>작업량과 로봇 상태에 따라 약 30초~1분 소요될 수 있습니다.</small>
+                        </div>
+                    </div>
+                )}
+
+                {result && (
+                    <div className="plan-result" aria-live="polite">
+                        <div className={`plan-result-status ${result.status}`}>
+                            <div>
+                                <span>PLAN STATUS</span>
+                                <strong>{PLAN_STATUS_LABEL[result.status] ?? result.status}</strong>
+                            </div>
+                            <b>{field(result, "final_route", "finalRoute") ?? "-"}</b>
+                        </div>
+
+                        {plan && (
+                            <>
+                                <div className="simulation-metric-grid plan-metrics">
+                                    <div className="simulation-metric-card">
+                                        <span>계획 명령</span>
+                                        <strong>{logicalOperations.length}</strong>
+                                        <small>/ {commands.length}</small>
+                                    </div>
+                                    <div className="simulation-metric-card">
+                                        <span>배정 로봇</span>
+                                        <strong>{robotPlans.length}</strong>
+                                        <small>대</small>
+                                    </div>
+                                    <div className="simulation-metric-card">
+                                        <span>예상 완료</span>
+                                        <strong className="metric-text">
+                                            {formatDuration(field(plan, "makespan_ms", "makespanMs"))}
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <div className="plan-identity compact">
+                                    <span>PLAN ID</span>
+                                    <strong>{field(plan, "plan_id", "planId")}</strong>
+                                </div>
+
+                                <div className="compact-plan-list" aria-label="명령별 AI 배정 결과">
+                                    {commands.map((command) => {
+                                        const logicalOperation = logicalOperations.find(
+                                            (operation) => field(operation, "operation_id", "operationId")
+                                                === command.operationId
+                                        );
+                                        const robotId = field(
+                                            logicalOperation,
+                                            "assigned_robot_id",
+                                            "assignedRobotId"
+                                        );
+                                        const selected = command.operationId === selectedCommand?.operationId;
+                                        return (
+                                            <button
+                                                type="button"
+                                                className={`compact-plan-row ${selected ? "selected" : ""}`}
+                                                key={command.operationId}
+                                                onClick={() => setSelectedOperationId(command.operationId)}
+                                            >
+                                                <span>{OPERATION_LABEL[command.operationType] ?? command.operationType}</span>
+                                                <strong>{command.productCode}</strong>
+                                                <b className={robotId ? "assigned" : "deferred"}>
+                                                    {robotId ?? "보류"}
+                                                </b>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {selectedCommand && (
+                                    <div className="selected-plan-detail">
+                                        <div>
+                                            <span>선택 명령</span>
+                                            <strong>{selectedCommand.operationId}</strong>
+                                        </div>
+                                        <div>
+                                            <span>담당 로봇</span>
+                                            <strong>{selectedRobotId ?? "배정되지 않음"}</strong>
+                                        </div>
+                                        <div>
+                                            <span>완료 예정</span>
+                                            <strong>
+                                                {selectedRobot
+                                                    ? formatDuration(field(selectedRobot, "finish_at_ms", "finishAtMs"))
+                                                    : "-"}
+                                            </strong>
+                                        </div>
+                                        {selectedRouteNodes.length > 0 && (
+                                            <div className="selected-plan-route">
+                                                {selectedRouteNodes.map((node, index) => (
+                                                    <span key={`${node}-${index}`}>
+                                                        <b>{node}</b>
+                                                        {index < selectedRouteNodes.length - 1 && <i>→</i>}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {planWarnings.length > 0 && (
+                            <div className="plan-alert warning">{planWarnings.join(" ")}</div>
+                        )}
+                        {planErrors.length > 0 && (
+                            <div className="plan-alert error">
+                                {planErrors.map((error) => error.message).join(", ")}
+                            </div>
                         )}
                     </div>
-
-                    {/* 품목 추가 */}
-                    {availableProducts.length > 0 && (
-                        <div className="inbound-product-add">
-                            <select
-                                value={newProductCode}
-                                onChange={(e) => setNewProductCode(e.target.value)}
-                            >
-                                <option value="">품목 선택</option>
-
-                                {availableProducts.map((product) => (
-                                    <option
-                                        key={product.product_code}
-                                        value={product.product_code}
-                                    >
-                                        {product.product_code}{" "}
-                                        {product.product_name}
-                                    </option>
-                                )
-                                )}
-                            </select>
-
-                            <div className="inbound-add-ratio">
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="100"
-                                    placeholder="비율"
-                                    value={newProductRatio}
-                                    onChange={(e) => setNewProductRatio(e.target.value)}
-                                />
-                                <span>%</span>
-                            </div>
-
-                            <button
-                                type="button"
-                                onClick={handleAddInboundProduct}
-                            >
-                                추가
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </section>
-
-            {/* 출고 설정 */}
-            <section className="simulation-setting-panel">
-                <h2 className="simulation-setting-title">
-                    출고 설정
-                </h2>
-
-                <div className="simulation-setting-row">
-                    <label>출고 주문 건수</label>
-
-                    <div className="simulation-input-unit">
-                        <input
-                            type="number"
-                            min="0"
-                            value={outboundSettings.order_count}
-                            onChange={(e) =>
-                                handleOutboundChange(
-                                    "order_count",
-                                    Number(e.target.value)
-                                )
-                            }
-                        />
-                        <span>건</span>
-                    </div>
-                </div>
-
-                <div className="simulation-setting-row">
-                    <label>총 출고 예정량</label>
-
-                    <div className="simulation-input-unit">
-                        <input
-                            type="number"
-                            min="0"
-                            value={outboundSettings.total_quantity}
-                            onChange={(e) =>
-                                handleOutboundChange(
-                                    "total_quantity",
-                                    Number(e.target.value)
-                                )
-                            }
-                        />
-
-                        <span>BOX</span>
-                    </div>
-                </div>
-
-                <div className="simulation-setting-row">
-                    <label>주문 발생 패턴</label>
-
-                    <select
-                        value={outboundSettings.arrival_pattern}
-                        onChange={(e) =>
-                            handleOutboundChange(
-                                "arrival_pattern",
-                                e.target.value
-                            )
-                        }
-                    >
-                        <option value="UNIFORM">균등</option>
-                        <option value="RANDOM">랜덤</option>
-                        <option value="PEAK">집중</option>
-                    </select>
-                </div>
-
-                <div className="simulation-setting-row">
-                    <label>출고 처리기한</label>
-
-                    <div className="simulation-input-unit">
-                        <input
-                            type="number"
-                            min="0"
-                            value={outboundSettings.processing_deadline_minutes}
-                            onChange={(e) =>
-                                handleOutboundChange(
-                                    "processing_deadline_minutes",
-                                    Number(e.target.value)
-                                )
-                            }
-                        />
-                        <span>분</span>
-                    </div>
-                </div>
-
-                <div className="simulation-setting-row">
-                    <label>부분 출고</label>
-
-                    <select
-                        value={outboundSettings.allow_partial_shipment
-                            ? "true"
-                            : "false"
-                        }
-                        onChange={(e) =>
-                            handleOutboundChange(
-                                "allow_partial_shipment",
-                                e.target.value === "true"
-                            )
-                        }
-                    >
-                        <option value="true">허용</option>
-                        <option value="false">허용 안 함</option>
-                    </select>
-                </div>
-            </section>
-
-            {/* 자연어 명령 */}
-            <section className="simulation-setting-panel">
-                <h2 className="simulation-setting-title">
-                    명령 입력
-                </h2>
-
-                <div className="natural-command-content">
-                    <textarea
-                        id="natural-command"
-                        value={naturalCommand}
-                        onChange={(e) => setNaturalCommand(e.target.value)}
-                        placeholder="예: A 상품 출고 작업을 우선 처리해줘"
-                    />
-
-                    <div className="natural-command-actions">
-                        <button
-                            type="button"
-                            onClick={handleNaturalCommand}
-                            disabled={!naturalCommand.trim()}
-                        >
-                            명령 실행
-                        </button>
-                    </div>
-                </div>
+                )}
             </section>
         </aside>
     );

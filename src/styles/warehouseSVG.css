@@ -7,13 +7,12 @@
 
     width: 100%;
     height: 100%;
-    min-width: 0;
-    min-height: 0;
 
+    min-width: 0;
     box-sizing: border-box;
     overflow: hidden;
 
-    background: #ffffff;
+    background: var(--background-color);
 }
 
 /* =========================
@@ -22,50 +21,10 @@
 
 .warehouse-svg {
     display: block;
-
     width: 100%;
     height: 100%;
-    min-width: 0;
-    min-height: 0;
 
     background: #ffffff;
-}
-
-/* SVG를 확대·축소해도 선 굵기가 지나치게 변하지 않도록 설정 */
-.warehouse-svg line,
-.warehouse-svg circle,
-.warehouse-svg rect {
-    vector-effect: non-scaling-stroke;
-}
-
-/* =========================
-   노드 번호 보기 버튼
-========================= */
-
-.warehouse-node-toggle {
-    position: absolute;
-    z-index: 20;
-
-    min-width: 116px;
-    height: 34px;
-    padding: 0 13px;
-
-    border: 1px solid #94a3b8;
-    border-radius: 7px;
-    background: rgba(255, 255, 255, 0.96);
-
-    color: #334155;
-    font-size: 13px;
-    font-weight: 600;
-
-    cursor: pointer;
-    box-shadow: 0 2px 7px rgba(15, 23, 42, 0.12);
-}
-
-.warehouse-node-toggle:hover {
-    border-color: #2563eb;
-    background: #eff6ff;
-    color: #1d4ed8;
 }
 
 /* =========================
@@ -75,146 +34,310 @@
 .warehouse-edge {
     fill: none;
 
-    stroke: #cbd5e1;
-    stroke-width: 1.7;
+    stroke: #c5c5c5;
+    stroke-width: 2;
 }
 
+/* 일반 이동 경로 */
 .edge-lane {
-    stroke: #cbd5e1;
+    stroke: #c5c5c5;
 }
 
+/* 랙 접근 경로 */
 .edge-rack_access {
-    stroke: #b8c2cf;
+    stroke: #b5b5b5;
 }
 
-.edge-inbound_stations,
+/* 입고 엘리베이터 내부 */
+.edge-inbound_stations {
+    stroke: #b5b5b5;
+}
+
+/* 입고 연결 */
 .edge-inbound_connector {
-    stroke: #86b99b;
+    stroke: #999999;
 }
 
-.edge-outbound_stations,
+/* 출고 엘리베이터 내부 */
+.edge-outbound_stations {
+    stroke: #b5b5b5;
+}
+
+/* 출고 연결 */
 .edge-outbound_connector {
-    stroke: #e6a26b;
+    stroke: #999999;
 }
 
+/* 충전소 연결 */
 .edge-charging_connector {
-    stroke: #7ea4e6;
+    stroke: #999999;
+
+    stroke-dasharray: 4 3;
+}
+
+.warehouse-layout-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 320px;
+    color: #555555;
+}
+
+.warehouse-layout-error {
+    color: #b42318;
+}
+
+.warehouse-layout-error button {
+    padding: 7px 14px;
+    border: 1px solid #333333;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+/* 실제 통로에서 핸드오프/출고 스테이션으로 들어가는 서비스 스퍼 */
+.edge-inbound_handoff_access {
+    stroke: #7c4db3;
+}
+
+.edge-outbound_station_access {
+    stroke: #2c8a52;
+}
+
+/* 포트·슈트와 처리 설비 사이의 논리 관계. 로봇 이동 경로가 아니다. */
+.warehouse-logical-edge {
+    fill: none;
+    stroke-width: 1.5;
     stroke-dasharray: 5 4;
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+.logical-inbound {
+    stroke: #8754c7;
+}
+
+.logical-outbound {
+    stroke: #269653;
+}
+
+.warehouse-box-transfer {
+    pointer-events: none;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.28));
+}
+
+.warehouse-box-transfer rect {
+    stroke-width: 2;
+}
+
+.warehouse-box-transfer path {
+    fill: none;
+    stroke-width: 1;
+}
+
+.transfer-inbound rect,
+.transfer-inbound path {
+    stroke: #6d3fac;
+}
+
+.transfer-outbound rect,
+.transfer-outbound path {
+    stroke: #1f7540;
+}
+
+.warehouse-waiting-box,
+.warehouse-robot-load {
+    pointer-events: none;
+    filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.3));
+}
+
+.warehouse-waiting-box rect,
+.warehouse-robot-load rect {
+    stroke: #334155;
+    stroke-width: 1.3;
+}
+
+.warehouse-waiting-box path,
+.warehouse-robot-load path {
+    fill: none;
+    stroke: rgba(30, 41, 59, 0.7);
+    stroke-width: 0.8;
+}
+
+.warehouse-waiting-count circle {
+    fill: #ffffff;
+    stroke: #6d3fac;
+    stroke-width: 1.2;
+}
+
+.warehouse-waiting-count text {
+    fill: #4c1d95;
+    font-size: 7px;
+    font-weight: 700;
 }
 
 /* =========================
-   일반 이동 노드
+   Route Node
 ========================= */
-
 .warehouse-route-node {
-    stroke-width: 1.2;
+    fill: #ffffff;
+
+    stroke: #777777;
+    stroke-width: 1;
 }
 
 .warehouse-route-label {
     font-size: 8px;
-    font-weight: 500;
-    fill: #475569;
-
-    paint-order: stroke;
-    stroke: #ffffff;
-    stroke-width: 2px;
-
+    fill: #555555;
     pointer-events: none;
+    
+}
+
+.warehouse-node-toggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+
+    z-index: 10;
 }
 
 /* =========================
-   접근 노드 / 충전 연결 노드
+   Route ↔ Charging Junction
+   Route ↔ inbound
+   Route ↔ outbound
 ========================= */
-
 .warehouse-charge-junction,
 .warehouse-inbound-access,
 .warehouse-outbound-access {
-    stroke-width: 1.5;
+    fill: #ffffff;
+
+    stroke: #333333;
+    stroke-width: 1;
+}
+
+.warehouse-inbound-access {
+    fill: #8754c7;
+    stroke: #6d3fac;
+}
+
+.warehouse-outbound-access {
+    fill: #269653;
+    stroke: #1f7540;
 }
 
 /* =========================
    Rack
 ========================= */
-
 .warehouse-rack {
-    stroke-width: 1.6;
+    fill: #ffffff;
+
+    stroke: #333333;
+    stroke-width: 1.5;
 }
 
+/* 랙 내부 각 층 */
 .warehouse-rack-level {
-    stroke: #94a3b8;
-    stroke-width: 0.7;
+    stroke: #777777;
+    stroke-width: 0.5;
 }
 
+/* 비어 있음 */
 .rack-level-empty {
-    fill: #f8fafc;
+    fill: #ffffff;
 }
 
+/* 일부 적재 */
 .rack-level-partial {
-    fill: #cbd5e1;
+    fill: #cccccc;
 }
 
+/* 가득 참 */
 .rack-level-full {
-    fill: #64748b;
+    fill: #777777;
 }
 
+.rack-level-occupied {
+    stroke: rgba(30, 41, 59, 0.45);
+    stroke-width: 0.6;
+}
+
+/* 랙 ID */
 .warehouse-rack-label {
     font-size: 9px;
-    font-weight: 600;
 
-    paint-order: stroke;
-    stroke: #ffffff;
-    stroke-width: 2px;
+    fill: #333333;
 
     pointer-events: none;
 }
 
 /* =========================
-   입고지 / 출고지 / 충전 슬롯
-   실제 색상은 WarehouseSVG.jsx의 MAP_THEME에서 결정
+   Inbound
 ========================= */
+.warehouse-inbound-node {
+    fill: #ffffff;
 
-.warehouse-inbound-node,
-.warehouse-outbound-node,
-.warehouse-charging-slot {
-    stroke-width: 1.8;
+    stroke: #333333;
+    stroke-width: 1.5;
 }
 
-.warehouse-station-label,
-.warehouse-charging-label {
+/* =========================
+   Outbound
+========================= */
+.warehouse-outbound-node {
+    fill: #ffffff;
+
+    stroke: #333333;
+    stroke-width: 1.5;
+}
+
+/* 입출고 노드 글자 */
+.warehouse-station-label {
     font-size: 10px;
-    font-weight: 700;
+
+    fill: #333333;
+
+    pointer-events: none;
+}
+
+/* =========================
+   Charging
+========================= */
+.warehouse-charging-slot {
+    fill: #ffffff;
+
+    stroke: #333333;
+    stroke-width: 1.5;
+}
+
+.warehouse-charging-label {
+    font-size: 9px;
+
+    fill: #333333;
+
+    pointer-events: none;
+}
+
+/* =========================
+   Area Label
+
+   입고 엘리베이터
+   출고 엘리베이터
+   충전소
+========================= */
+.warehouse-area-title {
+    font-size: 14px;
+
+    font-weight: 600;
+
+    fill: #333333;
 
     pointer-events: none;
 }
 
 .warehouse-station-id {
     font-size: 8px;
-    font-weight: 600;
-    fill: #475569;
-
-    paint-order: stroke;
-    stroke: #ffffff;
-    stroke-width: 2px;
-
-    pointer-events: none;
-}
-
-/* =========================
-   주요 구역 배지
-========================= */
-
-.warehouse-area-badges {
-    pointer-events: none;
-}
-
-.warehouse-area-badges rect {
-    stroke-width: 1.5;
-}
-
-.warehouse-area-title {
-    font-size: 14px;
-    font-weight: 700;
-
+    fill: #555555;
     pointer-events: none;
 }
 
@@ -224,42 +347,18 @@
 
 .warehouse-aisle-label {
     font-size: 11px;
-    font-weight: 700;
-    fill: #475569;
+    font-weight: 600;
 
-    paint-order: stroke;
-    stroke: #ffffff;
-    stroke-width: 2px;
+    fill: #555555;
 
     pointer-events: none;
-}
-
-/* =========================
-   색상 범례
-========================= */
-
-.warehouse-map-legend {
-    pointer-events: none;
-}
-
-.warehouse-map-legend > rect {
-    filter: drop-shadow(0 2px 3px rgba(15, 23, 42, 0.08));
-}
-
-.warehouse-map-legend text {
-    user-select: none;
 }
 
 /* =========================
    Robot
 ========================= */
-
 .warehouse-robot {
     cursor: pointer;
-
-    transition-property: transform;
-    transition-timing-function: linear;
-
     will-change: transform;
 }
 
@@ -269,8 +368,8 @@
 
 .warehouse-robot-id {
     font-size: 12px;
-    font-weight: 700;
-    fill: #0f172a;
+
+    fill: #222222;
 
     paint-order: stroke;
     stroke: #ffffff;
@@ -279,15 +378,54 @@
     pointer-events: none;
 }
 
-/* =========================
-   작은 화면
-========================= */
+.warehouse-fixed-station-robot {
+    pointer-events: none;
+    filter: drop-shadow(0 2px 2px rgb(15 35 65 / 24%));
+}
 
-@media (max-width: 1000px) {
-    .warehouse-node-toggle {
-        min-width: 104px;
-        height: 31px;
-        padding: 0 10px;
-        font-size: 12px;
-    }
+.warehouse-fixed-station-robot .station-robot-platform,
+.warehouse-fixed-station-robot .station-robot-body,
+.warehouse-fixed-station-robot .station-robot-head {
+    fill: #edf5ff;
+    stroke: #174f9e;
+    stroke-width: 2;
+}
+
+.warehouse-fixed-station-robot .station-robot-arm {
+    fill: none;
+    stroke: #174f9e;
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.warehouse-fixed-station-robot .station-robot-joint {
+    fill: #73a9f5;
+    stroke: #174f9e;
+    stroke-width: 1.5;
+}
+
+.warehouse-fixed-station-robot .station-robot-eye {
+    fill: #174f9e;
+    stroke: none;
+}
+
+.warehouse-fixed-station-robot.working .station-robot-body,
+.warehouse-fixed-station-robot.working .station-robot-head {
+    fill: #e9fff1;
+    stroke: #21894b;
+}
+
+.warehouse-fixed-station-robot.working .station-robot-arm {
+    stroke: #21894b;
+    animation: station-arm-working 0.8s ease-in-out infinite alternate;
+}
+
+.warehouse-fixed-station-robot.releasing .station-robot-arm.right {
+    stroke: #ef8b22;
+}
+
+@keyframes station-arm-working {
+    from { transform: rotate(-3deg); }
+    to { transform: rotate(3deg); }
 }

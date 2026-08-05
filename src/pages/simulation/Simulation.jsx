@@ -7,21 +7,14 @@ import SimulationTask from "./SimulationTask";
 import SimulationEvent from "./SimulationEvent";
 
 import useStompSubscriptions from "../../hooks/useStompSubscriptions";
-import { API_URL, TOPICS } from "../../api/config";
+import { TOPICS } from "../../api/config";
 import {
-    api,
     simulationRunApi,
-    scenarioApi,
-    productApi,
     optimizationApi,
     warehouseApi,
     robotApi,
+    fulfillmentCommandApi,
 } from "../../api/client";
-
-import scenariosData from "../../data/scenarios.json";
-import productsData from "../../data/products.json";
-import inbound from "../../data/inbound.json";
-import outbound from "../../data/outbound.json";
 
 // 창고 목록을 못 불러왔을 때 쓸 기본 창고
 const DEFAULT_WAREHOUSE_ID = 1;
@@ -32,31 +25,33 @@ const WAREHOUSE_ID_KEY = "selectedWarehouseId";
 // 새로고침 후에도 실행 중인 시뮬레이션을 이어서 쓰기 위한 저장 키
 const RUN_ID_KEY = "simulationRunId";
 
-// 충전소 노드 코드 (warehouse_graph.json 의 CHARGING_SLOT 노드)
-// 로봇은 여기서 출발하고, 초기화하면 여기로 돌아온다.
-const CHARGING_SLOTS = [
-    "C01", "C02", "C03", "C04", "C05",
-    "C06", "C07", "C08", "C09", "C10",
-];
+// 구조화 입력을 기본으로 두고 선택적으로 섞을 LLM 표현 비율 설정
+const COMMAND_EXPRESSION_MIX_KEY = "simulationCommandExpressionMixV2";
+const DEFAULT_COMMAND_EXPRESSION_MIX = {
+    policyEnabled: false,
+    naturalLanguageEnabled: false,
+};
 
-// 로봇을 못 불러왔을 때 쓰는 임시 배치.
-// 창고에 등록된 로봇을 조회하지 못한 경우에만 쓴다.
-const restingRobots = (count = 6) =>
-    Array.from({ length: Math.min(count, CHARGING_SLOTS.length) }, (_, index) => ({
-        robot_id: index + 1,
-        robot_code: `R${index + 1}`,
-        node_id: CHARGING_SLOTS[index],
-        battery: 100,
-        status: "IDLE",
-        transition_ms: 0,
-    }));
+const loadCommandExpressionMix = () => {
+    try {
+        const saved = JSON.parse(localStorage.getItem(COMMAND_EXPRESSION_MIX_KEY));
+        return {
+            policyEnabled: saved?.policyEnabled === true,
+            naturalLanguageEnabled: saved?.naturalLanguageEnabled === true,
+        };
+    } catch {
+        return DEFAULT_COMMAND_EXPRESSION_MIX;
+    }
+};
 
 // 백엔드 SimulationRunStatus → 화면 표시 문구
 const STATUS_LABEL = {
     CREATED: "대기",
     RUNNING: "실행",
     PAUSED: "일시정지",
+    QUIESCING: "안전 노드 정지 중",
     REPLANNING: "재계획",
+    PENDING_ACTIVATION: "새 계획 전환 대기",
     COMPLETED: "완료",
     STOPPED: "중지",
     FAILED: "실패",
@@ -64,27 +59,52 @@ const STATUS_LABEL = {
 
 // 백엔드 RobotStateResponse → 화면 로봇 객체
 //
-// 이동 중이면 백엔드가 다음 노드(nextNodeCode)와 도착까지 남은 시간을 함께 보낸다.
-// 로봇을 "도착 지점"에 배치하고 그 시간만큼 CSS transition 을 주면
-// 브라우저가 직전 위치에서 목적지까지 부드럽게 이어서 그려준다.
+// BE가 보내는 현재 MOVE 구간과 절대 진행률을 화면 모델로 옮긴다.
+// FE는 시간을 누적하지 않고 매 상태 메시지에서 이 값을 다시 기준점으로 삼는다.
 const toRobotView = (state) => {
     const isMoving = Boolean(state.nextNodeCode);
+    const hasAuthoritativeMovement = Boolean(state.movementStepId)
+        && state.movementProgress !== null
+        && state.movementProgress !== undefined
+        && Number.isFinite(Number(state.movementProgress));
+    const displayNodeCode = hasAuthoritativeMovement
+        ? state.currentNodeCode
+        : isMoving
+            ? state.nextNodeCode
+            : state.currentNodeCode;
 
     return {
         robot_id: state.robotId,
         robot_code: `R${state.robotId}`,
-
-        // 이동 중이면 목적지 노드, 정지 중이면 현재 노드
-        node_id: isMoving ? state.nextNodeCode : state.currentNodeCode,
+        node_id: displayNodeCode,
+        from_node_code: hasAuthoritativeMovement
+            ? state.currentNodeCode
+            : displayNodeCode,
+        to_node_code: hasAuthoritativeMovement
+            ? state.nextNodeCode
+            : displayNodeCode,
+        movement_step_id: hasAuthoritativeMovement
+            ? state.movementStepId
+            : null,
+        movement_start_at_ms: state.movementStartAtMillis,
+        movement_end_at_ms: state.movementEndAtMillis,
+        simulation_time_ms: state.simulationTimeMillis,
+        movement_progress: hasAuthoritativeMovement
+            ? Number(state.movementProgress)
+            : null,
+        arrival_in_seconds: hasAuthoritativeMovement
+            ? Number(state.arrivalInSeconds ?? 0)
+            : null,
+        movement_snapshot_received_at: performance.now(),
 
         battery: state.batteryLevel,
         status: state.status,
-
-        // 보간 시간(ms). 정지 상태면 즉시 반영
-        transition_ms:
-            isMoving && state.arrivalInSeconds
-                ? Math.max(0, state.arrivalInSeconds * 1000)
-                : 0,
+        activity: state.activity ?? state.status,
+        current_task_id: state.currentTaskId,
+        task_type: state.taskType,
+        service_kind: state.serviceKind,
+        service_progress: state.serviceProgress,
+        carrying_load: Boolean(state.carryingLoad),
     };
 };
 
@@ -106,14 +126,21 @@ function Simulation() {
         setSelectedWarehouseIdState(warehouseId);
     };
 
-    // 시나리오 설정 (백엔드 조회 실패 시 목업 데이터로 폴백)
-    const [scenarioSettings, setScenarioSettings] = useState(scenariosData);
-    const [selectedScenario, setSelectedScenario] = useState(
-        scenariosData[0]?.scenario_id ?? ""
-    );
     const [simulationSpeed, setSimulationSpeed] = useState(1);
     const [simulationStatus, setSimulationStatus] = useState("대기");
     const [simulationTime, setSimulationTime] = useState(0);
+    const [commandExpressionMix, setCommandExpressionMixState] = useState(
+        loadCommandExpressionMix
+    );
+
+    const setCommandExpressionMix = (mix) => {
+        const normalized = {
+            policyEnabled: mix?.policyEnabled === true,
+            naturalLanguageEnabled: mix?.naturalLanguageEnabled === true,
+        };
+        localStorage.setItem(COMMAND_EXPRESSION_MIX_KEY, JSON.stringify(normalized));
+        setCommandExpressionMixState(normalized);
+    };
 
     // 실행 중인 시뮬레이션 ID
     // 새로고침해도 같은 실행을 이어서 쓰도록 localStorage 에 보관한다.
@@ -132,12 +159,16 @@ function Simulation() {
         setSimulationRunIdState(runId);
     };
 
-    // 작업 / 이벤트 / 품목 목록
+    // 작업 / 이벤트 목록
     // 목업이 아니라 백엔드에서 받은 것만 보여준다.
     // 시작하면 그 실행의 작업으로 채워지고, 이후 WebSocket 으로 갱신된다.
     const [taskList, setTaskList] = useState([]);
     const [eventList, setEventList] = useState([]);
-    const [products, setProducts] = useState(productsData);
+    const [generatedCommands, setGeneratedCommands] = useState([]);
+
+    useEffect(() => {
+        setGeneratedCommands([]);
+    }, [simulationRunId, selectedWarehouseId]);
 
     /* =========================================================
        백엔드 초기 데이터 로딩
@@ -171,59 +202,6 @@ function Simulation() {
         loadWarehouses();
     }, []);
 
-    // 창고를 바꾸면 그 창고의 시나리오를 다시 불러온다
-    useEffect(() => {
-        const loadInitialData = async () => {
-            try {
-                const scenarioList = await scenarioApi.getAll(
-                    selectedWarehouseId
-                );
-
-                if (Array.isArray(scenarioList) && scenarioList.length > 0) {
-                    // 백엔드 응답을 화면에서 쓰던 형태로 변환
-                    const mapped = scenarioList.map((scenario) => ({
-                        scenario_id: scenario.id,
-                        scenario_name: scenario.scenarioName,
-                        robot_count: scenario.robotCount,
-                        simulation_speed: scenario.simulationSpeed,
-                        initial_battery: scenario.initialBattery,
-                        charging_threshold: scenario.chargingThreshold,
-                        auto_replan: scenario.autoReplan,
-                        obstacle_enabled: scenario.obstacleEnabled,
-                    }));
-
-                    setScenarioSettings(mapped);
-                    setSelectedScenario(mapped[0].scenario_id);
-                }
-            } catch (error) {
-                console.warn(
-                    "시나리오 조회 실패 - 목업 데이터를 사용합니다.",
-                    error.message
-                );
-            }
-
-            try {
-                const productList = await productApi.getAll();
-
-                if (Array.isArray(productList) && productList.length > 0) {
-                    setProducts(
-                        productList.map((product) => ({
-                            product_code: product.productCode,
-                            product_name: product.productName,
-                        }))
-                    );
-                }
-            } catch (error) {
-                console.warn(
-                    "품목 조회 실패 - 목업 데이터를 사용합니다.",
-                    error.message
-                );
-            }
-        };
-
-        loadInitialData();
-    }, [selectedWarehouseId]);
-
     // 시작 전에도 창고에 등록된 로봇을 지도에 보여준다.
     // 실행 중이면 실시간 상태가 우선이므로 건드리지 않는다.
     useEffect(() => {
@@ -235,19 +213,6 @@ function Simulation() {
         // 창고가 바뀔 때만 다시 배치한다.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedWarehouseId]);
-
-    // 시뮬레이션 타이머
-    useEffect(() => {
-        if (simulationStatus !== "실행" && simulationStatus !== "재계획") {
-            return;
-        }
-
-        const timer = setInterval(() => {
-            setSimulationTime((time) => time + simulationSpeed);
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [simulationStatus, simulationSpeed]);
 
     const formatSimulationTime = (totalSeconds) => {
         const hours = Math.floor(totalSeconds / 3600);
@@ -320,14 +285,13 @@ function Simulation() {
                     node_id: nodeCodeById.get(robot.nodeId),
                     battery: robot.battery,
                     status: "IDLE",
-                    transition_ms: 0,
                 }))
                 .filter((robot) => robot.node_id);
 
-            setRobots(placed.length > 0 ? placed : restingRobots());
+            setRobots(placed);
         } catch (error) {
             console.warn("로봇 초기 배치 조회 실패", error.message);
-            setRobots(restingRobots());
+            setRobots([]);
         }
     };
 
@@ -381,14 +345,20 @@ function Simulation() {
         try {
             const snapshot = await simulationRunApi.getRobotStates(runId);
 
+            // BE 재시작 시 메모리 기반 AI 시간표를 복구할 수 없으므로 백엔드는
+            // 남아 있던 실행을 STOPPED로 정리한다. 브라우저 localStorage에 그 ID가
+            // 남아 있어도 중간 Redis 위치를 기본 위치처럼 다시 그리지 않는다.
+            if (snapshot?.status === "STOPPED") {
+                setSimulationRunId(null);
+                setSimulationStatus("대기");
+                setSimulationTime(0);
+                setTaskList([]);
+                await loadRestingRobots(selectedWarehouseId);
+                return;
+            }
+
             if (snapshot?.robots?.length) {
-                setRobots(
-                    snapshot.robots.map((state) => ({
-                        ...toRobotView(state),
-                        // 복구 시점에는 보간하지 않고 즉시 현재 위치에 놓는다
-                        transition_ms: 0,
-                    }))
-                );
+                setRobots(snapshot.robots.map(toRobotView));
             }
 
             if (snapshot?.status) {
@@ -416,44 +386,13 @@ function Simulation() {
     }, [simulationRunId]);
 
     /**
-     * 화면 설정값을 백엔드 요청 형태로 변환한다. (SimulationRunCreateRequest)
-     * 이 값으로 백엔드가 입고/출고 작업을 자동 생성한다.
+     * 실행 컨테이너만 만든다. 입출고 명령은 시작 후 0분·5분·10분에
+     * 백엔드 command cycle이 재고를 읽어 자동 생성한다.
      */
     const buildCreatePayload = () => {
-        // 시나리오 ID는 숫자여야 한다.
-        // 백엔드 조회 실패로 목업("S1")이 선택된 경우 null로 보낸다.
-        const scenarioIdNumber = Number(selectedScenario);
-        const scenarioId = Number.isFinite(scenarioIdNumber)
-            ? scenarioIdNumber
-            : null;
-
-        if (scenarioId === null) {
-            console.warn(
-                "시나리오가 백엔드에서 조회되지 않아 프리셋 없이 실행합니다."
-            );
-        }
-
         return {
             warehouseId: selectedWarehouseId,
-            scenarioId: scenarioId,
             simulationSpeed: Number(simulationSpeed),
-            inbound: {
-                inboundCount: inboundSettings.inbound_count,
-                totalQuantity: inboundSettings.total_quantity,
-                arrivalPattern: inboundSettings.arrival_pattern,
-                products: inboundSettings.products.map((product) => ({
-                    productCode: product.product_code,
-                    ratio: product.ratio,
-                })),
-            },
-            outbound: {
-                orderCount: outboundSettings.order_count,
-                totalQuantity: outboundSettings.total_quantity,
-                arrivalPattern: outboundSettings.arrival_pattern,
-                processingDeadlineMinutes:
-                    outboundSettings.processing_deadline_minutes,
-                allowPartialShipment: outboundSettings.allow_partial_shipment,
-            },
         };
     };
 
@@ -461,17 +400,7 @@ function Simulation() {
      * 설정값이 유효한지 검사한다.
      */
     const validateSettings = () => {
-        if (!selectedScenario) {
-            alert("시나리오를 선택해주세요.");
-            return false;
-        }
-
-        if (inboundRatioTotal !== 100) {
-            alert("입고 품목 구성 비율의 합계가 100%가 되어야 합니다.");
-            return false;
-        }
-
-        return true;
+        return Boolean(selectedWarehouseId);
     };
 
     /**
@@ -574,8 +503,14 @@ function Simulation() {
                 return "ALREADY_RUNNING";
 
             case "PAUSED":
-            case "REPLANNING":
                 await handleResume();
+                return "ALREADY_RUNNING";
+
+            case "QUIESCING":
+            case "REPLANNING":
+            case "PENDING_ACTIVATION":
+                setSimulationStatus(STATUS_LABEL[current.status]);
+                isPausedRef.current = false;
                 return "ALREADY_RUNNING";
 
             default:
@@ -621,6 +556,11 @@ function Simulation() {
                 runId = created.simulationRunId;
             }
 
+            // 시작 직후 실행되는 0분 명령부터 화면에서 고른 표현 방식을 사용한다.
+            await fulfillmentCommandApi.configureCycle(
+                runId,
+                commandExpressionMix
+            );
             const started = await simulationRunApi.start(runId);
 
             setSimulationRunId(runId);
@@ -791,7 +731,7 @@ function Simulation() {
        로봇 / 실시간 구독
     ========================================================= */
 
-    const [robots, setRobots] = useState(() => restingRobots());
+    const [robots, setRobots] = useState([]);
     const isPausedRef = useRef(false);
 
     // 로봇 상태 1건 수신 → 해당 로봇만 갱신
@@ -866,7 +806,7 @@ function Simulation() {
                 setSimulationStatus(STATUS_LABEL[run.status] ?? run.status);
 
                 // 완료되어도 실행 ID는 유지한다.
-                // 초기화 후 다시 시작하면 같은 시나리오를 처음부터 재생할 수 있다.
+                // 초기화 후 다시 시작하면 0분 자동 명령 배치부터 새로 시작한다.
                 // (STOPPED 는 사용자가 명시적으로 끝낸 것이므로 새 실행을 만든다)
                 if (run.status === "STOPPED") {
                     setSimulationRunId(null);
@@ -879,51 +819,6 @@ function Simulation() {
         subscriptions,
         Boolean(simulationRunId)
     );
-
-    /* =========================================================
-       입출고 설정 패널
-    ========================================================= */
-
-    const [inboundSettings, setInboundSettings] = useState(inbound);
-    const [outboundSettings, setOutboundSettings] = useState(outbound);
-
-    // 입고 품목 비율 합계
-    const inboundRatioTotal = inboundSettings.products.reduce(
-        (total, product) => total + Number(product.ratio),
-        0
-    );
-
-    // 자연어 명령 처리
-    const [naturalCommand, setNaturalCommand] = useState("");
-
-    const handleNaturalCommand = async () => {
-        const command = naturalCommand.trim();
-
-        if (!command) {
-            alert("명령을 입력해주세요.");
-            return;
-        }
-
-        if (!simulationRunId) {
-            alert("먼저 시뮬레이션을 실행해주세요.");
-            return;
-        }
-
-        try {
-            console.log("자연어 명령:", { command: command });
-
-            const data = await api.post(
-                `/simulation-runs/${simulationRunId}/commands`,
-                { command: command }
-            );
-
-            console.log("자연어 명령 응답:", data);
-            setNaturalCommand("");
-        } catch (error) {
-            console.error("자연어 명령 처리 실패:", error);
-            alert(error.message ?? "명령을 처리하지 못했습니다.");
-        }
-    };
 
     /* =========================================================
        화면
@@ -1075,21 +970,23 @@ function Simulation() {
                 <WarehouseSVG
                     warehouseId={selectedWarehouseId}
                     robots={robots}
-                    simulationSpeed={simulationSpeed}
+                    tasks={taskList}
+                    generatedCommands={generatedCommands}
+                    isRunning={
+                        simulationStatus === "실행"
+                        || simulationStatus === "재계획"
+                    }
                 />
             </main>
 
             {/* 입출고 설정 / 자연어 명령 패널 */}
             <SimulationPanel
-                inboundSettings={inboundSettings}
-                setInboundSettings={setInboundSettings}
-                outboundSettings={outboundSettings}
-                setOutboundSettings={setOutboundSettings}
-                products={products}
-                inboundRatioTotal={inboundRatioTotal}
-                naturalCommand={naturalCommand}
-                setNaturalCommand={setNaturalCommand}
-                handleNaturalCommand={handleNaturalCommand}
+                simulationRunId={simulationRunId}
+                onSimulatedTimeChange={setSimulationTime}
+                tasks={taskList}
+                commandExpressionMix={commandExpressionMix}
+                onCommandExpressionMixChange={setCommandExpressionMix}
+                onGeneratedCommandsChange={setGeneratedCommands}
             />
 
             {/* 작업 목록 (WebSocket 실시간 갱신) */}
@@ -1098,7 +995,10 @@ function Simulation() {
             {/* 이벤트 목록 (WebSocket 실시간 갱신) */}
             <SimulationEvent events={eventList} />
 
-            
+            {/* 하단 footer */}
+            <footer className="footer">
+                Footer
+            </footer>
         </div>
     );
 }
