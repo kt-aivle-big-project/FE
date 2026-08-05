@@ -60,6 +60,12 @@ function Sidebar() {
                         </NavLink>
                     </li>
 
+                    <li>
+                        <NavLink to="/board">
+                            게시판
+                        </NavLink>
+                    </li>
+
                 </ul>
             </nav>
 
