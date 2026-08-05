@@ -1,3 +1,6 @@
+// ============================================================
+// 1. IMPORTS
+// ============================================================
 import { useEffect, useRef, useState } from "react";
 import "../styles/WarehouseSVG.css";
 import { productApi, warehouseApi, warehouseItemApi } from "../api/client";
@@ -9,10 +12,45 @@ import robotPutaway from "../assets/robots/robot_putaway.png";
 import robotRelocation from "../assets/robots/robot_relocation.png";
 import robotReplenish from "../assets/robots/robot_replenish.png";
 
+// ============================================================
+// 2. 화면·시뮬레이션 공통 상수
+// ============================================================
+const SVG_WIDTH = 1200;
+const SVG_HEIGHT = 600;
+const PADDING_X = 40;
+const PADDING_Y = 30;
+const INVENTORY_POLL_INTERVAL_MS = 1500;
+const ROBOT_MARKER_SIZE = 46;
+const OUTBOUND_HANDOFF_RATIO = 0.25;
+const RACK_LEVELS = [1, 2, 3];
+
+const TERMINAL_TASK_STATUSES = new Set(["DONE", "FAILED", "CANCELLED"]);
+const OUTBOUND_SERVICE_EDGE_TYPES = new Set([
+    "outbound_service",
+    "station_service",
+]);
+
+// 로봇 동작·상태별 이미지 매핑
+const ROBOT_IMAGES = {
+    IDLE: robotHero,
+    ASSIGNED: robotHero,
+    MOVING: robotHero,
+    WORKING: robotHero,
+    CHARGING: robotCharging,
+    PICKING: robotPicking,
+    PUTAWAY: robotPutaway,
+    RELOCATION: robotRelocation,
+    REPLENISH: robotReplenish,
+};
+
+// ============================================================
+// 3. 공통 순수 함수
+// ============================================================
+
 /**
  * 그래프에 시각화용 rack_storage 노드가 없는 경우 rack_access 노드를 이용해 보완한다.
- * 백엔드 그래프는 경로 탐색에 필요한 접근 노드만 제공할 수 있지만, 화면에서는 선반 자체를
- * 그려야 하므로 동일한 rack_id를 가진 접근 노드들의 중심 좌표에 가상 선반 노드를 만든다.
+ * 백엔드 그래프는 경로 탐색에 필요한 접근 노드만 제공할 수 있지만, 
+ * 화면에서는 선반 자체를 그려야 하므로 동일한 rack_id를 가진 접근 노드들의 중심 좌표에 가상 선반 노드를 만든다.
  * 이미 같은 ID의 rack_storage 노드가 존재하면 중복 생성하지 않는다.
  */
 const withRackStorageNodes = (graph) => {
@@ -63,8 +101,77 @@ const withRackStorageNodes = (graph) => {
     };
 };
 
-// 진행률이나 비율을 0~1 범위로 제한하는 공통 함수이다.
+// 진행률이나 비율을 0~1 범위로 제한하는 공통 함수
+// 숫자로 변환할 수 없는 값은 0으로 처리해 좌표 계산에서 NaN이 퍼지는 것을 막는다.
 const clamp01 = (value) => Math.max(0, Math.min(1, Number(value) || 0));
+
+// task/robot ID를 이용해 여러 후보 중 하나를 고르는 로직이 입고·출고에서 반복되므로
+// 동일한 선택 규칙을 한 함수로 모아 렌더링마다 선택 결과가 바뀌지 않게 한다.
+const selectByStableKey = (items, key = 0) => {
+    if (!Array.isArray(items) || items.length === 0) return null;
+
+    const numericKey = Number(key ?? 0);
+    const safeKey = Number.isFinite(numericKey) ? numericKey : 0;
+    return items[Math.abs(safeKey) % items.length];
+};
+
+// 좌표 보간식이 로봇 이동과 BOX 인계 처리에 반복되어 의미를 드러내는 함수로 정리한다.
+const interpolate = (start, end, progress) =>
+    start + (end - start) * progress;
+
+// 주어진 엣지에서 현재 nodeId의 반대편 노드 ID를 반환한다.
+// 해당 엣지에 nodeId가 포함되지 않으면 null을 반환한다.
+const peerNodeId = (edge, nodeId) => (
+    edge.source === nodeId
+        ? edge.target
+        : edge.target === nodeId
+            ? edge.source
+            : null
+);
+
+// 출고 설비 내부 연결에 해당하는 서비스 엣지인지 판별한다.
+const isOutboundServiceEdge = (edge) => (
+    edge.service_only === true
+    || OUTBOUND_SERVICE_EDGE_TYPES.has(String(edge.type ?? "").toLowerCase())
+);
+
+// 여러 후보 중 목표 y 좌표와 가장 가까운 노드를 선택한다.
+const closestNodeByY = (nodes, targetY) => nodes.reduce(
+    (best, node) => (
+        !best || Math.abs(Number(node.y) - Number(targetY))
+            < Math.abs(Number(best.y) - Number(targetY))
+            ? node
+            : best
+    ),
+    null,
+);
+
+// 원본 그래프 좌표를 SVG 좌표로 바꾸는 X/Y 함수의 중복을 제거한다.
+const createCoordinateConverter = (values, canvasSize, padding) => {
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const availableSize = canvasSize - padding * 2;
+
+    return (value) => (
+        padding
+        + ((value - minValue) / (maxValue - minValue)) * availableSize
+    );
+};
+
+// 연결 노드를 찾을 때마다 전체 엣지를 순회하지 않도록 노드별 엣지 역인덱스를 생성한다.
+const createEdgesByNodeMap = (edges) => {
+    const edgesByNode = new Map();
+
+    edges.forEach((edge) => {
+        [edge.source, edge.target].forEach((nodeId) => {
+            const connectedEdges = edgesByNode.get(nodeId) ?? [];
+            connectedEdges.push(edge);
+            edgesByNode.set(nodeId, connectedEdges);
+        });
+    });
+
+    return edgesByNode;
+};
 
 /**
  * 상품 ID마다 일관된 BOX 색상을 만든다.
@@ -84,8 +191,8 @@ const productColor = (itemId) => {
 
 /**
  * 특정 시각(now)에 로봇이 화면상 어느 좌표에 있어야 하는지 계산한다.
- * 백엔드가 내려준 movement_progress를 기준값으로 사용하고, 다음 스냅샷이 오기 전 짧은 구간만
- * requestAnimationFrame 시각을 이용해 예측한다. 따라서 프론트의 누적 오차가 커지지 않는다.
+ * 백엔드가 내려준 movement_progress를 기준값으로 사용하고, 
+ * 다음 스냅샷이 오기 전 짧은 구간만 requestAnimationFrame 시각을 이용해 예측한다. 
  */
 const robotPositionAt = (
     robot,
@@ -107,8 +214,8 @@ const robotPositionAt = (
     const remainingMillis = Number(robot.arrival_in_seconds) * 1000;
     const receivedAt = Number(robot.movement_snapshot_received_at);
 
-    // BE progress is authoritative. requestAnimationFrame only predicts the
-    // small interval until the next BE snapshot and never accumulates time.
+    // 백엔드에서 전달받은 진행률을 기준값으로 사용한다.
+    // 다음 백엔드 스냅샷을 받기 전까지의 짧은 구간만 예측하며, 프론트에서 경과 시간을 누적해 진행률을 계속 계산하지 않는다.
     if (
         isRunning
         && baseProgress < 1
@@ -125,13 +232,97 @@ const robotPositionAt = (
 
     // 출발점과 도착점 사이를 progress 비율만큼 선형 보간하여 최종 SVG 좌표를 만든다.
     return {
-        x: fromX + (toX - fromX) * progress,
-        y: fromY + (toY - fromY) * progress,
+        x: interpolate(fromX, toX, progress),
+        y: interpolate(fromY, toY, progress),
     };
 };
 
+// ============================================================
+// 4. 백엔드 레이아웃 응답 변환
+// ============================================================
+// 백엔드 레이아웃 응답을 화면에서 사용하는 그래프 구조로 변환한다.
+const convertWarehouseLayout = (data) => {
+    // 엣지는 DB의 숫자 노드 ID를 참조하므로, 화면용 nodeCode로 바꾸기 위한 맵을 만든다.
+    const nodeCodeMap = new Map(
+        data.nodes
+            .filter((node) => node.nodeCode)
+            .map((node) => [node.id, node.nodeCode]),
+    );
+
+    // 유효한 코드와 타입을 가진 노드만 렌더링 대상으로 변환한다.
+    // routeAttributes를 먼저 펼친 뒤 공통 필드를 덮어써 백엔드 확장 속성도 보존한다.
+    const convertedNodes = data.nodes
+        .filter((node) => node.nodeCode && node.nodeType)
+        .map((node) => {
+            const routeMatch = node.nodeCode.match(/^R(\d+)_(\d+)$/);
+            const chargingMatch = node.nodeCode.match(/^C(\d+)$/);
+
+            return {
+                ...(node.routeAttributes ?? {}),
+                databaseId: node.id,
+                id: node.nodeCode,
+                type: node.nodeType.toLowerCase(),
+                x: node.x,
+                y: node.y,
+                rack_id:
+                    node.nodeType === "RACK_ACCESS"
+                        ? node.resourceCode
+                        : undefined,
+                handoff_id:
+                    node.nodeType === "INBOUND_HANDOFF_ACCESS"
+                        ? node.resourceCode
+                        : undefined,
+                station_id:
+                    node.nodeType === "OUTBOUND_STATION_ACCESS"
+                        ? node.resourceCode
+                        : undefined,
+                side: node.side,
+                service_only: node.serviceOnly,
+                transit_allowed: node.transitAllowed,
+                holding_allowed: node.holdingAllowed,
+                node_capacity: node.nodeCapacity,
+                row: routeMatch ? Number(routeMatch[1]) : undefined,
+                col: routeMatch ? Number(routeMatch[2]) : undefined,
+                label:
+                    node.nodeType === "INBOUND"
+                        ? node.nodeCode.replace("I_", "")
+                        : node.nodeType === "OUTBOUND"
+                            ? node.nodeCode.replace("O_", "")
+                            : undefined,
+                index: chargingMatch ? Number(chargingMatch[1]) : undefined,
+            };
+        });
+
+    // 엣지의 양 끝 DB ID를 nodeCode로 교체하고 거리·속도·통행 가능 속성을 보존한다.
+    const convertedEdges = data.edges
+        .map((edge) => ({
+            ...(edge.routeAttributes ?? {}),
+            id: edge.edgeCode ?? String(edge.id),
+            source: nodeCodeMap.get(edge.fromNodeId),
+            target: nodeCodeMap.get(edge.toNodeId),
+            type: edge.edgeType ?? "lane",
+            distance_m: edge.distance,
+            speed_limit_mps: edge.speedLimitMps,
+            service_only: edge.serviceOnly,
+            mobile_robot_traversable: edge.mobileRobotTraversable,
+        }))
+        .filter((edge) => edge.source && edge.target);
+
+    return {
+        graph: withRackStorageNodes({
+            nodes: convertedNodes,
+            edges: convertedEdges,
+        }),
+        convertedNodeCount: convertedNodes.length,
+        convertedEdgeCount: convertedEdges.length,
+    };
+};
+
+// ============================================================
+// 5. 로봇 마커 하위 컴포넌트
+// ============================================================
 /**
- * 로봇 한 대를 SVG 그룹으로 렌더링하고 위치를 애니메이션하는 하위 컴포넌트이다.
+ * 로봇 한 대를 SVG 그룹으로 렌더링하고 위치를 애니메이션한다.
  * 부모가 계산한 출발·도착 SVG 좌표와 백엔드 이동 스냅샷을 받아 DOM transform만 갱신한다.
  * carrying_load가 참이면 로봇 우측 상단에 운반 중인 BOX도 함께 표시한다.
  */
@@ -208,9 +399,6 @@ function AnimatedRobotMarker({
         performance.now(),
         isRunning,
     );
-    // 로봇 ID 텍스트의 세로 위치를 이미지 크기에 맞춰 계산하기 위한 기준값이다.
-    const robotSize = 46;
-
     // 각 로봇은 하나의 SVG 그룹으로 묶여 transform 이동이 모든 자식 요소에 동일하게 적용된다.
     return (
         <g
@@ -246,7 +434,7 @@ function AnimatedRobotMarker({
             {/* 로봇 코드와 상세 툴팁을 제공해 지도에서 개별 로봇 상태를 식별할 수 있게 한다. */}
             <text
                 x="3"
-                y={robotSize / 2 + 10}
+                y={ROBOT_MARKER_SIZE / 2 + 10}
                 textAnchor="middle"
                 className="warehouse-robot-id"
             >
@@ -259,8 +447,10 @@ function AnimatedRobotMarker({
     );
 }
 
+// ============================================================
+// 6. 창고 메인 컴포넌트
+// ============================================================
 /**
- * 창고 전체를 렌더링하는 메인 컴포넌트이다.
  * warehouseId가 바뀌면 레이아웃과 재고를 다시 조회하고, robots/tasks/commands를 조합하여
  * 실시간 로봇 이동, 시설 인계, 입고 대기열, 선반 점유 상태를 한 SVG 안에 표현한다.
  *
@@ -278,15 +468,12 @@ function WarehouseSVG({
     generatedCommands = [],
     isRunning = false,
 }) {
-    // 지도 위 노드 ID 텍스트를 사용자가 켜고 끌 수 있도록 관리하는 UI 상태이다.
-    // 노드 표시 ON / OFF
+    // ============================================================
+    // 6-1. 상태
+    // ============================================================
     const [showNodeLabels, setShowNodeLabels] = useState(false);
 
-    // 처음에는 고른 창고의 JSON 지도를 보여주고,
-    // API 조회 성공 후 백엔드 데이터로 교체
-    // graphData는 백엔드 응답을 화면 렌더링 구조로 변환한 최종 그래프이다.
-    // loading/error/reloadKey는 조회 상태와 수동 재시도를 관리한다.
-    // warehouseItems와 products는 선반 재고 및 BOX 툴팁을 구성할 때 함께 사용한다.
+    // 백엔드에서 조회한 창고 레이아웃을 화면용 그래프 데이터로 저장한다.
     const [graphData, setGraphData] = useState(null);
     const [layoutLoading, setLayoutLoading] = useState(true);
     const [layoutError, setLayoutError] = useState(null);
@@ -294,6 +481,20 @@ function WarehouseSVG({
     const [warehouseItems, setWarehouseItems] = useState([]);
     const [products, setProducts] = useState([]);
 
+    // ============================================================
+    // 6-2. UI 이벤트 핸들러
+    // ============================================================
+    const handleToggleNodeLabels = () => {
+        setShowNodeLabels((previousValue) => !previousValue);
+    };
+
+    const handleRetryLayout = () => {
+        setLayoutReloadKey((previousValue) => previousValue + 1);
+    };
+
+    // ============================================================
+    // 6-3. 서버 데이터 조회 effect
+    // ============================================================
     // 창고 ID가 바뀌거나 사용자가 다시 시도 버튼을 누르면 레이아웃을 다시 조회한다.
     // cancelled 플래그는 이전 요청이 늦게 완료되어 새 창고 상태를 덮어쓰는 것을 방지한다.
     useEffect(() => {
@@ -301,115 +502,28 @@ function WarehouseSVG({
         setGraphData(null);
         setLayoutError(null);
         setLayoutLoading(true);
-        // 창고를 바꾸면 API 응답이 오기 전까지 그 창고의 폴백 지도를 보여준다
-
         // 백엔드 레이아웃 응답을 받아 프론트에서 사용하는 node/edge 필드명으로 변환한다.
         const fetchWarehouseLayout = async () => {
             try {
                 const data = await warehouseApi.getLayout(warehouseId);
                 if (cancelled) return;
 
-                // 엣지는 DB의 숫자 노드 ID를 참조하므로, 화면용 nodeCode로 바꾸기 위한 맵을 만든다.
-                const nodeCodeMap = new Map(
-                    data.nodes
-                        .filter((node) => node.nodeCode)
-                        .map((node) => [node.id, node.nodeCode])
-                );
+                const {
+                    graph,
+                    convertedNodeCount,
+                    convertedEdgeCount,
+                } = convertWarehouseLayout(data);
 
-                // 유효한 코드와 타입을 가진 노드만 렌더링 대상으로 변환한다.
-                // routeAttributes를 먼저 펼친 뒤 공통 필드를 덮어써 백엔드 확장 속성도 보존한다.
-                const convertedNodes = data.nodes
-                    .filter((node) => node.nodeCode && node.nodeType)
-                    .map((node) => {
-                        // R행_열 형식은 통로 라벨 계산에, C번호 형식은 충전소 번호 표시에 사용한다.
-                        const routeMatch = node.nodeCode.match(/^R(\d+)_(\d+)$/);
-                        const chargingMatch = node.nodeCode.match(/^C(\d+)$/);
-
-                        // DB ID는 재고의 nodeId와 연결하기 위해 databaseId로 별도 보존한다.
-                        // id는 SVG와 엣지 연결에서 사용하는 사람이 읽을 수 있는 nodeCode로 통일한다.
-                        return {
-                            ...(node.routeAttributes ?? {}),
-                            databaseId: node.id,
-                            id: node.nodeCode,
-                            type: node.nodeType.toLowerCase(),
-                            x: node.x,
-                            y: node.y,
-                            // 노드 종류별 resourceCode를 의미에 맞는 필드명으로 분리한다.
-                            // 해당 타입이 아닌 경우 undefined로 두어 잘못된 시설 연결을 막는다.
-                            rack_id:
-                                node.nodeType === "RACK_ACCESS"
-                                    ? node.resourceCode
-                                    : undefined,
-                            handoff_id:
-                                node.nodeType === "INBOUND_HANDOFF_ACCESS"
-                                    ? node.resourceCode
-                                    : undefined,
-                            station_id:
-                                node.nodeType === "OUTBOUND_STATION_ACCESS"
-                                    ? node.resourceCode
-                                    : undefined,
-                            // 경로 정책과 수용 가능 여부 등 백엔드의 운영 속성을 화면 데이터에 유지한다.
-                            side: node.side,
-                            service_only: node.serviceOnly,
-                            transit_allowed: node.transitAllowed,
-                            holding_allowed: node.holdingAllowed,
-                            node_capacity: node.nodeCapacity,
-
-                            // route 노드 코드에서 추출한 행·열 값은 통로 번호와 정렬 기준으로 사용한다.
-                            row: routeMatch
-                                ? Number(routeMatch[1])
-                                : undefined,
-
-                            col: routeMatch
-                                ? Number(routeMatch[2])
-                                : undefined,
-
-                            // 입고/출고 시설의 화면 라벨은 I_, O_ 접두사를 제거해 간결하게 표시한다.
-                            label:
-                                node.nodeType === "INBOUND"
-                                    ? node.nodeCode.replace("I_", "")
-                                    : node.nodeType === "OUTBOUND"
-                                        ? node.nodeCode.replace("O_", "")
-                                        : undefined,
-
-                            // 충전소 노드 코드의 숫자 부분만 추출해 슬롯 내부 라벨로 사용한다.
-                            index: chargingMatch
-                                ? Number(chargingMatch[1])
-                                : undefined,
-                        };
-                    });
-
-                // 엣지의 양 끝 DB ID를 nodeCode로 교체하고 거리·속도·통행 가능 속성을 보존한다.
-                // 양 끝 노드를 찾지 못한 엣지는 좌표를 계산할 수 없으므로 마지막에 제외한다.
-                const convertedEdges = data.edges
-                    .map((edge) => ({
-                        ...(edge.routeAttributes ?? {}),
-                        id: edge.edgeCode ?? String(edge.id),
-                        source: nodeCodeMap.get(edge.fromNodeId),
-                        target: nodeCodeMap.get(edge.toNodeId),
-                        type: edge.edgeType ?? "lane",
-                        distance_m: edge.distance,
-                        speed_limit_mps: edge.speedLimitMps,
-                        service_only: edge.serviceOnly,
-                        mobile_robot_traversable:
-                            edge.mobileRobotTraversable,
-                    }))
-                    .filter((edge) => edge.source && edge.target);
-
-                // 접근 노드만 있는 랙을 시각화용 선반 노드로 보완한 뒤 최종 그래프 상태에 저장한다.
-                setGraphData(withRackStorageNodes({
-                    nodes: convertedNodes,
-                    edges: convertedEdges,
-                }));
+                setGraphData(graph);
                 setLayoutLoading(false);
 
                 // 변환된 노드·엣지 개수를 기록해 백엔드 응답 누락이나 필터링 결과를 확인하기 쉽게 한다.
                 console.log("변환된 창고 지도:", {
                     warehouseId,
-                    nodes: convertedNodes.length,
-                    edges: convertedEdges.length,
+                    nodes: convertedNodeCount,
+                    edges: convertedEdgeCount,
                 });
-            // 조회 실패 시 이전 지도를 남기지 않고 오류 상태로 전환하여 잘못된 창고가 보이지 않게 한다.
+                // 조회 실패 시 이전 지도를 남기지 않고 오류 상태로 전환하여 잘못된 창고가 보이지 않게 한다.
             } catch (error) {
                 if (cancelled) return;
                 console.error("창고 레이아웃 조회 오류:", error);
@@ -477,7 +591,7 @@ function WarehouseSVG({
         setWarehouseItems([]);
         refreshInventory();
         if (isRunning) {
-            timerId = window.setInterval(refreshInventory, 1500);
+            timerId = window.setInterval(refreshInventory, INVENTORY_POLL_INTERVAL_MS);
         }
         // 창고나 실행 상태가 바뀌면 이전 요청 결과를 무시하고 기존 폴링 타이머를 정리한다.
         return () => {
@@ -486,6 +600,9 @@ function WarehouseSVG({
         };
     }, [warehouseId, isRunning]);
 
+    // ============================================================
+    // 6-4. 조회 상태별 화면
+    // ============================================================
     // 레이아웃이 준비되기 전에는 좌표 계산을 진행할 수 없으므로 로딩 화면을 먼저 반환한다.
     if (layoutLoading) {
         return (
@@ -502,92 +619,35 @@ function WarehouseSVG({
             <div className="warehouse-svg-wrapper warehouse-layout-state warehouse-layout-error">
                 <strong>창고 지도를 불러오지 못했습니다.</strong>
                 <span>{layoutError}</span>
-                <button type="button" onClick={() => setLayoutReloadKey((value) => value + 1)}>
+                <button type="button" onClick={handleRetryLayout}>
                     다시 시도
                 </button>
             </div>
         );
     }
 
-    // SVG 내부 좌표계는 1200×600으로 고정하고, 실제 화면 크기는 CSS와 viewBox가 비율에 맞게 조절한다.
-    // PADDING은 가장자리 시설과 라벨이 잘리지 않도록 그래프 좌표 영역에 여백을 준다.
-    // SVG 크기
-    const SVG_WIDTH = 1200;
-    const SVG_HEIGHT = 600;
-
-    const PADDING_X = 40;
-    const PADDING_Y = 30;
-
+    // ============================================================
+    // 6-5. 그래프 인덱스와 좌표 변환
+    // ============================================================
     // 백엔드 좌표의 최소·최대 범위를 구해 서로 다른 크기의 창고도 같은 SVG 영역에 맞춘다.
-    // warehouse_graph.json 좌표 범위 계산
-    // JSON의 x, y 좌표를 SVG 좌표로 자동 변환하기 위해 최소/최대 좌표를 구함
     const xValues = graphData.nodes.map((node) => node.x);
     const yValues = graphData.nodes.map((node) => node.y);
 
-    const minX = Math.min(...xValues);
-    const maxX = Math.max(...xValues);
-
-    const minY = Math.min(...yValues);
-    const maxY = Math.max(...yValues);
-
-    // 원본 x 좌표를 좌우 패딩 사이의 SVG 좌표로 정규화한다.
-    // 원본 최솟값은 왼쪽 패딩, 최댓값은 오른쪽 패딩에 대응한다.
-    // JSON 좌표 → SVG 좌표 변환
-    const convertX = (x) => {
-        const availableWidth = SVG_WIDTH - PADDING_X * 2;
-        return (
-            PADDING_X +
-            ((x - minX) / (maxX - minX)) *
-            availableWidth
-        );
-    };
-
-    // 원본 y 좌표도 같은 방식으로 상하 패딩 사이에 선형 변환한다.
-    const convertY = (y) => {
-        const availableHeight = SVG_HEIGHT - PADDING_Y * 2;
-        return (
-            PADDING_Y +
-            ((y - minY) / (maxY - minY)) *
-            availableHeight
-        );
-    };
+    // X/Y는 같은 정규화 공식을 사용하므로 공통 팩토리 함수로 생성한다.
+    const convertX = createCoordinateConverter(xValues, SVG_WIDTH, PADDING_X);
+    const convertY = createCoordinateConverter(yValues, SVG_HEIGHT, PADDING_Y);
 
     // 반복적인 배열 검색을 피하기 위해 node.id를 키로 노드 객체를 바로 찾는 맵을 만든다.
     // 엣지 좌표 계산, 시설 그룹화, 로봇 위치 보정 등 대부분의 후속 계산에서 사용된다.
-    // 노드 ID → 노드 정보
-    // edge.source / edge.target를 좌표로 변환할 때 사용
     const nodeMap = new Map(
         graphData.nodes.map((node) => [node.id, node])
     );
 
-    // 각 노드에 연결된 모든 엣지를 역인덱스로 구성한다.
-    // 특정 접근 노드의 이웃이나 고정 허브의 경계 노드를 찾을 때 전체 엣지를 매번 순회하지 않는다.
-    const edgesByNode = new Map();
-    graphData.edges.forEach((edge) => {
-        [edge.source, edge.target].forEach((nodeId) => {
-            const values = edgesByNode.get(nodeId) ?? [];
-            values.push(edge);
-            edgesByNode.set(nodeId, values);
-        });
-    });
-    // 주어진 엣지에서 현재 nodeId의 반대편 노드 ID를 반환한다.
-    // 해당 엣지에 nodeId가 포함되지 않으면 null을 반환한다.
-    const peerNodeId = (edge, nodeId) => (
-        edge.source === nodeId
-            ? edge.target
-            : edge.target === nodeId
-                ? edge.source
-                : null
-    );
-    // 출고 설비 내부 연결에 해당하는 서비스 엣지인지 판별한다.
-    // service_only 플래그 또는 정해진 edge type 둘 중 하나만 충족해도 서비스 엣지로 본다.
-    const isOutboundServiceEdge = (edge) => (
-        edge.service_only === true
-        || ["outbound_service", "station_service"].includes(
-            String(edge.type ?? "").toLowerCase(),
-        )
-    );
+    const edgesByNode = createEdgesByNodeMap(graphData.edges);
 
+    // ============================================================
+    // 6-6. 시설 관계와 로봇 표시 위치 계산
+    // ============================================================
     // 입고 포트와 AMR 접근 노드의 관계는 경로 탐색용 엣지가 아니라 화면 안내용 논리 엣지이다.
     // display_port_ids에 등록된 포트만 연결하고, 실제 노드 객체가 없는 항목은 제외한다.
     // 포트/슈트는 로봇 경로 노드가 아니므로 실제 TRAVERSES와 분리해 표시한다.
@@ -617,10 +677,7 @@ function WarehouseSVG({
             )
         ));
         if (candidates.length === 0) return null;
-        const numericKey = Number(robotKey ?? 0);
-        const index = Math.abs(Number.isFinite(numericKey) ? numericKey : 0)
-            % candidates.length;
-        return candidates[index];
+        return selectByStableKey(candidates, robotKey);
     };
 
     // 같은 출고 스테이션에 속하는 접근 노드와 슈트 ID를 하나의 그룹으로 묶는다.
@@ -703,18 +760,6 @@ function WarehouseSVG({
         .map((edge) => nodeMap.get(peerNodeId(edge, hub.id)))
         .filter((node) => node?.type === "route" && !fixedHubIds.has(node.id));
 
-    // 여러 후보 중 목표 y 좌표와 가장 가까운 노드를 선택한다.
-    // 출고 설비의 세로 위치에 맞는 AMR 표시 지점을 고를 때 사용한다.
-    const closestNodeByY = (nodes, targetY) => nodes.reduce(
-        (best, node) => (
-            !best || Math.abs(Number(node.y) - Number(targetY))
-                < Math.abs(Number(best.y) - Number(targetY))
-                ? node
-                : best
-        ),
-        null,
-    );
-
     // 노드 코드가 어떤 출고 그룹에 속하는지 폭넓게 판별한다.
     // 그룹 ID, 슈트, 접근 노드, 고정 허브, 허브 주변 AMR 경계 노드까지 모두 확인한다.
     const stationGroupForMobileNode = (nodeCode) =>
@@ -743,10 +788,7 @@ function WarehouseSVG({
         const candidates = directlyConnected.length > 0
             ? directlyConnected
             : group.accessNodes;
-        const numericKey = Number(robotKey ?? 0);
-        const index = Math.abs(Number.isFinite(numericKey) ? numericKey : 0)
-            % candidates.length;
-        return candidates[index];
+        return selectByStableKey(candidates, robotKey);
     };
 
     // 출고 접근 노드에 대응하는 고정 허브를 결정한다.
@@ -765,12 +807,13 @@ function WarehouseSVG({
      * 로봇은 실제로 OUTBOUND_STATION_ACCESS까지만 주행한다.
      * 다만 외부 상태가 논리 출고지/슈트 코드를 가리키는 경우에도 화면에서
      * 사라지지 않도록 해당 출고 설비의 실제 접근 노드 좌표로 보정한다.
-     */
-    // 표시 위치 보정 순서:
-    // 1) 실제 출고 접근 노드면 인접 AMR 경계 노드로 이동한다.
-    // 2) 고정 허브 코드면 해당 허브 주변의 AMR 경계 노드로 이동한다.
-    // 3) 일반 경로 노드는 그대로 사용한다.
-    // 4) 논리 출고지/슈트 코드면 소속 출고 그룹을 찾아 실제 접근 가능한 노드로 대체한다.
+     * 
+     * 표시 위치 보정 순서:
+     * 1) 실제 출고 접근 노드면 인접 AMR 경계 노드로 이동한다.
+     * 2) 고정 허브 코드면 해당 허브 주변의 AMR 경계 노드로 이동한다.
+     * 3) 일반 경로 노드는 그대로 사용한다.
+     * 4) 논리 출고지/슈트 코드면 소속 출고 그룹을 찾아 실제 접근 가능한 노드로 대체한다.
+    */
     const resolveRobotDisplayNode = (robot, requestedNodeCode = robot.node_id) => {
         const nodeCode = requestedNodeCode;
         const exactNode = nodeMap.get(nodeCode);
@@ -810,6 +853,9 @@ function WarehouseSVG({
             ?? exactNode;
     };
 
+    // ============================================================
+    // 6-7. 상품·작업·재고 파생 데이터
+    // ============================================================
     // 상품과 작업을 ID로 즉시 조회할 수 있도록 Map으로 변환한다.
     // externalOperationId 맵은 생성 명령과 이미 저장된 작업의 중복 표시를 막는 데 사용한다.
     const productById = new Map(
@@ -844,7 +890,7 @@ function WarehouseSVG({
                 return [
                     node.id,
                     {
-                        levels: [1, 2, 3].map((level) => {
+                        levels: RACK_LEVELS.map((level) => {
                             const item = storedLevels.get(level) ?? null;
                             const product = item
                                 ? productById.get(Number(item.itemId)) ?? null
@@ -856,21 +902,9 @@ function WarehouseSVG({
             }),
     );
 
-    // 백엔드 activity/status 문자열을 실제 이미지 리소스에 연결한다.
-    // 일반 이동 상태는 기본 로봇을 사용하고, 충전·피킹·적치 등 작업 상태는 전용 이미지를 사용한다.
-    // 로봇 이미지 매핑
-    const robotImages = {
-        IDLE: robotHero,
-        ASSIGNED: robotHero,
-        MOVING: robotHero,
-        WORKING: robotHero,
-        CHARGING: robotCharging,
-        PICKING: robotPicking,
-        PUTAWAY: robotPutaway,
-        RELOCATION: robotRelocation,
-        REPLENISH: robotReplenish,
-    };
-
+    // ============================================================
+    // 6-8. 시설 인계 BOX와 입고 대기열 계산
+    // ============================================================
     // 각 로봇의 service_progress를 이용해 시설과 로봇 사이에서 이동 중인 BOX를 만든다.
     // flatMap을 사용하므로 시설 인계 상태가 아닌 로봇은 빈 배열을 반환해 결과에서 자연스럽게 제외된다.
     const transferBoxes = robots.flatMap((robot) => {
@@ -888,6 +922,7 @@ function WarehouseSVG({
         let facilityNodeIds = [];
         let direction = null;
         let transferStartNode = serviceNode;
+
         // 입고 PICKUP은 외부 포트에서 AMR 접근 노드 방향으로 BOX가 이동한다.
         if (
             taskType === "INBOUND"
@@ -903,7 +938,8 @@ function WarehouseSVG({
             facilityNodeIds = inboundAccess.display_port_ids ?? [];
             transferStartNode = inboundAccess;
             direction = "inbound";
-        // 출고 DROP/STATION은 AMR 접근 노드에서 고정 로봇을 거쳐 슈트로 BOX가 이동한다.
+
+            // 출고 DROP/STATION은 AMR 접근 노드에서 고정 로봇을 거쳐 슈트로 BOX가 이동한다.
         } else if (
             taskType === "OUTBOUND"
             && ["DROP", "STATION"].includes(serviceKind)
@@ -935,13 +971,12 @@ function WarehouseSVG({
 
         // 여러 포트나 슈트가 연결된 경우 task/robot ID 기반으로 하나를 선택한다.
         // 같은 작업은 렌더링마다 같은 시설을 선택하므로 BOX가 임의로 다른 위치로 바뀌지 않는다.
-        const numericKey = Number(robot.current_task_id ?? robot.robot_id ?? 0);
-        const facilityNode = facilityNodes[
-            Math.abs(Number.isFinite(numericKey) ? numericKey : 0)
-            % facilityNodes.length
-        ];
+        const facilityNode = selectByStableKey(
+            facilityNodes,
+            robot.current_task_id ?? robot.robot_id,
+        );
         // 서비스 진행률을 0~1로 제한하고, 로봇·시설 좌표를 SVG 좌표로 미리 변환한다.
-        const progress = Math.max(0, Math.min(1, Number(robot.service_progress)));
+        const progress = clamp01(robot.service_progress);
         const serviceX = convertX(serviceNode.x);
         const serviceY = convertY(serviceNode.y);
         const facilityX = convertX(facilityNode.x);
@@ -951,30 +986,29 @@ function WarehouseSVG({
         const fixedHub = direction === "outbound"
             ? fixedHubForStationAccess(transferStartNode, serviceNode)
             : null;
-        // Default station timing is roughly 25% input handoff and 75%
-        // fixed-robot sorting/release.  The latter may overlap the next box.
-        const handoffRatio = 0.25;
+
+        const handoffRatio = OUTBOUND_HANDOFF_RATIO;
         let x;
         let y;
         let stage = "facility-to-mobile";
         // 입고는 포트에서 AMR 쪽으로 단일 구간 보간을 수행한다.
         // 출고는 고정 허브 유무와 진행률에 따라 두 구간 또는 단일 구간으로 나누어 보간한다.
         if (direction === "inbound") {
-            x = facilityX + (serviceX - facilityX) * progress;
-            y = facilityY + (serviceY - facilityY) * progress;
+            x = interpolate(facilityX, serviceX, progress);
+            y = interpolate(facilityY, serviceY, progress);
         } else if (fixedHub && progress <= handoffRatio) {
             const stageProgress = progress / handoffRatio;
-            x = serviceX + (convertX(fixedHub.x) - serviceX) * stageProgress;
-            y = serviceY + (convertY(fixedHub.y) - serviceY) * stageProgress;
+            x = interpolate(serviceX, convertX(fixedHub.x), stageProgress);
+            y = interpolate(serviceY, convertY(fixedHub.y), stageProgress);
             stage = "mobile-to-fixed-robot";
         } else if (fixedHub) {
             const stageProgress = (progress - handoffRatio) / (1 - handoffRatio);
-            x = convertX(fixedHub.x) + (facilityX - convertX(fixedHub.x)) * stageProgress;
-            y = convertY(fixedHub.y) + (facilityY - convertY(fixedHub.y)) * stageProgress;
+            x = interpolate(convertX(fixedHub.x), facilityX, stageProgress);
+            y = interpolate(convertY(fixedHub.y), facilityY, stageProgress);
             stage = "fixed-robot-to-chute";
         } else {
-            x = serviceX + (facilityX - serviceX) * progress;
-            y = serviceY + (facilityY - serviceY) * progress;
+            x = interpolate(serviceX, facilityX, progress);
+            y = interpolate(serviceY, facilityY, progress);
             stage = "mobile-to-chute";
         }
 
@@ -999,9 +1033,8 @@ function WarehouseSVG({
         }];
     });
 
-    // 입고 대기 BOX 계산에 필요한 작업 상태와 조회용 맵을 준비한다.
-    // 완료·실패·취소 작업은 더 이상 포트 대기열에 표시하지 않는다.
-    const terminalTaskStatuses = new Set(["DONE", "FAILED", "CANCELLED"]);
+    // 입고 대기 BOX 계산에 필요한 조회용 맵을 준비한다.
+    // 완료·실패·취소 상태 집합은 렌더링마다 재생성하지 않도록 파일 상단 상수를 사용한다.
     const robotByTaskId = new Map(
         robots
             .filter((robot) => robot.current_task_id != null)
@@ -1041,7 +1074,7 @@ function WarehouseSVG({
         if (
             task
             && (
-                terminalTaskStatuses.has(task.status)
+                TERMINAL_TASK_STATUSES.has(task.status)
                 || task.inventoryAppliedAt
             )
         ) return;
@@ -1106,18 +1139,18 @@ function WarehouseSVG({
         };
     });
 
-    // 여기까지 계산된 파생 데이터들을 바탕으로 실제 SVG 레이어를 순서대로 렌더링한다.
+    // ============================================================
+    // 6-9. SVG 렌더링
+    // ============================================================
     // 뒤에 작성된 요소가 앞 요소 위에 보이므로 바닥→엣지→시설→BOX→로봇 순서를 유지한다.
-    // 로봇 이동 속도/시간 조절
     return (
         <div className="warehouse-svg-wrapper">
 
             {/* 노드 라벨 토글 버튼은 showNodeLabels 상태만 변경하며 지도 데이터에는 영향을 주지 않는다. */}
-            {/* 노드 표시 ON / OFF */}
             <button
                 type="button"
                 className="warehouse-node-toggle"
-                onClick={() => setShowNodeLabels((prev) => !prev)}
+                onClick={handleToggleNodeLabels}
             >
                 {showNodeLabels ? "노드 번호 숨기기" : "노드 번호 보기"}
             </button>
@@ -1147,7 +1180,6 @@ function WarehouseSVG({
                 </defs>
 
                 {/* 흰색 바닥을 먼저 깔아 부모 배경색과 무관하게 지도 배경을 일정하게 유지한다. */}
-                {/* 창고 바닥 */}
                 <rect
                     x="0"
                     y="0"
@@ -1157,7 +1189,6 @@ function WarehouseSVG({
                 />
 
                 {/* 동일 크기의 rect에 격자 패턴을 덮어 창고 좌표계를 시각적으로 구분한다. */}
-                {/* 좌표 격자 */}
                 <rect
                     x="0"
                     y="0"
@@ -1166,9 +1197,8 @@ function WarehouseSVG({
                     fill="url(#warehouse-grid)"
                 />
 
-                {/* 이동 가능한 활성 엣지만 선으로 표시한다. 통행 불가·신규 작업 비활성 엣지는 숨긴다. */}
-                {/* EDGE
-                    항상 노드보다 먼저 그려야 선 위에 노드가 올라옴 */}
+                {/* EDGE (항상 노드보다 먼저 그려야 선 위에 노드가 올라옴)
+                    이동 가능한 활성 엣지만 선으로 표시한다. 통행 불가·신규 작업 비활성 엣지는 숨긴다. */}
                 <g className="warehouse-edges">
                     {graphData.edges.map(
                         (edge) => {
@@ -1200,7 +1230,6 @@ function WarehouseSVG({
                 </g>
 
                 {/* 각 통로의 첫 번째 열(col=0) 노드만 사용해 A01 형식의 통로 라벨을 한 번씩 표시한다. */}
-                {/* 통로 번호 */}
                 <g className="warehouse-aisle-labels">
                     {graphData.nodes
                         .filter((node) =>
@@ -1221,7 +1250,6 @@ function WarehouseSVG({
                 </g>
 
                 {/* AMR이 실제로 지나는 route 노드를 작은 원으로 표시하고, 옵션에 따라 ID도 함께 보여준다. */}
-                {/* 로봇이 실제로 이동하는 route 노드 */}
                 <g className="warehouse-route-nodes">
                     {graphData.nodes
                         .filter((node) => node.type === "route"
@@ -1249,13 +1277,12 @@ function WarehouseSVG({
                                     >
                                         {node.id}
                                     </text>
-                                    )}
-                                </g>
+                                )}
+                            </g>
                         ))}
                 </g>
 
                 {/* 논리 엣지는 시설 관계를 설명하기 위한 선이며 실제 로봇 경로 계산 결과와 분리된다. */}
-                {/* 시설 논리 관계: 화면에만 표시하고 경로 탐색에는 포함하지 않는다. */}
                 <g className="warehouse-logical-edges">
                     {inboundLogicalEdges.map((edge) => (
                         <line
@@ -1281,8 +1308,7 @@ function WarehouseSVG({
                     )}
                 </g>
 
-                {/* 같은 포트의 대기 BOX는 최대 3개만 겹쳐 그린다. 3개를 넘으면 배지에 전체 수량을 표시한다. */}
-                {/* 아직 AMR이 수령하지 않은 입고 BOX 대기열 */}
+                {/* AMR이 아직 수령하지 않은 입고 BOX를 포트별로 최대 3개까지 표시하고, 초과 수량은 배지로 보여준다. */}
                 <g className="warehouse-inbound-waiting-boxes">
                     {[...waitingInboundGroups.values()].map(({ portNode, entries }) => {
                         const visibleEntries = entries.slice(0, 3);
@@ -1322,8 +1348,8 @@ function WarehouseSVG({
                     })}
                 </g>
 
-                {/* transferBoxes에서 계산한 현재 좌표에 BOX를 배치해 시설 인계 진행 상황을 표현한다. */}
-                {/* 로봇은 접근 노드에 머물고 BOX만 논리 입·출고 설비와 이동한다. */}
+                {/* transferBoxes에서 계산한 좌표에 BOX를 배치하며,
+                    로봇은 접근 노드에 머물고 BOX만 논리 입·출고 설비 사이를 이동한다. */}
                 <g className="warehouse-box-transfers">
                     {transferBoxes.map((box) => (
                         <g
@@ -1348,7 +1374,6 @@ function WarehouseSVG({
                 </g>
 
                 {/* 입고 포트와 AMR 경로 사이의 인계 지점을 별도 원으로 표시한다. */}
-                {/* 입고지 연결 inbound-access */}
                 <g className="warehouse-inbound-access">
                     {graphData.nodes
                         .filter((node) =>
@@ -1382,7 +1407,6 @@ function WarehouseSVG({
                 </g>
 
                 {/* 출고 스테이션과 AMR 경로 사이의 접근 지점을 입고 접근점과 다른 스타일로 표시한다. */}
-                {/* 출고지 연결 inbound-access */}
                 <g className="warehouse-outbound-access">
                     {graphData.nodes
                         .filter((node) =>
@@ -1415,8 +1439,6 @@ function WarehouseSVG({
                 </g>
 
                 {/* route와 charging_slot 사이에서 진입 방향을 연결하는 충전 분기 노드이다. */}
-                {/* 충전소 연결 Junction
-                    route ↔ charging slot 연결 지점 */}
                 <g className="warehouse-charge-junctions">
                     {graphData.nodes
                         .filter((node) =>
@@ -1436,8 +1458,6 @@ function WarehouseSVG({
                 </g>
 
                 {/* 선반마다 외곽과 3개 층을 그리며, 점유된 층은 상품 ID 기반 색상으로 채운다. */}
-                {/* 선반
-                    rack_inventory.json의 3단 재고 상태까지 표시 */}
                 <g className="warehouse-racks">
                     {graphData.nodes
                         .filter((node) =>
@@ -1446,10 +1466,7 @@ function WarehouseSVG({
                         .map((node) => {
                             // rackInventoryMap에 저장된 DB 재고와 상품 정보를 현재 선반 ID로 조회한다.
                             const inventory = rackInventoryMap.get(node.id);
-                            /*
-                             * 화면에서는 상단 → 중단 → 하단 순서로 보여주기 위해
-                             * level을 역순으로 정렬
-                             */
+                            // 화면에서는 상단 → 중단 → 하단 순서로 보여주기 위해 level을 역순으로 정렬
                             const levels = inventory?.levels
                                 ? [...inventory.levels].sort((a, b) => b.level - a.level)
                                 : [3, 2, 1].map((level) => ({ level, item: null, product: null }));
@@ -1473,8 +1490,8 @@ function WarehouseSVG({
                                         className="warehouse-rack"
                                     />
 
-                                    {/* 데이터의 층 번호는 1~3이지만 화면은 위에서 아래로 3→2→1 순서로 그린다. */}
-                                    {/* 선반 3단 */}
+                                    {/* 선반 3단 
+                                        데이터의 층 번호는 1~3이지만 화면은 위에서 아래로 3→2→1 순서로 그린다.*/}
                                     {levels.map(
                                         (level, index) => (
                                             <rect
@@ -1512,7 +1529,6 @@ function WarehouseSVG({
                 </g>
 
                 {/* 논리 입고 시설은 사각형과 간단한 라벨로 표시하며, 필요할 때 전체 노드 ID도 보여준다. */}
-                {/* 입고 엘리베이터 IA ~ IG  */}
                 <g className="warehouse-inbound">
                     {graphData.nodes
                         .filter((node) =>
@@ -1553,7 +1569,6 @@ function WarehouseSVG({
                 </g>
 
                 {/* 논리 출고 시설도 입고 시설과 동일한 구조이지만 별도 CSS 클래스로 구분한다. */}
-                {/* 출고 엘리베이터 OA ~ OG */}
                 <g className="warehouse-outbound">
                     {graphData.nodes
                         .filter(
@@ -1597,7 +1612,6 @@ function WarehouseSVG({
                 </g>
 
                 {/* charging_slot은 슬롯 번호를 중앙에 표시하고, 노드 라벨 옵션이 켜지면 전체 ID도 추가한다. */}
-                {/* 충전소 C01 ~ C10 */}
                 <g className="warehouse-charging">
                     {graphData.nodes
                         .filter((node) =>
@@ -1640,7 +1654,6 @@ function WarehouseSVG({
                 </g>
 
                 {/* 고정 좌표에 입고지·출고지·충전소 영역명을 표시해 지도 방향을 빠르게 파악하게 한다. */}
-                {/* 영역 이름 */}
                 <text
                     x="40"
                     y="100"
@@ -1669,8 +1682,6 @@ function WarehouseSVG({
                 </text>
 
                 {/* 고정 출고 로봇은 출고 허브에 배치되며 BOX 단계에 따라 작업·방출 애니메이션 클래스를 받는다. */}
-                {/* 로봇 */}
-                {/* Fixed outbound robots own the blue station nodes. */}
                 <g className="warehouse-fixed-station-robots">
                     {fixedOutboundRobots.map((stationRobot) => (
                         <g
@@ -1716,10 +1727,9 @@ function WarehouseSVG({
                         }
 
                         // activity가 더 구체적인 현재 동작이므로 status보다 먼저 이미지 선택에 사용한다.
-                        // 현재 상태에 맞는 로봇 이미지
                         const robotImage =
-                            robotImages[robot.activity]
-                            ?? robotImages[robot.status]
+                            ROBOT_IMAGES[robot.activity]
+                            ?? ROBOT_IMAGES[robot.status]
                             ?? robotHero;
                         // 현재 작업과 상품을 연결해 운반 BOX의 색상 및 툴팁 문구를 구성한다.
                         const activeTask = taskById.get(Number(robot.current_task_id));
