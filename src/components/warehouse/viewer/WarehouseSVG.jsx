@@ -15,6 +15,7 @@ import {
     selectByStableKey,
 } from "./warehouseSvgUtils";
 
+
 // ============================================================
 // 1. 공통 설정과 레이아웃 변환
 // ============================================================
@@ -168,6 +169,7 @@ function WarehouseSVG({
     robots = [],
     tasks = [],
     generatedCommands = [],
+    avoidanceStates = [],
     isRunning = false,
 }) {
     const [showNodeLabels, setShowNodeLabels] = useState(false);
@@ -670,7 +672,7 @@ function WarehouseSVG({
             x = interpolate(convertX(fixedHub.x), facilityX, stageProgress);
             y = interpolate(convertY(fixedHub.y), facilityY, stageProgress);
             stage = "fixed-robot-to-chute";
-            
+
         } else {
             x = interpolate(serviceX, facilityX, progress);
             y = interpolate(serviceY, facilityY, progress);
@@ -771,7 +773,7 @@ function WarehouseSVG({
         const portIds = accessNode.display_port_ids ?? [];
         const portNode = nodeMap.get(portIds[index % Math.max(1, portIds.length)])
             ?? accessNode;
-            
+
         const product = productById.get(Number(entry.itemId)) ?? null;
         const group = waitingInboundGroups.get(portNode.id) ?? {
             portNode,
@@ -789,6 +791,7 @@ function WarehouseSVG({
     // ============================================================
     // 8. 로봇 렌더링 데이터와 화면 조합
     // ============================================================
+
     // BOX가 허브를 지나면 working, 슈트로 방출 중이면 releasing 상태를 적용한다.
     const fixedOutboundRobots = fixedOutboundHubs.map((hub) => {
         const activeTransfers = transferBoxes.filter((box) => box.fixedHubId === hub.id);
@@ -804,6 +807,15 @@ function WarehouseSVG({
             ),
         };
     });
+
+    const avoidanceByRobotId = new Map(
+        avoidanceStates.map(
+            (avoidance) => [
+                avoidance.robotId,
+                avoidance,
+            ],
+        ),
+    );
 
     // 자식 레이어가 시설 관계를 다시 계산하지 않도록 로봇 표시 데이터를 부모에서 준비한다.
     const mobileRobotMarkers = robots
@@ -829,12 +841,27 @@ function WarehouseSVG({
                 (box) => String(box.id).startsWith(`${robot.robot_id}-`),
             );
 
+            const avoidance =
+                avoidanceByRobotId.get(
+                    robot.robot_id,
+                );
+
             return {
                 robot,
                 fromX: convertX(fromNode.x),
                 fromY: convertY(fromNode.y),
                 toX: convertX(toNode.x),
                 toY: convertY(toNode.y),
+
+                isAvoidanceWaiting:
+                    Boolean(avoidance),
+
+                avoidanceLabel:
+                    avoidance
+                        ? `${avoidance.reason} · `
+                        + `${avoidance.waitingSeconds.toFixed(1)}초`
+                        : null,
+
                 loadColor: productColor(activeTask?.itemId),
                 loadTitle: activeProduct
                     ? `${activeProduct.productName} (${activeProduct.productCode}) BOX 운반 중`

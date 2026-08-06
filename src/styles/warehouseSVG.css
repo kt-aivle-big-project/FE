@@ -429,3 +429,36 @@
     from { transform: rotate(-3deg); }
     to { transform: rotate(3deg); }
 }
+
+
+
+/* 충돌 회피 또는 통행 순서 대기 중인 로봇을 표시한다. */
+.warehouse-robot-avoidance-ring {
+    fill: none;
+    stroke: #f59e0b;
+    stroke-width: 2;
+    stroke-dasharray: 5 4;
+    animation:
+        warehouse-avoidance-pulse
+        0.9s ease-in-out infinite alternate;
+}
+
+.warehouse-robot-avoidance-label {
+    fill: #b45309;
+    font-size: 10px;
+    font-weight: 700;
+    paint-order: stroke;
+    stroke: white;
+    stroke-width: 3px;
+    stroke-linejoin: round;
+}
+
+@keyframes warehouse-avoidance-pulse {
+    from {
+        opacity: 0.4;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

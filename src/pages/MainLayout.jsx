@@ -1,12 +1,12 @@
 import { Outlet } from "react-router-dom";
-import Header from "../components/common/Header";
+import Sidebar from "../components/common/Sidebar";
 import Footer from "../components/common/Footer";
 import "../styles/layout.css";
 
 function MainLayout() {
     return (
         <div className="main-layout">
-            <Header />
+            <Sidebar />
 
             <div className="main-content">
                 <main className="page-content">

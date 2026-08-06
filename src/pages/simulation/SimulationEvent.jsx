@@ -1,36 +1,59 @@
-import { useState, useRef } from "react";
 import "../../styles/simulation/SimulationEvent.css";
 
-function SimulationEvent({ events = [] }) {
+const getEventTypeLabel = (eventType) => {
+    switch (eventType) {
+        case "PATH_BLOCKED":
+            return "통로 차단";
 
-    // 이벤트 유형 한글 변환
-    const getEventTypeLabel = (eventType) => {
-        switch (eventType) {
-            case "PATH_BLOCKED":
-                return "통로 차단";
+        case "COLLISION_AVOIDANCE_WAIT":
+            return "충돌 회피 대기";
 
-            default:
-                return eventType || "-";
-        }
-    };
+        default:
+            return eventType || "-";
+    }
+};
 
-    // 시간 표시
-    const formatEventTime = (dateTime) => {
-        if (!dateTime) {
-            return "-";
-        }
+const formatEventTime = (dateTime) => {
+    if (!dateTime) {
+        return "-";
+    }
 
-        const date = new Date(dateTime);
+    const date = new Date(dateTime);
 
-        return date.toLocaleTimeString(
-            "ko-KR",
-            {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false,
-            }
-        );
-    };
+    if (Number.isNaN(date.getTime())) {
+        return "-";
+    }
+
+    return date.toLocaleTimeString(
+        "ko-KR",
+        {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+        },
+    );
+};
+
+const formatWaitingSeconds = (seconds) => {
+    const numericSeconds = Number(seconds);
+
+    if (!Number.isFinite(numericSeconds)) {
+        return null;
+    }
+
+    return `${numericSeconds.toFixed(1)}초 대기`;
+};
+
+function SimulationEvent({
+    events = [],
+}) {
+    const sortedEvents = [...events]
+        .sort((left, right) => (
+            new Date(right.occurredAt).getTime()
+            - new Date(left.occurredAt).getTime()
+        ))
+        .slice(0, 30);
 
     return (
         <section className="simulation-event">
@@ -41,85 +64,116 @@ function SimulationEvent({ events = [] }) {
             </div>
 
             <div className="simulation-event-list">
-
-                {events.length === 0 ? (
-
+                {sortedEvents.length === 0 ? (
                     <div className="simulation-event-empty">
                         발생한 이벤트가 없습니다.
                     </div>
-
                 ) : (
+                    sortedEvents.map((event) => {
+                        const isAvoidanceEvent =
+                            event.eventType
+                            === "COLLISION_AVOIDANCE_WAIT";
 
-                    events.map((event) => (
+                        return (
+                            <article
+                                className={
+                                    isAvoidanceEvent
+                                        ? "simulation-event-card avoidance"
+                                        : "simulation-event-card"
+                                }
+                                key={event.id}
+                            >
+                                <div className="simulation-event-card-header">
+                                    <strong className="simulation-event-type">
+                                        {getEventTypeLabel(
+                                            event.eventType,
+                                        )}
+                                    </strong>
 
-                        <article
-                            className="simulation-event-card"
-                            key={event.id}
-                        >
+                                    <span className="simulation-event-time">
+                                        {formatEventTime(
+                                            event.occurredAt,
+                                        )}
+                                    </span>
+                                </div>
 
-                            {/* 이벤트 상단 */}
-                            <div className="simulation-event-card-header">
+                                <p className="simulation-event-description">
+                                    {event.description}
+                                </p>
 
-                                <strong className="simulation-event-type">
-                                    {getEventTypeLabel(event.eventType)}
-                                </strong>
+                                <div className="simulation-event-info">
+                                    {Array.isArray(event.robotIds)
+                                    && event.robotIds.length > 0
+                                        ? event.robotIds.map(
+                                            (robotId) => (
+                                                <span
+                                                    key={`${event.id}-${robotId}`}
+                                                >
+                                                    R{robotId}
+                                                </span>
+                                            ),
+                                        )
+                                        : event.robotId !== null
+                                            && event.robotId !== undefined
+                                            && (
+                                                <span>
+                                                    R{event.robotId}
+                                                </span>
+                                            )}
 
-                                <span className="simulation-event-time">
-                                    {formatEventTime(event.occurredAt)}
-                                </span>
+                                    {event.taskId !== null
+                                    && event.taskId !== undefined
+                                    && (
+                                        <span>
+                                            Task #{event.taskId}
+                                        </span>
+                                    )}
 
-                            </div>
+                                    {event.nodeId !== null
+                                    && event.nodeId !== undefined
+                                    && (
+                                        <span>
+                                            Node {event.nodeId}
+                                        </span>
+                                    )}
 
+                                    {isAvoidanceEvent
+                                    && !event.resolvedAt
+                                    && (
+                                        <span className="avoidance-wait-time">
+                                            {formatWaitingSeconds(
+                                                event.waitingSeconds,
+                                            )}
+                                        </span>
+                                    )}
 
-                            {/* 이벤트 설명 */}
-                            <p className="simulation-event-description">
-                                {event.description}
-                            </p>
+                                    {event.source === "INFERRED" && (
+                                        <span className="avoidance-inferred">
+                                            화면 추정
+                                        </span>
+                                    )}
+                                </div>
 
-
-                            {/* 관련 정보 */}
-                            <div className="simulation-event-info">
-
-                                {event.robotId !== null && (
-                                    <span>R{event.robotId}</span>
-                                )}
-
-                                {event.taskId !== null && (
-                                    <span>Task #{event.taskId}</span>
-                                )}
-
-                                {event.nodeId !== null && (
-                                    <span>Node {event.nodeId}</span>
-                                )}
-
-                            </div>
-
-
-                            {/* 해결 상태 */}
-                            <div className="simulation-event-footer">
-
-                                <span
-                                    className={
-                                        event.resolvedAt
-                                            ? "simulation-event-status resolved"
-                                            : "simulation-event-status unresolved"
-                                    }
-                                >
-                                    {event.resolvedAt
-                                        ? "해결"
-                                        : "미해결"}
-                                </span>
-
-                            </div>
-
-                        </article>
-
-                    ))
-
+                                <div className="simulation-event-footer">
+                                    <span
+                                        className={
+                                            event.resolvedAt
+                                                ? "simulation-event-status resolved"
+                                                : "simulation-event-status unresolved"
+                                        }
+                                    >
+                                        {event.resolvedAt
+                                            ? "이동 재개"
+                                            : isAvoidanceEvent
+                                                ? "대기 중"
+                                                : "미해결"}
+                                    </span>
+                                </div>
+                            </article>
+                        );
+                    })
                 )}
-
             </div>
-
         </section>
     );
 }

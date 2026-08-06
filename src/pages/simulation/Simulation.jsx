@@ -5,6 +5,7 @@ import WarehouseSVG from "../../components/warehouse/viewer/WarehouseSVG";
 import SimulationPanel from "./SimulationPanel";
 import SimulationTask from "./SimulationTask";
 import SimulationEvent from "./SimulationEvent";
+import useRobotAvoidanceTracker from "../../hooks/useRobotAvoidanceTracker";
 
 import useStompSubscriptions from "../../hooks/useStompSubscriptions";
 import { TOPICS } from "../../api/config";
@@ -15,6 +16,7 @@ import {
     robotApi,
     fulfillmentCommandApi,
 } from "../../api/client";
+
 
 // 창고 목록을 못 불러왔을 때 쓸 기본 창고
 const DEFAULT_WAREHOUSE_ID = 1;
@@ -105,6 +107,11 @@ const toRobotView = (state) => {
         service_kind: state.serviceKind,
         service_progress: state.serviceProgress,
         carrying_load: Boolean(state.carryingLoad),
+        waiting_reason: state.waitingReason ?? null,
+        waiting_node_code: state.waitingNodeCode ?? null,
+        blocking_robot_id: state.blockingRobotId ?? null,
+        wait_started_at_ms: state.waitStartedAtMillis ?? null,
+        estimated_resume_at_ms: state.estimatedResumeAtMillis ?? null,
     };
 };
 
@@ -733,7 +740,17 @@ function Simulation() {
 
     const [robots, setRobots] = useState([]);
     const isPausedRef = useRef(false);
+    const isSimulationRunning =
+        simulationStatus === "실행"
+        || simulationStatus === "재계획";
 
+    const {
+        avoidanceStates,
+        avoidanceEvents,
+    } = useRobotAvoidanceTracker(
+        robots,
+        isSimulationRunning,
+    );
     // 로봇 상태 1건 수신 → 해당 로봇만 갱신
     const applyRobotState = (state) => {
         const incoming = toRobotView(state);
@@ -972,10 +989,8 @@ function Simulation() {
                     robots={robots}
                     tasks={taskList}
                     generatedCommands={generatedCommands}
-                    isRunning={
-                        simulationStatus === "실행"
-                        || simulationStatus === "재계획"
-                    }
+                    avoidanceStates={avoidanceStates}
+                    isRunning={isSimulationRunning}
                 />
             </main>
 
@@ -993,12 +1008,13 @@ function Simulation() {
             <SimulationTask tasks={taskList} />
 
             {/* 이벤트 목록 (WebSocket 실시간 갱신) */}
-            <SimulationEvent events={eventList} />
+            <SimulationEvent
+                events={[
+                    ...avoidanceEvents,
+                    ...eventList,
+                ]}
+            />
 
-            {/* 하단 footer */}
-            <footer className="footer">
-                Footer
-            </footer>
         </div>
     );
 }
