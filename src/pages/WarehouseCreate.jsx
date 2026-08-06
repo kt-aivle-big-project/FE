@@ -19,6 +19,27 @@ const EMPTY_FORM = {
     status: "ACTIVE",
 };
 
+/**
+ * 지도 노드 좌표에서 창고 크기를 구한다.
+ *
+ * 백엔드 WarehouseImportService.resolveDimensions 와 같은 규칙이다.
+ * 여기서 다르게 계산하면 화면에 보이는 크기와 저장된 크기가 어긋난다.
+ */
+const dimensionsFromMap = (mapData) => {
+    const nodes = Array.isArray(mapData?.nodes) ? mapData.nodes : [];
+    const xValues = nodes.map((node) => Number(node.x)).filter(Number.isFinite);
+    const yValues = nodes.map((node) => Number(node.y)).filter(Number.isFinite);
+
+    if (xValues.length === 0 || yValues.length === 0) {
+        return null;
+    }
+
+    return {
+        width: Math.max(1, Math.ceil(Math.max(...xValues)) + 1),
+        height: Math.max(1, Math.ceil(Math.max(...yValues)) + 1),
+    };
+};
+
 const readDraft = () => {
     try {
         const saved = sessionStorage.getItem(DRAFT_STORAGE_KEY);
@@ -202,6 +223,18 @@ function WarehouseCreate() {
 
             setUploadedMapData(parsed);
             setJsonFileName(file.name);
+
+            // 가로·세로는 지도가 정답을 갖고 있다. 사람이 다시 입력할 필요가 없다.
+            const dimensions = dimensionsFromMap(parsed);
+
+            if (dimensions) {
+                setForm((previous) => ({
+                    ...previous,
+                    width: String(dimensions.width),
+                    height: String(dimensions.height),
+                }));
+            }
+
             setIsDirty(true);
         } catch (error) {
             setUploadedMapData(null);
