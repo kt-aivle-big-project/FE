@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 
-function Sidebar() {
+function Header() {
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -69,7 +69,7 @@ function Sidebar() {
                 </ul>
             </nav>
 
-            <div className="sidebar-logout">
+            <div className="header-logout">
                 <button
                     type="button"
                     className="logout-button"
@@ -82,4 +82,4 @@ function Sidebar() {
     );
 }
 
-export default Sidebar;
+export default Header;

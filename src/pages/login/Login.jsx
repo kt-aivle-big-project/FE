@@ -4,7 +4,7 @@ import laroLogo from "../../assets/laro/laro_logo.png";
 import laroBackground from "../../assets/laro/laro_background.png";
 import "../../styles/login/LoginCommon.css";
 import "../../styles/login/Login.css";
-import { EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/icon";
+import { EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";
 
 const API_URL = "http://localhost:8080/api";
 
