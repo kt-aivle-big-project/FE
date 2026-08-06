@@ -186,6 +186,8 @@ function Board() {
     const [isWriteModalOpen, setIsWriteModalOpen] =
         useState(false);
 
+    const [editingPostId, setEditingPostId] = useState(null);
+
     const [postTitle, setPostTitle] = useState("");
     const [postContent, setPostContent] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);
@@ -258,12 +260,29 @@ function Board() {
 
     const handleOpenWriteModal = () => {
         resetPostForm();
+        setEditingPostId(null);
         setFormSuccess("");
+        setIsWriteModalOpen(true);
+    };
+
+    const handleOpenEditModal = (post) => {
+        setEditingPostId(post.id);
+        setPostTitle(post.title);
+        setPostContent(post.content);
+        setSelectedFile(null);
+        setFormError("");
+        setFormSuccess("");
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+
         setIsWriteModalOpen(true);
     };
 
     const handleCloseWriteModal = () => {
         resetPostForm();
+        setEditingPostId(null);
         setIsWriteModalOpen(false);
     };
 
@@ -279,6 +298,7 @@ function Board() {
         setSelectedArchivePost(null);
         setFormError("");
         setFormSuccess("");
+        setEditingPostId(null);
         setIsWriteModalOpen(false);
     };
 
@@ -325,7 +345,11 @@ function Board() {
         }
 
         try {
-            let attachment = null;
+            const editingPost = archivePosts.find(
+                (post) => post.id === editingPostId
+            );
+
+            let attachment = editingPost?.attachment ?? null;
 
             if (selectedFile) {
                 const dataUrl =
@@ -341,11 +365,50 @@ function Board() {
                 };
             }
 
+            if (editingPostId) {
+                const nextPosts = archivePosts.map((post) =>
+                    post.id === editingPostId
+                        ? {
+                              ...post,
+                              title: normalizedTitle,
+                              content: normalizedContent,
+                              attachment,
+                              updatedAt:
+                                  new Date().toLocaleString(
+                                      "ko-KR"
+                                  ),
+                          }
+                        : post
+                );
+
+                const saved = saveArchivePosts(nextPosts);
+
+                if (!saved) {
+                    return;
+                }
+
+                const updatedPost = nextPosts.find(
+                    (post) => post.id === editingPostId
+                );
+
+                setSelectedArchivePost((currentPost) =>
+                    currentPost?.id === editingPostId
+                        ? updatedPost
+                        : currentPost
+                );
+
+                handleCloseWriteModal();
+                setFormSuccess("게시글이 수정되었습니다.");
+                return;
+            }
+
             const newPost = {
                 id: createPostId(),
                 title: normalizedTitle,
                 content: normalizedContent,
-                createdAt: new Date().toLocaleString("ko-KR"),
+                createdAt:
+                    new Date().toLocaleString("ko-KR"),
+                updatedAt: null,
                 attachment,
             };
 
@@ -360,10 +423,13 @@ function Board() {
             handleCloseWriteModal();
             setFormSuccess("게시글이 등록되었습니다.");
         } catch (error) {
-            console.error("게시글 등록 실패:", error);
+            console.error(
+                "게시글 등록 또는 수정 실패:",
+                error
+            );
 
             setFormError(
-                "게시글을 등록하는 중 오류가 발생했습니다."
+                "게시글을 저장하는 중 오류가 발생했습니다."
             );
         }
     };
@@ -660,9 +726,13 @@ function Board() {
                                     </h2>
 
                                     <p>
+                                        작성{" "}
                                         {
                                             selectedArchivePost.createdAt
                                         }
+
+                                        {selectedArchivePost.updatedAt &&
+                                            ` · 수정 ${selectedArchivePost.updatedAt}`}
                                     </p>
                                 </div>
 
@@ -677,6 +747,18 @@ function Board() {
                                         }
                                     >
                                         목록으로
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        className="archive-edit-button"
+                                        onClick={() =>
+                                            handleOpenEditModal(
+                                                selectedArchivePost
+                                            )
+                                        }
+                                    >
+                                        수정
                                     </button>
 
                                     <button
@@ -856,17 +938,31 @@ function Board() {
                                                             </td>
 
                                                             <td>
-                                                                <button
-                                                                    type="button"
-                                                                    className="archive-delete-button"
-                                                                    onClick={() =>
-                                                                        handleDeletePost(
-                                                                            post.id
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    삭제
-                                                                </button>
+                                                                <div className="archive-manage-actions">
+                                                                    <button
+                                                                        type="button"
+                                                                        className="archive-edit-button"
+                                                                        onClick={() =>
+                                                                            handleOpenEditModal(
+                                                                                post
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        수정
+                                                                    </button>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        className="archive-delete-button"
+                                                                        onClick={() =>
+                                                                            handleDeletePost(
+                                                                                post.id
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        삭제
+                                                                    </button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     )
@@ -911,12 +1007,15 @@ function Board() {
                             <div className="archive-modal-header">
                                 <div>
                                     <h2 id="archive-modal-title">
-                                        새 글 작성
+                                        {editingPostId
+                                            ? "게시글 수정"
+                                            : "새 글 작성"}
                                     </h2>
 
                                     <p>
-                                        게시글과 첨부파일을
-                                        등록합니다.
+                                        {editingPostId
+                                            ? "게시글 내용과 첨부파일을 수정합니다."
+                                            : "게시글과 첨부파일을 등록합니다."}
                                     </p>
                                 </div>
 
@@ -983,6 +1082,8 @@ function Board() {
                                     <small>
                                         파일 1개, 최대 2MB까지
                                         등록할 수 있습니다.
+                                        {editingPostId &&
+                                            " 새 파일을 선택하지 않으면 기존 파일이 유지됩니다."}
                                     </small>
                                 </label>
 
@@ -999,6 +1100,34 @@ function Board() {
                                         </span>
                                     </div>
                                 )}
+
+                                {editingPostId &&
+                                    !selectedFile &&
+                                    archivePosts.find(
+                                        (post) =>
+                                            post.id ===
+                                            editingPostId
+                                    )?.attachment && (
+                                        <div className="archive-current-file">
+                                            <span>
+                                                현재 첨부파일
+                                            </span>
+
+                                            <strong>
+                                                {
+                                                    archivePosts.find(
+                                                        (
+                                                            post
+                                                        ) =>
+                                                            post.id ===
+                                                            editingPostId
+                                                    )
+                                                        ?.attachment
+                                                        ?.name
+                                                }
+                                            </strong>
+                                        </div>
+                                    )}
 
                                 {formError && (
                                     <p
@@ -1024,7 +1153,9 @@ function Board() {
                                         type="submit"
                                         className="archive-submit-button"
                                     >
-                                        게시글 등록
+                                        {editingPostId
+                                            ? "수정 완료"
+                                            : "게시글 등록"}
                                     </button>
                                 </div>
                             </form>
