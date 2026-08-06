@@ -6,6 +6,14 @@ const BOARD_TABS = [
     { id: "manual", label: "사용 매뉴얼" },
 ];
 
+/**
+ * 공지사항.
+ *
+ * 관리자가 사용자에게 알리는 글이라 화면에서 추가·수정·삭제하지 않는다.
+ * 그래서 DB 가 아니라 여기서 관리한다. 공지를 바꾸려면 이 배열을 고친다.
+ *
+ * pinned 를 true 로 두면 번호 대신 "공지"로 표시된다.
+ */
 const NOTICES = [
     {
         id: 1,
@@ -13,7 +21,6 @@ const NOTICES = [
         title: "LARO 서비스 이용 안내",
         author: "관리자",
         date: "2026.08.05",
-        views: 128,
         pinned: true,
         content:
             "LARO는 창고 운영, 로봇 관리, 시뮬레이션 및 작업 최적화를 지원하는 서비스입니다. 서비스 이용 전 창고와 로봇 정보를 먼저 등록해 주세요.",
@@ -24,7 +31,6 @@ const NOTICES = [
         title: "AI 시뮬레이션 기능 업데이트 안내",
         author: "관리자",
         date: "2026.08.04",
-        views: 96,
         pinned: true,
         content:
             "AI 계획 생성, 작업 배정, 충돌 검증 및 재계획 기능이 업데이트되었습니다. 시뮬레이션 메뉴에서 확인할 수 있습니다.",
@@ -35,7 +41,6 @@ const NOTICES = [
         title: "정기 점검 예정 안내",
         author: "관리자",
         date: "2026.08.01",
-        views: 52,
         pinned: false,
         content:
             "서비스 안정화를 위한 정기 점검이 예정되어 있습니다. 점검 시간에는 일부 기능 이용이 제한될 수 있습니다.",
@@ -46,7 +51,6 @@ const NOTICES = [
         title: "창고 설계 데이터 등록 방법",
         author: "관리자",
         date: "2026.07.30",
-        views: 74,
         pinned: false,
         content:
             "창고 메뉴에서 창고를 생성한 뒤 노드, 통로, 랙, 입출고장 및 충전소 정보를 등록할 수 있습니다.",
@@ -173,8 +177,7 @@ function Board() {
 
                                     <p>
                                         {selectedNotice.author} ·{" "}
-                                        {selectedNotice.date} · 조회{" "}
-                                        {selectedNotice.views}
+                                        {selectedNotice.date}
                                     </p>
                                 </div>
 
@@ -229,7 +232,6 @@ function Board() {
                                             <th>제목</th>
                                             <th>작성자</th>
                                             <th>작성일</th>
-                                            <th>조회</th>
                                         </tr>
                                     </thead>
 
@@ -274,10 +276,6 @@ function Board() {
                                                         <td>
                                                             {notice.date}
                                                         </td>
-
-                                                        <td>
-                                                            {notice.views}
-                                                        </td>
                                                     </tr>
                                                 )
                                             )
@@ -285,7 +283,7 @@ function Board() {
                                             <tr>
                                                 <td
                                                     className="board-empty"
-                                                    colSpan="6"
+                                                    colSpan="5"
                                                 >
                                                     검색 결과가 없습니다.
                                                 </td>
