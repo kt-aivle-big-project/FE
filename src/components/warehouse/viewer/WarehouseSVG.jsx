@@ -14,9 +14,7 @@ import {
     productColor,
     selectByStableKey,
 } from "./warehouseSvgUtils";
-import {
-    analyzeRobotConflictRisks,
-} from "./robotConflictAnalyzer";
+
 
 // ============================================================
 // 1. 공통 설정과 레이아웃 변환
@@ -171,6 +169,7 @@ function WarehouseSVG({
     robots = [],
     tasks = [],
     generatedCommands = [],
+    avoidanceStates = [],
     isRunning = false,
 }) {
     const [showNodeLabels, setShowNodeLabels] = useState(false);
@@ -792,21 +791,7 @@ function WarehouseSVG({
     // ============================================================
     // 8. 로봇 렌더링 데이터와 화면 조합
     // ============================================================
-    // 웹소켓으로 받은 현재 로봇 이동 구간을 비교해 충돌 위험을 분석한다.
-    const conflictRisks = analyzeRobotConflictRisks(robots);
 
-    // 위험 엣지와 로봇을 렌더링 레이어에서 빠르게 조회하도록 Set으로 변환한다.
-    const conflictEdgeKeys = new Set(
-        conflictRisks
-            .map((risk) => risk.edgeKey)
-            .filter(Boolean),
-    );
-
-    const conflictRobotIds = new Set(
-        conflictRisks.flatMap(
-            (risk) => risk.robotIds,
-        ),
-    );
     // BOX가 허브를 지나면 working, 슈트로 방출 중이면 releasing 상태를 적용한다.
     const fixedOutboundRobots = fixedOutboundHubs.map((hub) => {
         const activeTransfers = transferBoxes.filter((box) => box.fixedHubId === hub.id);
@@ -822,6 +807,15 @@ function WarehouseSVG({
             ),
         };
     });
+
+    const avoidanceByRobotId = new Map(
+        avoidanceStates.map(
+            (avoidance) => [
+                avoidance.robotId,
+                avoidance,
+            ],
+        ),
+    );
 
     // 자식 레이어가 시설 관계를 다시 계산하지 않도록 로봇 표시 데이터를 부모에서 준비한다.
     const mobileRobotMarkers = robots
@@ -847,6 +841,11 @@ function WarehouseSVG({
                 (box) => String(box.id).startsWith(`${robot.robot_id}-`),
             );
 
+            const avoidance =
+                avoidanceByRobotId.get(
+                    robot.robot_id,
+                );
+
             return {
                 robot,
                 fromX: convertX(fromNode.x),
@@ -854,8 +853,14 @@ function WarehouseSVG({
                 toX: convertX(toNode.x),
                 toY: convertY(toNode.y),
 
-                // 충돌 위험에 포함된 로봇은 개별 마커에서 경고 효과를 표시한다.
-                hasConflictRisk: conflictRobotIds.has(robot.robot_id),
+                isAvoidanceWaiting:
+                    Boolean(avoidance),
+
+                avoidanceLabel:
+                    avoidance
+                        ? `${avoidance.reason} · `
+                        + `${avoidance.waitingSeconds.toFixed(1)}초`
+                        : null,
 
                 loadColor: productColor(activeTask?.itemId),
                 loadTitle: activeProduct
@@ -876,7 +881,6 @@ function WarehouseSVG({
             nodeMap={nodeMap}
             convertX={convertX}
             convertY={convertY}
-            conflictEdgeKeys={conflictEdgeKeys}
             inboundLogicalEdges={inboundLogicalEdges}
             outboundLogicalGroups={outboundLogicalGroups}
             waitingInboundGroups={waitingInboundGroups}

@@ -1,5 +1,4 @@
 import WarehouseBoxLayer from "./WarehouseBoxLayer";
-import WarehouseConflictEdgeLayer from "./WarehouseConflictEdgeLayer";
 import WarehouseFacilityLayer from "./WarehouseFacilityLayer";
 import WarehouseGraphLayer from "./WarehouseGraphLayer";
 import WarehouseRobotLayer from "./WarehouseRobotLayer";
@@ -17,7 +16,6 @@ function WarehouseCanvas({
     nodeMap,
     convertX,
     convertY,
-    conflictEdgeKeys,
     inboundLogicalEdges,
     outboundLogicalGroups,
     waitingInboundGroups,
@@ -83,14 +81,6 @@ function WarehouseCanvas({
                     showNodeLabels={showNodeLabels}
                     inboundLogicalEdges={inboundLogicalEdges}
                     outboundLogicalGroups={outboundLogicalGroups}
-                />
-
-                <WarehouseConflictEdgeLayer
-                    graphData={graphData}
-                    nodeMap={nodeMap}
-                    convertX={convertX}
-                    convertY={convertY}
-                    conflictEdgeKeys={conflictEdgeKeys}
                 />
 
                 <WarehouseBoxLayer

@@ -431,48 +431,34 @@
 }
 
 
-/* 실시간 충돌 위험이 감지된 이동 엣지를 강조한다. */
-.warehouse-conflict-edge {
-    stroke: #ef4444;
-    stroke-width: 8;
-    stroke-linecap: round;
-    stroke-dasharray: 10 6;
-    opacity: 0.85;
-    animation:
-        warehouse-conflict-edge-pulse
-        0.7s ease-in-out infinite alternate;
-}
 
-/* 충돌 위험에 포함된 로봇 주변에 경고 링을 표시한다. */
-.warehouse-robot-conflict-ring {
+/* 충돌 회피 또는 통행 순서 대기 중인 로봇을 표시한다. */
+.warehouse-robot-avoidance-ring {
     fill: none;
-    stroke: #ef4444;
+    stroke: #f59e0b;
     stroke-width: 2;
     stroke-dasharray: 5 4;
-    transform-origin: center;
     animation:
-        warehouse-robot-conflict-pulse
-        0.7s ease-in-out infinite alternate;
+        warehouse-avoidance-pulse
+        0.9s ease-in-out infinite alternate;
 }
 
-@keyframes warehouse-conflict-edge-pulse {
+.warehouse-robot-avoidance-label {
+    fill: #b45309;
+    font-size: 10px;
+    font-weight: 700;
+    paint-order: stroke;
+    stroke: white;
+    stroke-width: 3px;
+    stroke-linejoin: round;
+}
+
+@keyframes warehouse-avoidance-pulse {
     from {
         opacity: 0.4;
     }
 
     to {
         opacity: 1;
-    }
-}
-
-@keyframes warehouse-robot-conflict-pulse {
-    from {
-        opacity: 0.4;
-        stroke-width: 3;
-    }
-
-    to {
-        opacity: 1;
-        stroke-width: 3;
     }
 }

@@ -72,7 +72,8 @@ function WarehouseRobotLayer({
                             toY={marker.toY}
                             robotImage={robotImage}
                             isRunning={isRunning}
-                            hasConflictRisk={marker.hasConflictRisk}
+                            isAvoidanceWaiting={marker.isAvoidanceWaiting}
+                            avoidanceLabel={marker.avoidanceLabel}
                             loadColor={marker.loadColor}
                             loadTitle={marker.loadTitle}
                             hideLoad={marker.hideLoad}

@@ -15,7 +15,8 @@ function AnimatedRobotMarker({
     toY,
     robotImage,
     isRunning,
-    hasConflictRisk = false,
+    isAvoidanceWaiting = false,
+    avoidanceLabel = null,
     loadColor,
     loadTitle,
     hideLoad,
@@ -93,18 +94,30 @@ function AnimatedRobotMarker({
                 </clipPath>
             </defs>
 
-            {hasConflictRisk && (
-                <circle
-                    cx="1"
-                    cy="1"
-                    r="29"
-                    className="warehouse-robot-conflict-ring"
-                    pointerEvents="none"
-                >
-                    <title>
-                        {`${robot.robot_code} 충돌 위험 감지`}
-                    </title>
-                </circle>
+            {isAvoidanceWaiting && (
+                <>
+                    <circle
+                        cx="1"
+                        cy="1"
+                        r="28"
+                        className="warehouse-robot-avoidance-ring"
+                        pointerEvents="none"
+                    >
+                        <title>
+                            {avoidanceLabel ?? "통행 순서 대기 중"}
+                        </title>
+                    </circle>
+
+                    <text
+                        x="1"
+                        y="-31"
+                        textAnchor="middle"
+                        className="warehouse-robot-avoidance-label"
+                        pointerEvents="none"
+                    >
+                        대기
+                    </text>
+                </>
             )}
 
             <image
