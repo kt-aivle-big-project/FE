@@ -306,6 +306,7 @@ function Signup() {
             email: email.trim().toLowerCase(),
             password,
             privacyAgreed: privacyAgree,
+            serviceAgreed: serviceAgree,
             emailVerificationToken: verificationToken,
         };
 
