@@ -2,34 +2,17 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/login/LoginCommon.css";
 import "../../styles/login/Signup.css";
-import { UserIcon, EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/icon";
+import { UserIcon, EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";
 
 const API_URL = "http://localhost:8080/api";
 
-/*
- * 백엔드 API가 확정되면 이 부분만 수정
- *
- * 아이디 중복 확인 응답 예시:
- * { "available": true }
- *
- * 이메일 인증 성공 응답 예시:
- * { "verificationToken": "..." }
- */
-const AUTH_ENDPOINTS = {
-    checkUserid: `${API_URL}/auth/userid/check`,
-    sendEmailCode: `${API_URL}/auth/email-verifications/send`,
-    verifyEmailCode: `${API_URL}/auth/email-verifications/verify`,
-    signup: `${API_URL}/auth/signup`,
-};
-
-const USERID_PATTERN = /^[a-zA-Z0-9]+$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SPECIAL_CHARACTERS = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?";
 
 const CODE_EXPIRATION_SECONDS = 5 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;
 
-// 초 단위를 04:59 형식으로 변환  
+// 초 단위를 04:59 형식으로 변환
 const formatTime = (seconds) => {
     const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
     const remainingSeconds = String(seconds % 60).padStart(2, "0");
@@ -37,7 +20,7 @@ const formatTime = (seconds) => {
     return `${minutes}:${remainingSeconds}`;
 };
 
-// JSON 응답과 문자열 응답을 모두 처리  
+// JSON 응답과 문자열 응답을 모두 처리
 const readResponse = async (response) => {
     const contentType = response.headers.get("content-type") || "";
 
@@ -52,21 +35,13 @@ const readResponse = async (response) => {
 function Signup() {
     const navigate = useNavigate();
 
-    // 회원 기본 정보  
+    // 회원 기본 정보
     const [name, setName] = useState("");
-    const [userid, setUserid] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [passwordConfirm, setPasswordConfirm] = useState("");
 
-    // 아이디 중복 확인  
-    const [useridCheck, setUseridCheck] = useState({
-        status: "idle",
-        message: "",
-    });
-    const [isCheckingUserid, setIsCheckingUserid] = useState(false);
-
-    // 이메일 인증  
+    // 이메일 인증
     const [verificationCode, setVerificationCode] = useState("");
     const [verificationToken, setVerificationToken] = useState("");
     const [isCodeSent, setIsCodeSent] = useState(false);
@@ -75,22 +50,22 @@ function Signup() {
     const [codeTimeLeft, setCodeTimeLeft] = useState(0);
     const [resendTimeLeft, setResendTimeLeft] = useState(0);
 
-    // 비밀번호 표시 여부  
+    // 비밀번호 표시 여부
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
-    // 약관 동의  
+    // 약관 동의
     const [privacyAgree, setPrivacyAgree] = useState(false);
     const [serviceAgree, setServiceAgree] = useState(false);
 
-    // 모달 및 요청 상태  
+    // 모달 및 요청 상태
     const [termsModal, setTermsModal] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // 각 입력 항목 아래에 표시할 오류  
+    // 각 입력 항목 아래에 표시할 오류
     const [errors, setErrors] = useState({});
 
-    // 입력값 검사 결과  
+    // 입력값 검사 결과
     const isAllAgreed = privacyAgree && serviceAgree;
     const isEmailVerified = Boolean(verificationToken);
     const isPasswordLengthValid = password.length >= 8 && password.length <= 24;
@@ -99,7 +74,7 @@ function Signup() {
     ).length >= 2;
     const isPasswordMatch = password === passwordConfirm;
 
-    // 인증번호와 재전송 시간을 1초마다 감소  
+    // 인증번호와 재전송 시간을 1초마다 감소
     useEffect(() => {
         const timer = setInterval(() => {
             setCodeTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
@@ -109,7 +84,7 @@ function Signup() {
         return () => clearInterval(timer);
     }, []);
 
-    // 인증번호 유효시간이 끝나면 오류 표시  
+    // 인증번호 유효시간이 끝나면 오류 표시
     useEffect(() => {
         if (!isCodeSent || isEmailVerified || codeTimeLeft !== 0) return;
 
@@ -119,82 +94,12 @@ function Signup() {
         }));
     }, [codeTimeLeft, isCodeSent, isEmailVerified]);
 
-    // 특정 입력 항목의 오류 제거  
+    // 특정 입력 항목의 오류 제거
     const clearError = (field) => {
         setErrors((prev) => ({ ...prev, [field]: "" }));
     };
 
-    // 아이디를 수정하면 기존 중복 확인 결과 초기화  
-    const handleUseridChange = (e) => {
-        setUserid(e.target.value);
-        setUseridCheck({ status: "idle", message: "" });
-        setErrors((prev) => ({ ...prev, userid: "" }));
-    };
-
-    // 아이디 중복 확인  
-    const handleCheckUserid = async () => {
-        const normalizedUserid = userid.trim();
-
-        if (!normalizedUserid) {
-            setErrors((prev) => ({ ...prev, userid: "아이디를 입력해주세요." }));
-            return;
-        }
-
-        if (!USERID_PATTERN.test(normalizedUserid)) {
-            setErrors((prev) => ({
-                ...prev,
-                userid: "아이디는 영문, 숫자만 사용할 수 있습니다.",
-            }));
-            return;
-        }
-
-        setErrors((prev) => ({ ...prev, userid: "" }));
-
-        try {
-            setIsCheckingUserid(true);
-            clearError("userid");
-            setUseridCheck({ status: "idle", message: "" });
-
-            const response = await fetch(
-                AUTH_ENDPOINTS.checkUserid,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        userid: normalizedUserid
-                    }),
-                });
-
-            const data = await readResponse(response);
-
-            if (!response.ok) {
-                throw new Error(data.message || "아이디 중복 확인에 실패했습니다.");
-            }
-
-            if (typeof data.available !== "boolean") {
-                throw new Error("아이디 중복 확인 응답 형식이 올바르지 않습니다.");
-            }
-
-            if (data.available) {
-                setUseridCheck({
-                    status: "available",
-                    message: "사용 가능한 아이디입니다.",
-                });
-            } else {
-                setUseridCheck({
-                    status: "duplicate",
-                    message: "이미 사용 중인 아이디입니다.",
-                });
-            }
-        } catch (error) {
-            console.error("아이디 중복 확인 실패:", error);
-
-        } finally {
-            setIsCheckingUserid(false);
-        }
-    };
-
-    // 이메일 관련 인증 상태 초기화  
+    // 이메일 관련 인증 상태 초기화
     const resetEmailVerification = () => {
         setVerificationCode("");
         setVerificationToken("");
@@ -209,18 +114,18 @@ function Signup() {
         }));
     };
 
-    // 이메일을 수정하면 기존 인증 결과 초기화  
+    // 이메일을 수정하면 기존 인증 결과 초기화
     const handleEmailChange = (e) => {
         setEmail(e.target.value);
         resetEmailVerification();
     };
 
-    // 인증 완료 후 이메일을 다시 수정할 때 사용  
+    // 인증 완료 후 이메일을 다시 수정할 때 사용
     const handleChangeVerifiedEmail = () => {
         resetEmailVerification();
     };
 
-    // 이메일 인증번호 발송  
+    // 이메일 인증번호 발송
     const handleSendVerificationCode = async () => {
         const normalizedEmail = email.trim().toLowerCase();
 
@@ -247,7 +152,7 @@ function Signup() {
             }));
 
             const response = await fetch(
-                AUTH_ENDPOINTS.sendEmailCode,
+                `${API_URL}/auth/email/send`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -262,7 +167,7 @@ function Signup() {
                 throw new Error(data.message || "인증번호 발송에 실패했습니다.");
             }
 
-            // 발송 성공 후 인증번호 입력창과 타이머 표시  
+            // 발송 성공 후 인증번호 입력창과 타이머 표시
             setIsCodeSent(true);
             setVerificationCode("");
             setVerificationToken("");
@@ -276,7 +181,7 @@ function Signup() {
         }
     };
 
-    // 사용자가 입력한 인증번호 변경  
+    // 사용자가 입력한 인증번호 변경
     const handleVerificationCodeChange = (e) => {
         const code = e.target.value.replace(/\D/g, "").slice(0, 6);
 
@@ -284,7 +189,7 @@ function Signup() {
         clearError("verificationCode");
     };
 
-    // 인증번호 확인  
+    // 인증번호 확인
     const handleVerifyCode = async () => {
         const normalizedEmail = email.trim().toLowerCase();
 
@@ -309,7 +214,7 @@ function Signup() {
             clearError("verificationCode");
 
             const response = await fetch(
-                AUTH_ENDPOINTS.verifyEmailCode,
+                `${API_URL}/auth/email/verify`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -329,7 +234,7 @@ function Signup() {
                 throw new Error("이메일 인증 완료 토큰이 응답에 없습니다.");
             }
 
-            // 토큰이 저장되면 이메일 인증 완료로 처리  
+            // 토큰이 저장되면 이메일 인증 완료로 처리
             setVerificationToken(data.verificationToken);
             setCodeTimeLeft(0);
             setResendTimeLeft(0);
@@ -343,7 +248,7 @@ function Signup() {
         }
     };
 
-    // 모두 동의 체크박스로 필수 약관 전체 변경  
+    // 모두 동의 체크박스로 필수 약관 전체 변경
     const handleAllAgree = (e) => {
         const checked = e.target.checked;
 
@@ -352,20 +257,12 @@ function Signup() {
         clearError("agreement");
     };
 
-    // 회원가입 요청 전 전체 입력값 검사  
+    // 회원가입 요청 전 전체 입력값 검사
     const validateSignupForm = () => {
         const nextErrors = {};
 
         if (!name.trim()) {
             nextErrors.name = "이름을 입력해주세요.";
-        }
-
-        if (!userid.trim()) {
-            nextErrors.userid = "아이디를 입력해주세요.";
-        } else if (!USERID_PATTERN.test(userid.trim())) {
-            nextErrors.userid = "아이디는 영문, 숫자만 사용할 수 있습니다.";
-        } else if (useridCheck.status !== "available") {
-            nextErrors.userid = "아이디 중복 확인을 완료해주세요.";
         }
 
         if (!email.trim()) {
@@ -398,7 +295,7 @@ function Signup() {
         return Object.keys(nextErrors).length === 0;
     };
 
-    // 회원가입 요청  
+    // 회원가입 요청
     const handleSignup = async (e) => {
         e.preventDefault();
 
@@ -406,10 +303,10 @@ function Signup() {
 
         const signupData = {
             name: name.trim(),
-            userid: userid.trim(),
             email: email.trim().toLowerCase(),
             password,
             privacyAgreed: privacyAgree,
+            serviceAgreed: serviceAgree,
             emailVerificationToken: verificationToken,
         };
 
@@ -418,7 +315,7 @@ function Signup() {
             clearError("form");
 
             const response = await fetch(
-                AUTH_ENDPOINTS.signup,
+                `${API_URL}/auth/signup`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -430,7 +327,6 @@ function Signup() {
             if (!response.ok) {
                 const allowedFields = [
                     "name",
-                    "userid",
                     "email",
                     "password",
                     "passwordConfirm",
@@ -462,7 +358,7 @@ function Signup() {
         }
     };
 
-    // 약관 모달 내용  
+    // 약관 모달 내용
     const getTermsContent = () => {
         if (termsModal === "privacy") {
             return {
@@ -475,7 +371,7 @@ function Signup() {
 
                         <div className="terms-section">
                             <h3>1. 수집 항목</h3>
-                            <p>이름, 아이디, 이메일, 비밀번호</p>
+                            <p>이름, 이메일, 비밀번호</p>
                         </div>
 
                         <div className="terms-section">
@@ -559,7 +455,7 @@ function Signup() {
                 <header className="login-header">
                     <h1 className="login-title">회원가입</h1>
                     <p className="login-description">
-                        LARO 서비스를 이용할 계정을 만들어주세요.
+                        이메일 인증을 완료하고 LARO 계정을 만들어주세요.
                     </p>
                 </header>
 
@@ -602,61 +498,6 @@ function Signup() {
                             )}
                         </div>
 
-                        {/* 아이디 및 중복 확인 */}
-                        <div className="signup-field">
-                            <label htmlFor="userid">아이디</label>
-
-                            <div className="signup-verification-row">
-                                <div className="signup-input-wrapper signup-verification-input">
-                                    <span className="signup-input-icon">
-                                        <UserIcon />
-                                    </span>
-
-                                    <input
-                                        id="userid"
-                                        type="text"
-                                        value={userid}
-                                        placeholder="아이디를 입력하세요"
-                                        autoComplete="userid"
-                                        disabled={useridCheck.status === "available"}
-                                        onChange={handleUseridChange}
-                                    />
-                                </div>
-
-                                <button
-                                    type="button"
-                                    className="signup-verification-button"
-                                    onClick={handleCheckUserid}
-                                    disabled={
-                                        isCheckingUserid ||
-                                        useridCheck.status === "available"
-                                    }
-                                >
-                                    {isCheckingUserid
-                                        ? "확인 중..."
-                                        : useridCheck.status === "available"
-                                            ? "확인 완료"
-                                            : "중복 확인"}
-                                </button>
-                            </div>
-
-                            {useridCheck.message && (
-                                <p
-                                    className={`signup-verification-message ${useridCheck.status === "available"
-                                        ? "signup-verification-message-success"
-                                        : "signup-verification-message-error"
-                                        }`}
-                                    aria-live="polite"
-                                >
-                                    {useridCheck.message}
-                                </p>
-                            )}
-
-                            {errors.userid && (
-                                <p className="signup-password-error">{errors.userid}</p>
-                            )}
-                        </div>
-
                         {/* 이메일 및 인증번호 발송 */}
                         <div className="signup-field">
                             <label htmlFor="signup-email">이메일</label>
@@ -671,7 +512,7 @@ function Signup() {
                                         id="signup-email"
                                         type="email"
                                         value={email}
-                                        placeholder="이메일을 입력하세요"
+                                        placeholder="로그인에 사용할 이메일을 입력하세요"
                                         autoComplete="email"
                                         disabled={isEmailVerified}
                                         onChange={handleEmailChange}
