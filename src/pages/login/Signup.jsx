@@ -175,6 +175,10 @@ function Signup() {
             setResendTimeLeft(RESEND_COOLDOWN_SECONDS);
         } catch (error) {
             console.error("인증번호 발송 실패:", error);
+            setErrors((prev) => ({
+                ...prev,
+                email: error.message || "인증번호 발송에 실패했습니다.",
+            }));
 
         } finally {
             setIsSendingCode(false);
@@ -242,6 +246,10 @@ function Signup() {
         } catch (error) {
             console.error("이메일 인증 실패:", error);
             setVerificationToken("");
+            setErrors((prev) => ({
+                ...prev,
+                verificationCode: error.message || "인증번호 확인에 실패했습니다.",
+            }));
 
         } finally {
             setIsVerifyingCode(false);
@@ -352,6 +360,10 @@ function Signup() {
             navigate("/login");
         } catch (error) {
             console.error("회원가입 실패:", error);
+            setErrors((prev) => ({
+                ...prev,
+                form: error.message || "회원가입 처리 중 오류가 발생했습니다.",
+            }));
 
         } finally {
             setIsSubmitting(false);
