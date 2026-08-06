@@ -15,6 +15,7 @@ function AnimatedRobotMarker({
     toY,
     robotImage,
     isRunning,
+    hasConflictRisk = false,
     loadColor,
     loadTitle,
     hideLoad,
@@ -91,6 +92,20 @@ function AnimatedRobotMarker({
                     <rect x="-23" y="-23" width="50" height="50" rx="50" ry="50" />
                 </clipPath>
             </defs>
+
+            {hasConflictRisk && (
+                <circle
+                    cx="1"
+                    cy="1"
+                    r="29"
+                    className="warehouse-robot-conflict-ring"
+                    pointerEvents="none"
+                >
+                    <title>
+                        {`${robot.robot_code} 충돌 위험 감지`}
+                    </title>
+                </circle>
+            )}
 
             <image
                 href={robotImage}

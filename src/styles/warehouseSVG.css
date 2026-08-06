@@ -429,3 +429,50 @@
     from { transform: rotate(-3deg); }
     to { transform: rotate(3deg); }
 }
+
+
+/* 실시간 충돌 위험이 감지된 이동 엣지를 강조한다. */
+.warehouse-conflict-edge {
+    stroke: #ef4444;
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 10 6;
+    opacity: 0.85;
+    animation:
+        warehouse-conflict-edge-pulse
+        0.7s ease-in-out infinite alternate;
+}
+
+/* 충돌 위험에 포함된 로봇 주변에 경고 링을 표시한다. */
+.warehouse-robot-conflict-ring {
+    fill: none;
+    stroke: #ef4444;
+    stroke-width: 2;
+    stroke-dasharray: 5 4;
+    transform-origin: center;
+    animation:
+        warehouse-robot-conflict-pulse
+        0.7s ease-in-out infinite alternate;
+}
+
+@keyframes warehouse-conflict-edge-pulse {
+    from {
+        opacity: 0.4;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes warehouse-robot-conflict-pulse {
+    from {
+        opacity: 0.4;
+        stroke-width: 3;
+    }
+
+    to {
+        opacity: 1;
+        stroke-width: 3;
+    }
+}
