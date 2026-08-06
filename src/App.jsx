@@ -23,14 +23,45 @@ function App() {
                 <Route path="/signup" element={<Signup />} />
 
                 <Route element={<MainLayout />}>
-                    <Route path="/simulation" element={<Simulation />} />
-                    <Route path="/scenario" element={<Scenario />}/>
-                    <Route path="/robot" element={<RobotManagement />} />
-                    <Route path="/warehouse" element={<WarehouseManagement />} />
-                    <Route path="/warehouse/new" element={<WarehouseCreate />} />
-                    <Route path="/warehouse/:warehouseId/edit" element={<WarehouseCreate />} />
-                    <Route path="/operation" element={<OperationManagement />} />
-                    <Route path="/board" element={<Board />} />
+                    <Route
+                        path="/simulation"
+                        element={<Simulation />}
+                    />
+
+                    <Route
+                        path="/scenario"
+                        element={<Scenario />}
+                    />
+
+                    <Route
+                        path="/robot"
+                        element={<RobotManagement />}
+                    />
+
+                    <Route
+                        path="/warehouse"
+                        element={<WarehouseManagement />}
+                    />
+
+                    <Route
+                        path="/warehouse/new"
+                        element={<WarehouseCreate />}
+                    />
+
+                    <Route
+                        path="/warehouse/:warehouseId/edit"
+                        element={<WarehouseCreate />}
+                    />
+
+                    <Route
+                        path="/operation"
+                        element={<OperationManagement />}
+                    />
+
+                    <Route
+                        path="/board"
+                        element={<Board />}
+                    />
                 </Route>
             </Routes>
         </BrowserRouter>
