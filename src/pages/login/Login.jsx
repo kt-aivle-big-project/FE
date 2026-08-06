@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import laroLogo from "../../assets/laro/laro_logo.png";
-import laroBackground from "../../assets/laro/laro_background.png";
+import LoginCircuitBackground from "../../pages/login/LoginCircuitBackground";
 import "../../styles/login/LoginCommon.css";
 import "../../styles/login/Login.css";
 import { EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";
@@ -76,10 +76,8 @@ function Login() {
     };
 
     return (
-        <div
-            className="login-page"
-            style={{ backgroundImage: `url(${laroBackground})`, }}
-        >
+        <div className="login-page">
+            <LoginCircuitBackground />
             <main className="login-card">
                 <button
                     type="button"
