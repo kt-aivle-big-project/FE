@@ -11,6 +11,7 @@ import RobotManagement from "./pages/RobotManagement";
 import WarehouseManagement from "./pages/WarehouseManagement";
 import WarehouseCreate from "./pages/WarehouseCreate";
 import OperationManagement from "./pages/OperationManagement";
+import Board from "./pages/Board";
 
 function App() {
     return (
@@ -29,6 +30,7 @@ function App() {
                     <Route path="/warehouse/new" element={<WarehouseCreate />} />
                     <Route path="/warehouse/:warehouseId/edit" element={<WarehouseCreate />} />
                     <Route path="/operation" element={<OperationManagement />} />
+                    <Route path="/board" element={<Board />} />
                 </Route>
             </Routes>
         </BrowserRouter>
