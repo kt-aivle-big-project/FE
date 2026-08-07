@@ -2,19 +2,19 @@ import { useEffect, useState } from "react";
 import { warehouseApi } from "../../api/client";
 import "../../styles/scenario/ScenarioCreatePanel.css";
 
-/** 생성 또는 수정 모드의 초기 입력값을 만든다. */
+// 생성 또는 수정 모드의 초기 입력값을 만든다.
 const createInitialFormData = (initialScenario) => ({
-    name: initialScenario?.name ?? "",
+    scenarioName: initialScenario?.scenarioName ?? "",
     description: initialScenario?.description ?? "",
     warehouseId:
         initialScenario?.warehouseId != null
             ? String(initialScenario.warehouseId)
             : "",
     initialBattery: initialScenario?.initialBattery ?? 100,
-    chargeThreshold: initialScenario?.chargeThreshold ?? 20,
+    chargingThreshold: initialScenario?.chargingThreshold ?? 20,
 });
 
-/** 백엔드 창고 응답을 select 옵션 형태로 변환한다. */
+// 백엔드 창고 응답을 select 옵션 형태로 변환한다.
 const createWarehouseOption = (warehouse) => {
     if (warehouse?.id == null) {
         return null;
@@ -32,7 +32,7 @@ const createWarehouseOption = (warehouse) => {
     };
 };
 
-/** 숫자형 창고 ID는 숫자로, 그 외 ID는 문자열로 유지한다. */
+// 숫자형 창고 ID는 숫자로, 그 외 ID는 문자열로 유지한다.
 const normalizeWarehouseId = (warehouseId) => {
     const numericWarehouseId = Number(warehouseId);
 
@@ -58,7 +58,7 @@ function ScenarioCreatePanel({
     const [isWarehouseLoading, setIsWarehouseLoading] = useState(true);
     const [warehouseLoadError, setWarehouseLoadError] = useState("");
 
-    /** ESC 키로 열려 있는 생성/수정 패널을 닫는다. */
+    // ESC 키로 열려 있는 생성/수정 패널을 닫는다.
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (event.key === "Escape") {
@@ -73,7 +73,7 @@ function ScenarioCreatePanel({
         };
     }, [onClose]);
 
-    /** 패널이 열리면 백엔드에 등록된 창고 목록을 조회한다. */
+    // 패널이 열리면 백엔드에 등록된 창고 목록을 조회한다.
     useEffect(() => {
         let isCancelled = false;
 
@@ -162,7 +162,7 @@ function ScenarioCreatePanel({
         initialScenario?.warehouseLocation,
     ]);
 
-    /** 일반 입력값을 변경한다. */
+    // 일반 입력값을 변경한다.
     const handleInputChange = (event) => {
         const { name, value } = event.target;
 
@@ -177,7 +177,7 @@ function ScenarioCreatePanel({
         }));
     };
 
-    /** 숫자 입력값을 변경한다. */
+    // 숫자 입력값을 변경한다.
     const handleNumberChange = (event) => {
         const { name, value } = event.target;
 
@@ -192,12 +192,12 @@ function ScenarioCreatePanel({
         }));
     };
 
-    /** 필수 입력값과 배터리 범위를 검증한다. */
+    // 필수 입력값과 배터리 범위를 검증한다.
     const validateForm = () => {
         const nextErrors = {};
 
-        if (!formData.name.trim()) {
-            nextErrors.name = "시나리오명을 입력해주세요.";
+        if (!formData.scenarioName.trim()) {
+            nextErrors.scenarioName = "시나리오명을 입력해주세요.";
         }
 
         if (!formData.warehouseId) {
@@ -214,19 +214,19 @@ function ScenarioCreatePanel({
         }
 
         if (
-            formData.chargeThreshold === "" ||
-            formData.chargeThreshold < 0 ||
-            formData.chargeThreshold > 100
+            formData.chargingThreshold === "" ||
+            formData.chargingThreshold < 0 ||
+            formData.chargingThreshold > 100
         ) {
-            nextErrors.chargeThreshold =
+            nextErrors.chargingThreshold =
                 "충전 기준은 0~100 사이로 입력해주세요.";
         }
 
         if (
-            Number(formData.chargeThreshold) >=
+            Number(formData.chargingThreshold) >=
             Number(formData.initialBattery)
         ) {
-            nextErrors.chargeThreshold =
+            nextErrors.chargingThreshold =
                 "충전 기준은 초기 배터리보다 작아야 합니다.";
         }
 
@@ -235,7 +235,7 @@ function ScenarioCreatePanel({
         return Object.keys(nextErrors).length === 0;
     };
 
-    /** 검증된 시나리오 정보를 부모 컴포넌트로 전달한다. */
+    // 검증된 시나리오 정보를 부모 컴포넌트로 전달한다.
     const handleSubmit = (event) => {
         event.preventDefault();
 
@@ -257,15 +257,11 @@ function ScenarioCreatePanel({
         }
 
         onSubmit({
-            name: formData.name.trim(),
-            description: formData.description.trim(),
-            // 백엔드 관계 연결 기준은 warehouseId이다.
             warehouseId: normalizeWarehouseId(selectedWarehouse.value),
-            // 목록과 상세 화면 표시에 필요한 창고 정보이다.
-            warehouseName: selectedWarehouse.name,
-            warehouseLocation: selectedWarehouse.location,
+            scenarioName: formData.scenarioName.trim(),
+            description: formData.description.trim(),
             initialBattery: Number(formData.initialBattery),
-            chargeThreshold: Number(formData.chargeThreshold),
+            chargingThreshold: Number(formData.chargingThreshold),
         });
     };
 
@@ -322,19 +318,19 @@ function ScenarioCreatePanel({
 
                                 <input
                                     type="text"
-                                    name="name"
-                                    value={formData.name}
+                                    name="scenarioName"
+                                    value={formData.scenarioName}
                                     placeholder="시나리오명을 입력해주세요."
                                     onChange={handleInputChange}
                                     autoFocus
                                     className={
-                                        errors.name ? "is-error" : ""
+                                        errors.scenarioName ? "is-error" : ""
                                     }
                                 />
 
-                                {errors.name && (
+                                {errors.scenarioName && (
                                     <small className="scenario-create-error">
-                                        {errors.name}
+                                        {errors.scenarioName}
                                     </small>
                                 )}
                             </label>
@@ -481,13 +477,13 @@ function ScenarioCreatePanel({
                                 <div className="scenario-create-suffix-input">
                                     <input
                                         type="number"
-                                        name="chargeThreshold"
-                                        value={formData.chargeThreshold}
+                                        name="chargingThreshold"
+                                        value={formData.chargingThreshold}
                                         min="0"
                                         max="100"
                                         onChange={handleNumberChange}
                                         className={
-                                            errors.chargeThreshold
+                                            errors.chargingThreshold
                                                 ? "is-error"
                                                 : ""
                                         }
@@ -500,9 +496,9 @@ function ScenarioCreatePanel({
                                     이 값 이하가 되면 충전 작업으로 전환합니다.
                                 </small>
 
-                                {errors.chargeThreshold && (
+                                {errors.chargingThreshold && (
                                     <small className="scenario-create-error">
-                                        {errors.chargeThreshold}
+                                        {errors.chargingThreshold}
                                     </small>
                                 )}
                             </label>
