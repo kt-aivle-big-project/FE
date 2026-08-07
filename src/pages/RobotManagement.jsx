@@ -812,7 +812,7 @@ function RobotManagement() {
         try {
             setIsDeleting(true);
 
-            await robotApi.remove(robotId);
+            await robotApi.delete(robotId);
 
             setRuntimeStates((previousStates) => {
                 const nextStates = { ...previousStates };
