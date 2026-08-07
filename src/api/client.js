@@ -153,9 +153,18 @@ export const scenarioApi = {
                 ? `/scenarios?warehouseId=${warehouseId}`
                 : "/scenarios"
         ),
-    get: (scenarioId) => api.get(`/scenarios/${scenarioId}`),
+
+    get: (scenarioId) =>
+        api.get(`/scenarios/${scenarioId}`),
+
+    create: (payload) =>
+        api.post("/scenarios", payload),
+
     update: (scenarioId, payload) =>
         api.patch(`/scenarios/${scenarioId}`, payload),
+
+    delete: (scenarioId) =>
+        api.delete(`/scenarios/${scenarioId}`),
 };
 
 export const productApi = {

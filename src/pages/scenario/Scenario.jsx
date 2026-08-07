@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import ScenarioDetail from "./ScenarioDetail";
-import ScenarioCreateModal from "./ScenarioCreateModal";
+import ScenarioCreatePanel from "./ScenarioCreatePanel";
 import { scenarioApi } from "../../api/client";
 import "../../styles/scenario/Scenario.css";
 
@@ -79,7 +79,7 @@ const getUpdatedTime = (scenario) => {
 
 function Scenario() {
     const [scenarios, setScenarios] = useState([]);
-    const [isScenarioModalOpen, setIsScenarioModalOpen] = useState(false);
+    const [isScenarioPanelOpen, setIsScenarioPanelOpen] = useState(false);
     const [editingScenarioId, setEditingScenarioId] = useState(null);
     const [openMenuScenarioId, setOpenMenuScenarioId] = useState(null);
     const [selectedScenarioId, setSelectedScenarioId] = useState(null);
@@ -116,9 +116,10 @@ function Scenario() {
 
         const result = scenarios.filter((scenario) => {
             const searchableText = [
-                scenario.name,
-                scenario.scenarioId,
+                scenario.scenarioName,
+                scenario.id,
                 scenario.warehouseName,
+                scenario.warehouseId,
             ]
                 .filter(Boolean)
                 .join(" ")
@@ -200,120 +201,126 @@ function Scenario() {
         setCurrentPage(1);
     };
 
-    // 시나리오 생성 모달 열기
+    // 시나리오 생성 패널 열기
     const handleCreateScenario = () => {
         setOpenMenuScenarioId(null);
         setEditingScenarioId(null);
-        setIsScenarioModalOpen(true);
+        setSelectedScenarioId(null);
+        setIsScenarioPanelOpen(true);
     };
 
-    // 시나리오 수정 모달 열기
+    // 시나리오 수정 패널 열기
     const handleEditScenario = (scenario) => {
         setOpenMenuScenarioId(null);
         setEditingScenarioId(scenario.id);
-        setIsScenarioModalOpen(true);
+        setIsScenarioPanelOpen(true);
     };
 
-    // 시나리오 모달 닫기
-    const handleCloseScenarioModal = () => {
-        setIsScenarioModalOpen(false);
+    // 시나리오 생성/수정 패널 닫기
+    const handleCloseScenarioPanel = () => {
+        setIsScenarioPanelOpen(false);
         setEditingScenarioId(null);
     };
 
-    // 모달에서 전달받은 시나리오를 목록에 반영
-    const handleScenarioSubmit = (submittedData) => {
-        const now = new Date().toISOString();
+    // 시나리오 생성/수정
+    const handleScenarioSubmit = async (submittedData) => {
+        const isEditMode = editingScenarioId !== null;
 
-        if (editingScenarioId !== null) {
-            setScenarios((previousScenarios) =>
-                previousScenarios.map((scenario) =>
-                    scenario.id === editingScenarioId
-                        ? {
-                            ...scenario,
-                            ...submittedData,
-                            status: "DRAFT",
-                            productCount: submittedData.products?.length ?? 0,
-                            updatedAt: now,
-                        }
-                        : scenario
-                )
-            );
-
-            // 수정한 시나리오의 상세 화면 유지
-            setSelectedScenarioId(editingScenarioId);
-            handleCloseScenarioModal();
-            return;
-        }
-
-        const nextId =
-            scenarios.reduce(
-                (maximumId, scenario) =>
-                    Math.max(maximumId, Number(scenario.id) || 0),
-                0
-            ) + 1;
-
-        const nextScenarioNumber =
-            scenarios.reduce((maximumNumber, scenario) => {
-                const matchedNumber = Number(
-                    String(scenario.scenarioId)
-                        .split("-")
-                        .at(-1)
+        try {
+            if (isEditMode) {
+                await scenarioApi.update(
+                    editingScenarioId,
+                    submittedData
                 );
 
-                return Number.isNaN(matchedNumber)
-                    ? maximumNumber
-                    : Math.max(maximumNumber, matchedNumber);
-            }, 0) + 1;
+                console.log("시나리오 수정 성공:", submittedData);
+            } else {
+                const createdScenario =
+                    await scenarioApi.create(submittedData);
 
-        const newScenario = {
-            id: nextId,
-            scenarioId: `SCN-2026-${String(
-                nextScenarioNumber
-            ).padStart(3, "0")}`,
-            ...submittedData,
-            status: "DRAFT",
-            productCount: submittedData.products?.length ?? 0,
-            createdAt: now,
-            updatedAt: now,
-            executionHistory: [],
-            replanResult: null,
-        };
+                // 백엔드에서 생성된 id가 있어야 생성 성공으로 처리한다.
+                if (!createdScenario || createdScenario.id == null) {
+                    throw new Error(
+                        "시나리오 생성 API 응답이 올바르지 않습니다."
+                    );
+                }
 
-        setScenarios((previousScenarios) => [
-            newScenario,
-            ...previousScenarios,
-        ]);
+                console.log("시나리오 생성 성공:", createdScenario);
+            }
 
-        // 생성한 시나리오의 상세 화면 열기
-        setSelectedScenarioId(newScenario.id);
-        setCurrentPage(1);
-        handleCloseScenarioModal();
+            // 저장 성공 후 백엔드의 최신 목록을 다시 조회한다.
+            const response = await scenarioApi.getAll();
+
+            if (!Array.isArray(response)) {
+                throw new Error("시나리오 목록 응답이 배열이 아닙니다.");
+            }
+
+            setScenarios(response);
+
+            if (isEditMode) {
+                setSelectedScenarioId(editingScenarioId);
+            } else {
+                setSelectedScenarioId(null);
+                setCurrentPage(1);
+            }
+
+            handleCloseScenarioPanel();
+        } catch (error) {
+            console.error(
+                isEditMode
+                    ? "시나리오 수정 실패:"
+                    : "시나리오 생성 실패:",
+                error
+            );
+
+            alert(
+                error.message ??
+                    (isEditMode
+                        ? "시나리오 수정에 실패했습니다."
+                        : "시나리오 생성에 실패했습니다.")
+            );
+        }
     };
 
     // 시나리오 삭제
-    const handleDeleteScenario = (scenario) => {
+    const handleDeleteScenario = async (scenario) => {
         setOpenMenuScenarioId(null);
 
         const shouldDelete = window.confirm(
-            `“${scenario.name}” 시나리오를 삭제할까요?`
+            `“${scenario.scenarioName}” 시나리오를 삭제할까요?`
         );
 
         if (!shouldDelete) {
             return;
         }
 
-        setScenarios((previousScenarios) =>
-            previousScenarios.filter(
-                (item) => item.id !== scenario.id
-            )
-        );
+        try {
+            await scenarioApi.delete(scenario.id);
 
-        // 상세로 보고 있던 시나리오를 삭제하면 상세 영역 닫기
-        if (selectedScenarioId === scenario.id) {
-            setSelectedScenarioId(null);
+            // 삭제 성공 후 백엔드의 최신 목록을 다시 조회한다.
+            const response = await scenarioApi.getAll();
+
+            if (!Array.isArray(response)) {
+                throw new Error("시나리오 목록 응답이 배열이 아닙니다.");
+            }
+
+            setScenarios(response);
+
+            if (selectedScenarioId === scenario.id) {
+                setSelectedScenarioId(null);
+            }
+
+            setCurrentPage(1);
+
+            console.log("시나리오 삭제 성공:", scenario);
+        } catch (error) {
+            console.error("시나리오 삭제 실패:", error);
+
+            alert(
+                error.message ??
+                    "시나리오 삭제에 실패했습니다."
+            );
         }
-
-        setCurrentPage(1);
     };
 
     // 시나리오 상태 변경
@@ -351,6 +358,8 @@ function Scenario() {
     // 선택한 시나리오 상세 표시
     const handleScenarioClick = (scenarioId) => {
         setOpenMenuScenarioId(null);
+        setIsScenarioPanelOpen(false);
+        setEditingScenarioId(null);
         setSelectedScenarioId(scenarioId);
     };
 
@@ -372,8 +381,11 @@ function Scenario() {
     return (
         <main className="scenario-page">
             <div
-                className={`scenario-workspace ${selectedScenario ? "has-detail" : "is-list-only"
-                    }`}
+                className={`scenario-workspace ${
+                    isScenarioPanelOpen || selectedScenario
+                        ? "has-side-panel"
+                        : "is-list-only"
+                }`}
             >
                 {/* 왼쪽 시나리오 목록 */}
                 <section className="scenario-list-card">
@@ -502,11 +514,11 @@ function Scenario() {
 
                                                         <span className="scenario-name-content">
                                                             <strong>
-                                                                {scenario.name}
+                                                                {scenario.scenarioName}
                                                             </strong>
 
                                                             <small>
-                                                                {scenario.scenarioId}
+                                                                #{scenario.id}
                                                             </small>
                                                         </span>
                                                     </button>
@@ -539,7 +551,7 @@ function Scenario() {
                                                         <button
                                                             type="button"
                                                             className="scenario-more-button"
-                                                            aria-label={`${scenario.name} 메뉴 열기`}
+                                                            aria-label={`${scenario.scenarioName} 메뉴 열기`}
                                                             aria-haspopup="menu"
                                                             aria-expanded={openMenuScenarioId === scenario.id}
                                                             onClick={() => handleToggleScenarioMenu(scenario.id)}
@@ -552,7 +564,7 @@ function Scenario() {
                                                                 <div
                                                                     className="scenario-row-menu"
                                                                     role="menu"
-                                                                    aria-label={`${scenario.name} 작업 메뉴`}
+                                                                    aria-label={`${scenario.scenarioName} 작업 메뉴`}
                                                                 >
                                                                     <div className="scenario-row-status-menu">
                                                                         <span className="scenario-row-menu-label">
@@ -620,12 +632,15 @@ function Scenario() {
                                             </div>
 
                                             <strong>
-                                                검색 결과가 없습니다.
+                                                {scenarios.length === 0
+                                                    ? "등록된 시나리오가 없습니다."
+                                                    : "검색 결과가 없습니다."}
                                             </strong>
 
                                             <p>
-                                                검색어나 필터 조건을 다시
-                                                확인해주세요.
+                                                {scenarios.length === 0
+                                                    ? "새 시나리오를 생성해 시작해보세요."
+                                                    : "검색어나 필터 조건을 다시 확인해주세요."}
                                             </p>
                                         </td>
                                     </tr>
@@ -692,30 +707,29 @@ function Scenario() {
                     </footer>
                 </section>
 
-                {/* 오른쪽 시나리오 상세 영역 */}
-                {selectedScenario && (
-                    <ScenarioDetail
-                        scenario={selectedScenario}
-                        onClose={handleCloseDetail}
-                        onEdit={handleEditScenario}
-                        onDelete={handleDeleteScenario}
-                        onStatusChange={
-                            handleScenarioStatusChange
-                        }
+                {/* 오른쪽 시나리오 생성/수정 또는 상세 영역 */}
+                {isScenarioPanelOpen ? (
+                    <ScenarioCreatePanel
+                        key={editingScenario?.id ?? "create"}
+                        mode={editingScenario ? "edit" : "create"}
+                        initialScenario={editingScenario}
+                        onClose={handleCloseScenarioPanel}
+                        onSubmit={handleScenarioSubmit}
                     />
+                ) : (
+                    selectedScenario && (
+                        <ScenarioDetail
+                            scenario={selectedScenario}
+                            onClose={handleCloseDetail}
+                            onEdit={handleEditScenario}
+                            onDelete={handleDeleteScenario}
+                            onStatusChange={
+                                handleScenarioStatusChange
+                            }
+                        />
+                    )
                 )}
             </div>
-
-            {/* 시나리오 생성/수정 모달 */}
-            {isScenarioModalOpen && (
-                <ScenarioCreateModal
-                    key={editingScenario?.id ?? "create"}
-                    mode={editingScenario ? "edit" : "create"}
-                    initialScenario={editingScenario}
-                    onClose={handleCloseScenarioModal}
-                    onSubmit={handleScenarioSubmit}
-                />
-            )}
         </main>
     );
 }

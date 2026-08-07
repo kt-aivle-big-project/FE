@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/operationManagement.css";
+import "../styles/OperationManagement.css";
 
 import { operationApi, warehouseApi } from "../api/client";
 import { TOPICS } from "../api/config";

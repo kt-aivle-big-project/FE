@@ -1,0 +1,543 @@
+/* =========================================================
+   Scenario create panel
+   ========================================================= */
+
+.scenario-create-panel {
+    position: sticky;
+    top: var(--laro-gap-content);
+
+    display: flex;
+    min-width: 0;
+    width: 100%;
+    max-height: calc(100vh - var(--laro-gap-content) - var(--laro-gap-content));
+    flex-direction: column;
+
+    overflow: hidden;
+
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-small);
+
+    background: var(--laro-surface);
+}
+
+.scenario-create-panel,
+.scenario-create-panel * {
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   Header
+   ========================================================= */
+
+.scenario-create-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--laro-gap-page);
+
+    flex: 0 0 auto;
+
+    padding: var(--laro-padding-large)
+        calc(var(--laro-padding-large) + var(--laro-gap-content));
+
+    border-bottom: 1px solid var(--laro-border);
+
+    background: var(--laro-surface);
+}
+
+.scenario-create-panel-header h2 {
+    margin: 0;
+
+    color: var(--laro-navy);
+
+    font-size: var(--laro-font-section-title);
+    font-weight: var(--laro-font-weight-bold);
+    line-height: 1.4;
+}
+
+.scenario-create-panel-header p {
+    margin: calc(var(--laro-gap-content) / 2) 0 0;
+
+    color: var(--laro-subtext);
+
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-regular);
+    line-height: 1.5;
+}
+
+.scenario-create-close-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 auto;
+
+    width: 34px;
+    height: 34px;
+    padding: 0;
+
+    border: 0;
+    border-radius: var(--laro-radius-control);
+
+    background: transparent;
+    color: var(--laro-subtext);
+
+    font-size: var(--laro-font-metric);
+    font-weight: var(--laro-font-weight-regular);
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        color 0.18s ease;
+}
+
+.scenario-create-close-button:hover {
+    background: var(--laro-surface-hover);
+    color: var(--laro-navy);
+}
+
+
+/* =========================================================
+   Body
+   ========================================================= */
+
+.scenario-create-panel-body {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--laro-gap-page);
+
+    overflow-y: auto;
+
+    padding: var(--laro-padding-large)
+        calc(var(--laro-padding-large) + var(--laro-gap-content));
+
+    background: var(--laro-surface);
+}
+
+
+/* =========================================================
+   Section
+   ========================================================= */
+
+.scenario-create-section {
+    padding: var(--laro-padding-large);
+
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-small);
+
+    background: var(--laro-surface);
+}
+
+.scenario-create-section-heading {
+    display: flex;
+    align-items: flex-start;
+
+    margin-bottom: var(--laro-gap-page);
+}
+
+.scenario-create-section-heading > div {
+    min-width: 0;
+}
+
+.scenario-create-section-heading h3 {
+    margin: 0;
+
+    color: var(--laro-navy);
+
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
+    line-height: 1.4;
+}
+
+.scenario-create-section-heading p {
+    margin: calc(var(--laro-gap-content) / 2) 0 0;
+
+    color: var(--laro-subtext);
+
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-regular);
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   Form field
+   ========================================================= */
+
+.scenario-create-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.scenario-create-field > span {
+    margin-bottom: 7px;
+
+    color: var(--laro-navy);
+
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.scenario-create-field em,
+.scenario-create-required-note em {
+    margin-left: 3px;
+
+    color: var(--laro-danger);
+
+    font-style: normal;
+}
+
+.scenario-create-panel input,
+.scenario-create-panel select,
+.scenario-create-panel textarea {
+    width: 100%;
+
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    outline: none;
+
+    background: var(--laro-surface);
+    color: var(--laro-text);
+
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-regular);
+
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
+}
+
+.scenario-create-panel input,
+.scenario-create-panel select {
+    height: 40px;
+    padding: 0 var(--laro-padding-small);
+}
+
+.scenario-create-panel textarea {
+    min-height: 86px;
+    padding: var(--laro-padding-small);
+
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.scenario-create-panel input::placeholder,
+.scenario-create-panel textarea::placeholder {
+    color: var(--laro-placeholder);
+}
+
+.scenario-create-panel input:hover,
+.scenario-create-panel select:hover,
+.scenario-create-panel textarea:hover {
+    border-color: var(--laro-border-dark);
+}
+
+.scenario-create-panel input:focus,
+.scenario-create-panel select:focus,
+.scenario-create-panel textarea:focus {
+    border-color: var(--laro-primary);
+    box-shadow: 0 0 0 3px var(--laro-focus-ring);
+}
+
+.scenario-create-panel input.is-error,
+.scenario-create-panel select.is-error,
+.scenario-create-panel textarea.is-error {
+    border-color: var(--laro-danger);
+}
+
+.scenario-create-panel input:disabled,
+.scenario-create-panel select:disabled,
+.scenario-create-panel textarea:disabled {
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   Basic information
+   ========================================================= */
+
+.scenario-create-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--laro-padding-large)
+        calc(var(--laro-padding-large) + var(--laro-gap-content));
+}
+
+.scenario-create-full-field {
+    grid-column: 1 / -1;
+}
+
+.scenario-create-description-field {
+    align-self: start;
+}
+
+
+/* =========================================================
+   Warehouse select
+   ========================================================= */
+
+.scenario-create-warehouse-select {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+}
+
+.scenario-create-warehouse-select > span {
+    position: absolute;
+    left: var(--laro-padding-small);
+    z-index: 1;
+
+    color: var(--laro-primary);
+
+    font-size: var(--laro-font-card-title);
+
+    pointer-events: none;
+}
+
+.scenario-create-warehouse-select select {
+    padding-left: calc(
+        var(--laro-padding-large) + var(--laro-gap-page)
+    );
+}
+
+
+/* =========================================================
+   Battery settings
+   ========================================================= */
+
+.scenario-create-battery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: calc(var(--laro-padding-large) + var(--laro-gap-content));
+}
+
+.scenario-create-suffix-input {
+    position: relative;
+}
+
+.scenario-create-suffix-input input {
+    padding-right: calc(
+        var(--laro-padding-large) + var(--laro-gap-page)
+    );
+}
+
+.scenario-create-suffix-input > span {
+    position: absolute;
+    top: 50%;
+    right: var(--laro-padding-small);
+
+    color: var(--laro-subtext);
+
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.scenario-create-help {
+    margin-top: 6px;
+
+    color: var(--laro-subtext);
+
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-regular);
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   Validation
+   ========================================================= */
+
+.scenario-create-error {
+    margin-top: calc(var(--laro-gap-content) / 2);
+
+    color: var(--laro-danger);
+
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-medium);
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   Footer
+   ========================================================= */
+
+.scenario-create-panel-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--laro-padding-large);
+
+    flex: 0 0 auto;
+
+    min-height: 68px;
+    padding: var(--laro-padding-small)
+        calc(var(--laro-padding-large) + var(--laro-gap-content));
+
+    border-top: 1px solid var(--laro-border);
+
+    background: var(--laro-surface);
+}
+
+.scenario-create-required-note {
+    color: var(--laro-subtext);
+
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-regular);
+}
+
+.scenario-create-footer-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--laro-gap-content);
+}
+
+.scenario-create-cancel-button,
+.scenario-create-submit-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 138px;
+    height: 42px;
+    padding: 0 var(--laro-padding-large);
+
+    border-radius: var(--laro-radius-control);
+
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-bold);
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        color 0.18s ease,
+        opacity 0.18s ease;
+}
+
+.scenario-create-cancel-button {
+    border: 1px solid var(--laro-primary);
+
+    background: var(--laro-surface);
+    color: var(--laro-primary);
+}
+
+.scenario-create-cancel-button:hover {
+    background: var(--laro-primary-light);
+}
+
+.scenario-create-submit-button {
+    border: 1px solid var(--laro-primary);
+
+    background: var(--laro-primary);
+    color: var(--laro-white);
+}
+
+.scenario-create-submit-button:hover {
+    border-color: var(--laro-primary-hover);
+
+    background: var(--laro-primary-hover);
+}
+
+.scenario-create-submit-button:active {
+    border-color: var(--laro-primary-active);
+
+    background: var(--laro-primary-active);
+}
+
+.scenario-create-submit-button:disabled {
+    border-color: var(--laro-border);
+
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+
+/* =========================================================
+   Focus
+   ========================================================= */
+
+.scenario-create-panel button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--laro-focus-ring);
+}
+
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+
+@media (max-width: 768px) {
+    .scenario-create-info-grid,
+    .scenario-create-battery-grid {
+        grid-template-columns: 1fr;
+        gap: var(--laro-gap-page);
+    }
+
+    .scenario-create-full-field {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 1050px) {
+    .scenario-create-panel {
+        position: static;
+        max-height: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .scenario-create-panel-header,
+    .scenario-create-panel-body,
+    .scenario-create-panel-footer {
+        padding-right: var(--laro-padding-large);
+        padding-left: var(--laro-padding-large);
+    }
+
+    .scenario-create-panel-body {
+        padding-top: var(--laro-gap-page);
+        padding-bottom: var(--laro-gap-page);
+    }
+
+    .scenario-create-section {
+        padding: var(--laro-gap-page);
+    }
+
+    .scenario-create-panel-footer {
+        align-items: stretch;
+        flex-direction: column;
+        gap: var(--laro-gap-content);
+    }
+
+    .scenario-create-required-note {
+        align-self: flex-start;
+    }
+
+    .scenario-create-footer-actions {
+        width: 100%;
+    }
+
+    .scenario-create-cancel-button,
+    .scenario-create-submit-button {
+        min-width: 0;
+        flex: 1;
+    }
+}
