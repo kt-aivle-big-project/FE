@@ -216,9 +216,16 @@ export const robotApi = {
             warehouseId
                 ? `/robots?warehouseId=${warehouseId}`
                 : "/robots"
-    ),
-    get: (robotId) => api.get(`/robots/${robotId}`),
-    create: (payload) => api.post("/robots", payload),
+        ),
+
+    get: (robotId) =>
+        api.get(`/robots/${robotId}`),
+
+    create: (payload) =>
+        api.post("/robots", payload),
+
+    delete: (robotId) =>
+        api.delete(`/robots/${robotId}`),
 };
 
 export const taskApi = {
