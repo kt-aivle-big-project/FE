@@ -1,246 +1,565 @@
-/* =========================
-   시뮬레이션 전체 레이아웃
-========================= */
+/* ============================================================
+   1. 시뮬레이션 전체 레이아웃
+============================================================ */
 
 .simulation-wrapper {
-    width: 100%;
-    min-height: 100vh;
-
     display: grid;
-    margin-left: 5px;
-
     grid-template-areas:
         "simulation-header simulation-header"
         "simulation-view   simulation-panel"
         "simulation-task   simulation-event"
         "simulation-setting simulation-setting"
         "footer footer";
-
     grid-template-columns: minmax(0, 1fr) 390px;
-    grid-template-rows:
-        70px auto auto auto auto 100px;
+    grid-template-rows: 148px 650px minmax(230px, auto) auto auto 100px;
+    gap: 12px;
 
-    gap: 10px;
+    width: 100%;
+    min-height: 100vh;
+    margin-left: 0;
+
+    box-sizing: border-box;
+    background: var(--laro-background);
+    color: var(--laro-text);
 }
 
-/* =========================
-   상단 시뮬레이션 헤더
-========================= */
+/* ============================================================
+   2. 상단 헤더
+============================================================ */
 
 .simulation-header {
     grid-area: simulation-header;
 
-    width: 100%;
-    min-width: 0;
-    
     display: grid;
-    grid-template-columns: 250px minmax(500px, 1fr) auto;
-    align-items: center;
+    grid-template-rows: 64px 72px;
+    gap: 12px;
 
-    border: var(--border);
-    background: var(--background-color);
-    color: var(--font-color);
+    width: 100%;
+    height: 148px;
+    min-width: 0;
+
+    box-sizing: border-box;
 }
 
-.simulation-header-title {
+/* 상단 네이비 영역 */
+.simulation-topbar {
+    display: grid;
+    grid-template-columns:
+        minmax(220px, 1fr)
+        minmax(360px, 520px)
+        auto;
+    align-items: center;
+
+    min-width: 0;
+    height: 64px;
+
+    box-sizing: border-box;
+    background: var(--laro-navy);
+    color: var(--laro-dark-text);
+}
+
+.simulation-topbar-title {
+    display: flex;
+    align-items: center;
+    min-width: 0;
     height: 100%;
+    padding: 0 20px;
+}
+
+.simulation-topbar-title h2 {
+    margin: 0;
+    color: var(--laro-white);
+    font-size: 21px;
+    font-weight: var(--laro-font-weight-bold);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.simulation-topbar-scenario {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    min-width: 0;
+    height: 100%;
+    padding: 0 20px;
+}
+
+.simulation-topbar-label {
+    flex-shrink: 0;
+    color: var(--laro-dark-subtext);
+    font-size: 11px;
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.simulation-topbar-scenario p {
+    width: min(320px, 100%);
+    min-width: 0;
+    height: 36px;
+    margin: 0;
+    padding: 0 12px;
 
     display: flex;
     align-items: center;
 
-    padding: 0 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid var(--laro-dark-border);
+    background: var(--laro-dark-surface);
+    color: var(--laro-dark-text);
 
-    border-right: var(--border);
+    font-size: 12px;
+    font-weight: var(--laro-font-weight-medium);
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.simulation-header-title h2 {
-    font-size: 25px;
+.simulation-topbar-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    min-width: 0;
+    height: 100%;
+    padding: 0 20px;
+}
+
+.simulation-topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    min-width: 0;
+    padding: 0 18px;
+    border-left: 1px solid var(--laro-dark-divider);
+    border-right: 1px solid var(--laro-dark-divider);
+}
+
+.simulation-topbar-user p,
+.simulation-topbar-datetime {
+    margin: 0;
+    overflow: hidden;
+    color: var(--laro-dark-text);
+    font-size: 11px;
+    font-weight: var(--laro-font-weight-medium);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.simulation-topbar-datetime {
+    padding-left: 18px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* 하단 설정 및 제어 영역 */
+.simulation-controlbar {
+    display: grid;
+    grid-template-columns: minmax(560px, 1fr) auto;
+    align-items: stretch;
+
+    width: 100%;
+    height: 72px;
+    min-width: 0;
+
+    box-sizing: border-box;
+    border: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+    color: var(--laro-text);
 }
 
 .simulation-header-info {
-    height: 100%;
-    min-width: 0;
-
     display: grid;
-    grid-template-columns: 200px 75px 110px 120px;
-
+    grid-template-columns:
+        minmax(210px, 1.4fr)
+        115px
+        145px
+        135px;
     align-items: stretch;
+
+    min-width: 0;
+    height: 100%;
 }
 
 .simulation-header-info-item {
-    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+
     min-width: 0;
+    height: 100%;
+    padding: 8px 14px;
 
-    display: grid;
-    grid-template-rows: 32px 1fr;
-
-    padding: 0;
-
-    border-right: var(--border);
+    box-sizing: border-box;
+    border-right: 1px solid var(--laro-border);
 }
 
 .simulation-header-label {
-    width: 100%;
-    height: 40px;
-
     display: flex;
     align-items: center;
 
+    width: 100%;
     margin: 0;
-    padding: 0px;
+    padding: 0;
 
-    box-sizing: border-box;
-
-    font-size: 14px;
-    font-weight: 600;
+    color: var(--laro-subtext);
+    font-size: 11px;
+    font-weight: var(--laro-font-weight-semibold);
     line-height: 1;
 }
 
 .simulation-header-info-item select {
     width: 100%;
-    height: 30px;
-
+    height: 34px;
     margin: 0;
     padding: 0 10px;
 
     box-sizing: border-box;
-    border: var(--border);
-    background: var(--background-color);
-    color: var(--font-color);
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-text);
 
-    font-size: 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: var(--laro-font-weight-medium);
     outline: none;
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
 }
 
 .simulation-header-info-item select:hover {
-    background: var(--hover-color);
+    border-color: var(--laro-border-dark);
+    background: var(--laro-surface-hover);
+}
+
+.simulation-header-info-item select:focus,
+.simulation-header-info-item select:focus-visible {
+    border-color: var(--laro-primary);
+    outline: none;
+    box-shadow: none;
 }
 
 .simulation-header-status {
-    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    min-height: 20px;
+    color: var(--laro-success);
+    font-size: 14px;
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.simulation-header-status::before {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+
+    border-radius: 50%;
+    background: var(--laro-success);
+    content: "";
+}
+
+.simulation-header-socket {
+    color: var(--laro-subtext);
+    font-size: 9px;
+    line-height: 1;
+    white-space: nowrap;
 }
 
 .simulation-header-time {
-    min-width: 70px;
+    display: flex;
+    align-items: center;
 
+    min-height: 34px;
+    color: var(--laro-navy);
     font-size: 18px;
+    font-weight: var(--laro-font-weight-semibold);
     font-variant-numeric: tabular-nums;
 }
 
 .simulation-header-buttons {
-    height: 100%;
-
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: flex-end;
+    gap: 8px;
 
-    padding: 0 10px;
-}
+    height: 100%;
+    padding: 0 12px;
 
-.simulation-header-button {
-    height: 40px;
-    font-size: 16px;
-    padding: 0 25px;
-    border: var(--border);
-
-    background: var(--background-color);
-    color: var(--font-color);
-
-    cursor: pointer;
-}
-
-.simulation-header-button:hover {
-    background: var(--hover-color);
-}
-
-
-.simulation-header-button.start {
-    color: red;
-}
-
-/* 현재 작업을 버리고 설정값으로 작업을 새로 만드는 버튼 */
-.simulation-header-button.new-run {
-    color: #16a34a;
+    box-sizing: border-box;
     white-space: nowrap;
 }
 
-/* 실행을 완전히 종료하는 버튼 */
+.simulation-header-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 40px;
+    padding: 0 18px;
+
+    border: 1px solid var(--laro-border-dark);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-navy);
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: var(--laro-font-weight-semibold);
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.simulation-header-button:hover {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.simulation-header-button:focus,
+.simulation-header-button:focus-visible,
+.simulation-header-button:active {
+    outline: none;
+    box-shadow: none;
+}
+
+.simulation-header-button.start {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary);
+    color: var(--laro-white);
+}
+
+.simulation-header-button.start:hover {
+    border-color: var(--laro-primary-hover);
+    background: var(--laro-primary-hover);
+    color: var(--laro-white);
+}
+
+
+.simulation-header-button.start:active {
+    border-color: var(--laro-primary-active);
+    background: var(--laro-primary-active);
+}
+
+.simulation-header-button.new-run:active {
+    border-color: var(--laro-primary-active);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+/* 현재 설정으로 새로운 작업을 생성한다. */
+.simulation-header-button.new-run {
+    border-color: var(--laro-primary);
+    background: var(--laro-surface);
+    color: var(--laro-primary);
+    white-space: nowrap;
+}
+
+.simulation-header-button.new-run:hover {
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+/* 실행을 완전히 종료한다. */
 .simulation-header-button.stop {
-    color: #c14a4a;
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
 }
 
-.simulation-header-button:disabled {
-    color: #aaaaaa;
-    cursor: not-allowed;
+.simulation-header-button.stop:hover {
+    border-color: var(--laro-danger-hover);
+    background: var(--laro-danger);
+    color: var(--laro-white);
 }
 
+/* 마지막 재계획 버튼을 브랜드 액션으로 구분한다. */
+.simulation-header-button:last-child:not(.stop) {
+    border-color: var(--laro-primary);
+    color: var(--laro-primary);
+}
+
+.simulation-header-button:disabled,
 .simulation-header-button:disabled:hover {
-    background: var(--background-color);
+    border-color: var(--laro-border);
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+    cursor: not-allowed;
+    opacity: 0.75;
 }
 
-/* =========================
-   시뮬레이션 창고 화면
-========================= */
+/* ============================================================
+   3. 창고 시뮬레이션 화면
+============================================================ */
+
 .simulation-view {
     grid-area: simulation-view;
 
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
 
     width: 100%;
     height: 650px;
     min-width: 0;
     min-height: 400px;
+    overflow: hidden;
 
-    border: var(--border);
+    box-sizing: border-box;
+    border: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+    color: var(--laro-text);
 
     font-size: 40px;
-    font-weight: 400;
+    font-weight: var(--laro-font-weight-regular);
 }
 
-/* =========================
-   입출고
-========================= */
+/* ============================================================
+   4. 입출고 명령 및 AI 실행 계획
+============================================================ */
+
 .simulation-panel {
     grid-area: simulation-panel;
-
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
     align-self: start;
 }
 
-/* =========================
-    작업/이벤트
-========================= */
+/* ============================================================
+   5. 작업 현황 및 최근 이벤트
+============================================================ */
 
 .simulation-task {
     grid-area: simulation-task;
-
 }
 
 .simulation-event {
     grid-area: simulation-event;
-
 }
 
 .simulation-task,
 .simulation-event {
     display: flex;
-    min-height: 220px;
-
-    width: 100%;
-
-    box-sizing: border-box;
-    padding: 10px 10px;
-
     flex-direction: column;
     overflow: hidden;
 
-    border: var(--border);
-    background: var(--background-color);
+    width: 100%;
+    min-height: 230px;
+    padding: 0;
+
+    box-sizing: border-box;
+    border: 1px solid var(--laro-border);
+    background: var(--laro-surface);
 }
 
+/* ============================================================
+   6. 반응형 보완
+============================================================ */
+
+@media (max-width: 1450px) {
+    .simulation-wrapper {
+        grid-template-columns: minmax(0, 1fr) 350px;
+    }
+
+    .simulation-topbar {
+        grid-template-columns:
+            minmax(190px, 1fr)
+            minmax(300px, 430px)
+            auto;
+    }
+
+    .simulation-topbar-title {
+        padding: 0 16px;
+    }
+
+    .simulation-topbar-title h2 {
+        font-size: 19px;
+    }
+
+    .simulation-topbar-meta {
+        padding: 0 14px;
+    }
+
+    .simulation-topbar-user {
+        padding: 0 12px;
+    }
+
+    .simulation-controlbar {
+        grid-template-columns: minmax(500px, 1fr) auto;
+    }
+
+    .simulation-header-info {
+        grid-template-columns:
+            minmax(180px, 1.3fr)
+            100px
+            125px
+            115px;
+    }
+
+    .simulation-header-info-item {
+        padding: 8px 11px;
+    }
+
+    .simulation-header-button {
+        padding: 0 13px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 1180px) {
+    .simulation-wrapper {
+        grid-template-areas:
+            "simulation-header"
+            "simulation-view"
+            "simulation-panel"
+            "simulation-task"
+            "simulation-event"
+            "simulation-setting"
+            "footer";
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto auto auto auto auto 100px;
+    }
+
+    .simulation-header {
+        height: auto;
+        grid-template-rows: auto auto;
+    }
+
+    .simulation-topbar {
+        grid-template-columns: 180px minmax(0, 1fr);
+        min-height: 64px;
+        height: auto;
+    }
+
+    .simulation-topbar-meta {
+        grid-column: 1 / -1;
+        min-height: 48px;
+        border-top: 1px solid var(--laro-dark-divider);
+    }
+
+    .simulation-controlbar {
+        grid-template-columns: minmax(0, 1fr);
+        height: auto;
+    }
+
+    .simulation-header-info {
+        min-height: 72px;
+    }
+
+    .simulation-header-buttons {
+        justify-content: flex-start;
+        min-height: 58px;
+        border-top: 1px solid var(--laro-border);
+    }
+
+    .simulation-panel {
+        width: 100%;
+    }
+}
 

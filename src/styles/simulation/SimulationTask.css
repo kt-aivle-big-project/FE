@@ -1,327 +1,344 @@
-/* =========================
-   Simulation Task
-========================= */
+/* ============================================================
+   1. 작업 현황 헤더
+============================================================ */
+
 .simulation-task-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
 
-    gap: 10px;
+    min-height: 44px;
+    margin: 0;
+    padding: 0 14px;
 
-    margin-bottom: 10px;
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-surface);
 }
 
 .simulation-task-title {
     margin: 0;
-    font-size: 16px;
+    color: var(--laro-navy);
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
 }
 
 .simulation-task-summary {
     display: flex;
     align-items: center;
+    gap: 12px;
 
-    gap: 10px;
-
-    font-size: 12px;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 
 .task-summary-failed {
-    color: red;
-    font-weight: 500;
+    color: var(--laro-danger);
+    font-weight: var(--laro-font-weight-semibold);
 }
 
-/* =========================
-   Card Area
-========================= */
+/* ============================================================
+   2. 작업 목록 영역
+============================================================ */
+
 .simulation-task-card-area {
     display: grid;
-
-    grid-template-columns: 30px minmax(0, 1fr) 30px;
-
+    grid-template-columns: minmax(0, 1fr);
     align-items: stretch;
 
-    gap: 10px;
-
-    min-width: 0;
     width: 100%;
+    min-width: 0;
+    min-height: 0;
 }
 
-/* =========================
-   Scroll Button
-========================= */
+/* 테이블형 목록에서는 별도 좌우 이동 버튼을 사용하지 않는다. */
 .simulation-task-scroll-button {
-    width: 30px;
-
-    padding: 0;
-
-    font-size: 23px;
-
-    cursor: pointer;
-
-    transition:
-        background-color 0.15s ease,
-        border-color 0.15s ease;
-    
-    border: var(--border);
-    background: var(--background-color);
+    display: none;
 }
 
-.simulation-task-scroll-button:hover {
-    background: var(--background-color);
-    background: var(--hover-color);
-}
-
-.simulation-task-scroll-button:active {
-    background: var(--hover-color);
-}
-
-/* =========================
-   Task List
-========================= */
 .simulation-task-list {
     display: flex;
+    flex-direction: column;
+    gap: 0;
 
-    gap: 10px;
-
-    min-width: 0;
     width: 100%;
+    min-width: 0;
+    max-height: 186px;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
 
-    overflow-x: auto;
-    overflow-y: hidden;
-
-    scroll-behavior: smooth;
-
-    /* 작업이 많을 때 가로 스크롤바로 빠르게 이동할 수 있게 노출한다 */
-    padding-bottom: 8px;
-
+    background: var(--laro-surface);
     scrollbar-width: thin;
-    scrollbar-color: #b9c2cf transparent;
+    scrollbar-color: var(--laro-border-dark) transparent;
 }
 
 .simulation-task-list::-webkit-scrollbar {
-    height: 10px;
+    width: 7px;
 }
 
 .simulation-task-list::-webkit-scrollbar-track {
-    background: #f1f3f6;
-    border-radius: 5px;
+    background: transparent;
 }
 
 .simulation-task-list::-webkit-scrollbar-thumb {
-    background: #b9c2cf;
-    border-radius: 5px;
+    background: var(--laro-border-dark);
 }
 
 .simulation-task-list::-webkit-scrollbar-thumb:hover {
-    background: #8f9aab;
+    background: var(--laro-muted);
 }
 
-/* =========================
-   Task Card
-========================= */
-.simulation-task-card {
-    flex: 0 0 180px;
+/* ============================================================
+   3. 작업 행
+============================================================ */
 
-    min-width: 180px;
+.simulation-task-card {
+    display: grid;
+    grid-template-columns:
+        minmax(180px, 1.15fr)
+        minmax(105px, 0.65fr)
+        minmax(220px, 1.4fr)
+        minmax(160px, 0.95fr);
+    align-items: center;
+    gap: 16px;
+
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    min-height: 58px;
+    padding: 8px 14px;
 
     box-sizing: border-box;
-
-    padding: 10px 10px;
-
-    border: var(--border);
-    background: var(--background-color);
+    border: 0;
+    border-bottom: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+    box-shadow: none;
+    transition: background-color 0.15s ease;
 }
+
+.simulation-task-card:last-child {
+    border-bottom: 0;
+}
+
+.simulation-task-card:hover {
+    border-color: var(--laro-border);
+    background: var(--laro-surface-hover);
+    box-shadow: none;
+    transform: none;
+}
+
+/* ============================================================
+   4. 작업 기본 정보
+============================================================ */
 
 .simulation-task-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
 
-    gap: 5px;
-
-    padding-bottom: 8px;
-    margin-bottom: 8px;
-
-    border-bottom: var(--border);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
 }
 
 .simulation-task-card-title {
     display: flex;
     align-items: center;
-
     gap: 7px;
 
     min-width: 0;
 }
 
 .simulation-task-card-title strong {
-    font-size: 14px;
-    font-weight: 600;
-
+    overflow: hidden;
+    color: var(--laro-navy);
+    font-size: 12px;
+    font-weight: var(--laro-font-weight-semibold);
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .simulation-task-type {
-    padding: 2px 7px;
+    flex-shrink: 0;
+    padding: 3px 6px;
 
-    background: #f2f3f5;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-background);
+    color: var(--laro-subtext);
 
-    border-radius: 4px;
-
-    font-size: 12px;
-    font-weight: 500;
-
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
     white-space: nowrap;
 }
 
 .simulation-task-status {
     flex-shrink: 0;
+    padding: 3px 7px;
 
-    padding: 3px 6px;
-
-    border-radius: 10px;
-
-    font-size: 10px;
-    font-weight: 700;
-
+    border-radius: var(--laro-radius-control);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-bold);
     white-space: nowrap;
 }
 
-.status-pending {
-    background: #f0f0f0;
-    color: #666666;
+.status-pending,
+.status-default {
+    background: var(--laro-muted-light);
+    color: var(--laro-subtext);
 }
 
 .status-assigned {
-    background: #eef1f5;
-    color: #59697b;
+    background: var(--laro-navy-light);
+    color: var(--laro-navy);
 }
 
 .status-in_progress {
-    background: #e9f2ff;
-    color: #3f78b5;
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
 }
 
-/* 백엔드 TaskStatus 는 COMPLETED 가 아니라 DONE 을 보낸다 */
 .status-done,
 .status-completed {
-    background: #eaf5ed;
-    color: #468257;
+    background: var(--laro-success-light);
+    color: var(--laro-success);
 }
 
 .status-cancelled {
-    background: #f0f0f0;
-    color: #777777;
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
 }
 
 .status-failed {
-    background: #fcecec;
-    color: #c14a4a;
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
 }
 
-.status-default {
-    background: #f0f0f0;
-    color: #777777;
-}
+/* ============================================================
+   5. 담당 로봇
+============================================================ */
 
-/* =========================
-   로봇 상태
-========================= */
 .simulation-task-info {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
 
-    gap: 10px;
-
-    margin-bottom: 7px;
-
+    min-width: 0;
+    margin: 0;
     font-size: 11px;
 }
 
 .simulation-task-info-label {
-    color: #777777;
+    color: var(--laro-subtext);
+    white-space: nowrap;
 }
 
 .simulation-task-info strong {
-    font-size: 13px;
+    overflow: hidden;
+    color: var(--laro-text);
+    font-size: 12px;
+    font-weight: var(--laro-font-weight-semibold);
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* =========================
-   Route
-========================= */
+/* ============================================================
+   6. 이동 경로
+============================================================ */
+
 .simulation-task-route {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     gap: 10px;
 
-    padding: 10px 20px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
 
-    margin-bottom: 10px;
-
-    background: #f7f7f8;
-
-    border-radius: 5px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .simulation-task-node {
     display: flex;
     flex-direction: column;
-
     gap: 2px;
+    min-width: 0;
 }
-
 
 .simulation-task-node-label {
-    font-size: 10px;
-
-    color: #888888;
+    color: var(--laro-subtext);
+    font-size: 9px;
 }
 
-
 .simulation-task-node strong {
-    font-size: 14px;
+    overflow: hidden;
+    color: var(--laro-text);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .simulation-task-route-arrow {
     flex-shrink: 0;
-
-    font-size: 16px;
-
-    color: #888888;
+    color: var(--laro-primary);
+    font-size: var(--laro-font-card-title);
 }
 
-/* =========================
-   Time
-========================= */
+/* ============================================================
+   7. 작업 시간
+============================================================ */
+
 .simulation-task-time {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     gap: 10px;
+
+    min-width: 0;
 }
 
 .simulation-task-time > div {
     display: flex;
     align-items: center;
-
-    gap: 3px;
-
+    gap: 4px;
     min-width: 0;
 }
 
 .simulation-task-time span {
-    font-size: 10px;
-
-    color: #888888;
-}
-
-.simulation-task-time strong {
-    font-size: 12px;
+    color: var(--laro-subtext);
+    font-size: 9px;
     white-space: nowrap;
 }
 
+.simulation-task-time strong {
+    overflow: hidden;
+    color: var(--laro-text);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 1350px) {
+    .simulation-task-card {
+        grid-template-columns: minmax(170px, 1fr) minmax(100px, 0.7fr) minmax(190px, 1.2fr);
+    }
+
+    .simulation-task-time {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+        padding-top: 5px;
+        border-top: 1px solid var(--laro-muted-light);
+    }
+}

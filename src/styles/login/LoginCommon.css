@@ -2,24 +2,39 @@
 .login-page {
     width: 100%;
     min-height: 100vh;
-
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
-
     display: flex;
     align-items: center;
     justify-content: flex-end;
     padding-right: 150px;
+
+    background:
+        radial-gradient(
+            circle at 35% 45%,
+            rgba(37, 137, 244, 0.09) 0%,
+            transparent 34%
+        ),
+        var(--laro-login-background);
+}
+
+.login-bg::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(8, 45, 62, 0.12) 46%,
+        rgba(8, 45, 62, 0.78) 70%,
+        var(--laro-login-background) 100%
+    );
 }
 
 .login-card {
     width: min(100%, 480px);
-    padding: 32px 40px;
     border: 1px solid var(--laro-border);
     border-radius: 20px;
-    background: var(--laro-white);
-    box-shadow: 0 18px 50px var(--laro-shadow);
+    background: var(--laro-surface);
 }
 
 .login-back-button {
@@ -44,30 +59,16 @@
     text-align: center;
 }
 
-.login-logo {
-    display: block;
-    width: min(100%, 300px);
-    height: 200px;
-    margin: 0 auto;
-    object-fit: contain;
-}
-
 .login-title {
-    margin: 20px 0 0;
     color: var(--laro-navy);
     font-size: 25px;
-    font-weight: 700;
+    font-weight: var(--laro-font-weight-bold);
 }
 
 .login-description {
-    margin: 20px auto 0;
-    color: var(--laro-subtext);
-    font-size: 14px;
+    color: var(--laro-dark-subtext);
+    font-size: var(--laro-font-body);
     line-height: 1.6;
-}
-
-.login-content {
-    margin-top: 24px;
 }
 
 /* 로그인/회원가입 공통 폼 */
@@ -87,9 +88,9 @@
 
 .login-field label,
 .signup-field label {
-    color: var(--laro-text);
-    font-size: 14px;
-    font-weight: 600;
+    color: var(--laro-dark-text);
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-semibold);
 }
 
 .login-input-wrapper,
@@ -105,13 +106,13 @@
     width: 100%;
     height: 52px;
     padding: 0 16px 0 48px;
-    border: 1px solid var(--laro-border);
+    border-color: var(--laro-dark-border);
     border-radius: 12px;
     outline: none;
-    background: var(--laro-white);
-    color: var(--laro-text);
+    background: var(--laro-dark-surface);
+    color: var(--laro-dark-text);
     font-family: inherit;
-    font-size: 14px;
+    font-size: var(--laro-font-body);
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease;
@@ -119,14 +120,22 @@
 
 .login-input-wrapper input::placeholder,
 .signup-input-wrapper input::placeholder {
-    color: var(--laro-subtext);
+    color: var(--laro-dark-placeholder);
+    ;
+}
+
+.login-input-wrapper input:hover {
+    border-color: var(--laro-dark-border-hover);
+    background: var(--laro-dark-surface-hover);
 }
 
 .login-input-wrapper input:focus,
 .signup-input-wrapper input:focus {
     border-color: var(--laro-primary);
-    box-shadow: 0 0 0 3px var(--laro-focus-ring);
+    box-shadow: none;
+    outline: none;
 }
+
 
 .login-input-icon,
 .signup-input-icon {
@@ -135,7 +144,7 @@
     z-index: 1;
     width: 20px;
     height: 20px;
-    color: var(--laro-subtext);
+    color: var(--laro-muted);
     pointer-events: none;
 }
 
@@ -210,7 +219,7 @@
     border-radius: 12px;
     font-family: inherit;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: var(--laro-font-weight-semibold);
     cursor: pointer;
     transition:
         background-color 0.2s ease,
@@ -235,7 +244,7 @@
 
 .login-button-secondary {
     border-color: var(--laro-border);
-    background: var(--laro-white);
+    background: var(--laro-surface);
     color: var(--laro-text);
 }
 
@@ -291,11 +300,11 @@
     align-items: center;
     justify-content: center;
     gap: 7px;
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid var(--laro-border);
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top-color: var(--laro-dark-divider);
     color: var(--laro-subtext);
-    font-size: 14px;
+    font-size: var(--laro-font-body);
 }
 
 .login-footer button {
@@ -305,8 +314,8 @@
     background: transparent;
     color: var(--laro-primary);
     font-family: inherit;
-    font-size: 14px;
-    font-weight: 700;
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-bold);
     cursor: pointer;
 }
 
@@ -347,7 +356,7 @@
 .login-field-message {
     margin: 0;
     color: var(--laro-subtext);
-    font-size: 12px;
+    font-size: var(--laro-font-caption);
     line-height: 1.5;
 }
 
@@ -362,9 +371,9 @@
 .login-field-message-success {
     padding: 10px 12px;
     border-radius: 8px;
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-    font-weight: 600;
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+    font-weight: var(--laro-font-weight-semibold);
 }
 
 
@@ -373,7 +382,7 @@
     .login-page {
         align-items: flex-start;
         padding: 20px 16px;
-        background: var(--laro-white);
+        background: var(--laro-surface);
     }
 
     .login-card {
@@ -395,6 +404,23 @@
     .login-action-button {
         min-width: 104px;
         padding: 0 12px;
-        font-size: 12px;
+        font-size: var(--laro-font-caption);
     }
+}
+
+/* 로그인 화면의 모든 버튼 클릭 효과를 통일한다. */
+.login-card-integrated button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.login-card-integrated button:focus,
+.login-card-integrated button:focus-visible,
+.login-card-integrated button:active {
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+}
+
+.login-card-integrated button:active {
+    transform: none !important;
 }

@@ -52,7 +52,7 @@ function Sidebar() {
                                 `sidebar-link${isActive ? " active" : ""}`
                             }
                         >
-                            시나리오 설정
+                            시나리오 관리
                         </NavLink>
                     </li>
 

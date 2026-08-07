@@ -1,19 +1,28 @@
 /* ============================================================
-   1. 헤더
+   1. 최근 이벤트 헤더
 ============================================================ */
 
 .simulation-event-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
+    gap: 12px;
+
+    min-height: 44px;
+    margin: 0;
+    padding: 0 14px;
+
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-surface);
 }
 
 .simulation-event-title {
     margin: 0;
-    font-size: 14px;
+    color: var(--laro-navy);
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
 }
-
 
 /* ============================================================
    2. 이벤트 목록
@@ -22,140 +31,205 @@
 .simulation-event-list {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 0;
 
-    max-height: 220px;
-
+    max-height: 186px;
+    padding: 0;
     overflow-x: hidden;
     overflow-y: auto;
+
+    background: var(--laro-surface);
+    scrollbar-width: thin;
+    scrollbar-color: var(--laro-border-dark) transparent;
 }
 
+.simulation-event-list::-webkit-scrollbar {
+    width: 7px;
+}
+
+.simulation-event-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.simulation-event-list::-webkit-scrollbar-thumb {
+    background: var(--laro-border-dark);
+}
+
+.simulation-event-list::-webkit-scrollbar-thumb:hover {
+    background: var(--laro-muted);
+}
 
 /* ============================================================
-   3. 이벤트 카드
+   3. 이벤트 행
 ============================================================ */
 
 .simulation-event-card {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 5px 10px;
+    display: grid;
+    grid-template-columns: 135px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 3px;
 
-    border: var(--border);
-    background: var(--background-color);
+    width: 100%;
+    min-height: 58px;
+    padding: 8px 14px;
+
+    box-sizing: border-box;
+    border: 0;
+    border-bottom: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+    transition: background-color 0.15s ease;
+}
+
+.simulation-event-card:last-child {
+    border-bottom: 0;
+}
+
+.simulation-event-card:hover {
+    border-color: var(--laro-border);
+    background: var(--laro-surface-hover);
+    transform: none;
 }
 
 /* 충돌 회피 대기 이벤트를 구분한다. */
 .simulation-event-card.avoidance {
-    border-left: 3px solid #f59e0b;
+    border-left: 2px solid var(--laro-warning);
+    background: var(--laro-warning-light);
 }
 
-
 /* ============================================================
-   4. 카드 헤더
+   4. 이벤트 기본 정보
 ============================================================ */
 
 .simulation-event-card-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 5px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 3px;
 
-    margin-bottom: 5px;
+    min-width: 0;
+    margin: 0;
 }
 
 .simulation-event-type {
-    color: #333333;
+    overflow: hidden;
+    max-width: 100%;
+    color: var(--laro-navy);
     font-size: 12px;
+    font-weight: var(--laro-font-weight-semibold);
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .simulation-event-time {
-    font-size: 10px;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    font-variant-numeric: tabular-nums;
 }
 
-
 /* ============================================================
-   5. 이벤트 설명
+   5. 이벤트 설명 및 관련 정보
 ============================================================ */
 
 .simulation-event-description {
-    margin: 0 0 6px;
+    grid-column: 2;
 
-    color: #555555;
-    font-size: 12px;
+    overflow: hidden;
+    margin: 0;
+    color: var(--laro-text);
+    font-size: 11px;
     line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
-
-
-/* ============================================================
-   6. 관련 정보
-============================================================ */
 
 .simulation-event-info {
     display: flex;
+    grid-column: 2;
     align-items: center;
     flex-wrap: wrap;
     gap: 4px;
 
-    margin-bottom: 6px;
+    min-width: 0;
+    margin: 0;
 }
 
 .simulation-event-info span {
-    padding: 2px 4px;
+    padding: 2px 5px;
 
-    border-radius: 3px;
-    background: #eeeeee;
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-muted-light);
+    color: var(--laro-subtext);
 
-    font-size: 10px;
+    font-size: 9px;
+    white-space: nowrap;
 }
 
 .avoidance-wait-time {
-    color: #b45309;
-    font-weight: 600;
+    color: var(--laro-warning-hover);
+    font-weight: var(--laro-font-weight-semibold);
 }
 
 .avoidance-inferred {
-    color: #64748b;
-    font-size: 11px;
+    color: var(--laro-muted);
+    font-size: 9px;
 }
 
-
 /* ============================================================
-   7. 상태
+   6. 이벤트 상태
 ============================================================ */
 
 .simulation-event-footer {
     display: flex;
+    grid-column: 3;
+    grid-row: 1 / span 2;
     justify-content: flex-end;
 }
 
 .simulation-event-status {
-    padding: 2px 6px;
+    padding: 3px 7px;
 
-    border-radius: 10px;
-
-    font-size: 8px;
-    font-weight: 600;
+    border-radius: var(--laro-radius-control);
+    font-size: 9px;
+    font-weight: var(--laro-font-weight-semibold);
+    white-space: nowrap;
 }
 
 .simulation-event-status.unresolved {
-    color: #c64b4b;
-    background: #fdecec;
+    color: var(--laro-danger);
+    background: var(--laro-danger-light);
 }
 
 .simulation-event-status.resolved {
-    color: #468257;
-    background: #eaf5ed;
+    color: var(--laro-success);
+    background: var(--laro-success-light);
 }
 
-
 /* ============================================================
-   8. 빈 목록
+   7. 빈 목록
 ============================================================ */
 
 .simulation-event-empty {
-    padding: 30px 0;
+    display: grid;
+    min-height: 150px;
+    place-items: center;
+    padding: 20px;
 
-    color: #888888;
-    font-size: 10px;
+    border: 0;
+    border-radius: 0;
+    background: var(--laro-surface);
+    color: var(--laro-muted);
+
+    font-size: var(--laro-font-caption);
     text-align: center;
+}
+
+@media (max-width: 1350px) {
+    .simulation-event-card {
+        grid-template-columns: 110px minmax(0, 1fr) auto;
+        column-gap: 9px;
+        padding-inline: 10px;
+    }
 }

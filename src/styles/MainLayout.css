@@ -1,45 +1,88 @@
 /* =========================
    공통 변수
 ========================= */
-
 :root {
-    --border-color: #000000;
-    --border: 1px solid var(--border-color);
-    --background-color: #ffffff;
-    --font-color: #000000;
-    --hover-color: #eeeeee;
-}
+    /* 대표색 */
+    --laro-primary: #2589F4;
+    --laro-primary-hover: #1676DB;
+    --laro-primary-active: #0F67C5;
+    --laro-primary-light: #EAF4FF;
 
-:root {
-    /* 기존 색상 변수 */
-    --laro-primary: #2F80ED;
-    --laro-primary-hover: #1F6FD1;
-    --laro-primary-light: #EAF3FF;
-    --laro-navy: #16324F;
-    --laro-text: #202938;
-    --laro-subtext: #7A8494;
-    --laro-background: #F8FAFD;
+    /* 브랜드 색상 */
+    --laro-navy: #082D3E;
+    --laro-navy-hover: #0D3A4F;
+    --laro-navy-active: #062737;
+    --laro-navy-deep: #041F2D;
+    --laro-navy-light: #E8F0F4;
+
+    /* 로그인 배경 */
+    --laro-login-background: #082D3E;
+    --laro-login-background-light: #093044;
+    --laro-login-background-deep: #062737;
+
+    /* 시뮬레이션 강조색 */
+    --laro-sky: #70C3F1;
+    --laro-sky-hover: #5EABE1;
+    --laro-sky-active: #4B9CD3;
+    --laro-sky-light: #EAF8FF;
+
+    /* 밝은 화면 */
+    --laro-text: #172533;
+    --laro-subtext: #6F7E8E;
+    --laro-placeholder: #98A5AF;
+
+    --laro-background: #F6F9FC;
+    --laro-surface: #FCFDFE;
+    --laro-surface-hover: #EDF4F8;
     --laro-white: #FFFFFF;
-    --laro-border: #DCE3EC;
 
-    --laro-surface-hover: #F1F5FA;
-    --laro-shadow: rgba(22, 50, 79, 0.12);
-    --laro-focus-ring: rgba(47, 128, 237, 0.28);
+    --laro-border: #D8E3EA;
+    --laro-border-dark: #C5D3DC;
 
+    /* 어두운 화면 */
+    --laro-dark-background: #082D3E;
+    --laro-dark-background-light: #093044;
+    --laro-dark-background-deep: #062737;
+
+    --laro-dark-surface: rgba(255, 255, 255, 0.035);
+    --laro-dark-surface-hover: rgba(255, 255, 255, 0.065);
+    --laro-dark-surface-active: rgba(255, 255, 255, 0.09);
+
+    --laro-dark-text: rgba(255, 255, 255, 0.94);
+    --laro-dark-subtext: rgba(173, 201, 225, 0.72);
+    --laro-dark-placeholder: rgba(110, 140, 157, 0.72);
+
+    --laro-dark-border: rgba(112, 195, 241, 0.2);
+    --laro-dark-border-hover: rgba(112, 195, 241, 0.36);
+    --laro-dark-divider: rgba(112, 195, 241, 0.14);
+
+    /* 그림자 */
+    --laro-shadow: rgba(8, 45, 62, 0.12);
+    --laro-shadow-medium: rgba(8, 45, 62, 0.2);
+    --laro-focus-ring: rgba(37, 137, 244, 0.24);
+    --laro-overlay: rgba(4, 31, 45, 0.68);
+
+    /* 상태 색상 */
     --laro-danger: #E5484D;
+    --laro-danger-hover: #CF3E43;
     --laro-danger-light: #FFF1F2;
 
     --laro-success: #2E9D61;
+    --laro-success-hover: #25834F;
     --laro-success-light: #EAF8F0;
+
     --laro-warning: #D88700;
+    --laro-warning-hover: #BA7300;
     --laro-warning-light: #FFF6DF;
-    --laro-muted-light: #F1F4F8;
-    --laro-overlay: rgba(22, 50, 79, 0.45);
+
+    --laro-muted: #8794A3;
+    --laro-muted-light: #F0F4F7;
 
     /* 라운드 */
     --laro-radius-large: 16px;
     --laro-radius-medium: 14px;
     --laro-radius-small: 12px;
+    --laro-radius-control: 4px;
     --laro-radius-pill: 999px;
 
     /* 글자 크기 */
@@ -47,7 +90,7 @@
     --laro-font-section-title: 18px;
     --laro-font-card-title: 16px;
     --laro-font-body: 14px;
-    --laro-font-caption: 12px;
+    --laro-font-caption: 10px;
     --laro-font-metric: 24px;
 
     /* 글자 굵기 */
@@ -60,10 +103,9 @@
     --laro-padding-large: 20px;
     --laro-padding-small: 10px;
 
-    /* 요소 사이 간격 */
+    /* 간격 */
     --laro-gap-page: 15px;
     --laro-gap-content: 10px;
-
 }
 
 /* =========================
@@ -215,6 +257,10 @@ textarea:focus {
     background: var(--laro-background);
 }
 
+.header {
+    height: 50px;
+    background: var(--laro-navy);
+}
 
 /* =========================
    Page Content
@@ -225,8 +271,6 @@ textarea:focus {
     max-width: none;
     min-width: 0;
     min-height: 100vh;
-    flex: 1;
-    padding: 20px 20px;
 }
 
 /* 각 페이지의 최상위 요소가 전체 너비를 사용하도록 설정 */
@@ -234,6 +278,17 @@ textarea:focus {
     width: 100%;
     max-width: none;
     min-width: 0;
+}
+
+
+/* 사이드바와 메인 콘텐츠 사이의 구분선을 제거한다. */
+.sidebar {
+    border-right: 0 !important;
+}
+
+.main-content,
+.page-content {
+    border-left: 0;
 }
 
 

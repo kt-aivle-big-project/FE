@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import laroLogo from "../../assets/laro/laro_logo.png";
 import LoginCircuitBackground from "../../pages/login/LoginCircuitBackground";
 import "../../styles/login/LoginCommon.css";
 import "../../styles/login/Login.css";
-import { EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";
-
-const API_URL = "http://localhost:8080/api";
+import {
+    EmailIcon,
+    LockIcon,
+    PasswordToggleIcon,
+} from "../../components/common/icon";
+import { API_URL } from "../../api/config";
 
 function Login() {
     const navigate = useNavigate();
@@ -14,96 +16,130 @@ function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoginLoading, setIsLoginLoading] = useState(false);
+    const [isGuestLoading, setIsGuestLoading] = useState(false);
 
-    const handleLogin = async (e) => {
-        e.preventDefault();
+    const handleLogin = async (event) => {
+        event.preventDefault();
 
         if (!email.trim() || !password.trim()) {
-            alert("아이디와 비밀번호를 입력해주세요.");
+            alert("이메일과 비밀번호를 입력해주세요.");
             return;
         }
 
-        // 백엔드로 전달
-        const loginData = {
-            email: email.trim(),
-            password: password,
-        };
+        setIsLoginLoading(true);
 
         try {
-            const response = await fetch(
-                `${API_URL}/auth/login`,
-                {
-                    method: "POST",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(loginData),
-                }
-            );
+            const response = await fetch(`${API_URL}/auth/login`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: email.trim(),
+                    password,
+                }),
+            });
+
+            const data = await response
+                .json()
+                .catch(() => ({}));
 
             if (!response.ok) {
-                const errorMessage = await response.text();
-                throw new Error(errorMessage || "아이디 또는 비밀번호가 올바르지 않습니다.");
+                throw new Error(
+                    data.message || "이메일 또는 비밀번호가 올바르지 않습니다.",
+                );
             }
 
-            // 백엔드 응답 JSON
-            const data = await response.json();
+            const accessToken = data.accessToken || data.access_token || data.token;
 
-            // 저장
-            localStorage.setItem("accessToken", data.accessToken);
-            localStorage.setItem("name", data.name);
-            localStorage.setItem("email", data.email);
+            if (accessToken) {
+                localStorage.setItem("accessToken", accessToken);
+            }
 
-            console.log("로그인 사용자:", data);
+            if (data.name) {
+                localStorage.setItem("name", data.name);
+            }
 
-            alert("로그인되었습니다.");
-            navigate("/simulation");
+            if (data.email) {
+                localStorage.setItem("email", data.email);
+            }
 
+            navigate("/simulation", { replace: true });
         } catch (error) {
             console.error("로그인 실패:", error);
-
-            alert(error.message || "로그인 중 오류가 발생했습니다.");
+            alert(
+                error instanceof Error
+                    ? error.message
+                    : "로그인 중 오류가 발생했습니다.",
+            );
+        } finally {
+            setIsLoginLoading(false);
         }
     };
 
-    const handleSignup = () => {
-        navigate("/signup");
+    const handleGuestLogin = async () => {
+        try {
+            const response = await fetch(
+                `${API_URL}/auth/guest`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                });
+
+            const data = await response
+                .json()
+                .catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data.message || "게스트 로그인에 실패했습니다.");
+            }
+
+            const accessToken = data.accessToken || data.access_token || data.token;
+
+            if (accessToken) {
+                localStorage.setItem("accessToken", accessToken);
+            }
+
+            localStorage.setItem("loginType", "guest");
+            navigate("/simulation", { replace: true, });
+
+        } catch (error) {
+            console.error("게스트 로그인 실패:", error);
+            alert(error instanceof Error ? error.message : "게스트 로그인 중 오류가 발생했습니다.");
+        }
     };
 
-    const handleBack = () => {
-        navigate("/");
-    };
+    const isLoading = isLoginLoading || isGuestLoading;
 
     return (
         <div className="login-page">
             <LoginCircuitBackground />
-            <main className="login-card">
-                <button
-                    type="button"
-                    className="login-back-button"
-                    onClick={handleBack}
-                >
-                    <span aria-hidden="true">←</span>
-                    로그인 방식 선택
-                </button>
 
-                <header className="login-header">
-                    <img
-                        src={laroLogo}
-                        alt="LARO 창고 시뮬레이션 플랫폼"
-                        className="login-logo"
-                    />
-                </header>
-
+            <main className="login-card login-card-integrated">
                 <section className="login-content">
+                    <div className="login-brand">
+                        <h1 className="login-brand-name">LARO</h1>
+
+                        <p className="login-brand-description">
+                            <strong>L</strong>LM{" "}
+                            <strong>A</strong>utonomous{" "}
+                            <strong>R</strong>obot{" "}
+                            <strong>O</strong>rchestration
+                        </p>
+                    </div>
+
                     <form
                         className="login-form"
                         onSubmit={handleLogin}
                     >
                         <div className="login-field">
                             <label htmlFor="email">
-                                아이디
+                                이메일
                             </label>
 
                             <div className="login-input-wrapper">
@@ -115,9 +151,9 @@ function Login() {
                                     id="email"
                                     type="email"
                                     value={email}
-                                    placeholder="아이디를 입력하세요"
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    autoComplete="off"
+                                    placeholder="이메일을 입력하세요"
+                                    onChange={(event) => setEmail(event.target.value)}
+                                    disabled={isLoading}
                                 />
                             </div>
                         </div>
@@ -132,6 +168,7 @@ function Login() {
                                     type="button"
                                     className="login-find-password"
                                     onClick={() => navigate("/password")}
+                                    disabled={isLoading}
                                 >
                                     비밀번호 찾기
                                 </button>
@@ -148,16 +185,22 @@ function Login() {
                                     className="login-password-input"
                                     value={password}
                                     placeholder="비밀번호를 입력하세요"
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(event) => setPassword(event.target.value)}
                                     autoComplete="new-password"
+                                    disabled={isLoading}
                                 />
 
                                 <button
                                     type="button"
                                     className="login-password-toggle"
                                     onClick={() => setShowPassword((prev) => !prev)}
-                                    aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                                    aria-label={
+                                        showPassword
+                                            ? "비밀번호 숨기기"
+                                            : "비밀번호 보기"
+                                    }
                                     aria-pressed={showPassword}
+                                    disabled={isLoading}
                                 >
                                     <PasswordToggleIcon visible={showPassword} />
                                 </button>
@@ -167,10 +210,34 @@ function Login() {
                         <button
                             type="submit"
                             className="login-button login-button-primary"
+                            disabled={isLoading}
                         >
-                            로그인
+                            {isLoginLoading ? "로그인 중..." : "로그인"}
                         </button>
                     </form>
+
+                    <div
+                        className="login-divider"
+                        role="separator"
+                        aria-label="또는"
+                    >
+                        <span>또는</span>
+                    </div>
+
+                    <button
+                        type="button"
+                        className="login-button login-guest-button"
+                        onClick={handleGuestLogin}
+                        disabled={isLoading}
+                    >
+                        {isGuestLoading
+                            ? "게스트 로그인 중..."
+                            : "게스트로 둘러보기"}
+                    </button>
+
+                    <p className="login-select-policy">
+                        계속 진행하면 이용약관 및 개인정보 처리방침에 동의하는 것으로 간주됩니다.
+                    </p>
                 </section>
 
                 <footer className="login-footer">
@@ -178,11 +245,13 @@ function Login() {
 
                     <button
                         type="button"
-                        onClick={handleSignup}
+                        onClick={() => navigate("/signup")}
+                        disabled={isLoading}
                     >
                         회원가입
                     </button>
                 </footer>
+
             </main>
         </div>
     );
