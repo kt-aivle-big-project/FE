@@ -18,6 +18,7 @@ export const clearAuth = () => {
     localStorage.removeItem("userId");
     localStorage.removeItem("name");
     localStorage.removeItem("email");
+    localStorage.removeItem("loginType");
 };
 
 export const redirectToLogin = () => {
@@ -30,6 +31,10 @@ export const redirectToLogin = () => {
 
 export const isLoggedIn = () => {
     return Boolean(getAccessToken());
+};
+
+export const isGuestSession = () => {
+    return localStorage.getItem("loginType") === "guest";
 };
 
 // 인증 헤더 (토큰이 없으면 빈 객체)
