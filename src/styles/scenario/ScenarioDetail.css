@@ -1,38 +1,28 @@
 /* =========================================================
-   Scenario detail card
-   오른쪽 시나리오 상세 영역
+   ScenarioDetail
+   오른쪽 패널용 시나리오 상세 화면
    ========================================================= */
 
 .scenario-detail-card {
-    display: block;
-
-    min-width: 0;
     width: 100%;
-
+    min-width: 0;
     overflow: hidden;
-
     border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
+    border-radius: 0;
     background: var(--laro-surface);
+    color: var(--laro-text);
+    box-shadow: none;
 }
 
-
-/* =========================================================
-   Detail header
-   ========================================================= */
-
+/* Header */
 .scenario-inline-detail-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
-
-    min-height: 96px;
-    padding: 20px 22px;
-
+    gap: 16px;
+    min-height: 72px;
+    padding: 12px 18px;
     border-bottom: 1px solid var(--laro-border);
-
     background: var(--laro-surface);
 }
 
@@ -40,25 +30,20 @@
     display: flex;
     align-items: center;
     min-width: 0;
-    gap: 12px;
+    gap: 10px;
 }
 
 .scenario-detail-title-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     flex: 0 0 auto;
-
-    width: 44px;
-    height: 44px;
-
-    border-radius: var(--laro-radius-small);
-
+    width: 38px;
+    height: 38px;
+    border-radius: var(--laro-radius-control);
     background: var(--laro-primary-light);
     color: var(--laro-primary);
-
-    font-size: 21px;
+    font-size: 18px;
 }
 
 .scenario-inline-title-content {
@@ -69,19 +54,15 @@
     display: flex;
     align-items: center;
     min-width: 0;
-    gap: 9px;
 }
 
 .scenario-inline-title-content h2 {
-    overflow: hidden;
-
     margin: 0;
-
+    overflow: hidden;
     color: var(--laro-navy);
-
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 800;
-    line-height: 1.4;
+    line-height: 1.35;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -90,1738 +71,17 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
-
-    margin-top: 6px;
-
+    gap: 5px;
+    margin-top: 4px;
     color: var(--laro-subtext);
-
-    font-size: 11px;
+    font-size: 10px;
 }
 
 .scenario-detail-header-actions {
     display: flex;
     align-items: center;
-
     flex: 0 0 auto;
-    gap: 8px;
-}
-
-
-/*
- * scenario-button의 공통 스타일은 Scenario.css에 있습니다.
- * 상세 영역에서는 보조 버튼 스타일만 정의합니다.
- */
-.scenario-button-secondary {
-    border-color: var(--laro-border);
-
-    background: var(--laro-surface);
-    color: var(--laro-text);
-}
-
-.scenario-button-secondary:hover {
-    border-color: var(--laro-primary);
-
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-}
-
-
-/* =========================================================
-   Detail body
-   ========================================================= */
-
-.scenario-inline-detail-body {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-
-    padding: 16px;
-
-    background: var(--laro-background);
-}
-
-
-/* =========================================================
-   Detail section
-   ========================================================= */
-
-.scenario-detail-section {
-    min-width: 0;
-    padding: 20px;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
-    background: var(--laro-surface);
-}
-
-.scenario-detail-section-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 14px;
-
-    margin-bottom: 16px;
-}
-
-.scenario-detail-section-header h3 {
-    margin: 0;
-
-    color: var(--laro-navy);
-
-    font-size: 16px;
-    font-weight: 800;
-}
-
-.scenario-detail-section-header p {
-    margin: 5px 0 0;
-
-    color: var(--laro-subtext);
-
-    font-size: 11px;
-    line-height: 1.5;
-}
-
-.scenario-detail-section-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    flex: 0 0 auto;
-
-    min-height: 25px;
-    padding: 0 9px;
-
-    border-radius: var(--laro-radius-pill);
-
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-
-    font-size: 10px;
-    font-weight: 800;
-}
-
-
-/* =========================================================
-   Scenario overview
-   적용 창고, 설명, 로봇 유형, 운영 설정 통합 영역
-   ========================================================= */
-
-.scenario-overview {
-    overflow: hidden;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
-    background: var(--laro-surface);
-}
-
-
-/* =========================================================
-   Overview common
-   ========================================================= */
-
-.scenario-overview-label {
-    display: block;
-
-    color: var(--laro-subtext);
-
-    font-size: 10px;
-    font-weight: 700;
-}
-
-.scenario-overview-block-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-
-    margin-bottom: 15px;
-}
-
-.scenario-overview-block-header > div {
-    min-width: 0;
-}
-
-.scenario-overview-block-header p {
-    margin: 5px 0 0;
-
-    color: var(--laro-subtext);
-
-    font-size: 10px;
-    line-height: 1.5;
-}
-
-.scenario-overview-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    flex: 0 0 auto;
-
-    min-height: 25px;
-    padding: 0 9px;
-
-    border-radius: var(--laro-radius-pill);
-
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-
-    font-size: 10px;
-    font-weight: 800;
-}
-
-
-/* =========================================================
-   Overview primary
-   적용 창고 + 설명
-   ========================================================= */
-
-.scenario-overview-primary {
-    display: grid;
-    grid-template-columns:
-        minmax(210px, 0.3fr)
-        minmax(0, 0.7fr);
-
-    border-bottom: 1px solid var(--laro-border);
-}
-
-.scenario-overview-warehouse,
-.scenario-overview-description {
-    min-width: 0;
-    padding: 17px 18px;
-}
-
-.scenario-overview-warehouse {
-    border-right: 1px solid var(--laro-border);
-}
-
-.scenario-overview-warehouse-value {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    gap: 10px;
-
-    margin-top: 11px;
-}
-
-.scenario-overview-warehouse-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    flex: 0 0 auto;
-
-    width: 32px;
-    height: 32px;
-
-    border-radius: var(--laro-radius-control);
-
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-
-    font-size: 14px;
-}
-
-.scenario-overview-warehouse-value strong {
-    overflow: hidden;
-
-    color: var(--laro-navy);
-
-    font-size: 13px;
-    font-weight: 800;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.scenario-overview-description {
-    background: var(--laro-background);
-}
-
-.scenario-overview-description p {
-    margin: 10px 0 0;
-
-    color: var(--laro-text);
-
-    font-size: 12px;
-    line-height: 1.7;
-    word-break: keep-all;
-}
-
-
-/* =========================================================
-   Overview secondary
-   로봇 유형 + 배터리 및 재계획 설정
-   ========================================================= */
-
-.scenario-overview-secondary {
-    display: grid;
-    grid-template-columns:
-        minmax(260px, 0.4fr)
-        minmax(0, 0.6fr);
-}
-
-.scenario-overview-robot,
-.scenario-overview-settings {
-    min-width: 0;
-    padding: 18px;
-}
-
-.scenario-overview-robot {
-    border-right: 1px solid var(--laro-border);
-}
-
-
-/* =========================================================
-   Overview robot types
-   ========================================================= */
-
-.scenario-overview-robot-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.scenario-overview-robot-tag {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-
-    min-height: 34px;
-    padding: 0 12px;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-control);
-
-    background: var(--laro-background);
-    color: var(--laro-navy);
-
-    font-size: 11px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.scenario-overview-robot-tag > span {
-    color: var(--laro-primary);
-
-    font-size: 13px;
-}
-
-.scenario-overview-empty {
-    margin: 0;
-    padding: 18px 0;
-
-    color: var(--laro-subtext);
-
-    font-size: 11px;
-    text-align: center;
-}
-
-
-/* =========================================================
-   Overview battery and replan settings
-   ========================================================= */
-
-.scenario-overview-setting-grid {
-    display: grid;
-    grid-template-columns:
-        minmax(0, 1fr)
-        minmax(0, 1fr)
-        minmax(170px, 1.15fr);
-    gap: 10px;
-}
-
-.scenario-overview-setting-item {
-    display: flex;
-    min-width: 0;
-    min-height: 92px;
-    flex-direction: column;
-
-    padding: 13px;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
-    background: var(--laro-background);
-}
-
-.scenario-overview-setting-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.scenario-overview-setting-heading > span,
-.scenario-overview-setting-item.is-replan > span {
-    color: var(--laro-subtext);
-
-    font-size: 10px;
-    font-weight: 600;
-}
-
-.scenario-overview-setting-heading > strong {
-    color: var(--laro-navy);
-
-    font-size: 16px;
-    font-weight: 800;
-}
-
-.scenario-overview-progress {
-    width: 100%;
-    height: 7px;
-    margin-top: auto;
-
-    overflow: hidden;
-
-    border-radius: var(--laro-radius-pill);
-
-    background: var(--laro-muted-light);
-}
-
-.scenario-overview-progress > span {
-    display: block;
-    height: 100%;
-
-    border-radius: inherit;
-
-    background: var(--laro-primary);
-}
-
-.scenario-overview-progress.is-warning > span {
-    background: var(--laro-warning);
-}
-
-.scenario-overview-setting-item.is-replan {
-    justify-content: space-between;
-}
-
-.scenario-overview-setting-item.is-replan > strong {
-    margin-top: 12px;
-
-    color: var(--laro-navy);
-
-    font-size: 11px;
-    font-weight: 800;
-    line-height: 1.55;
-    word-break: keep-all;
-}
-
-
-/* =========================================================
-   Scenario item cards
-   품목명과 품목 코드만 표시
-   ========================================================= */
-
-.scenario-item-card-list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-}
-
-.scenario-item-card {
-    display: flex;
-    align-items: center;
-
-    min-width: 0;
-    min-height: 76px;
-
-    overflow: hidden;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
-    background: var(--laro-surface);
-
-    transition:
-        border-color 0.18s ease,
-        background 0.18s ease,
-        transform 0.18s ease;
-}
-
-.scenario-item-card:hover {
-    border-color: var(--laro-primary);
-
-    background: var(--laro-primary-light);
-
-    transform: translateY(-1px);
-}
-
-
-/* 품목 아이콘 */
-.scenario-item-card-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    flex: 0 0 48px;
-    align-self: stretch;
-
-    border-right: 1px solid var(--laro-border);
-
-    background: var(--laro-background);
-    color: var(--laro-primary);
-
-    font-size: 18px;
-}
-
-
-/* 품목 정보 */
-.scenario-item-card-content {
-    display: flex;
-    min-width: 0;
-    flex: 1;
-    flex-direction: column;
-    gap: 5px;
-
-    padding: 13px 14px;
-}
-
-.scenario-item-card-content strong {
-    overflow: hidden;
-
-    color: var(--laro-navy);
-
-    font-size: 13px;
-    font-weight: 800;
-    line-height: 1.4;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.scenario-item-card-content span {
-    overflow: hidden;
-
-    color: var(--laro-subtext);
-
-    font-size: 10px;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-
-/* =========================================================
-   Empty item state
-   ========================================================= */
-
-.scenario-item-empty {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    justify-content: center;
-
-    min-height: 180px;
-    padding: 30px;
-
-    border: 1px dashed var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
-    background: var(--laro-background);
-
-    text-align: center;
-}
-
-.scenario-item-empty-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 44px;
-    height: 44px;
-    margin-bottom: 12px;
-
-    border-radius: 11px;
-
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-
-    font-size: 20px;
-}
-
-.scenario-item-empty strong {
-    color: var(--laro-navy);
-
-    font-size: 13px;
-}
-
-.scenario-item-empty p {
-    margin: 7px 0 0;
-
-    color: var(--laro-subtext);
-
-    font-size: 11px;
-    line-height: 1.5;
-}
-
-
-/* =========================================================
-   Empty detail
-   시나리오가 선택되지 않은 상태
-   ========================================================= */
-
-.scenario-detail-placeholder {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    justify-content: center;
-
-    min-height: 620px;
-    padding: 40px;
-
-    text-align: center;
-}
-
-.scenario-detail-placeholder-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 52px;
-    height: 52px;
-    margin-bottom: 14px;
-
-    border-radius: 13px;
-
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-
-    font-size: 24px;
-}
-
-.scenario-detail-placeholder h2 {
-    margin: 0;
-
-    color: var(--laro-navy);
-
-    font-size: 18px;
-}
-
-.scenario-detail-placeholder p {
-    max-width: 340px;
-    margin: 8px 0 0;
-
-    color: var(--laro-subtext);
-
-    font-size: 11px;
-    line-height: 1.6;
-}
-
-
-/* =========================================================
-   Execution history
-   실행 이력
-   ========================================================= */
-
-.scenario-history-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    flex: 0 0 auto;
-
-    min-height: 20px;
-    padding: 0 10px;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-control);
-
-    background: var(--laro-surface);
-    color: var(--laro-primary);
-
-    font-size: 10px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.scenario-history-table-wrapper {
-    width: 100%;
-
-    overflow-x: auto;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-}
-
-.scenario-history-table {
-    width: 100%;
-    min-width: 700px;
-
-    border-collapse: collapse;
-    table-layout: fixed;
-}
-
-
-/* 실행 이력 열 너비 */
-.scenario-history-table th:nth-child(1) {
-    width: 20%;
-}
-
-.scenario-history-table th:nth-child(2) {
-    width: 20%;
-}
-
-.scenario-history-table th:nth-child(3) {
-    width: 15%;
-}
-
-.scenario-history-table th:nth-child(4) {
-    width: 15%;
-}
-
-.scenario-history-table th:nth-child(5) {
-    width: 15%;
-}
-
-.scenario-history-table th:nth-child(6) {
-    width: 5%;
-}
-
-.scenario-history-table thead {
-    background: var(--laro-background);
-}
-
-.scenario-history-table th {
-    height: 30px;
-    padding: 0 13px;
-
-    border-bottom: 1px solid var(--laro-border);
-
-    color: var(--laro-subtext);
-
-    font-size: 10px;
-    font-weight: 700;
-    text-align: left;
-    white-space: nowrap;
-}
-
-.scenario-history-table td {
-    height: 40px;
-    padding: 9px 13px;
-
-    border-bottom: 1px solid var(--laro-border);
-
-    color: var(--laro-text);
-
-    font-size: 11px;
-    vertical-align: middle;
-}
-
-.scenario-history-table tbody tr {
-    transition:
-        background 0.18s ease,
-        box-shadow 0.18s ease;
-}
-
-.scenario-history-table tbody tr:hover {
-    background: var(--laro-surface-hover);
-}
-
-.scenario-history-table tbody tr:last-child td {
-    border-bottom: 0;
-}
-
-
-/* 가장 최근 실행 */
-.scenario-history-table tbody tr.is-latest {
-    background: var(--laro-primary-light);
-
-    box-shadow: inset 3px 0 0 var(--laro-primary);
-}
-
-.scenario-history-run-id {
-    color: var(--laro-navy);
-
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.scenario-history-date,
-.scenario-history-executor {
-    display: block;
-
-    overflow: hidden;
-
-    color: var(--laro-text);
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.scenario-history-duration {
-    color: var(--laro-navy);
-
-    font-size: 11px;
-    font-weight: 800;
-}
-
-
-/* 실행 상태 */
-.scenario-execution-status {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-
-    min-height: 25px;
-    padding: 0 9px;
-
-    border-radius: 7px;
-
-    font-size: 9px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.scenario-execution-status > span {
-    font-size: 11px;
-    line-height: 1;
-}
-
-.scenario-execution-status.is-completed {
-    background: var(--laro-success-light);
-    color: var(--laro-success);
-}
-
-.scenario-execution-status.is-running {
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-}
-
-.scenario-execution-status.is-failed {
-    background: var(--laro-danger-light);
-    color: var(--laro-danger);
-}
-
-.scenario-execution-status.is-default {
-    background: var(--laro-muted-light);
-    color: var(--laro-subtext);
-}
-
-
-/* 실행 이력 더보기 */
-.scenario-history-more-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 29px;
-    height: 29px;
-    padding: 0;
-
-    border: 0;
-    border-radius: var(--laro-radius-control);
-
-    background: transparent;
-    color: var(--laro-subtext);
-
-    font-size: 17px;
-
-    cursor: pointer;
-
-    transition:
-        background 0.18s ease,
-        color 0.18s ease;
-}
-
-.scenario-history-more-button:hover {
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-}
-
-
-/* =========================================================
-   Shared empty state
-   실행 이력 / 재계획 결과
-   ========================================================= */
-
-.scenario-history-empty,
-.scenario-replan-empty {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    justify-content: center;
-
-    min-height: 150px;
-    padding: 20px;
-
-    border: 1px dashed var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
-    background: var(--laro-background);
-
-    text-align: center;
-}
-
-.scenario-history-empty-icon,
-.scenario-replan-empty-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 40px;
-    height: 40px;
-    margin-bottom: 12px;
-
-    border-radius: 11px;
-
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-
-    font-size: 20px;
-}
-
-.scenario-history-empty strong,
-.scenario-replan-empty strong {
-    color: var(--laro-navy);
-
-    font-size: 13px;
-}
-
-.scenario-history-empty p,
-.scenario-replan-empty p {
-    margin: 7px 0 0;
-
-    color: var(--laro-subtext);
-
-    font-size: 11px;
-    line-height: 1.5;
-}
-
-
-/* =========================================================
-   Replan result section header
-   재계획 결과 섹션 헤더
-   ========================================================= */
-
-.scenario-replan-section-header {
-    align-items: center;
-}
-
-.scenario-replan-section-title {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    gap: 12px;
-}
-
-.scenario-replan-section-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    flex: 0 0 auto;
-
-    width: 38px;
-    height: 38px;
-
-    border: 1px solid var(--laro-primary);
-    border-radius: var(--laro-radius-control);
-
-    background: var(--laro-surface);
-    color: var(--laro-primary);
-
-    font-size: 17px;
-}
-
-.scenario-replan-latest-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-
-    flex: 0 0 auto;
-
-    min-height: 30px;
-    padding: 0 11px;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-control);
-
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-
-    font-size: 10px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-
-/* =========================================================
-   Replan result
-   재계획 결과 전체 영역
-   ========================================================= */
-
-.scenario-replan-result {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 10px;
-}
-
-
-/* =========================================================
-   Replan highlights
-   상태, 유형, 사유, 트리거 로봇
-   ========================================================= */
-
-.scenario-replan-highlight-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-
-    overflow: hidden;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
-    background: var(--laro-surface);
-}
-
-.scenario-replan-highlight-card {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    gap: 12px;
-
-    min-height: 108px;
-    padding: 18px;
-
-    border-right: 1px solid var(--laro-border);
-
-    background: var(--laro-surface);
-}
-
-.scenario-replan-highlight-card:last-child {
-    border-right: 0;
-}
-
-.scenario-replan-highlight-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    flex: 0 0 auto;
-
-    width: 40px;
-    height:40px;
-
-    border-radius: 50%;
-
-    font-size: 22px;
-    font-weight: 700;
-}
-
-
-/* 결과 상태 아이콘 */
-.scenario-replan-highlight-icon.is-status.is-success {
-    background: var(--laro-success-light);
-    color: var(--laro-success);
-}
-
-.scenario-replan-highlight-icon.is-status.is-failed {
-    background: var(--laro-danger-light);
-    color: var(--laro-danger);
-}
-
-.scenario-replan-highlight-icon.is-status.is-processing {
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-}
-
-.scenario-replan-highlight-icon.is-status.is-pending,
-.scenario-replan-highlight-icon.is-status.is-default {
-    background: var(--laro-muted-light);
-    color: var(--laro-subtext);
-}
-
-
-/* 최적화 유형 아이콘 */
-.scenario-replan-highlight-icon.is-type {
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-}
-
-
-/* 재계획 사유 아이콘 */
-.scenario-replan-highlight-icon.is-reason {
-    background: var(--laro-warning-light);
-    color: var(--laro-warning);
-}
-
-
-/* 트리거 로봇 아이콘 */
-.scenario-replan-highlight-icon.is-robot {
-    background: var(--laro-muted-light);
-    color: var(--laro-navy);
-}
-
-.scenario-replan-highlight-content {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 7px;
-}
-
-.scenario-replan-highlight-content > span {
-    color: var(--laro-subtext);
-
-    font-size: 12px;
-}
-
-.scenario-replan-highlight-value {
-    overflow: hidden;
-
-    color: var(--laro-navy);
-
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1.35;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.scenario-replan-highlight-value.is-primary {
-    color: var(--laro-primary);
-}
-
-.scenario-replan-highlight-value.is-robot {
-    color: var(--laro-navy);
-}
-
-.scenario-replan-highlight-value.is-success {
-    color: var(--laro-success);
-}
-
-.scenario-replan-highlight-value.is-failed {
-    color: var(--laro-danger);
-}
-
-.scenario-replan-highlight-value.is-processing {
-    color: var(--laro-primary);
-}
-
-.scenario-replan-highlight-value.is-pending,
-.scenario-replan-highlight-value.is-default {
-    color: var(--laro-subtext);
-}
-
-
-/* =========================================================
-   Replan detail grid
-   결과 설명 + 실행 추적 정보
-   ========================================================= */
-
-.scenario-replan-detail-grid {
-    display: grid;
-    grid-template-columns:
-        minmax(0, 1fr)
-        minmax(0, 1fr);
-
-    overflow: hidden;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
-    background: var(--laro-surface);
-}
-
-.scenario-replan-description-card,
-.scenario-replan-trace-card {
-    min-width: 0;
-    padding: 18px;
-}
-
-.scenario-replan-description-card {
-    border-right: 1px solid var(--laro-border);
-}
-
-
-/* =========================================================
-   Replan card heading
-   ========================================================= */
-
-.scenario-replan-card-heading {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    min-height: 34px;
-    padding-bottom: 13px;
-
-    border-bottom: 1px solid var(--laro-border);
-}
-
-.scenario-replan-card-heading-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    flex: 0 0 auto;
-
-    width: 28px;
-    height: 28px;
-
-    color: var(--laro-primary);
-
-    font-size: 19px;
-    font-weight: 800;
-}
-
-.scenario-replan-card-heading h4 {
-    margin: 0;
-
-    color: var(--laro-navy);
-
-    font-size: 14px;
-    font-weight: 800;
-}
-
-
-/* =========================================================
-   Replan description
-   ========================================================= */
-
-.scenario-replan-description-content {
-    padding: 17px 4px 4px;
-}
-
-.scenario-replan-description-content p {
-    margin: 0;
-
-    color: var(--laro-text);
-
-    font-size: 12px;
-    line-height: 1.85;
-    word-break: keep-all;
-}
-
-
-/* =========================================================
-   Replan trace
-   실행 추적 정보
-   ========================================================= */
-
-.scenario-replan-trace-list {
-    margin: 0;
-}
-
-.scenario-replan-trace-list > div {
-    display: grid;
-    grid-template-columns:
-        minmax(145px, 0.8fr)
-        minmax(0, 1.2fr);
-
-    align-items: center;
-    gap: 12px;
-
-    min-height: 52px;
-    padding: 8px 2px;
-
-    border-bottom: 1px solid var(--laro-border);
-}
-
-.scenario-replan-trace-list > div:last-child {
-    border-bottom: 0;
-}
-
-.scenario-replan-trace-list dt {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    gap: 9px;
-
-    color: var(--laro-subtext);
-
-    font-size: 10px;
-    font-weight: 600;
-}
-
-.scenario-replan-trace-list dd {
-    overflow: hidden;
-
-    margin: 0;
-
-    color: var(--laro-navy);
-
-    font-size: 12px;
-    font-weight: 800;
-    text-align: right;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.scenario-replan-trace-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    flex: 0 0 auto;
-
-    width: 30px;
-    height: 30px;
-
-    border-radius: var(--laro-radius-control);
-
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-
-    font-size: 13px;
-    font-weight: 800;
-}
-
-.scenario-replan-trace-icon.is-success {
-    background: var(--laro-success-light);
-    color: var(--laro-success);
-}
-
-.scenario-replan-trace-icon.is-failed {
-    background: var(--laro-danger-light);
-    color: var(--laro-danger);
-}
-
-.scenario-replan-trace-icon.is-processing {
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-}
-
-.scenario-replan-trace-icon.is-pending,
-.scenario-replan-trace-icon.is-default {
-    background: var(--laro-muted-light);
-    color: var(--laro-subtext);
-}
-
-
-/* 원본 결과 상태 */
-.scenario-replan-raw-status {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    min-height: 26px;
-    padding: 0 9px;
-
-    border-radius: 7px;
-
-    font-size: 10px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.scenario-replan-raw-status.is-success {
-    background: var(--laro-success-light);
-    color: var(--laro-success);
-}
-
-.scenario-replan-raw-status.is-failed {
-    background: var(--laro-danger-light);
-    color: var(--laro-danger);
-}
-
-.scenario-replan-raw-status.is-processing {
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-}
-
-.scenario-replan-raw-status.is-pending,
-.scenario-replan-raw-status.is-default {
-    background: var(--laro-muted-light);
-    color: var(--laro-subtext);
-}
-
-
-/* =========================================================
-   Responsive
-   ========================================================= */
-
-@media (max-width: 1450px) {
-    .scenario-replan-highlight-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .scenario-replan-highlight-card:nth-child(2) {
-        border-right: 0;
-    }
-
-    .scenario-replan-highlight-card:nth-child(-n + 2) {
-        border-bottom: 1px solid var(--laro-border);
-    }
-}
-
-@media (max-width: 1300px) {
-    .scenario-overview-primary {
-        grid-template-columns:
-            minmax(190px, 0.35fr)
-            minmax(0, 0.65fr);
-    }
-
-    .scenario-overview-secondary {
-        grid-template-columns: 1fr;
-    }
-
-    .scenario-overview-robot {
-        border-right: 0;
-        border-bottom: 1px solid var(--laro-border);
-    }
-}
-
-@media (max-width: 1250px) {
-    .scenario-item-card-list {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 1100px) {
-    .scenario-replan-detail-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .scenario-replan-description-card {
-        border-right: 0;
-        border-bottom: 1px solid var(--laro-border);
-    }
-}
-
-@media (max-width: 980px) {
-    .scenario-inline-detail-header {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .scenario-detail-header-actions {
-        justify-content: flex-end;
-    }
-}
-
-@media (max-width: 880px) {
-    .scenario-overview-primary {
-        grid-template-columns: 1fr;
-    }
-
-    .scenario-overview-warehouse {
-        border-right: 0;
-        border-bottom: 1px solid var(--laro-border);
-    }
-
-    .scenario-overview-setting-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .scenario-overview-setting-item.is-replan {
-        grid-column: 1 / -1;
-
-        min-height: 76px;
-    }
-}
-
-@media (max-width: 680px) {
-    .scenario-inline-detail-header {
-        padding: 17px;
-    }
-
-    .scenario-detail-title-row {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .scenario-inline-title-content h2 {
-        font-size: 18px;
-
-        white-space: normal;
-    }
-
-    .scenario-detail-header-actions {
-        width: 100%;
-    }
-
-    .scenario-detail-header-actions .scenario-button {
-        flex: 1;
-    }
-
-    .scenario-inline-detail-body {
-        padding: 11px;
-    }
-
-    .scenario-detail-section {
-        padding: 16px;
-    }
-
-    .scenario-item-card-list {
-        grid-template-columns: 1fr;
-    }
-
-    .scenario-item-card-content strong {
-        white-space: normal;
-    }
-
-    .scenario-replan-section-header {
-        align-items: flex-start;
-    }
-
-    .scenario-replan-highlight-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .scenario-replan-highlight-card {
-        min-height: 88px;
-
-        border-right: 0;
-        border-bottom: 1px solid var(--laro-border);
-    }
-
-    .scenario-replan-highlight-card:nth-child(2) {
-        border-right: 0;
-    }
-
-    .scenario-replan-highlight-card:nth-child(-n + 2) {
-        border-bottom: 1px solid var(--laro-border);
-    }
-
-    .scenario-replan-highlight-card:last-child {
-        border-bottom: 0;
-    }
-
-    .scenario-replan-highlight-icon {
-        width: 44px;
-        height: 44px;
-
-        font-size: 19px;
-    }
-
-    .scenario-replan-highlight-value {
-        font-size: 14px;
-    }
-
-    .scenario-replan-description-card,
-    .scenario-replan-trace-card {
-        padding: 15px;
-    }
-
-    .scenario-replan-trace-list > div {
-        grid-template-columns: 1fr;
-        gap: 5px;
-
-        padding: 10px 0;
-    }
-
-    .scenario-replan-trace-list dd {
-        padding-left: 39px;
-
-        text-align: left;
-    }
-}
-
-@media (max-width: 560px) {
-    .scenario-overview-warehouse,
-    .scenario-overview-description,
-    .scenario-overview-robot,
-    .scenario-overview-settings {
-        padding: 15px;
-    }
-
-    .scenario-overview-setting-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .scenario-overview-setting-item.is-replan {
-        grid-column: auto;
-    }
-
-    .scenario-overview-robot-list {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .scenario-overview-robot-tag {
-        min-width: 0;
-    }
-}
-
-@media (max-width: 420px) {
-    .scenario-overview-robot-list {
-        grid-template-columns: 1fr;
-    }
-
-    .scenario-detail-header-actions {
-        flex-direction: column;
-    }
-
-    .scenario-detail-header-actions .scenario-button {
-        width: 100%;
-    }
-}
-
-/* ============================================================
-   LARO 관제센터 스타일
-   카드 선택 및 최신 행은 두꺼운 강조선 없이 배경으로만 구분한다.
-============================================================ */
-
-.scenario-detail-card {
-    border: 1px solid var(--laro-border);
-    border-radius: 0;
-    background: var(--laro-surface);
-    box-shadow: none;
-}
-
-.scenario-inline-detail-header {
-    min-height: 72px;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--laro-border);
-    background: var(--laro-surface);
-}
-
-.scenario-detail-title-icon,
-.scenario-overview-warehouse-icon,
-.scenario-item-empty-icon,
-.scenario-detail-placeholder-icon,
-.scenario-history-empty-icon,
-.scenario-replan-empty-icon,
-.scenario-replan-section-icon,
-.scenario-replan-highlight-icon,
-.scenario-replan-trace-icon {
-    border-radius: var(--laro-radius-control);
-}
-
-.scenario-inline-detail-body {
-    gap: 12px;
-    padding: 12px;
-    background: var(--laro-background);
-}
-
-/* 주요 섹션 */
-.scenario-detail-section,
-.scenario-overview,
-.scenario-item-card,
-.scenario-history-table-wrapper,
-.scenario-history-empty,
-.scenario-replan-empty,
-.scenario-replan-highlight-grid,
-.scenario-replan-detail-grid,
-.scenario-replan-description-card,
-.scenario-replan-trace-card {
-    border-color: var(--laro-border);
-    border-radius: 0;
-    background: var(--laro-surface);
-    box-shadow: none;
-}
-
-.scenario-detail-section {
-    padding: 18px;
-}
-
-.scenario-detail-section-header h3,
-.scenario-inline-title-content h2,
-.scenario-overview-warehouse-value strong,
-.scenario-item-card-content strong,
-.scenario-history-run-id,
-.scenario-history-duration {
-    color: var(--laro-navy);
-}
-
-/* 개요 */
-.scenario-overview-setting-item,
-.scenario-overview-robot-tag {
-    border: 1px solid var(--laro-border);
-    border-radius: 0;
-    background: var(--laro-background);
-}
-
-.scenario-overview-description {
-    background: var(--laro-background);
-}
-
-.scenario-overview-progress,
-.scenario-overview-progress > span {
-    border-radius: 0;
-}
-
-/* 품목 카드 */
-.scenario-item-card {
-    transform: none;
-    transition:
-        border-color 0.15s ease,
-        background-color 0.15s ease;
-}
-
-.scenario-item-card:hover {
-    border-color: var(--laro-primary);
-    background: var(--laro-primary-light);
-    transform: none;
-}
-
-/* 선택 클래스가 추가되더라도 굵은 선은 사용하지 않는다. */
-.scenario-item-card.is-selected,
-.scenario-item-card.selected,
-.scenario-item-card[aria-selected="true"] {
-    border: 1px solid var(--laro-primary);
-    background: var(--laro-primary-light);
-    outline: none;
-    box-shadow: none;
-}
-
-/* 실행 이력 */
-.scenario-history-table thead {
-    background: var(--laro-background);
-}
-
-.scenario-history-table th,
-.scenario-history-table td {
-    border-bottom-color: var(--laro-border);
-}
-
-.scenario-history-table tbody tr:hover {
-    background: var(--laro-surface-hover);
-}
-
-/* 최신 행은 배경만 사용하고 왼쪽 굵은 선을 제거한다. */
-.scenario-history-table tbody tr.is-latest {
-    background: var(--laro-primary-light);
-    box-shadow: none;
-}
-
-.scenario-history-count,
-.scenario-execution-status,
-.scenario-history-more-button,
-.scenario-detail-section-count,
-.scenario-overview-count,
-.scenario-replan-latest-badge,
-.scenario-replan-raw-status {
-    box-shadow: none;
-}
-
-.scenario-history-count,
-.scenario-history-more-button {
-    border-radius: var(--laro-radius-control);
-}
-
-/* 재계획 결과 */
-.scenario-replan-highlight-card,
-.scenario-replan-description-card,
-.scenario-replan-trace-card {
-    box-shadow: none;
-}
-
-.scenario-replan-highlight-card.is-selected,
-.scenario-replan-highlight-card.selected,
-.scenario-replan-highlight-card[aria-selected="true"] {
-    border: 1px solid var(--laro-primary);
-    background: var(--laro-primary-light);
-    outline: none;
-    box-shadow: none;
-}
-
-/* 버튼 및 포커스 */
-.scenario-detail-card button:focus,
-.scenario-detail-card button:focus-visible,
-.scenario-detail-card button:active {
-    outline: none;
-    box-shadow: none;
+    gap: 6px;
 }
 
 .scenario-button-secondary {
@@ -1837,55 +97,456 @@
     color: var(--laro-primary-active);
 }
 
-@media (max-width: 720px) {
-    .scenario-inline-detail-header {
-        height: auto;
-        min-height: 72px;
-        padding: 14px 16px;
-    }
-}
-
-
-
-/* 새 root 적용 */
-.scenario-detail-card {
-    background: var(--laro-surface);
-    color: var(--laro-text);
-}
-
-.scenario-inline-detail-header {
-    background: var(--laro-surface);
-}
-
+/* Body */
 .scenario-inline-detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
     background: var(--laro-background);
 }
 
-.scenario-detail-section,
-.scenario-overview,
-.scenario-item-card {
+.scenario-detail-section {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
     background: var(--laro-surface);
+    box-shadow: none;
+}
+
+.scenario-detail-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 13px;
+}
+
+.scenario-detail-section-header h3 {
+    margin: 0;
+    color: var(--laro-navy);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.scenario-detail-section-header p {
+    margin: 4px 0 0;
+    color: var(--laro-subtext);
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+/* Scenario info */
+.scenario-info-card {
+    border: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.scenario-info-main {
+    display: grid;
+    grid-template-columns: minmax(145px, 0.34fr) minmax(0, 0.66fr);
+}
+
+.scenario-info-warehouse,
+.scenario-info-description {
+    min-width: 0;
+    padding: 14px;
+}
+
+.scenario-info-warehouse {
+    border-right: 1px solid var(--laro-border);
+}
+
+.scenario-info-label {
+    display: block;
+    color: var(--laro-subtext);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.scenario-info-warehouse strong {
+    display: block;
+    margin-top: 8px;
+    overflow: hidden;
+    color: var(--laro-navy);
+    font-size: 13px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-info-description {
+    background: var(--laro-background);
+}
+
+.scenario-info-description p,
+.scenario-replan-message p {
+    margin: 7px 0 0;
+    color: var(--laro-text);
+    font-size: 11px;
+    line-height: 1.65;
+    word-break: keep-all;
+}
+
+.scenario-info-divider {
+    height: 1px;
+    background: var(--laro-border);
+}
+
+.scenario-info-robot-area {
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-info-row-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 9px;
+}
+
+.scenario-info-count {
+    color: var(--laro-primary);
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.scenario-info-robot-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.scenario-info-robot-tag {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 9px;
+    border: 1px solid var(--laro-border);
+    background: var(--laro-background);
+    color: var(--laro-navy);
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.scenario-info-empty {
+    color: var(--laro-subtext);
+    font-size: 10px;
+}
+
+.scenario-info-setting-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.scenario-info-setting-item {
+    display: flex;
+    min-width: 0;
+    min-height: 66px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 14px;
+    border-right: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.scenario-info-setting-item:last-child {
+    border-right: 0;
+}
+
+.scenario-info-setting-item > span {
+    color: var(--laro-subtext);
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.scenario-info-setting-item > strong {
+    overflow: hidden;
+    color: var(--laro-navy);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Recent replan */
+.scenario-replan-section-header {
+    align-items: center;
+}
+
+.scenario-replan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.scenario-replan-latest-badge,
+.scenario-replan-all-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.scenario-replan-latest-badge {
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+}
+
+.scenario-replan-all-button {
+    background: var(--laro-surface);
+    color: var(--laro-primary);
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.scenario-replan-all-button:hover {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+}
+
+.scenario-replan-compact {
+    border: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.scenario-replan-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.scenario-replan-summary-item {
+    display: flex;
+    min-width: 0;
+    min-height: 70px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 7px;
+    padding: 12px 14px;
+    border-right: 1px solid var(--laro-border);
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-replan-summary-item:nth-child(2n) {
+    border-right: 0;
+}
+
+.scenario-replan-summary-item > span,
+.scenario-replan-meta span {
+    color: var(--laro-subtext);
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.scenario-replan-summary-item > strong {
+    overflow: hidden;
+    color: var(--laro-navy);
+    font-size: 12px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-replan-status.is-success {
+    color: var(--laro-success);
+}
+
+.scenario-replan-status.is-failed {
+    color: var(--laro-danger);
+}
+
+.scenario-replan-status.is-processing {
+    color: var(--laro-primary);
+}
+
+.scenario-replan-status.is-pending,
+.scenario-replan-status.is-default {
+    color: var(--laro-subtext);
+}
+
+.scenario-replan-message {
+    padding: 14px;
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-background);
+}
+
+.scenario-replan-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.scenario-replan-meta > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+    padding: 11px 14px;
+    border-right: 1px solid var(--laro-border);
+}
+
+.scenario-replan-meta > div:last-child {
+    border-right: 0;
+}
+
+.scenario-replan-meta strong {
+    overflow: hidden;
+    color: var(--laro-navy);
+    font-size: 10px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-replan-empty {
+    display: flex;
+    min-height: 130px;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px;
+    border: 1px dashed var(--laro-border);
+    background: var(--laro-background);
+    text-align: center;
+}
+
+.scenario-replan-empty strong {
+    color: var(--laro-navy);
+    font-size: 12px;
+}
+
+.scenario-replan-empty p {
+    margin: 6px 0 0;
+    color: var(--laro-subtext);
+    font-size: 10px;
+}
+
+/* Empty detail */
+.scenario-detail-placeholder {
+    display: flex;
+    min-height: 520px;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    padding: 32px;
+    text-align: center;
+}
+
+.scenario-detail-placeholder-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    margin-bottom: 12px;
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+    font-size: 21px;
+}
+
+.scenario-detail-placeholder h2 {
+    margin: 0;
+    color: var(--laro-navy);
+    font-size: 16px;
+}
+
+.scenario-detail-placeholder p {
+    max-width: 300px;
+    margin: 7px 0 0;
+    color: var(--laro-subtext);
+    font-size: 10px;
+    line-height: 1.6;
 }
 
 .scenario-detail-card button:focus,
 .scenario-detail-card button:focus-visible,
-.scenario-detail-card button:active,
-.scenario-detail-card input:focus,
-.scenario-detail-card input:focus-visible,
-.scenario-detail-card select:focus,
-.scenario-detail-card select:focus-visible {
+.scenario-detail-card button:active {
     outline: none;
     box-shadow: none;
 }
 
-.scenario-item-card.is-selected,
-.scenario-item-card.selected,
-.scenario-item-card[aria-selected="true"],
-.scenario-replan-highlight-card.is-selected,
-.scenario-replan-highlight-card.selected,
-.scenario-replan-highlight-card[aria-selected="true"] {
-    border: 1px solid var(--laro-primary);
-    background: var(--laro-primary-light);
-    outline: none;
-    box-shadow: none;
+@media (max-width: 1080px) {
+    .scenario-inline-detail-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .scenario-detail-header-actions {
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 760px) {
+    .scenario-info-main {
+        grid-template-columns: 1fr;
+    }
+
+    .scenario-info-warehouse {
+        border-right: 0;
+        border-bottom: 1px solid var(--laro-border);
+    }
+
+    .scenario-info-setting-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .scenario-info-setting-item:nth-child(2) {
+        border-right: 0;
+    }
+
+    .scenario-info-setting-item.is-wide {
+        grid-column: 1 / -1;
+        border-top: 1px solid var(--laro-border);
+        border-right: 0;
+    }
+}
+
+@media (max-width: 560px) {
+    .scenario-inline-detail-header {
+        padding: 13px 14px;
+    }
+
+    .scenario-detail-header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .scenario-inline-detail-body {
+        padding: 9px;
+    }
+
+    .scenario-detail-section {
+        padding: 13px;
+    }
+
+    .scenario-replan-section-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .scenario-replan-summary-grid,
+    .scenario-replan-meta,
+    .scenario-info-setting-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .scenario-replan-summary-item,
+    .scenario-replan-meta > div,
+    .scenario-info-setting-item {
+        border-right: 0;
+    }
 }
