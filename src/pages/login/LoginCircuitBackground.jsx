@@ -1,17 +1,6 @@
 function LoginCircuitBackground() {
     return (
         <div className="login-bg" aria-hidden="true">
-            <div className="login-bg-brand">
-                <div className="login-bg-brand-title">
-                    <span className="login-bg-brand-name">LARO</span>
-                </div>
-                <p className="login-bg-brand-acronym">
-                    <strong>L</strong>LM <strong>A</strong>utonomous
-                    <strong> R</strong>obot <strong>O</strong>rchestration
-                </p>
-                <p className="login-bg-brand-full">Warehouse Simulation Platform</p>
-            </div>
-
             <div className="login-bg-simulation">
                 <svg
                     viewBox="0 0 760 520"

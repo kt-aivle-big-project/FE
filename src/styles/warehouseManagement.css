@@ -965,3 +965,410 @@
         width: 100%;
     }
 }
+
+/* ============================================================
+   LARO 관제센터 스타일
+   기존 구조와 동작은 유지하고 색상과 표면 디자인을 통일한다.
+============================================================ */
+
+.warehouse-management {
+    padding: 12px;
+    gap: 12px;
+    border-left: 0;
+    background: var(--laro-background);
+    color: var(--laro-text);
+}
+
+/* 페이지 헤더 */
+.management-header {
+    display: flex;
+    align-items: center;
+    min-height: 72px;
+    padding: 0 20px;
+    border: 1px solid var(--laro-border);
+    border-top: 0;
+    border-left: 0;
+    border-radius: 0;
+    background: var(--laro-surface);
+    box-shadow: none;
+}
+
+/* 창고 목록 및 상세 패널 */
+.warehouse-list-panel,
+.warehouse-detail {
+    border: 1px solid var(--laro-border);
+    border-top: 0;
+    border-radius: 0;
+    background: var(--laro-surface);
+    box-shadow: none;
+}
+
+.warehouse-list-header,
+.warehouse-detail-header {
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.warehouse-list-header h2,
+.warehouse-title-group h1 {
+    color: var(--laro-navy);
+    font-weight: var(--laro-font-weight-bold);
+    letter-spacing: -0.02em;
+}
+
+/* 공통 버튼 */
+.warehouse-button,
+.warehouse-action-buttons button,
+.layout-edit-button,
+.secondary-button,
+.primary-button,
+.warehouse-modal-actions button {
+    border: 1px solid var(--laro-border-dark);
+    border-radius: 4px;
+    background: var(--laro-surface);
+    color: var(--laro-navy);
+    font-weight: var(--laro-font-weight-semibold);
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.warehouse-button:hover,
+.warehouse-action-buttons button:hover,
+.layout-edit-button:hover,
+.secondary-button:hover {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.primary-button {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary);
+    color: var(--laro-white);
+}
+
+.primary-button:hover {
+    border-color: var(--laro-primary-hover);
+    background: var(--laro-primary-hover);
+    color: var(--laro-white);
+}
+
+.warehouse-action-buttons .delete-button {
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
+.warehouse-action-buttons .delete-button:hover {
+    border-color: var(--laro-danger-hover);
+    background: var(--laro-danger);
+    color: var(--laro-white);
+}
+
+.warehouse-management button:focus,
+.warehouse-management button:focus-visible,
+.warehouse-management button:active {
+    outline: none;
+    box-shadow: none;
+}
+
+/* 창고 목록 */
+.warehouse-list {
+    gap: 10px;
+}
+
+.warehouse-list-item {
+    padding: 16px;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    box-shadow: none;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.warehouse-list-item:hover {
+    border-color: var(--laro-border-dark);
+    background: var(--laro-surface-hover);
+}
+
+.warehouse-list-item.active {
+    border: 1px solid var(--laro-primary);
+    background: var(--laro-primary-light);
+    box-shadow: inset 3px 0 0 var(--laro-primary);
+}
+
+.warehouse-list-info strong {
+    color: var(--laro-navy);
+}
+
+.warehouse-list-info span {
+    color: var(--laro-subtext);
+}
+
+.warehouse-status,
+.detail-status {
+    border: 0;
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+/* 창고 미리보기 */
+.warehouse-preview {
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+}
+
+.warehouse-preview-placeholder {
+    color: var(--laro-muted);
+}
+
+/* 시설 구성 및 정보 */
+.warehouse-configuration,
+.warehouse-info-section {
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+    box-shadow: none;
+}
+
+.warehouse-configuration-header h2,
+.warehouse-info-header h2 {
+    color: var(--laro-navy);
+}
+
+.warehouse-configuration-header p,
+.warehouse-facility-main p,
+.warehouse-info-row span {
+    color: var(--laro-subtext);
+}
+
+.warehouse-facility-list {
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+}
+
+.warehouse-facility-item {
+    border-bottom-color: var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.warehouse-facility-item:hover {
+    background: var(--laro-surface-hover);
+}
+
+.warehouse-facility-icon {
+    border-radius: 3px;
+}
+
+.warehouse-facility-title-row strong,
+.warehouse-facility-count strong,
+.warehouse-info-row strong {
+    color: var(--laro-text);
+}
+
+.warehouse-facility-count span {
+    color: var(--laro-subtext);
+}
+
+.warehouse-facility-item.shelf .warehouse-facility-icon {
+    border-color: var(--laro-border-dark);
+    background: var(--laro-muted-light);
+    color: var(--laro-subtext);
+}
+
+.warehouse-facility-item.shelf .warehouse-facility-badge {
+    background: var(--laro-muted-light);
+    color: var(--laro-subtext);
+}
+
+.warehouse-facility-item.inbound .warehouse-facility-icon,
+.warehouse-facility-item.inbound .warehouse-facility-badge {
+    border-color: var(--laro-success);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.warehouse-facility-item.outbound .warehouse-facility-icon,
+.warehouse-facility-item.outbound .warehouse-facility-badge {
+    border-color: var(--laro-warning);
+    background: var(--laro-warning-light);
+    color: var(--laro-warning-hover);
+}
+
+.warehouse-facility-item.charging .warehouse-facility-icon,
+.warehouse-facility-item.charging .warehouse-facility-badge {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+}
+
+.warehouse-facility-badge {
+    border-radius: var(--laro-radius-pill);
+}
+
+.warehouse-info-header,
+.warehouse-info-row {
+    border-bottom-color: var(--laro-border);
+}
+
+/* 모달 */
+.warehouse-modal-backdrop {
+    background: var(--laro-overlay);
+}
+
+.warehouse-modal {
+    border: 1px solid var(--laro-border-dark);
+    border-radius: 0;
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    box-shadow: 0 18px 44px var(--laro-shadow-medium);
+}
+
+.warehouse-modal-header h2 {
+    color: var(--laro-navy);
+}
+
+.warehouse-modal-close,
+.warehouse-modal-back {
+    color: var(--laro-subtext);
+}
+
+.warehouse-modal-close:hover,
+.warehouse-modal-back:hover {
+    background: transparent;
+    color: var(--laro-primary);
+}
+
+/* 생성 방식 */
+.warehouse-creation-card {
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+    color: var(--laro-text);
+}
+
+.warehouse-creation-card:hover {
+    border-color: var(--laro-border-dark);
+    background: var(--laro-surface-hover);
+}
+
+.warehouse-creation-card.selected {
+    border: 1px solid var(--laro-primary);
+    background: var(--laro-primary-light);
+    box-shadow: inset 3px 0 0 var(--laro-primary);
+}
+
+.warehouse-creation-card span,
+.creation-card-icon {
+    color: var(--laro-subtext);
+}
+
+/* 탭 */
+.warehouse-create-tabs {
+    border: 1px solid var(--laro-border);
+    background: var(--laro-muted-light);
+}
+
+.warehouse-create-tabs span,
+.warehouse-create-tabs button {
+    color: var(--laro-subtext);
+}
+
+.warehouse-create-tabs span.active,
+.warehouse-create-tabs button.active {
+    background: var(--laro-surface);
+    color: var(--laro-primary);
+}
+
+.warehouse-create-tabs button:hover {
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+/* 폼 */
+.warehouse-form-field span {
+    color: var(--laro-text);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.warehouse-form-field input,
+.warehouse-form-field select,
+.warehouse-form-field textarea {
+    border: 1px solid var(--laro-border);
+    border-radius: 4px;
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    outline: none;
+}
+
+.warehouse-form-field input::placeholder,
+.warehouse-form-field textarea::placeholder {
+    color: var(--laro-placeholder);
+}
+
+.warehouse-form-field input:hover,
+.warehouse-form-field select:hover,
+.warehouse-form-field textarea:hover {
+    border-color: var(--laro-border-dark);
+}
+
+.warehouse-form-field input:focus,
+.warehouse-form-field input:focus-visible,
+.warehouse-form-field select:focus,
+.warehouse-form-field select:focus-visible,
+.warehouse-form-field textarea:focus,
+.warehouse-form-field textarea:focus-visible {
+    border-color: var(--laro-primary);
+    outline: none;
+    box-shadow: none;
+}
+
+/* 레이아웃 설계 및 JSON 업로드 */
+.warehouse-layout-editor-heading span {
+    color: var(--laro-subtext);
+}
+
+.warehouse-layout-editor-heading > span {
+    border-color: var(--laro-border);
+    background: var(--laro-background);
+}
+
+.warehouse-json-upload {
+    border-color: var(--laro-border-dark);
+    background: var(--laro-background);
+}
+
+.warehouse-json-file-info {
+    border-color: var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.warehouse-json-file-info button {
+    color: var(--laro-danger);
+}
+
+.warehouse-modal-actions {
+    border-top-color: var(--laro-border);
+}
+
+.primary-button:disabled {
+    border-color: var(--laro-border);
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+}
+
+@media (max-width: 1000px) {
+    .management-header {
+        min-height: 72px;
+    }
+}
+

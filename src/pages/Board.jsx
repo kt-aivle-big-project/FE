@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import "../styles/board.css";
+import "../styles/Board.css";
 
 const BOARD_TABS = [
     { id: "notice", label: "공지사항" },

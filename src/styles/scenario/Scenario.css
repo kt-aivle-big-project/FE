@@ -64,9 +64,9 @@
     overflow: hidden;
 
     border: 1px solid var(--laro-border);
-    border-radius: 12px;
+    border-radius: var(--laro-radius-small);
 
-    background: var(--laro-white);
+    background: var(--laro-surface);
 }
 
 
@@ -124,7 +124,7 @@
     padding: 0 14px;
 
     border: 0;
-    border-radius: 14px;
+    border-radius: var(--laro-radius-medium);
 
     font-size: 12px;
     font-weight: 700;
@@ -140,7 +140,7 @@
 
 .scenario-button-primary {
     background: var(--laro-primary);
-    color: var(--laro-white);
+    color: var(--laro-surface);
 }
 
 .scenario-button-primary:hover {
@@ -197,10 +197,10 @@
     padding: 0 14px 0 39px;
 
     border: 1px solid var(--laro-border);
-    border-radius: 12px;
+    border-radius: var(--laro-radius-small);
     outline: none;
 
-    background: var(--laro-white);
+    background: var(--laro-surface);
     color: var(--laro-text);
 
     font-size: 13px;
@@ -221,7 +221,7 @@
 .scenario-page .scenario-search input:focus {
     border-color: var(--laro-primary);
 
-    box-shadow: 0 0 0 3px var(--laro-focus-ring);
+    box-shadow: none;
 }
 
 
@@ -234,10 +234,10 @@
     padding: 0 30px 0 12px;
 
     border: 1px solid var(--laro-border);
-    border-radius: 12px;
+    border-radius: var(--laro-radius-small);
     outline: none;
 
-    background: var(--laro-white);
+    background: var(--laro-surface);
     color: var(--laro-text);
 
     font-size: 12px;
@@ -256,7 +256,7 @@
 .scenario-page .scenario-filter-select:focus {
     border-color: var(--laro-primary);
 
-    box-shadow: 0 0 0 3px var(--laro-focus-ring);
+    box-shadow: none;
 }
 
 
@@ -271,9 +271,9 @@
     padding: 0 10px;
 
     border: 1px solid var(--laro-border);
-    border-radius: 12px;
+    border-radius: var(--laro-radius-small);
 
-    background: var(--laro-white);
+    background: var(--laro-surface);
     color: var(--laro-subtext);
 
     font-size: 12px;
@@ -406,7 +406,7 @@
 .scenario-table tbody tr.is-selected {
     background: var(--laro-primary-light);
 
-    box-shadow: inset 3px 0 0 var(--laro-primary);
+    box-shadow: none;
 }
 
 .scenario-table tbody tr.is-selected td {
@@ -460,7 +460,7 @@
     width: 34px;
     height: 34px;
 
-    border-radius: 9px;
+    border-radius: var(--laro-radius-control);
 
     background: var(--laro-primary-light);
     color: var(--laro-primary);
@@ -541,7 +541,7 @@
 
     padding: 0 10px;
 
-    border-radius: 50px;
+    border-radius: var(--laro-radius-pill);
 
     font-size: 12px;
     font-weight: 700;
@@ -594,7 +594,7 @@
     padding: 0;
 
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--laro-radius-control);
 
     background: transparent;
     color: var(--laro-subtext);
@@ -634,7 +634,7 @@
 
     margin-bottom: 12px;
 
-    border-radius: 12px;
+    border-radius: var(--laro-radius-small);
 
     background: var(--laro-primary-light);
     color: var(--laro-primary);
@@ -675,7 +675,7 @@
 
     padding: 14px 20px;
 
-    background: var(--laro-white);
+    background: var(--laro-surface);
 }
 
 .scenario-list-footer > span {
@@ -701,7 +701,7 @@
     padding: 0 8px;
 
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: var(--laro-radius-control);
 
     background: transparent;
     color: var(--laro-subtext);
@@ -728,7 +728,7 @@
     border-color: var(--laro-primary);
 
     background: var(--laro-primary);
-    color: var(--laro-white);
+    color: var(--laro-surface);
 }
 
 .scenario-pagination button:disabled {
@@ -747,7 +747,7 @@
 .scenario-page select:focus-visible {
     outline: none;
 
-    box-shadow: 0 0 0 3px var(--laro-focus-ring);
+    box-shadow: none;
 }
 
 
@@ -854,4 +854,62 @@
         align-items: flex-start;
         flex-direction: column;
     }
+}
+
+/* 새 root 적용 */
+.scenario-page {
+    background: var(--laro-background);
+    color: var(--laro-text);
+}
+
+/* 일반 페이지 헤더 */
+.scenario-list-header {
+    background: var(--laro-surface);
+    color: var(--laro-text);
+}
+
+.scenario-list-heading h1 {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-page-title);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.scenario-list-heading p {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-body);
+}
+
+/* 버튼 */
+.scenario-button,
+.scenario-reset-button,
+.scenario-pagination button {
+    border-radius: var(--laro-radius-control);
+}
+
+.scenario-button-primary:active {
+    background: var(--laro-primary-active);
+    color: var(--laro-white);
+}
+
+/* 입력 */
+.scenario-page .scenario-search input,
+.scenario-page .scenario-filter-select {
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+}
+
+.scenario-page button:focus,
+.scenario-page button:focus-visible,
+.scenario-page input:focus,
+.scenario-page input:focus-visible,
+.scenario-page select:focus,
+.scenario-page select:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+/* 선택 */
+.scenario-table tbody tr.is-selected {
+    background: var(--laro-primary-light);
+    box-shadow: none;
 }
