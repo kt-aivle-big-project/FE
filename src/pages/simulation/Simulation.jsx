@@ -16,7 +16,6 @@ import {
     scenarioApi,
     robotApi,
     fulfillmentCommandApi,
-    scenarioApi,
 } from "../../api/client";
 import { isGuestSession } from "../../api/auth";
 
