@@ -117,7 +117,7 @@ function ScenarioDetail({
     };
 
     const handleOpenReplanHistory = () => {
-        const scenarioId = scenario.scenarioId || "";
+        const scenarioId = scenario.id ?? "";
         const target = scenarioId
             ? `/replan-history?scenarioId=${encodeURIComponent(scenarioId)}`
             : "/replan-history";
@@ -135,11 +135,11 @@ function ScenarioDetail({
 
                     <div className="scenario-inline-title-content">
                         <div className="scenario-detail-title-row">
-                            <h2>{scenario.name}</h2>
+                            <h2>{scenario.scenarioName}</h2>
                         </div>
 
                         <div className="scenario-detail-sub-info">
-                            <span>{scenario.scenarioId || "-"}</span>
+                            <span>{scenario.scenarioCode || "-"}</span>
                             <span>·</span>
                             <span>
                                 최근 수정 {formatDateTime(scenario.updatedAt)}
@@ -246,13 +246,30 @@ function ScenarioDetail({
 
                             <article className="scenario-info-setting-item">
                                 <span>충전 전환 기준</span>
-                                <strong>{scenario.chargeThreshold ?? 20}%</strong>
+                                <strong>{scenario.chargingThreshold ?? 20}%</strong>
                             </article>
 
-                            <article className="scenario-info-setting-item is-wide">
-                                <span>재계획 방식</span>
+                            <article className="scenario-info-setting-item">
+                                <span>투입 로봇</span>
+                                <strong>{scenario.robotCount ?? "-"}대</strong>
+                            </article>
+
+                            <article className="scenario-info-setting-item">
+                                <span>재생 배속</span>
+                                <strong>{scenario.simulationSpeed ?? 1}배</strong>
+                            </article>
+
+                            <article className="scenario-info-setting-item">
+                                <span>자동 재계획</span>
                                 <strong>
-                                    {getReplanMethodLabel(scenario.replanMethod)}
+                                    {scenario.autoReplan ? "사용" : "사용 안 함"}
+                                </strong>
+                            </article>
+
+                            <article className="scenario-info-setting-item">
+                                <span>장애물 발생</span>
+                                <strong>
+                                    {scenario.obstacleEnabled ? "포함" : "미포함"}
                                 </strong>
                             </article>
                         </div>
