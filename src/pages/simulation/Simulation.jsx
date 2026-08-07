@@ -15,6 +15,7 @@ import {
     warehouseApi,
     robotApi,
     fulfillmentCommandApi,
+    scenarioApi,
 } from "../../api/client";
 
 
@@ -26,6 +27,9 @@ const WAREHOUSE_ID_KEY = "selectedWarehouseId";
 
 // 새로고침 후에도 실행 중인 시뮬레이션을 이어서 쓰기 위한 저장 키
 const RUN_ID_KEY = "simulationRunId";
+
+// 선택한 시나리오를 새로고침 후에도 유지하기 위한 저장 키
+const SCENARIO_ID_KEY = "selectedScenarioId";
 
 // 구조화 입력을 기본으로 두고 선택적으로 섞을 LLM 표현 비율 설정
 const COMMAND_EXPRESSION_MIX_KEY = "simulationCommandExpressionMixV2";
@@ -133,6 +137,23 @@ function Simulation() {
         setSelectedWarehouseIdState(warehouseId);
     };
 
+    // 시나리오 선택
+    // 시나리오를 고르면 그 설정(배속 등)을 실행에 그대로 쓴다.
+    const [scenarios, setScenarios] = useState([]);
+    const [selectedScenarioId, setSelectedScenarioIdState] = useState(() => {
+        const saved = localStorage.getItem(SCENARIO_ID_KEY);
+        return saved ? Number(saved) : null;
+    });
+
+    const setSelectedScenarioId = (scenarioId) => {
+        if (scenarioId) {
+            localStorage.setItem(SCENARIO_ID_KEY, String(scenarioId));
+        } else {
+            localStorage.removeItem(SCENARIO_ID_KEY);
+        }
+        setSelectedScenarioIdState(scenarioId);
+    };
+
     const [simulationSpeed, setSimulationSpeed] = useState(1);
     const [simulationStatus, setSimulationStatus] = useState("대기");
     const [simulationTime, setSimulationTime] = useState(0);
@@ -208,6 +229,71 @@ function Simulation() {
 
         loadWarehouses();
     }, []);
+
+    // 선택한 창고의 시나리오 목록을 불러온다.
+    // 창고가 바뀌면 이전 창고의 시나리오는 쓸 수 없으므로 선택을 비운다.
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadScenarios = async () => {
+            if (!selectedWarehouseId) {
+                setScenarios([]);
+                return;
+            }
+
+            try {
+                const list = await scenarioApi.getAll(selectedWarehouseId);
+
+                if (cancelled) return;
+
+                const items = Array.isArray(list) ? list : [];
+                setScenarios(items);
+
+                // 저장해둔 시나리오가 이 창고에 없으면 첫 번째로 되돌린다.
+                setSelectedScenarioIdState((current) => {
+                    const exists = items.some(
+                        (scenario) => scenario.id === current
+                    );
+
+                    if (exists) return current;
+
+                    const next = items[0]?.id ?? null;
+
+                    if (next) {
+                        localStorage.setItem(SCENARIO_ID_KEY, String(next));
+                    } else {
+                        localStorage.removeItem(SCENARIO_ID_KEY);
+                    }
+
+                    return next;
+                });
+            } catch (error) {
+                if (cancelled) return;
+                console.warn("시나리오 목록 조회 실패", error.message);
+                setScenarios([]);
+            }
+        };
+
+        loadScenarios();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedWarehouseId]);
+
+    // 시나리오를 고르면 그 배속을 화면 설정에도 반영한다.
+    const handleScenarioChange = (event) => {
+        const value = event.target.value;
+        const scenarioId = value ? Number(value) : null;
+
+        setSelectedScenarioId(scenarioId);
+
+        const scenario = scenarios.find((item) => item.id === scenarioId);
+
+        if (scenario?.simulationSpeed) {
+            setSimulationSpeed(Number(scenario.simulationSpeed));
+        }
+    };
 
     // 시작 전에도 창고에 등록된 로봇을 지도에 보여준다.
     // 실행 중이면 실시간 상태가 우선이므로 건드리지 않는다.
@@ -400,6 +486,8 @@ function Simulation() {
         return {
             warehouseId: selectedWarehouseId,
             simulationSpeed: Number(simulationSpeed),
+            // 고른 시나리오가 있으면 그 설정으로 실행한다.
+            scenarioId: selectedScenarioId ?? null,
         };
     };
 
@@ -852,12 +940,39 @@ function Simulation() {
                         <h2>시뮬레이션 실행</h2>
                     </div>
 
-                    {/* 현재 코드에는 시나리오 조회·선택 기능이 없어 안내 문구만 배치한다. */}
+                    {/* 선택한 창고에 등록된 시나리오를 고른다. */}
                     <div className="simulation-topbar-scenario">
                         <span className="simulation-topbar-label">
                             시나리오 선택
                         </span>
-                        <p>시나리오 선택 기능 연결 필요</p>
+
+                        <select
+                            value={selectedScenarioId ?? ""}
+                            onChange={handleScenarioChange}
+                            disabled={
+                                scenarios.length === 0
+                                || Boolean(simulationRunId)
+                            }
+                            aria-label="시나리오 선택"
+                        >
+                            {scenarios.length === 0 ? (
+                                <option value="">
+                                    등록된 시나리오가 없습니다
+                                </option>
+                            ) : (
+                                scenarios.map((scenario) => (
+                                    <option
+                                        key={scenario.id}
+                                        value={scenario.id}
+                                    >
+                                        {scenario.scenarioName}
+                                        {scenario.scenarioCode
+                                            ? ` (${scenario.scenarioCode})`
+                                            : ""}
+                                    </option>
+                                ))
+                            )}
+                        </select>
                     </div>
 
                     {/* 사용자와 현재 날짜·시간은 관련 데이터가 연결되면 교체한다. */}

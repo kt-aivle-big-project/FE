@@ -115,6 +115,49 @@
     white-space: nowrap;
 }
 
+/* 브라우저 기본 렌더링을 끄지 않으면 배경·글자색이 시스템 기본값으로 덮인다. */
+.simulation-topbar-scenario select {
+    width: min(320px, 100%);
+    min-width: 0;
+    height: 36px;
+    margin: 0;
+    padding: 0 32px 0 12px;
+
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--laro-dark-border);
+    border-radius: 6px;
+    background-color: var(--laro-dark-surface);
+    color: var(--laro-dark-text);
+
+    /* 화살표를 직접 그린다 (appearance 를 끄면 사라지기 때문) */
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+        linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 16px) 15px, calc(100% - 11px) 15px;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: var(--laro-font-weight-medium);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    outline: none;
+    cursor: pointer;
+}
+
+/* 펼쳤을 때의 목록은 OS 가 그리므로 색을 따로 지정한다. */
+.simulation-topbar-scenario select option {
+    background-color: var(--laro-surface);
+    color: var(--laro-text);
+}
+
+.simulation-topbar-scenario select:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 .simulation-topbar-meta {
     display: flex;
     align-items: center;
