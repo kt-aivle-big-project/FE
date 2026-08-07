@@ -1,39 +1,27 @@
 /* =========================================================
-   Scenario create modal
+   Scenario create panel
    ========================================================= */
 
-.scenario-create-modal-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1200;
+.scenario-create-panel {
+    position: sticky;
+    top: var(--laro-gap-content);
 
     display: flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: var(--laro-padding-large);
-
-    background: var(--laro-overlay);
-    backdrop-filter: blur(2px);
-}
-
-.scenario-create-modal {
-    display: flex;
-    width: min(920px, 100%);
-    max-height: calc(100vh - var(--laro-padding-large) - var(--laro-padding-large));
+    min-width: 0;
+    width: 100%;
+    max-height: calc(100vh - var(--laro-gap-content) - var(--laro-gap-content));
     flex-direction: column;
 
     overflow: hidden;
 
     border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-large);
+    border-radius: var(--laro-radius-small);
 
     background: var(--laro-surface);
-    box-shadow: 0 18px 44px var(--laro-shadow-medium);
 }
 
-.scenario-create-modal,
-.scenario-create-modal * {
+.scenario-create-panel,
+.scenario-create-panel * {
     box-sizing: border-box;
 }
 
@@ -42,7 +30,7 @@
    Header
    ========================================================= */
 
-.scenario-create-modal-header {
+.scenario-create-panel-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -58,7 +46,7 @@
     background: var(--laro-surface);
 }
 
-.scenario-create-modal-header h2 {
+.scenario-create-panel-header h2 {
     margin: 0;
 
     color: var(--laro-navy);
@@ -68,7 +56,7 @@
     line-height: 1.4;
 }
 
-.scenario-create-modal-header p {
+.scenario-create-panel-header p {
     margin: calc(var(--laro-gap-content) / 2) 0 0;
 
     color: var(--laro-subtext);
@@ -116,7 +104,7 @@
    Body
    ========================================================= */
 
-.scenario-create-modal-body {
+.scenario-create-panel-body {
     display: flex;
     min-height: 0;
     flex: 1;
@@ -205,9 +193,9 @@
     font-style: normal;
 }
 
-.scenario-create-modal input,
-.scenario-create-modal select,
-.scenario-create-modal textarea {
+.scenario-create-panel input,
+.scenario-create-panel select,
+.scenario-create-panel textarea {
     width: 100%;
 
     border: 1px solid var(--laro-border);
@@ -226,13 +214,13 @@
         background 0.18s ease;
 }
 
-.scenario-create-modal input,
-.scenario-create-modal select {
+.scenario-create-panel input,
+.scenario-create-panel select {
     height: 40px;
     padding: 0 var(--laro-padding-small);
 }
 
-.scenario-create-modal textarea {
+.scenario-create-panel textarea {
     min-height: 86px;
     padding: var(--laro-padding-small);
 
@@ -240,33 +228,33 @@
     resize: vertical;
 }
 
-.scenario-create-modal input::placeholder,
-.scenario-create-modal textarea::placeholder {
+.scenario-create-panel input::placeholder,
+.scenario-create-panel textarea::placeholder {
     color: var(--laro-placeholder);
 }
 
-.scenario-create-modal input:hover,
-.scenario-create-modal select:hover,
-.scenario-create-modal textarea:hover {
+.scenario-create-panel input:hover,
+.scenario-create-panel select:hover,
+.scenario-create-panel textarea:hover {
     border-color: var(--laro-border-dark);
 }
 
-.scenario-create-modal input:focus,
-.scenario-create-modal select:focus,
-.scenario-create-modal textarea:focus {
+.scenario-create-panel input:focus,
+.scenario-create-panel select:focus,
+.scenario-create-panel textarea:focus {
     border-color: var(--laro-primary);
     box-shadow: 0 0 0 3px var(--laro-focus-ring);
 }
 
-.scenario-create-modal input.is-error,
-.scenario-create-modal select.is-error,
-.scenario-create-modal textarea.is-error {
+.scenario-create-panel input.is-error,
+.scenario-create-panel select.is-error,
+.scenario-create-panel textarea.is-error {
     border-color: var(--laro-danger);
 }
 
-.scenario-create-modal input:disabled,
-.scenario-create-modal select:disabled,
-.scenario-create-modal textarea:disabled {
+.scenario-create-panel input:disabled,
+.scenario-create-panel select:disabled,
+.scenario-create-panel textarea:disabled {
     background: var(--laro-muted-light);
     color: var(--laro-muted);
 
@@ -388,7 +376,7 @@
    Footer
    ========================================================= */
 
-.scenario-create-modal-footer {
+.scenario-create-panel-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -487,7 +475,7 @@
    Focus
    ========================================================= */
 
-.scenario-create-modal button:focus-visible {
+.scenario-create-panel button:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px var(--laro-focus-ring);
 }
@@ -509,28 +497,22 @@
     }
 }
 
+@media (max-width: 1050px) {
+    .scenario-create-panel {
+        position: static;
+        max-height: none;
+    }
+}
+
 @media (max-width: 600px) {
-    .scenario-create-modal-overlay {
-        align-items: stretch;
-
-        padding: 0;
-    }
-
-    .scenario-create-modal {
-        max-height: 100vh;
-
-        border: 0;
-        border-radius: 0;
-    }
-
-    .scenario-create-modal-header,
-    .scenario-create-modal-body,
-    .scenario-create-modal-footer {
+    .scenario-create-panel-header,
+    .scenario-create-panel-body,
+    .scenario-create-panel-footer {
         padding-right: var(--laro-padding-large);
         padding-left: var(--laro-padding-large);
     }
 
-    .scenario-create-modal-body {
+    .scenario-create-panel-body {
         padding-top: var(--laro-gap-page);
         padding-bottom: var(--laro-gap-page);
     }
@@ -539,7 +521,7 @@
         padding: var(--laro-gap-page);
     }
 
-    .scenario-create-modal-footer {
+    .scenario-create-panel-footer {
         align-items: stretch;
         flex-direction: column;
         gap: var(--laro-gap-content);

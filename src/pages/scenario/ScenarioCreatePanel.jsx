@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { warehouseApi } from "../../api/client";
-import "../../styles/scenario/ScenarioCreateModal.css";
+import "../../styles/scenario/ScenarioCreatePanel.css";
 
 // 생성 또는 수정 모드의 초기 입력값을 만든다.
 const createInitialFormData = (initialScenario) => ({
@@ -41,7 +41,7 @@ const normalizeWarehouseId = (warehouseId) => {
         : numericWarehouseId;
 };
 
-function ScenarioCreateModal({
+function ScenarioCreatePanel({
     mode = "create",
     initialScenario = null,
     onClose,
@@ -58,12 +58,8 @@ function ScenarioCreateModal({
     const [isWarehouseLoading, setIsWarehouseLoading] = useState(true);
     const [warehouseLoadError, setWarehouseLoadError] = useState("");
 
-    // 모달이 열려 있는 동안 배경 스크롤을 막고 ESC로 닫는다.
+    // ESC 키로 열려 있는 생성/수정 패널을 닫는다.
     useEffect(() => {
-        const previousOverflow = document.body.style.overflow;
-
-        document.body.style.overflow = "hidden";
-
         const handleKeyDown = (event) => {
             if (event.key === "Escape") {
                 onClose();
@@ -73,12 +69,11 @@ function ScenarioCreateModal({
         window.addEventListener("keydown", handleKeyDown);
 
         return () => {
-            document.body.style.overflow = previousOverflow;
             window.removeEventListener("keydown", handleKeyDown);
         };
     }, [onClose]);
 
-    // 모달이 열리면 백엔드에 등록된 창고 목록을 조회한다.
+    // 패널이 열리면 백엔드에 등록된 창고 목록을 조회한다.
     useEffect(() => {
         let isCancelled = false;
 
@@ -274,27 +269,14 @@ function ScenarioCreateModal({
         });
     };
 
-    // 어두운 배경 영역을 직접 클릭한 경우 팝업을 닫는다.
-    const handleOverlayMouseDown = (event) => {
-        if (event.target === event.currentTarget) {
-            onClose();
-        }
-    };
-
     return (
-        <div
-            className="scenario-create-modal-overlay"
-            onMouseDown={handleOverlayMouseDown}
+        <form
+            className="scenario-create-panel"
+            onSubmit={handleSubmit}
+            aria-labelledby="scenario-create-title"
         >
-            <form
-                className="scenario-create-modal"
-                onSubmit={handleSubmit}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="scenario-create-title"
-            >
-                {/* 팝업 상단 */}
-                <header className="scenario-create-modal-header">
+            {/* 패널 상단 */}
+                <header className="scenario-create-panel-header">
                     <div>
                         <h2 id="scenario-create-title">
                             {isEditMode
@@ -313,14 +295,14 @@ function ScenarioCreateModal({
                         type="button"
                         className="scenario-create-close-button"
                         onClick={onClose}
-                        aria-label="팝업 닫기"
+                        aria-label="패널 닫기"
                     >
                         ×
                     </button>
                 </header>
 
-                {/* 팝업 입력 영역 */}
-                <div className="scenario-create-modal-body">
+                {/* 패널 입력 영역 */}
+                <div className="scenario-create-panel-body">
                     <section className="scenario-create-section">
                         <div className="scenario-create-section-heading scenario-create-section-heading-simple">
                             <div>
@@ -528,8 +510,8 @@ function ScenarioCreateModal({
                     </section>
                 </div>
 
-                {/* 팝업 하단 */}
-                <footer className="scenario-create-modal-footer">
+                {/* 패널 하단 */}
+                <footer className="scenario-create-panel-footer">
                     <span className="scenario-create-required-note">
                         <em>*</em>
                         필수 입력 항목
@@ -556,9 +538,8 @@ function ScenarioCreateModal({
                         </button>
                     </div>
                 </footer>
-            </form>
-        </div>
+        </form>
     );
 }
 
-export default ScenarioCreateModal;
+export default ScenarioCreatePanel;

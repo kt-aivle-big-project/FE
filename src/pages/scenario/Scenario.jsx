@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import ScenarioDetail from "./ScenarioDetail";
-import ScenarioCreateModal from "./ScenarioCreateModal";
+import ScenarioCreatePanel from "./ScenarioCreatePanel";
 import { scenarioApi } from "../../api/client";
 import "../../styles/scenario/Scenario.css";
 
@@ -79,7 +79,7 @@ const getUpdatedTime = (scenario) => {
 
 function Scenario() {
     const [scenarios, setScenarios] = useState([]);
-    const [isScenarioModalOpen, setIsScenarioModalOpen] = useState(false);
+    const [isScenarioPanelOpen, setIsScenarioPanelOpen] = useState(false);
     const [editingScenarioId, setEditingScenarioId] = useState(null);
     const [openMenuScenarioId, setOpenMenuScenarioId] = useState(null);
     const [selectedScenarioId, setSelectedScenarioId] = useState(null);
@@ -200,27 +200,28 @@ function Scenario() {
         setCurrentPage(1);
     };
 
-    // 시나리오 생성 모달 열기
+    // 시나리오 생성 패널 열기
     const handleCreateScenario = () => {
         setOpenMenuScenarioId(null);
         setEditingScenarioId(null);
-        setIsScenarioModalOpen(true);
+        setSelectedScenarioId(null);
+        setIsScenarioPanelOpen(true);
     };
 
-    // 시나리오 수정 모달 열기
+    // 시나리오 수정 패널 열기
     const handleEditScenario = (scenario) => {
         setOpenMenuScenarioId(null);
         setEditingScenarioId(scenario.id);
-        setIsScenarioModalOpen(true);
+        setIsScenarioPanelOpen(true);
     };
 
-    // 시나리오 모달 닫기
-    const handleCloseScenarioModal = () => {
-        setIsScenarioModalOpen(false);
+    // 시나리오 생성/수정 패널 닫기
+    const handleCloseScenarioPanel = () => {
+        setIsScenarioPanelOpen(false);
         setEditingScenarioId(null);
     };
 
-    // 모달에서 전달받은 시나리오를 목록에 반영
+    // 패널에서 전달받은 시나리오를 목록에 반영
     const handleScenarioSubmit = (submittedData) => {
         const now = new Date().toISOString();
 
@@ -241,7 +242,7 @@ function Scenario() {
 
             // 수정한 시나리오의 상세 화면 유지
             setSelectedScenarioId(editingScenarioId);
-            handleCloseScenarioModal();
+            handleCloseScenarioPanel();
             return;
         }
 
@@ -287,7 +288,7 @@ function Scenario() {
         // 생성한 시나리오의 상세 화면 열기
         setSelectedScenarioId(newScenario.id);
         setCurrentPage(1);
-        handleCloseScenarioModal();
+        handleCloseScenarioPanel();
     };
 
     // 시나리오 삭제
@@ -351,6 +352,8 @@ function Scenario() {
     // 선택한 시나리오 상세 표시
     const handleScenarioClick = (scenarioId) => {
         setOpenMenuScenarioId(null);
+        setIsScenarioPanelOpen(false);
+        setEditingScenarioId(null);
         setSelectedScenarioId(scenarioId);
     };
 
@@ -372,8 +375,11 @@ function Scenario() {
     return (
         <main className="scenario-page">
             <div
-                className={`scenario-workspace ${selectedScenario ? "has-detail" : "is-list-only"
-                    }`}
+                className={`scenario-workspace ${
+                    isScenarioPanelOpen || selectedScenario
+                        ? "has-side-panel"
+                        : "is-list-only"
+                }`}
             >
                 {/* 왼쪽 시나리오 목록 */}
                 <section className="scenario-list-card">
@@ -692,30 +698,29 @@ function Scenario() {
                     </footer>
                 </section>
 
-                {/* 오른쪽 시나리오 상세 영역 */}
-                {selectedScenario && (
-                    <ScenarioDetail
-                        scenario={selectedScenario}
-                        onClose={handleCloseDetail}
-                        onEdit={handleEditScenario}
-                        onDelete={handleDeleteScenario}
-                        onStatusChange={
-                            handleScenarioStatusChange
-                        }
+                {/* 오른쪽 시나리오 생성/수정 또는 상세 영역 */}
+                {isScenarioPanelOpen ? (
+                    <ScenarioCreatePanel
+                        key={editingScenario?.id ?? "create"}
+                        mode={editingScenario ? "edit" : "create"}
+                        initialScenario={editingScenario}
+                        onClose={handleCloseScenarioPanel}
+                        onSubmit={handleScenarioSubmit}
                     />
+                ) : (
+                    selectedScenario && (
+                        <ScenarioDetail
+                            scenario={selectedScenario}
+                            onClose={handleCloseDetail}
+                            onEdit={handleEditScenario}
+                            onDelete={handleDeleteScenario}
+                            onStatusChange={
+                                handleScenarioStatusChange
+                            }
+                        />
+                    )
                 )}
             </div>
-
-            {/* 시나리오 생성/수정 모달 */}
-            {isScenarioModalOpen && (
-                <ScenarioCreateModal
-                    key={editingScenario?.id ?? "create"}
-                    mode={editingScenario ? "edit" : "create"}
-                    initialScenario={editingScenario}
-                    onClose={handleCloseScenarioModal}
-                    onSubmit={handleScenarioSubmit}
-                />
-            )}
         </main>
     );
 }
