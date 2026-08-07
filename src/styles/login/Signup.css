@@ -2,14 +2,12 @@
     align-items: center;
     justify-content: center;
     padding: 40px 20px;
-    background:
-        linear-gradient(
-            90deg,
-            rgba(0, 0, 0, 0.23) 0%,
-            rgba(0, 0, 0, 0.4) 58%,
-            rgba(0, 0, 0, 0.53) 100%
-        ),
-        var(--laro-navy);
+    background: linear-gradient(
+        90deg,
+        var(--laro-login-background-light) 0%,
+        var(--laro-login-background) 58%,
+        var(--laro-login-background-deep) 100%
+    );
 }
 
 .signup-card {
@@ -33,7 +31,7 @@
 .signup-agree-box {
     padding: 20px;
     border: 1px solid var(--laro-border);
-    border-radius: 14px;
+    border-radius: var(--laro-radius-medium);
     background: var(--laro-background);
 }
 
@@ -73,7 +71,7 @@
 .signup-agree-item {
     padding: 16px;
     border: 1px solid var(--laro-border);
-    border-radius: 12px;
+    border-radius: var(--laro-radius-small);
     background: var(--laro-surface);
 }
 
@@ -159,9 +157,9 @@
     max-height: 85vh;
     overflow: hidden;
     border: 1px solid var(--laro-border);
-    border-radius: 18px;
+    border-radius: var(--laro-radius-large);
     background: var(--laro-surface);
-    box-shadow: 0 18px 50px var(--laro-shadow);
+    box-shadow: 0 18px 44px var(--laro-shadow-medium);
 }
 
 .terms-modal-header {
@@ -185,7 +183,7 @@
     height: 34px;
     padding: 0;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--laro-radius-control);
     background: transparent;
     color: var(--laro-subtext);
     font-size: 18px;
@@ -235,7 +233,7 @@
     height: 42px;
     padding: 0 20px;
     border: 1px solid var(--laro-primary);
-    border-radius: 10px;
+    border-radius: var(--laro-radius-control);
     background: var(--laro-primary);
     color: var(--laro-white);
     font-family: inherit;
@@ -252,8 +250,8 @@
 .signup-terms-link:focus-visible,
 .terms-modal-close:focus-visible,
 .terms-confirm-button:focus-visible {
-    outline: 3px solid var(--laro-focus-ring);
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: none;
 }
 
 
@@ -281,7 +279,7 @@
     height: 52px;
     padding: 0 16px;
     border: 1px solid var(--laro-primary);
-    border-radius: 12px;
+    border-radius: var(--laro-radius-small);
     background: var(--laro-surface);
     color: var(--laro-primary);
     font-family: inherit;
@@ -306,8 +304,8 @@
 }
 
 .signup-verification-button:focus-visible {
-    outline: 3px solid var(--laro-focus-ring);
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: none;
 }
 
 .signup-verification-area {
@@ -334,7 +332,7 @@
 
 .signup-verification-message-success {
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: var(--laro-radius-control);
     background: var(--laro-success-light);
     color: var(--laro-success);
     font-weight: var(--laro-font-weight-semibold);
@@ -377,4 +375,51 @@
         padding: 0 12px;
         font-size: var(--laro-font-caption);
     }
+}
+
+/* 새 root 적용 */
+.signup-card {
+    color: var(--laro-text);
+}
+
+.signup-agree-box {
+    background: var(--laro-background);
+}
+
+.signup-agree-item,
+.terms-modal,
+.terms-modal-header,
+.terms-modal-content,
+.terms-modal-actions {
+    background: var(--laro-surface);
+}
+
+.signup-input-wrapper input::placeholder,
+.signup-code-input::placeholder,
+.terms-modal input::placeholder,
+.terms-modal textarea::placeholder {
+    color: var(--laro-placeholder);
+}
+
+.terms-confirm-button:active {
+    border-color: var(--laro-primary-active);
+    background: var(--laro-primary-active);
+}
+
+.signup-verification-button:active:not(:disabled) {
+    border-color: var(--laro-primary-active);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.signup-page input:focus,
+.signup-page input:focus-visible,
+.signup-page select:focus,
+.signup-page select:focus-visible,
+.signup-page textarea:focus,
+.signup-page textarea:focus-visible,
+.signup-page button:focus,
+.signup-page button:focus-visible {
+    outline: none;
+    box-shadow: none;
 }

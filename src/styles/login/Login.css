@@ -731,26 +731,18 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-.login-card-integrated button:focus,
-.login-card-integrated button:focus-visible,
-.login-card-integrated button:active {
-    outline: none !important;
-    box-shadow: none !important;
-    -webkit-box-shadow: none !important;
+/* 기본 상태: 기존 배경과 모양은 유지하고 테두리만 흰색으로 표시한다. */
+.login-card-integrated .login-input-wrapper input {
+    border-color: white;
 }
 
-.login-card-integrated button:active {
-    transform: none !important;
-}
-
+/* 입력 중: 배경은 그대로 두고 테두리만 파란색으로 변경한다. */
 .login-card-integrated .login-input-wrapper input:focus,
 .login-card-integrated .login-input-wrapper input:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-    -webkit-box-shadow: none !important;
-    border-color: var(--login-border) !important;
-}
 
+    outline: none;
+    box-shadow: none;
+}
 
 /* 로그인 카드를 오른쪽 세로 중앙에 고정한다. */
 .login-page {
