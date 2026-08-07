@@ -9,6 +9,18 @@ const STALL_THRESHOLD_MS = 1200;
 const PROGRESS_EPSILON = 0.002;
 const MAX_AVOIDANCE_EVENT_COUNT = 30;
 
+// 같은 대기 상황인지 비교한다. 대기 시간은 1초 단위로만 본다.
+// (밀리초까지 비교하면 매번 값이 달라져서 갱신이 멈추지 않는다)
+const avoidanceSignature = (list) => list
+    .map((item) => [
+        item.id,
+        item.blockingRobotId,
+        item.source,
+        item.targetNodeCode,
+        Math.floor(item.waitingSeconds),
+    ].join("|"))
+    .join("\n");
+
 const CONFIRMED_WAITING_STATUSES = new Set([
     "WAITING",
     "YIELDING",
@@ -185,6 +197,11 @@ export default function useRobotAvoidanceTracker(
         setAvoidanceEvents,
     ] = useState([]);
 
+    // 인터벌 안에서 최신 robots 를 읽되,
+    // robots 가 바뀔 때마다 인터벌을 다시 만들지는 않는다.
+    const robotsRef = useRef(robots);
+    robotsRef.current = robots;
+
     // 로봇 상태 메시지가 갱신될 때 마지막으로 실제 이동한 시각을 기록한다.
     useEffect(() => {
         const now = performance.now();
@@ -245,14 +262,17 @@ export default function useRobotAvoidanceTracker(
     // 진행률이 멈춘 시간을 계속 계산하기 위해 짧은 주기로 상태를 갱신한다.
     useEffect(() => {
         if (!isRunning) {
-            setAvoidanceStates([]);
+            setAvoidanceStates((previous) => (
+                previous.length === 0 ? previous : []
+            ));
             return undefined;
         }
 
         const updateAvoidanceStates = () => {
             const now = performance.now();
+            const currentRobots = robotsRef.current;
 
-            const nextStates = robots.flatMap(
+            const nextStates = currentRobots.flatMap(
                 (robot) => {
                     if (
                         !isMovingRobot(robot)
@@ -290,7 +310,7 @@ export default function useRobotAvoidanceTracker(
                     const blockingRobot =
                         findBlockingRobot(
                             robot,
-                            robots,
+                            currentRobots,
                         );
 
                     const source =
@@ -354,7 +374,13 @@ export default function useRobotAvoidanceTracker(
                 },
             );
 
-            setAvoidanceStates(nextStates);
+            // 내용이 같으면 이전 배열을 그대로 반환해 불필요한 리렌더를 막는다.
+            setAvoidanceStates((previous) => (
+                avoidanceSignature(previous)
+                    === avoidanceSignature(nextStates)
+                    ? previous
+                    : nextStates
+            ));
         };
 
         updateAvoidanceStates();
@@ -367,7 +393,7 @@ export default function useRobotAvoidanceTracker(
         return () => {
             window.clearInterval(timerId);
         };
-    }, [robots, isRunning]);
+    }, [isRunning]);
 
     // 대기 시작은 새 이벤트로 만들고, 다시 이동하면 해결 처리한다.
     useEffect(() => {
@@ -402,6 +428,11 @@ export default function useRobotAvoidanceTracker(
 
             setAvoidanceEvents(
                 (previousEvents) => {
+                    // 실제로 바뀐 게 없으면 이전 배열을 그대로 돌려준다.
+                    let changed =
+                        newAvoidances.length > 0
+                        || resolvedIds.size > 0;
+
                     let nextEvents =
                         previousEvents.map(
                             (event) => {
@@ -413,6 +444,17 @@ export default function useRobotAvoidanceTracker(
                                     );
 
                                 if (activeState) {
+                                    if (
+                                        event.description
+                                            === activeState.message
+                                        && event.waitingSeconds
+                                            === activeState.waitingSeconds
+                                    ) {
+                                        return event;
+                                    }
+
+                                    changed = true;
+
                                     return {
                                         ...event,
                                         description:
@@ -428,6 +470,8 @@ export default function useRobotAvoidanceTracker(
                                         event.avoidanceId,
                                     )
                                 ) {
+                                    changed = true;
+
                                     return {
                                         ...event,
                                         resolvedAt: nowIso,
@@ -437,6 +481,10 @@ export default function useRobotAvoidanceTracker(
                                 return event;
                             },
                         );
+
+                    if (!changed) {
+                        return previousEvents;
+                    }
 
                     const createdEvents =
                         newAvoidances.map(
