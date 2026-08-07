@@ -157,6 +157,7 @@ function RobotManagement() {
 
     const [isLoading, setIsLoading] = useState(false);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [searchText, setSearchText] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
@@ -791,6 +792,48 @@ function RobotManagement() {
         }
     };
 
+    const handleDeleteRobot = async () => {
+        if (!selectedRobotView) {
+            alert("삭제할 로봇을 선택해주세요.");
+            return;
+        }
+
+        const robotId = selectedRobotView.id;
+        const robotName = getRobotDisplayName(selectedRobotView);
+
+        const shouldDelete = window.confirm(
+            `${robotName}을(를) 삭제하시겠습니까?\n삭제한 로봇은 복구할 수 없습니다.`
+        );
+
+        if (!shouldDelete) {
+            return;
+        }
+
+        try {
+            setIsDeleting(true);
+
+            await robotApi.remove(robotId);
+
+            setRuntimeStates((previousStates) => {
+                const nextStates = { ...previousStates };
+                delete nextStates[robotId];
+                return nextStates;
+            });
+
+            setSelectedRobot(null);
+            setSelectedTask(null);
+
+            await fetchPageData(null, warehouseFilter);
+
+            alert("로봇이 삭제되었습니다.");
+        } catch (error) {
+            console.error("로봇 삭제 실패:", error);
+            alert(error.message || "로봇을 삭제하지 못했습니다.");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
         <div className="robot-management-wrapper">
             <header className="robot-management-header">
@@ -1008,6 +1051,17 @@ function RobotManagement() {
                 <aside className="robot-detail">
                     <div className="robot-section-header">
                         <h2>로봇 상세</h2>
+
+                        {selectedRobotView && (
+                            <button
+                                type="button"
+                                className="robot-delete-button"
+                                disabled={isDeleting || isLoading}
+                                onClick={handleDeleteRobot}
+                            >
+                                {isDeleting ? "삭제 중..." : "로봇 삭제"}
+                            </button>
+                        )}
                     </div>
 
                     {isDetailLoading ? (
