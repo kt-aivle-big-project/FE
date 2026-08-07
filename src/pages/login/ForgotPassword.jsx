@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../../api/config";
 import "../../styles/login/LoginCommon.css";
 import "../../styles/login/ForgotPassword.css";
 import { UserIcon, EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";
-
-const API_URL = "http://localhost:8080/api";
 
 /*
  * 백엔드 API가 확정되면 이 부분만 수정
