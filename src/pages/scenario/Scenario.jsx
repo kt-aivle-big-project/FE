@@ -100,7 +100,7 @@ function Scenario() {
 
                 setScenarios(response);
                 console.log("시나리오 목록 조회 성공:", response);
-                
+
             } catch (error) {
                 console.error("시나리오 목록 조회 실패:", error);
                 setScenarios([]);
@@ -221,78 +221,60 @@ function Scenario() {
         setEditingScenarioId(null);
     };
 
-    // 패널에서 전달받은 시나리오를 목록에 반영
-    const handleScenarioSubmit = (submittedData) => {
-        const now = new Date().toISOString();
+    // 시나리오 생성/수정
+    const handleScenarioSubmit = async (submittedData) => {
+        const isEditMode = editingScenarioId !== null;
 
-        if (editingScenarioId !== null) {
-            setScenarios((previousScenarios) =>
-                previousScenarios.map((scenario) =>
-                    scenario.id === editingScenarioId
-                        ? {
-                            ...scenario,
-                            ...submittedData,
-                            status: "DRAFT",
-                            productCount: submittedData.products?.length ?? 0,
-                            updatedAt: now,
-                        }
-                        : scenario
-                )
-            );
-
-            // 수정한 시나리오의 상세 화면 유지
-            setSelectedScenarioId(editingScenarioId);
-            handleCloseScenarioPanel();
-            return;
-        }
-
-        const nextId =
-            scenarios.reduce(
-                (maximumId, scenario) =>
-                    Math.max(maximumId, Number(scenario.id) || 0),
-                0
-            ) + 1;
-
-        const nextScenarioNumber =
-            scenarios.reduce((maximumNumber, scenario) => {
-                const matchedNumber = Number(
-                    String(scenario.scenarioId)
-                        .split("-")
-                        .at(-1)
+        try {
+            if (isEditMode) {
+                await scenarioApi.update(
+                    editingScenarioId,
+                    submittedData
                 );
 
-                return Number.isNaN(matchedNumber)
-                    ? maximumNumber
-                    : Math.max(maximumNumber, matchedNumber);
-            }, 0) + 1;
+                console.log("시나리오 수정 성공:", submittedData);
+            } else {
+                await scenarioApi.create(submittedData);
 
-        const newScenario = {
-            id: nextId,
-            scenarioId: `SCN-2026-${String(
-                nextScenarioNumber
-            ).padStart(3, "0")}`,
-            ...submittedData,
-            status: "DRAFT",
-            productCount: submittedData.products?.length ?? 0,
-            createdAt: now,
-            updatedAt: now,
-            executionHistory: [],
-            replanResult: null,
-        };
+                console.log("시나리오 생성 성공:", submittedData);
+            }
 
-        setScenarios((previousScenarios) => [
-            newScenario,
-            ...previousScenarios,
-        ]);
+            // 저장 후 최신 시나리오 목록을 다시 조회한다.
+            const response = await scenarioApi.getAll();
 
-        // 생성한 시나리오의 상세 화면 열기
-        setSelectedScenarioId(newScenario.id);
-        setCurrentPage(1);
-        handleCloseScenarioPanel();
+            if (!Array.isArray(response)) {
+                throw new Error("시나리오 목록 응답이 배열이 아닙니다.");
+            }
+
+            setScenarios(response);
+
+            if (isEditMode) {
+                setSelectedScenarioId(editingScenarioId);
+            } else {
+                setSelectedScenarioId(null);
+                setCurrentPage(1);
+            }
+
+            handleCloseScenarioPanel();
+        } catch (error) {
+            console.error(
+                isEditMode
+                    ? "시나리오 수정 실패:"
+                    : "시나리오 생성 실패:",
+                error
+            );
+
+            alert(
+                error.message ??
+                (isEditMode
+                    ? "시나리오 수정에 실패했습니다."
+                    : "시나리오 생성에 실패했습니다.")
+            );
+        }
     };
 
     // 시나리오 삭제
-    const handleDeleteScenario = (scenario) => {
+    const handleDeleteScenario = async (scenario) => {
         setOpenMenuScenarioId(null);
 
         const shouldDelete = window.confirm(
@@ -303,18 +285,33 @@ function Scenario() {
             return;
         }
 
-        setScenarios((previousScenarios) =>
-            previousScenarios.filter(
-                (item) => item.id !== scenario.id
-            )
-        );
+        try {
+            await scenarioApi.delete(scenario.id);
 
-        // 상세로 보고 있던 시나리오를 삭제하면 상세 영역 닫기
-        if (selectedScenarioId === scenario.id) {
-            setSelectedScenarioId(null);
+            // 삭제 후 최신 시나리오 목록을 다시 조회한다.
+            const response = await scenarioApi.getAll();
+
+            if (!Array.isArray(response)) {
+                throw new Error("시나리오 목록 응답이 배열이 아닙니다.");
+            }
+
+            setScenarios(response);
+
+            if (selectedScenarioId === scenario.id) {
+                setSelectedScenarioId(null);
+            }
+
+            setCurrentPage(1);
+
+            console.log("시나리오 삭제 성공:", scenario);
+        } catch (error) {
+            console.error("시나리오 삭제 실패:", error);
+
+            alert(
+                error.message ??
+                "시나리오 삭제에 실패했습니다."
+            );
         }
-
-        setCurrentPage(1);
     };
 
     // 시나리오 상태 변경
@@ -375,11 +372,10 @@ function Scenario() {
     return (
         <main className="scenario-page">
             <div
-                className={`scenario-workspace ${
-                    isScenarioPanelOpen || selectedScenario
-                        ? "has-side-panel"
-                        : "is-list-only"
-                }`}
+                className={`scenario-workspace ${isScenarioPanelOpen || selectedScenario
+                    ? "has-side-panel"
+                    : "is-list-only"
+                    }`}
             >
                 {/* 왼쪽 시나리오 목록 */}
                 <section className="scenario-list-card">
