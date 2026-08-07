@@ -241,6 +241,12 @@ export const warehouseApi = {
     get: (warehouseId) =>
         api.get(`/warehouses/${warehouseId}`),
 
+    createPersonalCopy: (templateWarehouseId) =>
+        api.post(`/warehouses/${templateWarehouseId}/personal-copy`),
+
+    createGuestPersonalCopy: (templateWarehouseId) =>
+        api.post(`/warehouses/${templateWarehouseId}/guest-personal-copy`),
+
     // 지도 JSON 과 함께 창고를 만든다.
     // 노드·간선뿐 아니라 랙·충전소·로봇까지 백엔드가 만들어준다.
     importWarehouse: (payload) =>
