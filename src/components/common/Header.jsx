@@ -19,6 +19,8 @@ function Header() {
         sessionStorage.removeItem("accessToken");
         sessionStorage.removeItem("refreshToken");
         sessionStorage.removeItem("user");
+        localStorage.removeItem("simulationRunId");
+        sessionStorage.removeItem("simulationRunId");
 
         alert("로그아웃되었습니다.");
         navigate("/login");
