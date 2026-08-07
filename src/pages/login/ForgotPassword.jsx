@@ -20,7 +20,7 @@ const PASSWORD_RESET_ENDPOINTS = {
 
 const USERID_PATTERN = /^[a-zA-Z0-9]+$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const SPECIAL_CHARACTERS = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?";
+const SPECIAL_CHARACTERS = "~!@#$%^&*()_+-=[]{};':\"\\|,.<>/?";
 
 const CODE_EXPIRATION_SECONDS = 5 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;
