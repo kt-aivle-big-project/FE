@@ -846,139 +846,167 @@ function Simulation() {
 
             {/* 상단 헤더 */}
             <header className="simulation-header">
-                <div className="simulation-header-title">
-                    <h2>시뮬레이션 실행</h2>
-                </div>
-
-                <div className="simulation-header-info">
-                    {/* 창고 선택 */}
-                    <div className="simulation-header-info-item simulation-scenario">
-                        <span className="simulation-header-label">창고</span>
-
-                        <select
-                            value={selectedWarehouseId}
-                            onChange={(e) =>
-                                handleWarehouseChange(e.target.value)
-                            }
-                            disabled={warehouses.length === 0}
-                        >
-                            {warehouses.length === 0 ? (
-                                <option value={selectedWarehouseId}>
-                                    불러오는 중...
-                                </option>
-                            ) : (
-                                warehouses.map((warehouse) => (
-                                    <option
-                                        key={warehouse.id}
-                                        value={warehouse.id}
-                                    >
-                                        {warehouse.name}
-                                    </option>
-                                ))
-                            )}
-                        </select>
+                {/* 상단 네이비 헤더 */}
+                <div className="simulation-topbar">
+                    <div className="simulation-topbar-title">
+                        <h2>시뮬레이션 실행</h2>
                     </div>
 
-                    {/* 현재 시뮬레이션 상태 */}
-                    <div className="simulation-header-info-item">
-                        <span className="simulation-header-label">상태</span>
-                        <span className="simulation-header-status">
-                            {simulationStatus}
+                    {/* 현재 코드에는 시나리오 조회·선택 기능이 없어 안내 문구만 배치한다. */}
+                    <div className="simulation-topbar-scenario">
+                        <span className="simulation-topbar-label">
+                            시나리오 선택
                         </span>
+                        <p>시나리오 선택 기능 연결 필요</p>
+                    </div>
 
-                        {/* 실시간 연결 표시 */}
-                        {simulationRunId && (
-                            <span
-                                className="simulation-header-socket"
-                                title={
-                                    connected
-                                        ? "실시간 연결됨"
-                                        : "실시간 연결 대기 중"
+                    {/* 사용자와 현재 날짜·시간은 관련 데이터가 연결되면 교체한다. */}
+                    <div className="simulation-topbar-meta">
+                        <div className="simulation-topbar-user">
+                            <span className="simulation-topbar-label">
+                                사용자
+                            </span>
+                            <p>운영자 정보 연결 필요</p>
+                        </div>
+
+                        <p className="simulation-topbar-datetime">
+                            현재 날짜·시간 표시 기능 연결 필요
+                        </p>
+                    </div>
+                </div>
+
+                {/* 시뮬레이션 설정 및 제어 영역 */}
+                <div className="simulation-controlbar">
+                    <div className="simulation-header-info">
+                        {/* 창고 선택 */}
+                        <div className="simulation-header-info-item simulation-scenario">
+                            <span className="simulation-header-label">창고</span>
+
+                            <select
+                                value={selectedWarehouseId}
+                                onChange={(e) =>
+                                    handleWarehouseChange(e.target.value)
+                                }
+                                disabled={warehouses.length === 0}
+                            >
+                                {warehouses.length === 0 ? (
+                                    <option value={selectedWarehouseId}>
+                                        불러오는 중...
+                                    </option>
+                                ) : (
+                                    warehouses.map((warehouse) => (
+                                        <option
+                                            key={warehouse.id}
+                                            value={warehouse.id}
+                                        >
+                                            {warehouse.name}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
+                        </div>
+
+                        {/* 현재 시뮬레이션 상태 */}
+                        <div className="simulation-header-info-item">
+                            <span className="simulation-header-label">상태</span>
+                            <span className="simulation-header-status">
+                                {simulationStatus}
+                            </span>
+
+                            {/* 실시간 연결 표시 */}
+                            {simulationRunId && (
+                                <span
+                                    className="simulation-header-socket"
+                                    title={
+                                        connected
+                                            ? "실시간 연결됨"
+                                            : "실시간 연결 대기 중"
+                                    }
+                                >
+                                    {connected ? "● 실시간" : "○ 연결 중"}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* 시뮬레이션 타이머 */}
+                        <div className="simulation-header-info-item">
+                            <span className="simulation-header-label">
+                                실행 시간
+                            </span>
+                            <span className="simulation-header-time">
+                                {formatSimulationTime(simulationTime)}
+                            </span>
+                        </div>
+
+                        {/* 시뮬레이션 실행 속도 */}
+                        <div className="simulation-header-info-item">
+                            <span className="simulation-header-label">
+                                실행 속도
+                            </span>
+
+                            <select
+                                className="simulation-header-speed"
+                                value={simulationSpeed}
+                                onChange={(e) =>
+                                    handleSpeedChange(Number(e.target.value))
                                 }
                             >
-                                {connected ? "● 실시간" : "○ 연결 중"}
-                            </span>
-                        )}
+                                <option value={0.5}>0.5배</option>
+                                <option value={1}>1배</option>
+                                <option value={2}>2배</option>
+                                <option value={3}>3배</option>
+                            </select>
+                        </div>
                     </div>
 
-                    {/* 시뮬레이션 타이머 */}
-                    <div className="simulation-header-info-item">
-                        <span className="simulation-header-label">
-                            실행 시간
-                        </span>
-                        <span className="simulation-header-time">
-                            {formatSimulationTime(simulationTime)}
-                        </span>
-                    </div>
-
-                    {/* 시뮬레이션 실행 속도 */}
-                    <div className="simulation-header-info-item">
-                        <span className="simulation-header-label">
-                            실행 속도
-                        </span>
-
-                        <select
-                            className="simulation-header-speed"
-                            value={simulationSpeed}
-                            onChange={(e) =>
-                                handleSpeedChange(Number(e.target.value))
-                            }
+                    {/* 기존 시뮬레이션 제어 기능을 그대로 사용한다. */}
+                    <div className="simulation-header-buttons">
+                        <button
+                            type="button"
+                            className="simulation-header-button start"
+                            onClick={handleStart}
                         >
-                            <option value={0.5}>0.5배</option>
-                            <option value={1}>1배</option>
-                            <option value={2}>2배</option>
-                            <option value={3}>3배</option>
-                        </select>
+                            시작
+                        </button>
+                        <button
+                            type="button"
+                            className="simulation-header-button new-run"
+                            onClick={handleNewRun}
+                            title="현재 작업을 버리고 지금 설정으로 작업을 새로 생성합니다"
+                        >
+                            새 작업 생성
+                        </button>
+                        <button
+                            type="button"
+                            className="simulation-header-button"
+                            onClick={handlePause}
+                        >
+                            일시정지
+                        </button>
+                        <button
+                            type="button"
+                            className="simulation-header-button"
+                            onClick={handleReset}
+                        >
+                            초기화
+                        </button>
+                        <button
+                            type="button"
+                            className="simulation-header-button stop"
+                            onClick={handleStop}
+                            disabled={!simulationRunId}
+                            title="이 실행을 완전히 종료합니다. 다시 시작하려면 새 작업을 만들어야 합니다."
+                        >
+                            중지
+                        </button>
+                        <button
+                            type="button"
+                            className="simulation-header-button"
+                            onClick={handleReplan}
+                        >
+                            재계획
+                        </button>
                     </div>
-                </div>
-
-                {/* 시뮬레이션 제어 버튼 */}
-                <div className="simulation-header-buttons">
-                    <button
-                        type="button"
-                        className="simulation-header-button start"
-                        onClick={handleStart}
-                    >
-                        시작
-                    </button>
-                    <button
-                        type="button"
-                        className="simulation-header-button new-run"
-                        onClick={handleNewRun}
-                        title="현재 작업을 버리고 지금 설정으로 작업을 새로 생성합니다"
-                    >
-                        새 작업 생성
-                    </button>
-                    <button
-                        type="button"
-                        className="simulation-header-button"
-                        onClick={handlePause}
-                    >
-                        일시정지
-                    </button>
-                    <button
-                        type="button"
-                        className="simulation-header-button"
-                        onClick={handleReset}
-                    >
-                        초기화
-                    </button>
-                    <button
-                        type="button"
-                        className="simulation-header-button stop"
-                        onClick={handleStop}
-                        disabled={!simulationRunId}
-                        title="이 실행을 완전히 종료합니다. 다시 시작하려면 새 작업을 만들어야 합니다."
-                    >
-                        중지
-                    </button>
-                    <button
-                        type="button"
-                        className="simulation-header-button"
-                        onClick={handleReplan}
-                    >
-                        재계획
-                    </button>
                 </div>
             </header>
 

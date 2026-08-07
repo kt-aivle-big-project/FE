@@ -7,7 +7,7 @@ import { UserIcon, EmailIcon, LockIcon, PasswordToggleIcon } from "../../compone
 const API_URL = "http://localhost:8080/api";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const SPECIAL_CHARACTERS = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?";
+const SPECIAL_CHARACTERS = "~!@#$%^&*()_+-=[]{};':\"\\|,.<>/?";
 
 const CODE_EXPIRATION_SECONDS = 5 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;

@@ -16,7 +16,9 @@ function Sidebar() {
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
         localStorage.removeItem("testUser");
+	localStorage.removeItem("simulationRunId");
 
+	sessionStorage.removeItem("simulationRunId");
         sessionStorage.removeItem("accessToken");
         sessionStorage.removeItem("refreshToken");
         sessionStorage.removeItem("user");
@@ -52,7 +54,7 @@ function Sidebar() {
                                 `sidebar-link${isActive ? " active" : ""}`
                             }
                         >
-                            시나리오 설정
+                            시나리오 관리
                         </NavLink>
                     </li>
 
