@@ -1,6 +1,10 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+    BrowserRouter,
+    Navigate,
+    Routes,
+    Route,
+} from "react-router-dom";
 
-import LoginSelect from "./pages/login/LoginSelect";
 import Login from "./pages/login/Login";
 import ForgotPassword from "./pages/login/ForgotPassword";
 import Signup from "./pages/login/Signup";
@@ -23,7 +27,7 @@ function App() {
                 {/* 로그인 */}
                 <Route
                     path="/"
-                    element={<LoginSelect />}
+                    element={<Navigate to="/login" replace />}
                 />
 
                 <Route
