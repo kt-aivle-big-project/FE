@@ -138,7 +138,7 @@ function Simulation() {
     };
 
     // 시나리오 선택
-    // 시나리오를 고르면 그 설정(배속 등)을 실행에 그대로 쓴다.
+    // 실행할 시나리오를 선택하고 선택값을 유지한다.
     const [scenarios, setScenarios] = useState([]);
     const [selectedScenarioId, setSelectedScenarioIdState] = useState(() => {
         const saved = localStorage.getItem(SCENARIO_ID_KEY);
@@ -230,47 +230,63 @@ function Simulation() {
         loadWarehouses();
     }, []);
 
-    // 선택한 창고의 시나리오 목록을 불러온다.
-    // 창고가 바뀌면 이전 창고의 시나리오는 쓸 수 없으므로 선택을 비운다.
+    // 전체 시나리오 목록을 불러온다.
+    // 시나리오와 창고는 독립적으로 선택하므로 창고 ID로 필터링하지 않는다.
     useEffect(() => {
         let cancelled = false;
 
         const loadScenarios = async () => {
-            if (!selectedWarehouseId) {
-                setScenarios([]);
-                return;
-            }
-
             try {
-                const list = await scenarioApi.getAll(selectedWarehouseId);
+                const list = await scenarioApi.getAll();
 
-                if (cancelled) return;
+                if (cancelled) {
+                    return;
+                }
 
-                const items = Array.isArray(list) ? list : [];
+                const items = Array.isArray(list)
+                    ? list
+                    : [];
+
                 setScenarios(items);
 
-                // 저장해둔 시나리오가 이 창고에 없으면 첫 번째로 되돌린다.
+                // 저장된 시나리오가 없으면 첫 번째 시나리오를 선택한다.
                 setSelectedScenarioIdState((current) => {
                     const exists = items.some(
-                        (scenario) => scenario.id === current
+                        (scenario) =>
+                            scenario.id === current
                     );
 
-                    if (exists) return current;
+                    if (exists) {
+                        return current;
+                    }
 
                     const next = items[0]?.id ?? null;
 
                     if (next) {
-                        localStorage.setItem(SCENARIO_ID_KEY, String(next));
+                        localStorage.setItem(
+                            SCENARIO_ID_KEY,
+                            String(next)
+                        );
                     } else {
-                        localStorage.removeItem(SCENARIO_ID_KEY);
+                        localStorage.removeItem(
+                            SCENARIO_ID_KEY
+                        );
                     }
 
                     return next;
                 });
             } catch (error) {
-                if (cancelled) return;
-                console.warn("시나리오 목록 조회 실패", error.message);
+                if (cancelled) {
+                    return;
+                }
+
+                console.warn(
+                    "시나리오 목록 조회 실패",
+                    error.message
+                );
+
                 setScenarios([]);
+                setSelectedScenarioId(null);
             }
         };
 
@@ -279,20 +295,17 @@ function Simulation() {
         return () => {
             cancelled = true;
         };
-    }, [selectedWarehouseId]);
+    }, []);
 
-    // 시나리오를 고르면 그 배속을 화면 설정에도 반영한다.
+    // 실행할 시나리오를 변경한다.
     const handleScenarioChange = (event) => {
         const value = event.target.value;
-        const scenarioId = value ? Number(value) : null;
+
+        const scenarioId = value
+            ? Number(value)
+            : null;
 
         setSelectedScenarioId(scenarioId);
-
-        const scenario = scenarios.find((item) => item.id === scenarioId);
-
-        if (scenario?.simulationSpeed) {
-            setSimulationSpeed(Number(scenario.simulationSpeed));
-        }
     };
 
     // 시작 전에도 창고에 등록된 로봇을 지도에 보여준다.
@@ -495,9 +508,18 @@ function Simulation() {
      * 설정값이 유효한지 검사한다.
      */
     const validateSettings = () => {
-        return Boolean(selectedWarehouseId);
-    };
+        if (!selectedScenarioId) {
+            alert("시나리오를 선택해주세요.");
+            return false;
+        }
 
+        if (!selectedWarehouseId) {
+            alert("창고를 선택해주세요.");
+            return false;
+        }
+
+        return true;
+    };
     /**
      * 새 시뮬레이션 생성.
      *
@@ -940,7 +962,7 @@ function Simulation() {
                         <h2>시뮬레이션 실행</h2>
                     </div>
 
-                    {/* 선택한 창고에 등록된 시나리오를 고른다. */}
+                    {/* 실행할 시나리오를 선택한다. */}
                     <div className="simulation-topbar-scenario">
                         <span className="simulation-topbar-label">
                             시나리오 선택
@@ -966,9 +988,6 @@ function Simulation() {
                                         value={scenario.id}
                                     >
                                         {scenario.scenarioName}
-                                        {scenario.scenarioCode
-                                            ? ` (${scenario.scenarioCode})`
-                                            : ""}
                                     </option>
                                 ))
                             )}
@@ -977,13 +996,6 @@ function Simulation() {
 
                     {/* 사용자와 현재 날짜·시간은 관련 데이터가 연결되면 교체한다. */}
                     <div className="simulation-topbar-meta">
-                        <div className="simulation-topbar-user">
-                            <span className="simulation-topbar-label">
-                                사용자
-                            </span>
-                            <p>운영자 정보 연결 필요</p>
-                        </div>
-
                         <p className="simulation-topbar-datetime">
                             현재 날짜·시간 표시 기능 연결 필요
                         </p>
