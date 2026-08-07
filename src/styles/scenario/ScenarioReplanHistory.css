@@ -23,15 +23,11 @@
 .scenario-replan-history-back {
     margin: 0 0 12px;
     padding: 0;
-
     border: 0;
-
     background: transparent;
     color: var(--laro-primary);
-
     font-size: 12px;
     font-weight: 700;
-
     cursor: pointer;
 }
 
@@ -41,9 +37,7 @@
 
 .scenario-replan-history-header h1 {
     margin: 0;
-
     color: var(--laro-navy);
-
     font-size: 26px;
     font-weight: 900;
     line-height: 1.35;
@@ -51,11 +45,22 @@
 
 .scenario-replan-history-header p {
     margin: 7px 0 0;
-
     color: var(--laro-subtext);
-
     font-size: 12px;
     line-height: 1.5;
+}
+
+.scenario-replan-history-run-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    margin-top: 10px;
+    padding: 0 9px;
+    border: 1px solid var(--laro-border);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+    font-size: 10px;
+    font-weight: 800;
 }
 
 /* =========================================================
@@ -66,7 +71,6 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
-
     margin-bottom: 14px;
 }
 
@@ -74,28 +78,21 @@
     min-width: 0;
     min-height: 100px;
     padding: 18px;
-
     border: 1px solid var(--laro-border);
-
     background: var(--laro-surface);
 }
 
 .scenario-replan-history-summary-card > span {
     display: block;
-
     color: var(--laro-subtext);
-
     font-size: 11px;
     font-weight: 700;
 }
 
 .scenario-replan-history-summary-card > strong {
     display: block;
-
     margin-top: 12px;
-
     color: var(--laro-navy);
-
     font-size: 25px;
     font-weight: 900;
 }
@@ -119,9 +116,7 @@
 
 .scenario-replan-history-content {
     min-width: 0;
-
     border: 1px solid var(--laro-border);
-
     background: var(--laro-surface);
 }
 
@@ -130,26 +125,20 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-
     padding: 18px 20px;
-
     border-bottom: 1px solid var(--laro-border);
 }
 
 .scenario-replan-history-content-header h2 {
     margin: 0;
-
     color: var(--laro-navy);
-
     font-size: 17px;
     font-weight: 900;
 }
 
 .scenario-replan-history-content-header p {
     margin: 5px 0 0;
-
     color: var(--laro-subtext);
-
     font-size: 10px;
 }
 
@@ -157,17 +146,12 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     flex: 0 0 auto;
-
     min-height: 28px;
     padding: 0 10px;
-
     border: 1px solid var(--laro-border);
-
     background: var(--laro-primary-light);
     color: var(--laro-primary);
-
     font-size: 10px;
     font-weight: 800;
     white-space: nowrap;
@@ -184,8 +168,7 @@
 
 .scenario-replan-history-table {
     width: 100%;
-    min-width: 1250px;
-
+    min-width: 1500px;
     border-collapse: collapse;
     table-layout: auto;
 }
@@ -196,11 +179,8 @@
 
 .scenario-replan-history-table th {
     padding: 12px 13px;
-
     border-bottom: 1px solid var(--laro-border);
-
     color: var(--laro-subtext);
-
     font-size: 10px;
     font-weight: 800;
     text-align: left;
@@ -209,14 +189,12 @@
 
 .scenario-replan-history-table td {
     padding: 14px 13px;
-
     border-bottom: 1px solid var(--laro-border);
-
     color: var(--laro-text);
-
     font-size: 11px;
     line-height: 1.5;
     vertical-align: middle;
+    white-space: nowrap;
 }
 
 .scenario-replan-history-table tbody tr {
@@ -236,6 +214,11 @@
     font-weight: 800;
 }
 
+.scenario-replan-history-count-value {
+    color: var(--laro-navy);
+    font-weight: 800;
+}
+
 /* =========================================================
    Status
    ========================================================= */
@@ -244,10 +227,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     min-height: 26px;
     padding: 0 9px;
-
     font-size: 10px;
     font-weight: 800;
     white-space: nowrap;
@@ -275,41 +256,43 @@
 }
 
 .scenario-replan-history-description {
-    min-width: 260px;
-
+    min-width: 320px;
+    max-width: 460px;
+    white-space: normal !important;
     word-break: keep-all;
 }
 
 /* =========================================================
-   Empty
+   Loading / Error / Empty
    ========================================================= */
 
+.scenario-replan-history-state,
 .scenario-replan-history-empty {
     display: flex;
     align-items: center;
     flex-direction: column;
     justify-content: center;
-
     min-height: 260px;
     padding: 30px;
-
     background: var(--laro-background);
-
     text-align: center;
 }
 
+.scenario-replan-history-state strong,
 .scenario-replan-history-empty strong {
     color: var(--laro-navy);
-
     font-size: 14px;
 }
 
+.scenario-replan-history-state p,
 .scenario-replan-history-empty p {
     margin: 7px 0 0;
-
     color: var(--laro-subtext);
-
     font-size: 11px;
+}
+
+.scenario-replan-history-state.is-error strong {
+    color: var(--laro-danger);
 }
 
 /* =========================================================

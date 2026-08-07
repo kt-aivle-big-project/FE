@@ -186,6 +186,11 @@ export const optimizationApi = {
             `/optimizations/simulation-runs/${runId}/reoptimize`,
             payload
         ),
+
+    getReoptimizationHistories: (runId) =>
+        api.get(
+            `/optimizations/simulation-runs/${runId}/reoptimization-histories`
+        ),
 };
 
 export const laroPlanApi = {
