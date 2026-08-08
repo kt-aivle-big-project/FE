@@ -125,7 +125,6 @@ function Simulation() {
        상단 헤더 - 시뮬레이션 실행
     ========================================================= */
 
-    // 창고 선택
     // 창고마다 지도·로봇·재고가 다르므로, 바꾸면 화면과 시뮬레이션 대상이 함께 바뀐다.
     const [warehouses, setWarehouses] = useState([]);
     const [selectedWarehouseId, setSelectedWarehouseIdState] = useState(() => {
@@ -138,8 +137,7 @@ function Simulation() {
         setSelectedWarehouseIdState(warehouseId);
     };
 
-    // 시나리오 선택
-    // 시나리오를 고르면 그 설정(배속 등)을 실행에 그대로 쓴다.
+    // 시나리오를 고르면 그 설정을 실행에 그대로 쓴다.
     const [scenarios, setScenarios] = useState([]);
     const [selectedScenarioId, setSelectedScenarioIdState] = useState(() => {
         const saved = localStorage.getItem(SCENARIO_ID_KEY);
@@ -171,7 +169,6 @@ function Simulation() {
         setCommandExpressionMixState(normalized);
     };
 
-    // 실행 중인 시뮬레이션 ID
     // 새로고침해도 같은 실행을 이어서 쓰도록 localStorage 에 보관한다.
     // (새 실행이 생기면 그 실행에 등록해둔 작업들이 누락되기 때문)
     const [simulationRunId, setSimulationRunIdState] = useState(() => {
@@ -188,8 +185,6 @@ function Simulation() {
         setSimulationRunIdState(runId);
     };
 
-    // 작업 / 이벤트 목록
-    // 목업이 아니라 백엔드에서 받은 것만 보여준다.
     // 시작하면 그 실행의 작업으로 채워지고, 이후 WebSocket 으로 갱신된다.
     const [taskList, setTaskList] = useState([]);
     const [eventList, setEventList] = useState([]);
@@ -935,75 +930,49 @@ function Simulation() {
 
             {/* 상단 헤더 */}
             <header className="simulation-header">
-                {/* 상단 네이비 헤더 */}
                 <div className="simulation-topbar">
-                    <div className="simulation-topbar-title">
-                        <h2>시뮬레이션 실행</h2>
-                    </div>
-
-                    {/* 선택한 창고에 등록된 시나리오를 고른다. */}
-                    <div className="simulation-topbar-scenario">
-                        <span className="simulation-topbar-label">
-                            시나리오 선택
-                        </span>
-
-                        <select
-                            value={selectedScenarioId ?? ""}
-                            onChange={handleScenarioChange}
-                            disabled={
-                                scenarios.length === 0
-                                || Boolean(simulationRunId)
-                            }
-                            aria-label="시나리오 선택"
-                        >
-                            {scenarios.length === 0 ? (
-                                <option value="">
-                                    등록된 시나리오가 없습니다
-                                </option>
-                            ) : (
-                                scenarios.map((scenario) => (
-                                    <option
-                                        key={scenario.id}
-                                        value={scenario.id}
-                                    >
-                                        {scenario.scenarioName}
-                                        {scenario.scenarioCode
-                                            ? ` (${scenario.scenarioCode})`
-                                            : ""}
-                                    </option>
-                                ))
-                            )}
-                        </select>
-                    </div>
-
-                    {/* 사용자와 현재 날짜·시간은 관련 데이터가 연결되면 교체한다. */}
-                    <div className="simulation-topbar-meta">
-                        <div className="simulation-topbar-user">
-                            <span className="simulation-topbar-label">
-                                사용자
-                            </span>
-                            <p>운영자 정보 연결 필요</p>
+                    <div className="simulation-topbar-left">
+                        <div className="simulation-topbar-title">
+                            <h2>시뮬레이션 실행</h2>
                         </div>
 
-                        <p className="simulation-topbar-datetime">
-                            현재 날짜·시간 표시 기능 연결 필요
-                        </p>
-                    </div>
-                </div>
+                        {/* 시나리오 선택 */}
+                        <div className="simulation-topbar-selector scenario">
+                            <span className="simulation-topbar-label">시나리오 선택</span>
+                            <select
+                                value={selectedScenarioId ?? ""}
+                                onChange={handleScenarioChange}
+                                disabled={scenarios.length === 0 || Boolean(simulationRunId)}
+                                aria-label="시나리오 선택"
+                            >
+                                {scenarios.length === 0 ? (
+                                    <option value="">
+                                        등록된 시나리오가 없습니다
+                                    </option>
+                                ) : (
+                                    scenarios.map((scenario) => (
+                                        <option
+                                            key={scenario.id}
+                                            value={scenario.id}
+                                        >
+                                            {scenario.scenarioName}
+                                            {scenario.scenarioCode
+                                                ? ` (${scenario.scenarioCode})`
+                                                : ""}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
+                        </div>
 
-                {/* 시뮬레이션 설정 및 제어 영역 */}
-                <div className="simulation-controlbar">
-                    <div className="simulation-header-info">
                         {/* 창고 선택 */}
-                        <div className="simulation-header-info-item simulation-scenario">
-                            <span className="simulation-header-label">창고</span>
-
+                        <div className="simulation-topbar-selector">
+                            <span className="simulation-topbar-label">창고 선택</span>
                             <select
                                 value={selectedWarehouseId}
-                                onChange={(e) =>
-                                    handleWarehouseChange(e.target.value)
-                                }
+                                onChange={(e) => handleWarehouseChange(e.target.value)}
                                 disabled={warehouses.length === 0}
+                                aria-label="창고 선택"
                             >
                                 {warehouses.length === 0 ? (
                                     <option value={selectedWarehouseId}>
@@ -1021,68 +990,112 @@ function Simulation() {
                                 )}
                             </select>
                         </div>
+                    </div>
 
-                        {/* 현재 시뮬레이션 상태 */}
-                        <div className="simulation-header-info-item">
-                            <span className="simulation-header-label">상태</span>
-                            <span className="simulation-header-status">
+                    <div className="simulation-topbar-right">
+                        {/* 시뮬레이션 시간 */}
+                        <div className="simulation-topbar-metric">
+                            <span>시뮬레이션 시간</span>
+                            <strong>{formatSimulationTime(simulationTime)}</strong>
+                        </div>
+
+                        {/* 현재 시스템 상태 */}
+                        <div className="simulation-topbar-metric">
+                            <span>시스템 상태</span>
+                            <strong className="simulation-topbar-status">
                                 {simulationStatus}
-                            </span>
-
-                            {/* 실시간 연결 표시 */}
+                            </strong>
                             {simulationRunId && (
-                                <span
-                                    className="simulation-header-socket"
-                                    title={
-                                        connected
-                                            ? "실시간 연결됨"
-                                            : "실시간 연결 대기 중"
-                                    }
-                                >
-                                    {connected ? "● 실시간" : "○ 연결 중"}
-                                </span>
+                                <small className="simulation-topbar-socket">
+                                    {connected ? "실시간 연결" : "연결 대기"}
+                                </small>
                             )}
                         </div>
 
-                        {/* 시뮬레이션 타이머 */}
-                        <div className="simulation-header-info-item">
-                            <span className="simulation-header-label">
-                                실행 시간
-                            </span>
-                            <span className="simulation-header-time">
-                                {formatSimulationTime(simulationTime)}
-                            </span>
-                        </div>
+                        {/* 알림 기능 */}
+                        <span
+                            className="simulation-topbar-notification"
+                            aria-label="알림"
+                            role="img"
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                                <path d="M10 21h4" />
+                            </svg>
+                        </span>
 
-                        {/* 시뮬레이션 실행 속도 */}
-                        <div className="simulation-header-info-item">
-                            <span className="simulation-header-label">
-                                실행 속도
-                            </span>
-
-                            <select
-                                className="simulation-header-speed"
-                                value={simulationSpeed}
-                                onChange={(e) =>
-                                    handleSpeedChange(Number(e.target.value))
-                                }
-                            >
-                                <option value={0.5}>0.5배</option>
-                                <option value={1}>1배</option>
-                                <option value={2}>2배</option>
-                                <option value={3}>3배</option>
-                            </select>
+                        {/* 사용자 정보 */}
+                        <div className="simulation-topbar-user">
+                            <span className="simulation-topbar-avatar">A</span>
+                            <strong>admin</strong>
+                            <span className="simulation-topbar-chevron">⌄</span>
                         </div>
                     </div>
+                </div>
 
-                    {/* 기존 시뮬레이션 제어 기능을 그대로 사용한다. */}
-                    <div className="simulation-header-buttons">
+            </header>
+
+            {/* 시뮬레이션 화면 */}
+            <main className="simulation-view">
+                {/* 시안의 WAREHOUSE LIVE VIEW 제어 바 */}
+                <div className="simulation-controlbar">
+                    <div className="simulation-controlbar-title">
+                        <strong>WAREHOUSE LIVE VIEW</strong>
+                    </div>
+
+                    <div className="simulation-controlbar-summary">
+                        <span
+                            className={`simulation-plan-badge ${generatedCommands.length > 0 ? "active" : ""
+                                }`}
+                        >
+                            AI PLAN {generatedCommands.length > 0 ? "ACTIVE" : "READY"}
+                        </span>
+                        <span>{taskList.length} TASKS</span>
+                        <span>{robotList.length} ROBOTS</span>
+                    </div>
+
+                    <div className="simulation-controlbar-actions">
+                        <select
+                            className="simulation-header-speed"
+                            value={simulationSpeed}
+                            onChange={(e) =>
+                                handleSpeedChange(Number(e.target.value))
+                            }
+                            aria-label="시뮬레이션 실행 속도"
+                        >
+                            <option value={0.5}>0.5배</option>
+                            <option value={1}>1배</option>
+                            <option value={2}>2배</option>
+                            <option value={3}>3배</option>
+                        </select>
+
                         <button
                             type="button"
                             className="simulation-header-button start"
                             onClick={handleStart}
                         >
-                            시작
+                            ▶ 시작
+                        </button>
+                        <button
+                            type="button"
+                            className="simulation-header-button"
+                            onClick={handlePause}
+                        >
+                            Ⅱ 일시정지
+                        </button>
+                        <button
+                            type="button"
+                            className="simulation-header-button"
+                            onClick={handleReset}
+                        >
+                            ↻ 초기화
+                        </button>
+                        <button
+                            type="button"
+                            className="simulation-header-button replan"
+                            onClick={handleReplan}
+                        >
+                            재계획
                         </button>
                         <button
                             type="button"
@@ -1090,21 +1103,7 @@ function Simulation() {
                             onClick={handleNewRun}
                             title="현재 작업을 버리고 지금 설정으로 작업을 새로 생성합니다"
                         >
-                            새 작업 생성
-                        </button>
-                        <button
-                            type="button"
-                            className="simulation-header-button"
-                            onClick={handlePause}
-                        >
-                            일시정지
-                        </button>
-                        <button
-                            type="button"
-                            className="simulation-header-button"
-                            onClick={handleReset}
-                        >
-                            초기화
+                            새 작업
                         </button>
                         <button
                             type="button"
@@ -1113,29 +1112,21 @@ function Simulation() {
                             disabled={!simulationRunId}
                             title="이 실행을 완전히 종료합니다. 다시 시작하려면 새 작업을 만들어야 합니다."
                         >
-                            중지
-                        </button>
-                        <button
-                            type="button"
-                            className="simulation-header-button"
-                            onClick={handleReplan}
-                        >
-                            재계획
+                            ■ 중지
                         </button>
                     </div>
                 </div>
-            </header>
 
-            {/* 시뮬레이션 화면 */}
-            <main className="simulation-view">
-                <WarehouseSVG
-                    warehouseId={selectedWarehouseId}
-                    robots={robotList}
-                    tasks={taskList}
-                    generatedCommands={generatedCommands}
-                    avoidanceStates={avoidanceStates}
-                    isRunning={isSimulationRunning}
-                />
+                <div className="simulation-view-content">
+                    <WarehouseSVG
+                        warehouseId={selectedWarehouseId}
+                        robots={robotList}
+                        tasks={taskList}
+                        generatedCommands={generatedCommands}
+                        avoidanceStates={avoidanceStates}
+                        isRunning={isSimulationRunning}
+                    />
+                </div>
             </main>
 
             {/* 입출고 설정 / 자연어 명령 패널 */}
