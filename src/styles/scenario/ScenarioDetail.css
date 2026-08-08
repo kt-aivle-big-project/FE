@@ -5,7 +5,6 @@
 
 .scenario-detail-card {
     width: 100%;
-    min-width: 0;
     overflow: hidden;
     border: 1px solid var(--laro-border);
     border-radius: 0;
@@ -971,31 +970,931 @@
     text-align: center;
 }
 
+
+/* ============================================================
+   AI 실행 리포트
+   ============================================================ */
+
+.scenario-ai-report {
+    overflow: hidden;
+    border: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.scenario-ai-report-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-background);
+}
+
+.scenario-ai-report-eyebrow,
+.scenario-ai-report-section-title > span,
+.scenario-ai-report-section-title-row > div > span {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--laro-primary);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.scenario-ai-report-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+}
+
+.scenario-ai-report-title-row > strong {
+    color: var(--laro-navy);
+    font-size: 15px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.scenario-ai-report-title-row > span {
+    overflow: hidden;
+    color: var(--laro-subtext);
+    font-size: 10px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-ai-report-header p {
+    margin: 6px 0 0;
+    color: var(--laro-subtext);
+    font-size: 9px;
+}
+
+.scenario-ai-report-section {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-ai-report-section:last-child {
+    border-bottom: 0;
+}
+
+.scenario-ai-report-section-title {
+    margin-bottom: 12px;
+}
+
+.scenario-ai-report-section-title > strong,
+.scenario-ai-report-section-title-row > div > strong {
+    color: var(--laro-navy);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.scenario-ai-report-section-title-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.scenario-ai-report-section-title-row > small {
+    color: var(--laro-subtext);
+    font-size: 9px;
+    font-weight: 800;
+}
+
+/* AI 입력 */
+.scenario-ai-input-box {
+    padding: 14px 16px;
+    border-left: 3px solid var(--laro-primary);
+    background: var(--laro-background);
+}
+
+.scenario-ai-input-box > p {
+    margin: 0;
+    color: var(--laro-navy);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.7;
+}
+
+.scenario-ai-input-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px 18px;
+    margin-top: 11px;
+    padding-top: 10px;
+    border-top: 1px solid var(--laro-border);
+}
+
+.scenario-ai-input-meta span {
+    color: var(--laro-subtext);
+    font-size: 9px;
+}
+
+.scenario-ai-input-meta strong {
+    margin-left: 3px;
+    color: var(--laro-navy);
+    font-size: 9px;
+    font-weight: 800;
+}
+
+/* 계획 요약 */
+.scenario-ai-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid var(--laro-border);
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-ai-overview-grid article {
+    min-width: 0;
+    padding: 14px 15px;
+    border-right: 1px solid var(--laro-border);
+}
+
+.scenario-ai-overview-grid article:last-child {
+    border-right: 0;
+}
+
+.scenario-ai-overview-grid article > span {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--laro-subtext);
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.scenario-ai-overview-grid article > strong {
+    display: block;
+    color: var(--laro-navy);
+    font-size: 19px;
+    font-weight: 900;
+}
+
+.scenario-ai-overview-grid article > strong.is-text {
+    font-size: 14px;
+}
+
+.scenario-ai-overview-grid article > strong small {
+    color: var(--laro-subtext);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.scenario-ai-overview-grid article > p {
+    margin: 4px 0 0;
+    color: var(--laro-subtext);
+    font-size: 8px;
+}
+
+/* 표 */
+.scenario-ai-report-table-wrap {
+    overflow-x: auto;
+}
+
+.scenario-ai-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.scenario-ai-report-table th {
+    padding: 8px 10px;
+    border-top: 1px solid var(--laro-border);
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-size: 8px;
+    font-weight: 800;
+    text-align: left;
+}
+
+.scenario-ai-report-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--laro-border);
+    color: var(--laro-text);
+    font-size: 9px;
+    vertical-align: middle;
+}
+
+.scenario-ai-report-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.scenario-ai-report-table td > strong {
+    color: var(--laro-navy);
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.scenario-ai-table-sub {
+    display: block;
+    margin-top: 3px;
+    color: var(--laro-subtext);
+    font-size: 8px;
+}
+
+.scenario-ai-operation-table th:nth-child(1),
+.scenario-ai-operation-table td:nth-child(1) {
+    width: 70px;
+}
+
+.scenario-ai-operation-table th:nth-child(2),
+.scenario-ai-operation-table td:nth-child(2) {
+    width: 28%;
+}
+
+.scenario-ai-operation-table th:nth-child(3),
+.scenario-ai-operation-table td:nth-child(3) {
+    width: 18%;
+}
+
+.scenario-ai-operation-table th:nth-child(5),
+.scenario-ai-operation-table td:nth-child(5) {
+    width: 80px;
+}
+
+.scenario-ai-route-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    color: var(--laro-subtext);
+    white-space: nowrap;
+}
+
+.scenario-ai-route-cell b {
+    color: var(--laro-primary);
+}
+
+.scenario-ai-assigned-robot {
+    color: var(--laro-primary) !important;
+}
+
+.scenario-ai-report-more {
+    padding: 10px 0 0;
+    color: var(--laro-subtext);
+    font-size: 9px;
+    text-align: right;
+}
+
+/* 경로 분석 */
+.scenario-ai-route-analysis {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--laro-border);
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-ai-route-analysis article {
+    padding: 13px 15px;
+    border-right: 1px solid var(--laro-border);
+}
+
+.scenario-ai-route-analysis article:last-child {
+    border-right: 0;
+}
+
+.scenario-ai-route-analysis span {
+    display: block;
+    color: var(--laro-primary);
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+}
+
+.scenario-ai-route-analysis strong {
+    display: block;
+    margin-top: 5px;
+    color: var(--laro-navy);
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.scenario-ai-route-analysis p {
+    margin: 3px 0 0;
+    color: var(--laro-subtext);
+    font-size: 8px;
+}
+
+/* 검증 */
+.scenario-ai-validation-section {
+    background: var(--laro-background);
+}
+
+.scenario-ai-validation-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.scenario-ai-validation-grid > div {
+    min-width: 0;
+    padding: 10px 12px;
+    border-right: 1px solid var(--laro-border);
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-ai-validation-grid > div:nth-child(3n) {
+    border-right: 0;
+}
+
+.scenario-ai-validation-grid > div:nth-last-child(-n + 3) {
+    border-bottom: 0;
+}
+
+.scenario-ai-validation-grid span {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--laro-subtext);
+    font-size: 8px;
+}
+
+.scenario-ai-validation-grid strong {
+    display: block;
+    overflow: hidden;
+    color: var(--laro-navy);
+    font-size: 9px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-ai-validation-grid strong.is-success {
+    color: var(--laro-success);
+}
+
+.scenario-ai-validation-message {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+    color: var(--laro-subtext);
+    font-size: 9px;
+    line-height: 1.6;
+}
+
+.scenario-ai-validation-message.is-warning {
+    color: var(--laro-warning);
+}
+
+.scenario-ai-validation-message.is-error {
+    color: var(--laro-danger);
+}
+
+@media (max-width: 900px) {
+    .scenario-ai-overview-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .scenario-ai-overview-grid article:nth-child(2) {
+        border-right: 0;
+    }
+
+    .scenario-ai-overview-grid article:nth-child(-n + 2) {
+        border-bottom: 1px solid var(--laro-border);
+    }
+}
+
 @media (max-width: 680px) {
-    .scenario-ai-plan-section-header {
-        align-items: flex-start;
+    .scenario-ai-report-header {
         flex-direction: column;
     }
 
-    .scenario-ai-plan-summary-grid {
+    .scenario-ai-overview-grid,
+    .scenario-ai-route-analysis,
+    .scenario-ai-validation-grid {
         grid-template-columns: 1fr;
     }
 
-    .scenario-ai-plan-summary-item {
+    .scenario-ai-overview-grid article,
+    .scenario-ai-route-analysis article,
+    .scenario-ai-validation-grid > div {
         border-right: 0;
         border-bottom: 1px solid var(--laro-border);
     }
 
-    .scenario-ai-plan-summary-item:last-child {
+    .scenario-ai-overview-grid article:last-child,
+    .scenario-ai-route-analysis article:last-child,
+    .scenario-ai-validation-grid > div:last-child {
         border-bottom: 0;
     }
 
-    .scenario-ai-plan-row {
-        grid-template-columns: 54px minmax(0, 1fr);
+    .scenario-ai-report-table {
+        min-width: 640px;
+    }
+}
+
+/* ============================================================
+   AI 실행 리포트 - 2열 구조
+   기존 ScenarioDetail.css 맨 아래에 추가해 사용한다.
+   ============================================================ */
+
+.scenario-ai-report-two-column {
+    overflow: hidden;
+    border: 1px solid #dfe7ef;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.scenario-ai-report-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    border-bottom: 1px solid #e7edf3;
+}
+
+.scenario-ai-report-row:last-child {
+    border-bottom: 0;
+}
+
+.scenario-ai-report-panel {
+    min-width: 0;
+    padding: 20px 22px;
+}
+
+.scenario-ai-report-panel + .scenario-ai-report-panel {
+    border-left: 1px solid #e7edf3;
+}
+
+.scenario-ai-report-section-title {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 16px;
+}
+
+.scenario-ai-report-section-title > span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #7b8b9b;
+}
+
+.scenario-ai-report-section-title > strong {
+    font-size: 15px;
+    font-weight: 700;
+    color: #172533;
+}
+
+.scenario-ai-report-section-title-row {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.scenario-ai-report-section-title-row > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.scenario-ai-report-section-title-row > div > span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #7b8b9b;
+}
+
+.scenario-ai-report-section-title-row > div > strong {
+    font-size: 15px;
+    font-weight: 700;
+    color: #172533;
+}
+
+.scenario-ai-report-section-title-row > small {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: #8795a4;
+}
+
+/* 1행 - 실행 리포트 / AI 입력 */
+
+.scenario-ai-report-identity,
+.scenario-ai-input-panel {
+    background: #fbfcfe;
+}
+
+.scenario-ai-report-plan-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.scenario-ai-report-plan-heading > div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.scenario-ai-report-plan-heading > div > strong {
+    font-size: 20px;
+    line-height: 1.2;
+    color: #172533;
+}
+
+.scenario-ai-report-plan-heading > div > span {
+    overflow: hidden;
+    font-size: 12px;
+    color: #6f7e8e;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-ai-report-meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 15px;
+    font-size: 12px;
+    color: #6f7e8e;
+}
+
+.scenario-ai-report-meta-line span:not(:last-child)::after {
+    content: "·";
+    margin-left: 14px;
+    color: #b2bec9;
+}
+
+.scenario-ai-input-command {
+    min-height: 48px;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.65;
+    color: #263746;
+}
+
+.scenario-ai-input-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px 18px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #edf1f5;
+}
+
+.scenario-ai-input-meta span {
+    font-size: 12px;
+    color: #728191;
+}
+
+.scenario-ai-input-meta strong {
+    margin-left: 3px;
+    color: #263746;
+}
+
+/* 2행 - 계획 요약 / 검증 */
+
+.scenario-ai-compact-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    border: 1px solid #edf1f5;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.scenario-ai-compact-metrics > div {
+    min-width: 0;
+    min-height: 74px;
+    padding: 13px 14px;
+}
+
+.scenario-ai-compact-metrics > div:nth-child(odd) {
+    border-right: 1px solid #edf1f5;
+}
+
+.scenario-ai-compact-metrics > div:nth-child(-n + 2) {
+    border-bottom: 1px solid #edf1f5;
+}
+
+.scenario-ai-compact-metrics span {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 11px;
+    color: #788797;
+}
+
+.scenario-ai-compact-metrics strong {
+    display: inline-block;
+    font-size: 17px;
+    font-weight: 700;
+    color: #172533;
+}
+
+.scenario-ai-compact-metrics strong.is-success {
+    color: #16855b;
+}
+
+.scenario-ai-compact-metrics small {
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #2589f4;
+}
+
+.scenario-ai-validation-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    background: #f6f9fc;
+}
+
+.scenario-ai-validation-result span {
+    font-size: 11px;
+    color: #788797;
+}
+
+.scenario-ai-validation-result strong {
+    font-size: 12px;
+    color: #263746;
+}
+
+/* 3행 - 작업 계획 / 로봇 배정 */
+
+.scenario-ai-report-row-table .scenario-ai-report-panel {
+    min-height: 300px;
+}
+
+.scenario-ai-report-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.scenario-ai-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.scenario-ai-report-table th {
+    padding: 9px 8px;
+    border-bottom: 1px solid #dfe7ef;
+    font-size: 11px;
+    font-weight: 600;
+    color: #748493;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.scenario-ai-report-table td {
+    padding: 11px 8px;
+    border-bottom: 1px solid #edf1f5;
+    font-size: 12px;
+    color: #425466;
+    vertical-align: middle;
+}
+
+.scenario-ai-report-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.scenario-ai-report-table td strong {
+    font-size: 12px;
+    color: #263746;
+}
+
+.scenario-ai-operation-table th:nth-child(1),
+.scenario-ai-operation-table td:nth-child(1) {
+    width: 29%;
+}
+
+.scenario-ai-operation-table th:nth-child(2),
+.scenario-ai-operation-table td:nth-child(2) {
+    width: 16%;
+}
+
+.scenario-ai-operation-table th:nth-child(3),
+.scenario-ai-operation-table td:nth-child(3) {
+    width: 34%;
+}
+
+.scenario-ai-operation-table th:nth-child(4),
+.scenario-ai-operation-table td:nth-child(4) {
+    width: 21%;
+}
+
+.scenario-ai-operation-name {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.scenario-ai-operation-name > strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-ai-route-cell {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    color: #5d6d7d;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.scenario-ai-route-cell b {
+    flex-shrink: 0;
+    color: #2589f4;
+}
+
+.scenario-ai-report-more {
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #718191;
+    text-align: right;
+}
+
+/* 4행 - 경로 분석 / 이벤트 */
+
+.scenario-ai-route-list {
+    border-top: 1px solid #edf1f5;
+}
+
+.scenario-ai-route-list-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 2px;
+    border-bottom: 1px solid #edf1f5;
+}
+
+.scenario-ai-route-list-row > span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #6f7e8e;
+}
+
+.scenario-ai-route-list-row > strong {
+    font-size: 14px;
+    color: #263746;
+}
+
+.scenario-ai-route-list-row > small {
+    min-width: 70px;
+    font-size: 12px;
+    color: #6f7e8e;
+    text-align: right;
+}
+
+.scenario-ai-route-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #f6f9fc;
+}
+
+.scenario-ai-route-total span {
+    font-size: 11px;
+    color: #788797;
+}
+
+.scenario-ai-route-total strong {
+    font-size: 15px;
+    color: #172533;
+}
+
+.scenario-ai-event-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.scenario-ai-event-item {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #edf1f5;
+}
+
+.scenario-ai-event-item:first-child {
+    padding-top: 0;
+}
+
+.scenario-ai-event-item:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.scenario-ai-event-time {
+    padding-top: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #7b8b9b;
+}
+
+.scenario-ai-event-content {
+    min-width: 0;
+}
+
+.scenario-ai-event-content > div {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.scenario-ai-event-content strong {
+    font-size: 13px;
+    color: #263746;
+}
+
+.scenario-ai-event-content p {
+    margin: 4px 0 2px;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #667687;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-ai-event-content small {
+    font-size: 11px;
+    color: #8b98a5;
+}
+
+.scenario-ai-event-type {
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #eef4f8;
+    font-size: 9px;
+    font-weight: 700;
+    color: #617487;
+}
+
+.scenario-ai-event-type.is-replan {
+    background: #eaf4ff;
+    color: #1676db;
+}
+
+.scenario-ai-event-type.is-wait {
+    background: #fff6df;
+    color: #a96c00;
+}
+
+.scenario-ai-event-type.is-charge {
+    background: #e9f8f1;
+    color: #16855b;
+}
+
+.scenario-ai-event-empty {
+    min-height: 145px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed #dfe7ef;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.scenario-ai-event-empty strong {
+    font-size: 13px;
+    color: #425466;
+}
+
+.scenario-ai-event-empty p {
+    max-width: 260px;
+    margin: 6px 0 0;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #8795a4;
+}
+
+/* 작은 화면에서는 기존 읽기 순서를 유지하며 1열로 전환한다. */
+
+@media (max-width: 1050px) {
+    .scenario-ai-report-row {
+        grid-template-columns: 1fr;
     }
 
-    .scenario-ai-plan-robot {
-        grid-column: 2;
-        align-items: flex-start;
+    .scenario-ai-report-panel + .scenario-ai-report-panel {
+        border-left: 0;
+        border-top: 1px solid #e7edf3;
+    }
+
+    .scenario-ai-report-row-table .scenario-ai-report-panel {
+        min-height: auto;
     }
 }

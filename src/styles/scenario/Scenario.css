@@ -4,7 +4,6 @@
 
 .scenario-page {
     width: 100%;
-    min-height: 100%;
 
     padding: 10px;
 
@@ -33,14 +32,13 @@
 .scenario-workspace {
     display: grid;
     grid-template-columns:
-        minmax(400px, 600px)
+        minmax(400px, 500px)
         minmax(0, 1fr);
 
     align-items: start;
     gap: 10px;
 
     width: 100%;
-    max-width: 1400px;
 
     margin: 0 auto;
 }
@@ -56,7 +54,6 @@
     display: flex;
     min-width: 0;
     width: 100%;
-    max-width: 600px;
     flex-direction: column;
 
     margin: 0;
