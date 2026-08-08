@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../styles/login/LoginCommon.css";
+import AuthCircuitBackground from "../../pages/login/AuthCircuitBackground";
+import "../../styles/login/AuthCommon.css";
 import "../../styles/login/Signup.css";
 import { UserIcon, EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";
-
-const API_URL = "http://localhost:8080/api";
+import { API_URL } from "../../api/config";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SPECIAL_CHARACTERS = "~!@#$%^&*()_+-=[]{};':\"\\|,.<>/?";
@@ -451,12 +451,12 @@ function Signup() {
     const modalContent = getTermsContent();
 
     return (
-        <div className="login-page signup-page">
-            <main className="login-card signup-card">
+        <div className="auth-page signup-page">
+            <main className="auth-card signup-card">
                 {/* 로그인 화면으로 돌아가기 */}
                 <button
                     type="button"
-                    className="login-back-button"
+                    className="auth-back-button"
                     onClick={() => navigate("/login")}
                 >
                     <span aria-hidden="true">←</span>
@@ -464,19 +464,19 @@ function Signup() {
                 </button>
 
                 {/* 회원가입 제목 */}
-                <header className="login-header">
-                    <h1 className="login-title">회원가입</h1>
-                    <p className="login-description">
+                <header className="auth-header">
+                    <h1 className="auth-title">회원가입</h1>
+                    <p className="auth-description">
                         이메일 인증을 완료하고 LARO 계정을 만들어주세요.
                     </p>
                 </header>
 
-                <section className="login-content">
-                    <form className="signup-form" onSubmit={handleSignup}>
+                <section className="auth-content">
+                    <form className="auth-form" onSubmit={handleSignup}>
                         {/* 회원가입 전체 오류 */}
                         {errors.form && (
                             <p
-                                className="signup-verification-message signup-verification-message-error"
+                                className="auth-message auth-message-error"
                                 aria-live="polite"
                             >
                                 {errors.form}
@@ -484,11 +484,11 @@ function Signup() {
                         )}
 
                         {/* 이름 */}
-                        <div className="signup-field">
+                        <div className="auth-field">
                             <label htmlFor="name">이름</label>
 
-                            <div className="signup-input-wrapper">
-                                <span className="signup-input-icon">
+                            <div className="auth-input-wrapper">
+                                <span className="auth-input-icon">
                                     <UserIcon />
                                 </span>
 
@@ -506,17 +506,17 @@ function Signup() {
                             </div>
 
                             {errors.name && (
-                                <p className="signup-password-error">{errors.name}</p>
+                                <p className="auth-message auth-message-error">{errors.name}</p>
                             )}
                         </div>
 
                         {/* 이메일 및 인증번호 발송 */}
-                        <div className="signup-field">
+                        <div className="auth-field">
                             <label htmlFor="signup-email">이메일</label>
 
-                            <div className="signup-verification-row">
-                                <div className="signup-input-wrapper signup-verification-input">
-                                    <span className="signup-input-icon">
+                            <div className="auth-action-row">
+                                <div className="auth-input-wrapper">
+                                    <span className="auth-input-icon">
                                         <EmailIcon />
                                     </span>
 
@@ -534,7 +534,7 @@ function Signup() {
                                 {isEmailVerified ? (
                                     <button
                                         type="button"
-                                        className="signup-verification-button"
+                                        className="auth-button auth-button-secondary auth-action-button"
                                         onClick={handleChangeVerifiedEmail}
                                     >
                                         이메일 변경
@@ -542,7 +542,7 @@ function Signup() {
                                 ) : (
                                     <button
                                         type="button"
-                                        className="signup-verification-button"
+                                        className="auth-button auth-button-secondary auth-action-button"
                                         onClick={handleSendVerificationCode}
                                         disabled={isSendingCode || resendTimeLeft > 0}
                                     >
@@ -558,18 +558,18 @@ function Signup() {
                             </div>
 
                             {errors.email && (
-                                <p className="signup-password-error">{errors.email}</p>
+                                <p className="auth-message auth-message-error">{errors.email}</p>
                             )}
 
                             {/* 인증번호가 발송된 경우에만 표시 */}
                             {isCodeSent && !isEmailVerified && (
                                 <div className="signup-verification-area">
-                                    <div className="signup-verification-row">
-                                        <div className="signup-input-wrapper signup-verification-input">
+                                    <div className="auth-action-row">
+                                        <div className="auth-input-wrapper">
                                             <input
                                                 id="verification-code"
                                                 type="text"
-                                                className="signup-code-input"
+                                                className="auth-code-input"
                                                 value={verificationCode}
                                                 placeholder="6자리 인증번호 입력"
                                                 inputMode="numeric"
@@ -582,7 +582,7 @@ function Signup() {
 
                                         <button
                                             type="button"
-                                            className="signup-verification-button"
+                                            className="auth-button auth-button-secondary auth-action-button"
                                             onClick={handleVerifyCode}
                                             disabled={
                                                 isVerifyingCode ||
@@ -594,7 +594,7 @@ function Signup() {
                                         </button>
                                     </div>
 
-                                    <p className="signup-verification-message signup-verification-message-sent">
+                                    <p className="auth-message auth-message-info">
                                         입력한 이메일로 인증번호를 발송했습니다. 남은 시간{" "}
                                         {formatTime(codeTimeLeft)}
                                     </p>
@@ -604,7 +604,7 @@ function Signup() {
                             {/* 이메일 인증 완료 */}
                             {isEmailVerified && (
                                 <p
-                                    className="signup-verification-message signup-verification-message-success"
+                                    className="auth-message auth-message-success"
                                     aria-live="polite"
                                 >
                                     이메일 인증이 완료되었습니다.
@@ -612,24 +612,25 @@ function Signup() {
                             )}
 
                             {errors.verificationCode && (
-                                <p className="signup-password-error">
+                                <p className="auth-message auth-message-error">
                                     {errors.verificationCode}
                                 </p>
                             )}
                         </div>
 
                         {/* 비밀번호 */}
-                        <div className="signup-field">
+                        <div className="auth-field">
                             <label htmlFor="signup-password">비밀번호</label>
 
-                            <div className="signup-input-wrapper">
-                                <span className="signup-input-icon">
+                            <div className="auth-input-wrapper">
+                                <span className="auth-input-icon">
                                     <LockIcon />
                                 </span>
 
                                 <input
                                     id="signup-password"
                                     type={showPassword ? "text" : "password"}
+                                    className="auth-password-input"
                                     value={password}
                                     placeholder="비밀번호를 입력하세요"
                                     autoComplete="new-password"
@@ -641,7 +642,7 @@ function Signup() {
 
                                 <button
                                     type="button"
-                                    className="signup-password-toggle"
+                                    className="auth-password-toggle"
                                     onClick={() => setShowPassword((prev) => !prev)}
                                     aria-label={
                                         showPassword
@@ -656,8 +657,8 @@ function Signup() {
 
                             {/* 비밀번호 조건 실시간 안내 */}
                             <p
-                                className={`signup-verification-message ${isPasswordLengthValid
-                                    ? "signup-verification-message-sent"
+                                className={`auth-message ${isPasswordLengthValid
+                                    ? "auth-message-info"
                                     : ""
                                     }`}
                             >
@@ -665,8 +666,8 @@ function Signup() {
                             </p>
 
                             <p
-                                className={`signup-verification-message ${hasSpecialCharacters
-                                    ? "signup-verification-message-sent"
+                                className={`auth-message ${hasSpecialCharacters
+                                    ? "auth-message-info"
                                     : ""
                                     }`}
                             >
@@ -674,22 +675,23 @@ function Signup() {
                             </p>
 
                             {errors.password && (
-                                <p className="signup-password-error">{errors.password}</p>
+                                <p className="auth-message auth-message-error">{errors.password}</p>
                             )}
                         </div>
 
                         {/* 비밀번호 확인 */}
-                        <div className="signup-field">
+                        <div className="auth-field">
                             <label htmlFor="password-confirm">비밀번호 확인</label>
 
-                            <div className="signup-input-wrapper">
-                                <span className="signup-input-icon">
+                            <div className="auth-input-wrapper">
+                                <span className="auth-input-icon">
                                     <LockIcon />
                                 </span>
 
                                 <input
                                     id="password-confirm"
                                     type={showPasswordConfirm ? "text" : "password"}
+                                    className="auth-password-input"
                                     value={passwordConfirm}
                                     placeholder="비밀번호를 다시 입력하세요"
                                     autoComplete="new-password"
@@ -701,7 +703,7 @@ function Signup() {
 
                                 <button
                                     type="button"
-                                    className="signup-password-toggle"
+                                    className="auth-password-toggle"
                                     onClick={() =>
                                         setShowPasswordConfirm((prev) => !prev)
                                     }
@@ -719,19 +721,19 @@ function Signup() {
                             </div>
 
                             {passwordConfirm && isPasswordMatch && (
-                                <p className="signup-verification-message signup-verification-message-sent">
+                                <p className="auth-message auth-message-info">
                                     ✓ 비밀번호가 일치합니다.
                                 </p>
                             )}
 
                             {passwordConfirm && !isPasswordMatch && (
-                                <p className="signup-password-error">
+                                <p className="auth-message auth-message-error">
                                     비밀번호가 일치하지 않습니다.
                                 </p>
                             )}
 
                             {errors.passwordConfirm && !passwordConfirm && (
-                                <p className="signup-password-error">
+                                <p className="auth-message auth-message-error">
                                     {errors.passwordConfirm}
                                 </p>
                             )}
@@ -819,7 +821,7 @@ function Signup() {
                             </div>
 
                             {errors.agreement && (
-                                <p className="signup-password-error">
+                                <p className="auth-message auth-message-error">
                                     {errors.agreement}
                                 </p>
                             )}
@@ -828,7 +830,7 @@ function Signup() {
                         {/* 회원가입 */}
                         <button
                             type="submit"
-                            className="login-button login-button-primary"
+                            className="auth-button auth-button-primary"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? "처리 중..." : "회원가입"}
@@ -836,7 +838,7 @@ function Signup() {
                     </form>
                 </section>
 
-                <footer className="login-footer">
+                <footer className="auth-footer">
                     <span>이미 계정이 있으신가요?</span>
                     <button type="button" onClick={() => navigate("/login")}>
                         로그인
@@ -878,7 +880,7 @@ function Signup() {
                         <footer className="terms-modal-actions">
                             <button
                                 type="button"
-                                className="terms-confirm-button"
+                                className="auth-button auth-button-primary terms-confirm-button"
                                 onClick={() => setTermsModal(null)}
                             >
                                 확인
