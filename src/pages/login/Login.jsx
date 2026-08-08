@@ -66,8 +66,6 @@ function Login() {
                 localStorage.setItem("email", data.email);
             }
 
-            localStorage.setItem("loginType", "user");
-
             navigate("/simulation", { replace: true });
         } catch (error) {
             console.error("로그인 실패:", error);
