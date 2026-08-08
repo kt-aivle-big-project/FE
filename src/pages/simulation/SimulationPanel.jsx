@@ -5,6 +5,7 @@ import {
 } from "../../api/client";
 import "../../styles/simulation/SimulationPanel.css";
 
+// 화면 표시용 상태와 작업 유형 라벨을 관리한다.
 const PLAN_STATUS_LABEL = {
     plan_validated: "계획 검증 완료",
     input_rejected: "명령 확인 필요",
@@ -20,9 +21,11 @@ const OPERATION_LABEL = {
     RECOVERY: "복구",
 };
 
+// snake_case와 camelCase 응답을 모두 지원한다.
 const field = (source, snakeCase, camelCase) =>
     source?.[snakeCase] ?? source?.[camelCase];
 
+// 배열이 아닌 값은 빈 배열로 정규화한다.
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
 const CYCLE_TO_WORKFLOW_STATE = {
@@ -62,11 +65,17 @@ const COMMAND_EXPRESSION_TOGGLES = [
     },
 ];
 
+// 사용자 화면에 노출하지 않을 내부 사전 점검 오류를 정의한다.
 const HIDDEN_PREFLIGHT_PROBLEM = "REDIS_RUNTIME_NOT_INITIALIZED";
+
+// 서버 상태 조회 주기를 한 곳에서 관리한다.
+const PREFLIGHT_POLL_INTERVAL_MS = 3000;
+const CYCLE_POLL_INTERVAL_MS = 1000;
 
 const isHiddenPreflightProblem = (value) =>
     String(value ?? "").trim().startsWith(HIDDEN_PREFLIGHT_PROBLEM);
 
+// 밀리초 단위 시간을 화면용 분/초 문자열로 변환한다.
 const formatDuration = (milliseconds) => {
     if (!Number.isFinite(Number(milliseconds))) {
         return "-";
@@ -79,6 +88,7 @@ const formatDuration = (milliseconds) => {
     return minutes > 0 ? `${minutes}분 ${seconds}초` : `${seconds}초`;
 };
 
+// 생성 시각을 한국어 로케일의 시:분:초 형식으로 표시한다.
 const formatGeneratedAt = (value) => {
     if (!value) {
         return "-";
@@ -96,6 +106,7 @@ const formatGeneratedAt = (value) => {
     });
 };
 
+// 서버의 마지막 갱신 시각을 기준으로 현재 단계의 경과 시간을 계산한다.
 const useElapsedSeconds = (active, serverUpdatedAt) => {
     const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
@@ -109,18 +120,23 @@ const useElapsedSeconds = (active, serverUpdatedAt) => {
         const startedAt = Number.isFinite(parsed)
             ? Math.min(Date.now(), parsed)
             : Date.now();
-        const update = () => setElapsedSeconds(Math.max(
-            0,
-            Math.floor((Date.now() - startedAt) / 1000)
-        ));
+        const update = () => {
+            const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+            setElapsedSeconds(Math.max(0, elapsed));
+        };
+
         update();
         const timerId = window.setInterval(update, 1000);
-        return () => window.clearInterval(timerId);
+
+        return () => {
+            window.clearInterval(timerId);
+        };
     }, [active, serverUpdatedAt]);
 
     return elapsedSeconds;
 };
 
+// 로봇 이동 경로가 길면 앞뒤 노드만 남겨 간단하게 표시한다.
 const compactRouteNodes = (robot) => {
     const steps = asArray(robot?.steps);
     const nodes = [field(robot, "initial_node", "initialNode")];
@@ -149,6 +165,7 @@ function SimulationPanel({
     onCommandExpressionMixChange,
     onGeneratedCommandsChange,
 }) {
+    // 사전 점검, 자동 명령 생성, AI 계획 상태를 관리한다.
     const [preflight, setPreflight] = useState({
         state: "idle",
         data: null,
@@ -165,6 +182,7 @@ function SimulationPanel({
     const [cycleStatus, setCycleStatus] = useState(null);
     const [configurationError, setConfigurationError] = useState("");
 
+    // LLM 명령 표현 설정이 바뀌면 현재 시뮬레이션 실행에 저장한다.
     useEffect(() => {
         let cancelled = false;
 
@@ -175,14 +193,11 @@ function SimulationPanel({
             };
         }
 
-        fulfillmentCommandApi.configureCycle(
-            simulationRunId,
-            {
-                policyEnabled: commandExpressionMix?.policyEnabled === true,
-                naturalLanguageEnabled:
-                    commandExpressionMix?.naturalLanguageEnabled === true,
-            }
-        )
+        fulfillmentCommandApi.configureCycle(simulationRunId, {
+            policyEnabled: commandExpressionMix?.policyEnabled === true,
+            naturalLanguageEnabled:
+                commandExpressionMix?.naturalLanguageEnabled === true,
+        })
             .then(() => {
                 if (!cancelled) setConfigurationError("");
             })
@@ -203,10 +218,12 @@ function SimulationPanel({
         commandExpressionMix?.naturalLanguageEnabled,
     ]);
 
+    // AI 계획 실행 가능 여부를 주기적으로 확인한다.
     useEffect(() => {
         let cancelled = false;
         let timerId;
 
+        // 실행 대상이 바뀌면 이전 워크플로와 선택 상태를 초기화한다.
         setWorkflow({
             state: "idle",
             generated: null,
@@ -246,7 +263,10 @@ function SimulationPanel({
 
         setPreflight({ state: "loading", data: null, error: "" });
         refreshPreflight();
-        timerId = window.setInterval(refreshPreflight, 3000);
+        timerId = window.setInterval(
+            refreshPreflight,
+            PREFLIGHT_POLL_INTERVAL_MS
+        );
 
         return () => {
             cancelled = true;
@@ -254,6 +274,7 @@ function SimulationPanel({
         };
     }, [simulationRunId]);
 
+    // 자동 명령 생성과 AI 계획 사이클 상태를 주기적으로 동기화한다.
     useEffect(() => {
         let cancelled = false;
         let timerId;
@@ -266,12 +287,16 @@ function SimulationPanel({
                 Math.floor(Number(status.simulatedTimeMs ?? 0) / 1000)
             );
             const generated = status.generated ?? null;
-            const commands = asArray(generated?.frontView?.commands);
-            if (commands.length > 0) {
+            const generatedCommands = asArray(generated?.frontView?.commands);
+
+            // 현재 선택한 명령이 사라졌으면 첫 번째 명령을 선택한다.
+            if (generatedCommands.length > 0) {
                 setSelectedOperationId((current) =>
-                    commands.some((command) => command.operationId === current)
+                    generatedCommands.some(
+                        (command) => command.operationId === current
+                    )
                         ? current
-                        : commands[0].operationId
+                        : generatedCommands[0].operationId
                 );
             }
             setWorkflow({
@@ -309,13 +334,14 @@ function SimulationPanel({
         }
 
         refresh();
-        timerId = window.setInterval(refresh, 1000);
+        timerId = window.setInterval(refresh, CYCLE_POLL_INTERVAL_MS);
         return () => {
             cancelled = true;
             window.clearInterval(timerId);
         };
     }, [simulationRunId, onSimulatedTimeChange]);
 
+    // 자동 생성 결과에서 화면에 필요한 명령 데이터를 추출한다.
     const generated = workflow.generated;
     const frontView = generated?.frontView;
     const summary = frontView?.summary;
@@ -328,10 +354,12 @@ function SimulationPanel({
         field(generated?.planRequest, "user_command", "userCommand") ?? ""
     ).trim();
 
+    // 생성된 명령 목록을 상위 시뮬레이션 화면과 동기화한다.
     useEffect(() => {
         onGeneratedCommandsChange?.(commands);
     }, [commands, onGeneratedCommandsChange]);
 
+    // AI 계획 결과와 선택 명령에 연결된 로봇 정보를 계산한다.
     const result = workflow.planResponse?.result;
     const plan = result?.plan;
     const logicalOperations = asArray(
@@ -341,6 +369,8 @@ function SimulationPanel({
     const planErrors = asArray(result?.errors);
     const frontendSummary = field(result, "frontend_summary", "frontendSummary");
     const planWarnings = asArray(frontendSummary?.warnings);
+    
+    // 내부 전용 오류는 제외하고 사용자에게 필요한 사전 점검 문제만 표시한다.
     const preflightProblemText = asArray(preflight.data?.problems)
         .filter((problem) => !isHiddenPreflightProblem(problem))
         .join(", ");
@@ -370,6 +400,7 @@ function SimulationPanel({
         [selectedRobot]
     );
 
+    // 현재 워크플로 상태에 따라 로딩 문구와 배지 스타일을 결정한다.
     const commandIsBusy = ["checking", "generating"].includes(workflow.state);
     const planIsBusy = workflow.state === "planning";
     const isBusy = commandIsBusy || planIsBusy;
@@ -377,10 +408,8 @@ function SimulationPanel({
     const naturalLanguageExpressionEnabled = commandExpressionMix?.naturalLanguageEnabled === true;
     const workflowBadge = WORKFLOW_BADGE[workflow.state] ?? WORKFLOW_BADGE.idle;
     const workflowBadgeClass = workflow.state === "complete"
-        ? "ready"
-        : isBusy
-            ? "planned"
-            : workflow.state;
+        ? "ready" : isBusy
+            ? "planned" : workflow.state;
     const commandBusyLabel = workflow.state === "checking"
         ? "실행 조건을 확인하고 있습니다."
         : "재고와 빈 선반을 확인해 입출고 명령을 생성하고 있습니다.";
@@ -388,11 +417,22 @@ function SimulationPanel({
         commandIsBusy,
         cycleStatus?.updatedAt
     );
-    const planElapsedSeconds = useElapsedSeconds(planIsBusy, cycleStatus?.updatedAt);
+    const planElapsedSeconds = useElapsedSeconds(
+        planIsBusy,
+        cycleStatus?.updatedAt
+    );
 
     return (
-        <aside className="simulation-panel" aria-label="입출고 명령 및 AI 계획 패널">
-            <section className={`simulation-visual-panel inbound-command-panel ${naturalLanguageRequest ? "has-language-request" : ""}`}>
+        <aside
+            className="simulation-panel"
+            aria-label="입출고 명령 및 AI 계획 패널"
+        >
+            {/* 생성된 입출고 명령과 LLM 표현 설정을 표시한다. */}
+            <section
+                className={`simulation-visual-panel inbound-command-panel ${
+                    naturalLanguageRequest ? "has-language-request" : ""
+                }`}
+            >
                 <div className="simulation-panel-heading">
                     <div>
                         <h2>생성된 입출고 명령</h2>
@@ -401,8 +441,11 @@ function SimulationPanel({
                         <span className={`simulation-status-chip ${workflowBadgeClass}`}>
                             {workflowBadge}
                         </span>
-                        <div className="command-expression-toggles" aria-label="LLM 명령 표현 설정">
-                        {COMMAND_EXPRESSION_TOGGLES.map((option) => {
+                        <div
+                            className="command-expression-toggles"
+                            aria-label="LLM 명령 표현 설정"
+                        >
+                            {COMMAND_EXPRESSION_TOGGLES.map((option) => {
                             const enabled = commandExpressionMix?.[option.key] === true;
                             const tooltip = [
                                 `${option.label} · 현재 ${enabled ? "사용 중" : "사용 안 함"}`,
@@ -410,8 +453,8 @@ function SimulationPanel({
                                 `켜면 자동 생성 작업 중 약 ${option.ratio}%에 적용됩니다.`,
                                 `클릭하면 ${enabled ? "사용하지 않도록" : "사용하도록"} 바뀝니다.`,
                             ].join("\n");
-                            return (
-                                <button
+                                return (
+                                    <button
                                     type="button"
                                     role="switch"
                                     aria-checked={enabled}
@@ -427,9 +470,9 @@ function SimulationPanel({
                                     disabled={isBusy}
                                 >
                                     <span />
-                                </button>
-                            );
-                        })}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -488,9 +531,13 @@ function SimulationPanel({
                             <span>{commands.length}건</span>
                         </div>
 
-                        <div className="compact-operation-list" aria-label="생성된 입출고 명령 목록">
+                        <div
+                            className="compact-operation-list"
+                            aria-label="생성된 입출고 명령 목록"
+                        >
                             {commands.map((command) => {
-                                const selected = command.operationId === selectedCommand?.operationId;
+                                const selected =
+                                    command.operationId === selectedCommand?.operationId;
                                 const operationType = command.operationType;
                                 return (
                                     <button
@@ -529,6 +576,7 @@ function SimulationPanel({
                 )}
             </section>
 
+            {/* 사전 점검 상태와 AI 실행 계획 결과를 표시한다. */}
             <section className="simulation-visual-panel outbound-plan-panel">
                 <div className="simulation-panel-heading">
                     <div>
@@ -607,7 +655,10 @@ function SimulationPanel({
                                     <strong>{field(plan, "plan_id", "planId")}</strong>
                                 </div>
 
-                                <div className="compact-plan-list" aria-label="명령별 AI 배정 결과">
+                                <div
+                                    className="compact-plan-list"
+                                    aria-label="명령별 AI 배정 결과"
+                                >
                                     {commands.map((command) => {
                                         const logicalOperation = logicalOperations.find(
                                             (operation) => field(operation, "operation_id", "operationId")
@@ -618,7 +669,9 @@ function SimulationPanel({
                                             "assigned_robot_id",
                                             "assignedRobotId"
                                         );
-                                        const selected = command.operationId === selectedCommand?.operationId;
+                                        const selected =
+                                            command.operationId
+                                            === selectedCommand?.operationId;
                                         return (
                                             <button
                                                 type="button"
@@ -626,7 +679,10 @@ function SimulationPanel({
                                                 key={command.operationId}
                                                 onClick={() => setSelectedOperationId(command.operationId)}
                                             >
-                                                <span>{OPERATION_LABEL[command.operationType] ?? command.operationType}</span>
+                                                <span>
+                                                    {OPERATION_LABEL[command.operationType]
+                                                        ?? command.operationType}
+                                                </span>
                                                 <strong>{command.productCode}</strong>
                                                 <b className={robotId ? "assigned" : "deferred"}>
                                                     {robotId ?? "보류"}
@@ -650,7 +706,13 @@ function SimulationPanel({
                                             <span>완료 예정</span>
                                             <strong>
                                                 {selectedRobot
-                                                    ? formatDuration(field(selectedRobot, "finish_at_ms", "finishAtMs"))
+                                                    ? formatDuration(
+                                                        field(
+                                                            selectedRobot,
+                                                            "finish_at_ms",
+                                                            "finishAtMs"
+                                                        )
+                                                    )
                                                     : "-"}
                                             </strong>
                                         </div>
