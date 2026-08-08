@@ -3,8 +3,9 @@ import "../../styles/simulation/Simulation.css";
 
 import WarehouseSVG from "../../components/warehouse/viewer/WarehouseSVG";
 import SimulationPanel from "./SimulationPanel";
-import SimulationTask from "./SimulationTask";
-import SimulationEvent from "./SimulationEvent";
+import SimulationTaskList from "./SimulationTaskList";
+import SimulationRobotList from "./SimulationRobotList";
+import SimulationEventList from "./SimulationEventList";
 import useRobotAvoidanceTracker from "../../hooks/useRobotAvoidanceTracker";
 
 import useStompSubscriptions from "../../hooks/useStompSubscriptions";
@@ -362,7 +363,7 @@ function Simulation() {
         }
 
         try {
-            const [robotList, layout] = await Promise.all([
+            const [registeredRobotList, layout] = await Promise.all([
                 robotApi.getAll(warehouseId),
                 warehouseApi.getLayout(warehouseId),
             ]);
@@ -371,7 +372,7 @@ function Simulation() {
                 (layout.nodes ?? []).map((node) => [node.id, node.nodeCode])
             );
 
-            const placed = (robotList ?? [])
+            const placed = (registeredRobotList ?? [])
                 .map((robot) => ({
                     robot_id: robot.id,
                     robot_code: `R${robot.id}`,
@@ -381,10 +382,10 @@ function Simulation() {
                 }))
                 .filter((robot) => robot.node_id);
 
-            setRobots(placed);
+            setRobotList(placed);
         } catch (error) {
             console.warn("로봇 초기 배치 조회 실패", error.message);
-            setRobots([]);
+            setRobotList([]);
         }
     };
 
@@ -451,7 +452,7 @@ function Simulation() {
             }
 
             if (snapshot?.robots?.length) {
-                setRobots(snapshot.robots.map(toRobotView));
+                setRobotList(snapshot.robots.map(toRobotView));
             }
 
             if (snapshot?.status) {
@@ -671,7 +672,7 @@ function Simulation() {
             const snapshot = await simulationRunApi.getRobotStates(runId);
 
             if (snapshot?.robots?.length) {
-                setRobots(snapshot.robots.map(toRobotView));
+                setRobotList(snapshot.robots.map(toRobotView));
             }
 
             // 이 실행의 작업 목록으로 교체한다.
@@ -826,7 +827,7 @@ function Simulation() {
        로봇 / 실시간 구독
     ========================================================= */
 
-    const [robots, setRobots] = useState([]);
+    const [robotList, setRobotList] = useState([]);
     const isPausedRef = useRef(false);
     const isSimulationRunning =
         simulationStatus === "실행"
@@ -836,23 +837,23 @@ function Simulation() {
         avoidanceStates,
         avoidanceEvents,
     } = useRobotAvoidanceTracker(
-        robots,
+        robotList,
         isSimulationRunning,
     );
     // 로봇 상태 1건 수신 → 해당 로봇만 갱신
     const applyRobotState = (state) => {
         const incoming = toRobotView(state);
 
-        setRobots((prevRobots) => {
-            const exists = prevRobots.some(
+        setRobotList((prevRobotList) => {
+            const exists = prevRobotList.some(
                 (robot) => robot.robot_id === incoming.robot_id
             );
 
             if (!exists) {
-                return [...prevRobots, incoming];
+                return [...prevRobotList, incoming];
             }
 
-            return prevRobots.map((robot) =>
+            return prevRobotList.map((robot) =>
                 robot.robot_id === incoming.robot_id
                     ? { ...robot, ...incoming }
                     : robot
@@ -861,7 +862,7 @@ function Simulation() {
     };
 
     // 작업 변경 수신 → 목록 갱신
-    // 백엔드 TaskResponse 형태를 그대로 보관한다. (SimulationTask 가 같은 형태를 읽는다)
+    // 백엔드 TaskResponse 형태를 그대로 보관한다. (SimulationTaskList 가 같은 형태를 읽는다)
     const applyTask = (task) => {
         // /topic/tasks 는 모든 실행의 작업을 뿌리므로
         // 지금 보고 있는 실행의 작업만 화면에 반영한다.
@@ -1129,7 +1130,7 @@ function Simulation() {
             <main className="simulation-view">
                 <WarehouseSVG
                     warehouseId={selectedWarehouseId}
-                    robots={robots}
+                    robots={robotList}
                     tasks={taskList}
                     generatedCommands={generatedCommands}
                     avoidanceStates={avoidanceStates}
@@ -1141,18 +1142,20 @@ function Simulation() {
             <SimulationPanel
                 simulationRunId={simulationRunId}
                 onSimulatedTimeChange={setSimulationTime}
-                tasks={taskList}
                 commandExpressionMix={commandExpressionMix}
                 onCommandExpressionMixChange={setCommandExpressionMix}
                 onGeneratedCommandsChange={setGeneratedCommands}
             />
 
             {/* 작업 목록 (WebSocket 실시간 갱신) */}
-            <SimulationTask tasks={taskList} />
+            <SimulationTaskList taskList={taskList} />
+
+            {/* 로봇 목록 (WebSocket 실시간 갱신) */}
+            <SimulationRobotList robotList={robotList} />
 
             {/* 이벤트 목록 (WebSocket 실시간 갱신) */}
-            <SimulationEvent
-                events={[
+            <SimulationEventList
+                eventList={[
                     ...avoidanceEvents,
                     ...eventList,
                 ]}
