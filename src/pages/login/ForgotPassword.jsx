@@ -1,24 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../styles/login/LoginCommon.css";
+import AuthCircuitBackground from "../../pages/login/AuthCircuitBackground";
+import "../../styles/login/AuthCommon.css";
 import "../../styles/login/ForgotPassword.css";
-import { UserIcon, EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";
+import { EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";
+import { API_URL } from "../../api/config";
 
-const API_URL = "http://localhost:8080/api";
-
-/*
- * 백엔드 API가 확정되면 이 부분만 수정
- *
- * 인증번호 확인 성공 응답 예시:
- * { "resetToken": "..." }
- */
 const PASSWORD_RESET_ENDPOINTS = {
     sendCode: `${API_URL}/auth/password-reset/email/send`,
     verifyCode: `${API_URL}/auth/password-reset/email/verify`,
     resetPassword: `${API_URL}/auth/password-reset`,
 };
 
-const USERID_PATTERN = /^[a-zA-Z0-9]+$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SPECIAL_CHARACTERS = "~!@#$%^&*()_+-=[]{};':\"\\|,.<>/?";
 
@@ -32,7 +25,7 @@ const formatTime = (seconds) => {
     return `${minutes}:${remainingSeconds}`;
 };
 
-// JSON 응답과 문자열 응답을 JSON 응답과 문자열 응답을 모두 처리
+// JSON 응답과 문자열 응답을 모두 처리
 const readResponse = async (response) => {
     const contentType = response.headers.get("content-type") || "";
 
@@ -48,7 +41,6 @@ function ForgotPassword() {
     const navigate = useNavigate();
 
     // 회원 정보
-    const [userid, setUserid] = useState("");
     const [email, setEmail] = useState("");
 
     // 이메일 인증
@@ -74,7 +66,7 @@ function ForgotPassword() {
     // 입력값 검사 결과
     const isEmailVerified = Boolean(resetToken);
     const isPasswordLengthValid = newPassword.length >= 8 && newPassword.length <= 24;
-    const hasSpecialCharacter = [...newPassword].some((character) =>
+    const hasSpecialCharacters = [...newPassword].filter((character) =>
         SPECIAL_CHARACTERS.includes(character)
     ).length >= 2;
     const isPasswordMatch = newPassword === newPasswordConfirm;
@@ -114,15 +106,9 @@ function ForgotPassword() {
 
         setErrors((prev) => ({
             ...prev,
-            userid: "",
             email: "",
             verificationCode: "",
         }));
-    };
-
-    const handleUseridChange = (e) => {
-        setUserid(e.target.value);
-        resetVerification();
     };
 
     const handleEmailChange = (e) => {
@@ -130,28 +116,14 @@ function ForgotPassword() {
         resetVerification();
     };
 
-    // 인증 완료 후 아이디와 이메일을 다시 수정
-    const handleChangeAccountInfo = () => {
+    // 인증 완료 후 이메일을 다시 수정
+    const handleChangeEmail = () => {
         resetVerification();
     };
 
     // 비밀번호 재설정 인증번호 발송
     const handleSendCode = async () => {
-        const normalizedUserid = userid.trim();
         const normalizedEmail = email.trim().toLowerCase();
-
-        if (!normalizedUserid) {
-            setErrors((prev) => ({ ...prev, userid: "아이디를 입력해주세요." }));
-            return;
-        }
-
-        if (!USERID_PATTERN.test(normalizedUserid)) {
-            setErrors((prev) => ({
-                ...prev,
-                userid: "아이디는 영문과 숫자만 사용할 수 있습니다.",
-            }));
-            return;
-        }
 
         if (!normalizedEmail) {
             setErrors((prev) => ({ ...prev, email: "이메일을 입력해주세요." }));
@@ -171,7 +143,6 @@ function ForgotPassword() {
 
             setErrors((prev) => ({
                 ...prev,
-                userid: "",
                 email: "",
                 verificationCode: "",
                 form: "",
@@ -181,7 +152,6 @@ function ForgotPassword() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    userid: normalizedUserid,
                     email: normalizedEmail,
                 }),
             });
@@ -243,7 +213,6 @@ function ForgotPassword() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    userid: userid.trim(),
                     email: email.trim().toLowerCase(),
                     code: verificationCode,
                 }),
@@ -289,7 +258,7 @@ function ForgotPassword() {
             nextErrors.newPassword = "새 비밀번호를 입력해주세요.";
         } else if (!isPasswordLengthValid) {
             nextErrors.newPassword = "비밀번호는 8자 이상 24자 이하로 입력해주세요.";
-        } else if (!hasSpecialCharacter) {
+        } else if (!hasSpecialCharacters) {
             nextErrors.newPassword = "비밀번호에 특수문자를 2개 이상 포함해주세요.";
         }
 
@@ -342,26 +311,28 @@ function ForgotPassword() {
     };
 
     return (
-        <div className="login-page password-reset-page">
-            <main className="login-card password-reset-card">
+        <div className="auth-page">
+            <AuthCircuitBackground />
+
+            <main className="auth-card">
                 {/* 비밀번호 변경 완료 화면 */}
                 {isCompleted ? (
                     <>
-                        <header className="login-header">
+                        <header className="auth-header">
                             <div className="password-reset-complete-icon" aria-hidden="true">
                                 ✓
                             </div>
 
-                            <h1 className="login-title">비밀번호 변경 완료</h1>
-                            <p className="login-description">
+                            <h1 className="auth-title">비밀번호 변경 완료</h1>
+                            <p className="auth-description">
                                 새로운 비밀번호로 로그인해주세요.
                             </p>
                         </header>
 
-                        <section className="login-content">
+                        <section className="auth-content">
                             <button
                                 type="button"
-                                className="login-button login-button-primary"
+                                className="auth-button auth-button-primary"
                                 onClick={() => navigate("/login")}
                             >
                                 로그인하러 가기
@@ -373,66 +344,39 @@ function ForgotPassword() {
                         {/* 로그인 화면으로 돌아가기 */}
                         <button
                             type="button"
-                            className="login-back-button"
+                            className="auth-back-button"
                             onClick={() => navigate("/login")}
                         >
                             <span aria-hidden="true">←</span>
                             로그인으로 돌아가기
                         </button>
 
-                        <header className="login-header">
-                            <h1 className="login-title">비밀번호 찾기</h1>
-                            <p className="login-description">
-                                가입한 아이디와 이메일을 인증한 후 새 비밀번호를 설정해주세요.
+                        <header className="auth-header">
+                            <h1 className="auth-title">비밀번호 찾기</h1>
+                            <p className="auth-description">
+                                가입한 이메일을 인증한 후 새 비밀번호를 설정해주세요.
                             </p>
                         </header>
 
-                        <section className="login-content">
-                            <form className="login-form" onSubmit={handleResetPassword}>
+                        <section className="auth-content">
+                            <form className="auth-form" onSubmit={handleResetPassword}>
                                 {/* 전체 요청 오류 */}
                                 {errors.form && (
                                     <p
-                                        className="login-field-message login-field-message-error"
+                                        className="auth-message auth-message-error"
                                         aria-live="polite"
                                     >
                                         {errors.form}
                                     </p>
                                 )}
 
-                                {/* 아이디 */}
-                                <div className="login-field">
-                                    <label htmlFor="password-reset-userid">아이디</label>
-
-                                    <div className="login-input-wrapper">
-                                        <span className="login-input-icon">
-                                            <UserIcon />
-                                        </span>
-
-                                        <input
-                                            id="password-reset-userid"
-                                            type="text"
-                                            value={userid}
-                                            placeholder="아이디를 입력하세요"
-                                            autoComplete="userid"
-                                            disabled={isEmailVerified}
-                                            onChange={handleUseridChange}
-                                        />
-                                    </div>
-
-                                    {errors.userid && (
-                                        <p className="login-field-message login-field-message-error">
-                                            {errors.userid}
-                                        </p>
-                                    )}
-                                </div>
-
                                 {/* 이메일 및 인증번호 발송 */}
-                                <div className="login-field">
+                                <div className="auth-field">
                                     <label htmlFor="password-reset-email">이메일</label>
 
-                                    <div className="login-action-row">
-                                        <div className="login-input-wrapper">
-                                            <span className="login-input-icon">
+                                    <div className="auth-action-row">
+                                        <div className="auth-input-wrapper">
+                                            <span className="auth-input-icon">
                                                 <EmailIcon />
                                             </span>
 
@@ -450,15 +394,15 @@ function ForgotPassword() {
                                         {isEmailVerified ? (
                                             <button
                                                 type="button"
-                                                className="login-button login-button-secondary login-action-button"
-                                                onClick={handleChangeAccountInfo}
+                                                className="auth-button auth-button-secondary auth-action-button"
+                                                onClick={handleChangeEmail}
                                             >
-                                                정보 변경
+                                                이메일 변경
                                             </button>
                                         ) : (
                                             <button
                                                 type="button"
-                                                className="login-button login-button-secondary login-action-button"
+                                                className="auth-button auth-button-secondary auth-action-button"
                                                 onClick={handleSendCode}
                                                 disabled={isSendingCode || resendTimeLeft > 0}
                                             >
@@ -474,7 +418,7 @@ function ForgotPassword() {
                                     </div>
 
                                     {errors.email && (
-                                        <p className="login-field-message login-field-message-error">
+                                        <p className="auth-message auth-message-error">
                                             {errors.email}
                                         </p>
                                     )}
@@ -482,15 +426,15 @@ function ForgotPassword() {
 
                                 {/* 인증번호 발송 후 표시 */}
                                 {isCodeSent && !isEmailVerified && (
-                                    <div className="login-field">
+                                    <div className="auth-field">
                                         <label htmlFor="password-reset-code">인증번호</label>
 
-                                        <div className="login-action-row">
-                                            <div className="login-input-wrapper">
+                                        <div className="auth-action-row">
+                                            <div className="auth-input-wrapper">
                                                 <input
                                                     id="password-reset-code"
                                                     type="text"
-                                                    className="password-reset-code-input"
+                                                    className="auth-code-input"
                                                     value={verificationCode}
                                                     placeholder="6자리 인증번호 입력"
                                                     inputMode="numeric"
@@ -503,7 +447,7 @@ function ForgotPassword() {
 
                                             <button
                                                 type="button"
-                                                className="login-button login-button-secondary login-action-button"
+                                                className="auth-button auth-button-secondary auth-action-button"
                                                 onClick={handleVerifyCode}
                                                 disabled={
                                                     isVerifyingCode ||
@@ -515,12 +459,12 @@ function ForgotPassword() {
                                             </button>
                                         </div>
 
-                                        <p className="login-field-message login-field-message-info">
+                                        <p className="auth-message auth-message-info">
                                             인증번호를 발송했습니다. 남은 시간 {formatTime(codeTimeLeft)}
                                         </p>
 
                                         {errors.verificationCode && (
-                                            <p className="login-field-message login-field-message-error">
+                                            <p className="auth-message auth-message-error">
                                                 {errors.verificationCode}
                                             </p>
                                         )}
@@ -530,7 +474,7 @@ function ForgotPassword() {
                                 {/* 이메일 인증 완료 */}
                                 {isEmailVerified && (
                                     <p
-                                        className="login-field-message login-field-message-success"
+                                        className="auth-message auth-message-success"
                                         aria-live="polite"
                                     >
                                         ✓ 이메일 인증이 완료되었습니다.
@@ -542,18 +486,18 @@ function ForgotPassword() {
                                     <>
                                         <div className="password-reset-divider" />
 
-                                        <div className="login-field">
+                                        <div className="auth-field">
                                             <label htmlFor="new-password">새 비밀번호</label>
 
-                                            <div className="login-input-wrapper">
-                                                <span className="login-input-icon">
+                                            <div className="auth-input-wrapper">
+                                                <span className="auth-input-icon">
                                                     <LockIcon />
                                                 </span>
 
                                                 <input
                                                     id="new-password"
                                                     type={showNewPassword ? "text" : "password"}
-                                                    className="password-reset-password-input"
+                                                    className="auth-password-input"
                                                     value={newPassword}
                                                     placeholder="새 비밀번호를 입력하세요"
                                                     autoComplete="new-password"
@@ -565,7 +509,7 @@ function ForgotPassword() {
 
                                                 <button
                                                     type="button"
-                                                    className="login-password-toggle"
+                                                    className="auth-password-toggle"
                                                     onClick={() => setShowNewPassword((prev) => !prev)}
                                                     aria-label={
                                                         showNewPassword
@@ -579,39 +523,39 @@ function ForgotPassword() {
                                             </div>
 
                                             <p
-                                                className={`login-field-message ${
+                                                className={`auth-message ${
                                                     isPasswordLengthValid
-                                                        ? "login-field-message-info"
+                                                        ? "auth-message-info"
                                                         : ""
                                                 }`}
                                             >
-                                                {isPasswordLengthValid ? "✓" : "○"} 8~16자
+                                                {isPasswordLengthValid ? "✓" : "○"} 8~24자
                                             </p>
 
                                             <p
-                                                className={`login-field-message ${
-                                                    hasSpecialCharacter
-                                                        ? "login-field-message-info"
+                                                className={`auth-message ${
+                                                    hasSpecialCharacters
+                                                        ? "auth-message-info"
                                                         : ""
                                                 }`}
                                             >
-                                                {hasSpecialCharacter ? "✓" : "○"} 특수문자 1개 이상
+                                                {hasSpecialCharacters ? "✓" : "○"} 특수문자 2개 이상
                                             </p>
 
                                             {errors.newPassword && (
-                                                <p className="login-field-message login-field-message-error">
+                                                <p className="auth-message auth-message-error">
                                                     {errors.newPassword}
                                                 </p>
                                             )}
                                         </div>
 
-                                        <div className="login-field">
+                                        <div className="auth-field">
                                             <label htmlFor="new-password-confirm">
                                                 새 비밀번호 확인
                                             </label>
 
-                                            <div className="login-input-wrapper">
-                                                <span className="login-input-icon">
+                                            <div className="auth-input-wrapper">
+                                                <span className="auth-input-icon">
                                                     <LockIcon />
                                                 </span>
 
@@ -622,7 +566,7 @@ function ForgotPassword() {
                                                             ? "text"
                                                             : "password"
                                                     }
-                                                    className="password-reset-password-input"
+                                                    className="auth-password-input"
                                                     value={newPasswordConfirm}
                                                     placeholder="새 비밀번호를 다시 입력하세요"
                                                     autoComplete="new-password"
@@ -634,7 +578,7 @@ function ForgotPassword() {
 
                                                 <button
                                                     type="button"
-                                                    className="login-password-toggle"
+                                                    className="auth-password-toggle"
                                                     onClick={() =>
                                                         setShowNewPasswordConfirm((prev) => !prev)
                                                     }
@@ -652,19 +596,19 @@ function ForgotPassword() {
                                             </div>
 
                                             {newPasswordConfirm && isPasswordMatch && (
-                                                <p className="login-field-message login-field-message-info">
+                                                <p className="auth-message auth-message-info">
                                                     ✓ 비밀번호가 일치합니다.
                                                 </p>
                                             )}
 
                                             {newPasswordConfirm && !isPasswordMatch && (
-                                                <p className="login-field-message login-field-message-error">
+                                                <p className="auth-message auth-message-error">
                                                     비밀번호가 일치하지 않습니다.
                                                 </p>
                                             )}
 
                                             {errors.newPasswordConfirm && !newPasswordConfirm && (
-                                                <p className="login-field-message login-field-message-error">
+                                                <p className="auth-message auth-message-error">
                                                     {errors.newPasswordConfirm}
                                                 </p>
                                             )}
@@ -672,7 +616,7 @@ function ForgotPassword() {
 
                                         <button
                                             type="submit"
-                                            className="login-button login-button-primary"
+                                            className="auth-button auth-button-primary"
                                             disabled={isResetting}
                                         >
                                             {isResetting ? "변경 중..." : "비밀번호 변경"}
