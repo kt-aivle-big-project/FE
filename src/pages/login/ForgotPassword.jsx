@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AuthCircuitBackground from "../../pages/login/AuthCircuitBackground";
 import "../../styles/login/AuthCommon.css";
 import "../../styles/login/ForgotPassword.css";
-import { EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";
+import { UserIcon, EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";
 import { API_URL } from "../../api/config";
 
 const PASSWORD_RESET_ENDPOINTS = {
@@ -41,6 +41,7 @@ function ForgotPassword() {
     const navigate = useNavigate();
 
     // 회원 정보
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
 
     // 이메일 인증
@@ -106,9 +107,15 @@ function ForgotPassword() {
 
         setErrors((prev) => ({
             ...prev,
+            name: "",
             email: "",
             verificationCode: "",
         }));
+    };
+
+    const handleNameChange = (e) => {
+        setName(e.target.value);
+        resetVerification();
     };
 
     const handleEmailChange = (e) => {
@@ -116,14 +123,20 @@ function ForgotPassword() {
         resetVerification();
     };
 
-    // 인증 완료 후 이메일을 다시 수정
-    const handleChangeEmail = () => {
+    // 인증 완료 후 이름과 이메일을 다시 수정
+    const handleChangeAccountInfo = () => {
         resetVerification();
     };
 
     // 비밀번호 재설정 인증번호 발송
     const handleSendCode = async () => {
+        const normalizedName = name.trim();
         const normalizedEmail = email.trim().toLowerCase();
+
+        if (!normalizedName) {
+            setErrors((prev) => ({ ...prev, name: "이름을 입력해주세요." }));
+            return;
+        }
 
         if (!normalizedEmail) {
             setErrors((prev) => ({ ...prev, email: "이메일을 입력해주세요." }));
@@ -143,6 +156,7 @@ function ForgotPassword() {
 
             setErrors((prev) => ({
                 ...prev,
+                name: "",
                 email: "",
                 verificationCode: "",
                 form: "",
@@ -152,6 +166,7 @@ function ForgotPassword() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                    name: normalizedName,
                     email: normalizedEmail,
                 }),
             });
@@ -213,6 +228,7 @@ function ForgotPassword() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                    name: name.trim(),
                     email: email.trim().toLowerCase(),
                     code: verificationCode,
                 }),
@@ -354,7 +370,7 @@ function ForgotPassword() {
                         <header className="auth-header">
                             <h1 className="auth-title">비밀번호 찾기</h1>
                             <p className="auth-description">
-                                가입한 이메일을 인증한 후 새 비밀번호를 설정해주세요.
+                                가입한 이름과 이메일을 인증한 후 새 비밀번호를 설정해주세요.
                             </p>
                         </header>
 
@@ -369,6 +385,33 @@ function ForgotPassword() {
                                         {errors.form}
                                     </p>
                                 )}
+
+                                {/* 이름 */}
+                                <div className="auth-field">
+                                    <label htmlFor="password-reset-name">이름</label>
+
+                                    <div className="auth-input-wrapper">
+                                        <span className="auth-input-icon">
+                                            <UserIcon />
+                                        </span>
+
+                                        <input
+                                            id="password-reset-name"
+                                            type="text"
+                                            value={name}
+                                            placeholder="가입한 이름을 입력하세요"
+                                            autoComplete="name"
+                                            disabled={isEmailVerified}
+                                            onChange={handleNameChange}
+                                        />
+                                    </div>
+
+                                    {errors.name && (
+                                        <p className="auth-message auth-message-error">
+                                            {errors.name}
+                                        </p>
+                                    )}
+                                </div>
 
                                 {/* 이메일 및 인증번호 발송 */}
                                 <div className="auth-field">
@@ -395,9 +438,9 @@ function ForgotPassword() {
                                             <button
                                                 type="button"
                                                 className="auth-button auth-button-secondary auth-action-button"
-                                                onClick={handleChangeEmail}
+                                                onClick={handleChangeAccountInfo}
                                             >
-                                                이메일 변경
+                                                정보 변경
                                             </button>
                                         ) : (
                                             <button
