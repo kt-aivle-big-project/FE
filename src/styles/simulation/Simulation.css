@@ -157,21 +157,53 @@
     line-height: 1;
     font-variant-numeric: tabular-nums;
 }
+/* 시스템 상태 상단 */
+.simulation-topbar-status-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
 
+.simulation-topbar-status-header > span {
+    color: color-mix(in srgb, var(--laro-navy-light) 68%, transparent);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-medium);
+    line-height: 1.2;
+}
+
+/* 실시간 연결 */
+.simulation-topbar-connection {
+    color: var(--laro-primary);
+    font-size: 8px;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* 현재 상태 */
 .simulation-topbar-status {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: var(--laro-success) !important;
+    margin-top: 3px;
 }
 
 .simulation-topbar-status::before {
+    content: "";
     width: 7px;
     height: 7px;
     flex-shrink: 0;
     border-radius: var(--laro-radius-pill);
     background: var(--laro-success);
     content: "";
+}
+
+.simulation-topbar-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--laro-success) !important;
 }
 
 .simulation-topbar-socket {
@@ -184,33 +216,21 @@
     white-space: nowrap;
 }
 
-.simulation-topbar-notification {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 46px;
-    height: 38px;
-    border-left: 1px solid color-mix(in srgb, var(--laro-navy-light) 20%, transparent);
-    color: color-mix(in srgb, var(--laro-navy-light) 82%, transparent);
-}
-
-.simulation-topbar-notification svg {
-    width: 18px;
-    height: 18px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.7;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
 .simulation-topbar-user {
     display: flex;
     align-items: center;
     gap: 8px;
-    height: 38px;
-    padding-left: 16px;
-    border-left: 1px solid color-mix(in srgb, var(--laro-navy-light) 20%, transparent);
+    height: 40px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+}
+
+.simulation-topbar-user:hover {
+    opacity: 0.8;
 }
 
 .simulation-topbar-avatar {

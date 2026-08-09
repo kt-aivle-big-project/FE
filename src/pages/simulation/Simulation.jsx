@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../../styles/simulation/Simulation.css";
 
 import WarehouseSVG from "../../components/warehouse/viewer/WarehouseSVG";
@@ -121,6 +122,8 @@ const toRobotView = (state) => {
 };
 
 function Simulation() {
+    const navigate = useNavigate();
+
     /* =========================================================
        상단 헤더 - 시뮬레이션 실행
     ========================================================= */
@@ -929,10 +932,6 @@ function Simulation() {
         Boolean(simulationRunId)
     );
 
-    /* =========================================================
-       화면
-    ========================================================= */
-
     return (
         <div className="simulation-wrapper">
 
@@ -1009,34 +1008,32 @@ function Simulation() {
 
                         {/* 현재 시스템 상태 */}
                         <div className="simulation-topbar-metric">
-                            <span>시스템 상태</span>
+                            <div className="simulation-topbar-status-header">
+                                <span>시스템 상태</span>
+
+                                {simulationRunId && (
+                                    <small className="simulation-topbar-connection">
+                                        {connected ? "실시간 연결" : "연결 대기"}
+                                    </small>
+                                )}
+                            </div>
+
                             <strong className="simulation-topbar-status">
                                 {simulationStatus}
                             </strong>
-                            {simulationRunId && (
-                                <small className="simulation-topbar-socket">
-                                    {connected ? "실시간 연결" : "연결 대기"}
-                                </small>
-                            )}
                         </div>
-
-                        {/* 알림 기능 */}
-                        <span
-                            className="simulation-topbar-notification"
-                            aria-label="알림"
-                            role="img"
-                        >
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-                                <path d="M10 21h4" />
-                            </svg>
-                        </span>
 
                         {/* 사용자 정보 */}
                         <div className="simulation-topbar-user">
-                            <span className="simulation-topbar-avatar">A</span>
-                            <strong>admin</strong>
-                            <span className="simulation-topbar-chevron">⌄</span>
+                            <button
+                                type="button"
+                                className="simulation-topbar-user"
+                                onClick={() => navigate("/profile")}
+                                aria-label="내 프로필로 이동"
+                            >
+                                <span className="simulation-topbar-avatar">A</span>
+                                <strong>admin</strong>
+                            </button>
                         </div>
                     </div>
                 </div>
