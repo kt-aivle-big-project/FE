@@ -369,7 +369,7 @@ function SimulationPanel({
     const planErrors = asArray(result?.errors);
     const frontendSummary = field(result, "frontend_summary", "frontendSummary");
     const planWarnings = asArray(frontendSummary?.warnings);
-    
+
     // 내부 전용 오류는 제외하고 사용자에게 필요한 사전 점검 문제만 표시한다.
     const preflightProblemText = asArray(preflight.data?.problems)
         .filter((problem) => !isHiddenPreflightProblem(problem))
@@ -427,320 +427,359 @@ function SimulationPanel({
             className="simulation-panel"
             aria-label="입출고 명령 및 AI 계획 패널"
         >
-            {/* 생성된 입출고 명령과 LLM 표현 설정을 표시한다. */}
-            <section
-                className={`simulation-visual-panel inbound-command-panel ${
-                    naturalLanguageRequest ? "has-language-request" : ""
-                }`}
-            >
-                <div className="simulation-panel-heading">
-                    <div>
-                        <h2>생성된 입출고 명령</h2>
+            <section className="simulation-panel-card">
+                <header className="simulation-panel-header">
+                    <div className="simulation-panel-header-copy">
+                        <h2>AI PLAN</h2>
+                        <p>자동 명령 생성과 실행 계획을 한 화면에서 확인합니다.</p>
                     </div>
-                    <div className="command-heading-actions">
-                        <span className={`simulation-status-chip ${workflowBadgeClass}`}>
+
+                    <div className="simulation-panel-header-status">
+                        <span
+                            className={`simulation-status-chip ${workflowBadgeClass}`}
+                            title="자동 명령 생성 및 AI 계획 진행 상태"
+                        >
                             {workflowBadge}
                         </span>
+                    </div>
+                </header>
+
+                <div className="simulation-panel-scroll">
+                    {/* 기존 LLM 명령 표현 설정을 동일한 동작으로 제공한다. */}
+                    <section className="simulation-panel-section">
+                        <div className="simulation-panel-section-heading">
+                            <h3>명령 생성 방식</h3>
+                        </div>
+
                         <div
-                            className="command-expression-toggles"
+                            className="command-expression-options"
                             aria-label="LLM 명령 표현 설정"
                         >
                             {COMMAND_EXPRESSION_TOGGLES.map((option) => {
-                            const enabled = commandExpressionMix?.[option.key] === true;
-                            const tooltip = [
-                                `${option.label} · 현재 ${enabled ? "사용 중" : "사용 안 함"}`,
-                                option.description,
-                                `켜면 자동 생성 작업 중 약 ${option.ratio}%에 적용됩니다.`,
-                                `클릭하면 ${enabled ? "사용하지 않도록" : "사용하도록"} 바뀝니다.`,
-                            ].join("\n");
+                                const enabled = commandExpressionMix?.[option.key] === true;
+                                const tooltip = [
+                                    `${option.label} · 현재 ${enabled ? "사용 중" : "사용 안 함"}`,
+                                    option.description,
+                                    `켜면 자동 생성 작업 중 약 ${option.ratio}%에 적용됩니다.`,
+                                    `클릭하면 ${enabled ? "사용하지 않도록" : "사용하도록"} 바뀝니다.`,
+                                ].join("\n");
+
                                 return (
-                                    <button
-                                    type="button"
-                                    role="switch"
-                                    aria-checked={enabled}
-                                    aria-label={option.label}
-                                    data-tooltip={tooltip}
-                                    className={`${option.tone} ${enabled ? "selected" : ""}`}
-                                    key={option.key}
-                                    onClick={() => onCommandExpressionMixChange?.({
-                                        policyEnabled: policyExpressionEnabled,
-                                        naturalLanguageEnabled: naturalLanguageExpressionEnabled,
-                                        [option.key]: !enabled,
-                                    })}
-                                    disabled={isBusy}
-                                >
-                                    <span />
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-
-                {configurationError && (
-                    <div className="command-expression-error">
-                        {configurationError}
-                    </div>
-                )}
-
-                {commandIsBusy ? (
-                    <div className="plan-loading command-loading" aria-live="polite">
-                        <div className="plan-loading-dots" aria-hidden="true">
-                            <span />
-                            <span />
-                            <span />
-                        </div>
-                        <div className="plan-loading-copy">
-                            <strong>{commandElapsedSeconds}초 경과</strong>
-                            <p>{commandBusyLabel}</p>
-                            <small>품목 수와 재고 상태에 따라 시간이 더 걸릴 수 있습니다.</small>
-                        </div>
-                    </div>
-                ) : !simulationRunId ? (
-                    <div className="plan-empty-state compact">
-                        <strong>시뮬레이션 실행을 먼저 만들어 주세요.</strong>
-                    </div>
-                ) : !generated ? (
-                    <div className="command-ready-state">
-                        <p>시뮬레이션이 시작되면 입출고 명령을 자동 생성합니다.</p>
-                        <span>목적지 선반과 담당 로봇은 AI 계획에서 결정됩니다.</span>
-                    </div>
-                ) : (
-                    <>
-                        <div className="simulation-metric-grid command-metrics">
-                            <div className="simulation-metric-card">
-                                <span>입고</span>
-                                <strong>{summary?.generatedInboundCommands ?? 0}</strong>
-                                <small>BOX</small>
-                            </div>
-                            <div className="simulation-metric-card">
-                                <span>출고</span>
-                                <strong>{summary?.generatedOutboundCommands ?? 0}</strong>
-                                <small>BOX</small>
-                            </div>
-                            <div className="simulation-metric-card">
-                                <span>빈 선반 칸</span>
-                                <strong>{summary?.emptyStorageSlots ?? 0}</strong>
-                                <small>/ {summary?.totalStorageSlots ?? 0}</small>
-                            </div>
-                        </div>
-
-                        <div className="command-batch-meta">
-                            <span>{frontView?.mode ?? "AUTO"}</span>
-                            <span>{formatGeneratedAt(frontView?.generatedAt)}</span>
-                            <span>{commands.length}건</span>
-                        </div>
-
-                        <div
-                            className="compact-operation-list"
-                            aria-label="생성된 입출고 명령 목록"
-                        >
-                            {commands.map((command) => {
-                                const selected =
-                                    command.operationId === selectedCommand?.operationId;
-                                const operationType = command.operationType;
-                                return (
-                                    <button
-                                        type="button"
-                                        className={`compact-operation-row ${selected ? "selected" : ""}`}
-                                        key={command.operationId}
-                                        onClick={() => setSelectedOperationId(command.operationId)}
+                                    <div
+                                        className={`command-expression-option ${enabled ? "selected" : ""
+                                            }`}
+                                        key={option.key}
                                     >
-                                        <span className={`operation-type-badge ${operationType?.toLowerCase()}`}>
-                                            {OPERATION_LABEL[operationType] ?? operationType}
-                                        </span>
-                                        <span className="operation-product">
-                                            <strong>{command.productName ?? command.productCode}</strong>
-                                            <small>{command.productCode}</small>
-                                        </span>
-                                        <span className="operation-quantity">
-                                            {command.boxCount ?? 1} BOX
-                                            <small>{command.quantity ?? 0} EA</small>
-                                        </span>
-                                    </button>
+                                        <div className="command-expression-copy">
+                                            <strong>{option.label}</strong>
+                                            <span>{option.description}</span>
+                                            <small>약 {option.ratio}% 적용</small>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={enabled}
+                                            aria-label={option.label}
+                                            data-tooltip={tooltip}
+                                            className={`command-expression-switch ${option.tone} ${enabled ? "selected" : ""
+                                                }`}
+                                            onClick={() =>
+                                                onCommandExpressionMixChange?.({
+                                                    policyEnabled:
+                                                        policyExpressionEnabled,
+                                                    naturalLanguageEnabled:
+                                                        naturalLanguageExpressionEnabled,
+                                                    [option.key]: !enabled,
+                                                })
+                                            }
+                                            disabled={isBusy}
+                                        >
+                                            <span />
+                                        </button>
+                                    </div>
                                 );
                             })}
                         </div>
 
-                        {naturalLanguageRequest && (
-                            <div className="command-language-request">
-                                <span>자연어 명령·요청</span>
-                                <p>{naturalLanguageRequest}</p>
+                        {configurationError && (
+                            <div className="command-expression-error">
+                                {configurationError}
                             </div>
                         )}
-                    </>
-                )}
+                    </section>
 
-                {warnings.length > 0 && (
-                    <div className="plan-alert warning">{warnings.join(" ")}</div>
-                )}
-            </section>
-
-            {/* 사전 점검 상태와 AI 실행 계획 결과를 표시한다. */}
-            <section className="simulation-visual-panel outbound-plan-panel">
-                <div className="simulation-panel-heading">
-                    <div>
-                        <span className="simulation-panel-eyebrow">AI EXECUTION PLAN</span>
-                        <h2>AI 실행 계획</h2>
-                    </div>
-                    <span className={`simulation-status-chip ${preflight.state}`}>
-                        {preflight.state === "ready" && "READY"}
-                        {preflight.state === "loading" && "확인 중"}
-                        {preflight.state === "blocked" && "NOT READY"}
-                        {preflight.state === "error" && "연결 오류"}
-                        {preflight.state === "idle" && "실행 대기"}
-                    </span>
-                </div>
-
-                {preflight.state === "blocked" && preflightProblemText && (
-                    <div className="plan-alert warning">
-                        {preflightProblemText}
-                    </div>
-                )}
-                {preflight.state === "error" && (
-                    <div className="plan-alert error">{preflight.error}</div>
-                )}
-                {workflow.state === "error" && distinctWorkflowError && (
-                    <div className="plan-alert error">{distinctWorkflowError}</div>
-                )}
-
-                {planIsBusy && (
-                    <div className="plan-loading" aria-live="polite">
-                        <div className="plan-loading-dots" aria-hidden="true">
-                            <span />
-                            <span />
-                            <span />
-                        </div>
-                        <div className="plan-loading-copy">
-                            <strong>{planElapsedSeconds}초 경과</strong>
-                            <p>생성된 명령과 창고 실시간 상태로 AI 계획을 계산하고 있습니다.</p>
-                            <small>작업량과 로봇 상태에 따라 약 30초~1분 소요될 수 있습니다.</small>
-                        </div>
-                    </div>
-                )}
-
-                {result && (
-                    <div className="plan-result" aria-live="polite">
-                        <div className={`plan-result-status ${result.status}`}>
+                    {/* 기존 자연어 요청 값을 별도 자연어 명령 영역에 배치한다. */}
+                    <section className="simulation-panel-section">
+                        <div className="simulation-panel-section-heading compact">
                             <div>
-                                <span>PLAN STATUS</span>
-                                <strong>{PLAN_STATUS_LABEL[result.status] ?? result.status}</strong>
+                                <h3>자연어 명령·요청</h3>
                             </div>
-                            <b>{field(result, "final_route", "finalRoute") ?? "-"}</b>
                         </div>
 
-                        {plan && (
-                            <>
-                                <div className="simulation-metric-grid plan-metrics">
-                                    <div className="simulation-metric-card">
-                                        <span>계획 명령</span>
-                                        <strong>{logicalOperations.length}</strong>
-                                        <small>/ {commands.length}</small>
-                                    </div>
-                                    <div className="simulation-metric-card">
-                                        <span>배정 로봇</span>
-                                        <strong>{robotPlans.length}</strong>
-                                        <small>대</small>
-                                    </div>
-                                    <div className="simulation-metric-card">
-                                        <span>예상 완료</span>
-                                        <strong className="metric-text">
-                                            {formatDuration(field(plan, "makespan_ms", "makespanMs"))}
-                                        </strong>
-                                    </div>
-                                </div>
+                        {naturalLanguageRequest ? (
+                            <div className="command-language-request">
+                                <p>{naturalLanguageRequest}</p>
+                            </div>
+                        ) : (
+                            <div className="simulation-panel-empty-state">
+                                <strong>생성된 자연어 명령이 없습니다.</strong>
+                                <span>
+                                    자연어 명령을 사용하면 생성된 요청이 여기에 표시됩니다.
+                                </span>
+                            </div>
+                        )}
+                    </section>
 
-                                <div className="plan-identity compact">
-                                    <span>PLAN ID</span>
-                                    <strong>{field(plan, "plan_id", "planId")}</strong>
+                    {/* 생성된 입출고 명령 데이터와 선택 기능을 그대로 유지한다. */}
+                    <section className="simulation-panel-section">
+                        <div className="simulation-panel-section-heading">
+                            <div>
+                                <h3>생성된 입출고 명령</h3>
+                            </div>
+
+                            {generated && (
+                                <div className="command-batch-meta">
+                                    <span>{frontView?.mode ?? "AUTO"}</span>
+                                    <span>
+                                        {formatGeneratedAt(frontView?.generatedAt)}
+                                    </span>
+                                    <strong>{commands.length}건</strong>
+                                </div>
+                            )}
+                        </div>
+
+                        {commandIsBusy ? (
+                            <div className="plan-loading command-loading" aria-live="polite">
+                                <div className="plan-loading-dots" aria-hidden="true">
+                                    <span />
+                                    <span />
+                                    <span />
+                                </div>
+                                <div className="plan-loading-copy">
+                                    <strong>{commandElapsedSeconds}초 경과</strong>
+                                    <p>{commandBusyLabel}</p>
+                                    <small>품목 수와 재고 상태에 따라 시간이 더 걸릴 수 있습니다.</small>
+                                </div>
+                            </div>
+                        ) : !simulationRunId ? (
+                            <div className="simulation-panel-empty-state">
+                                <strong>시뮬레이션 실행이 필요합니다.</strong>
+                                <span>실행을 생성하면 입출고 명령을 확인할 수 있습니다.</span>
+                            </div>
+                        ) : !generated ? (
+                            <div className="simulation-panel-empty-state">
+                                <strong>시뮬레이션이 시작되면 입출고 명령을 자동 생성합니다.</strong>
+                                <span>목적지 선반과 담당 로봇은 AI 계획에서 결정됩니다.</span>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="simulation-metric-grid">
+                                    <div className="simulation-metric-card">
+                                        <span>입고</span>
+                                        <strong>{summary?.generatedInboundCommands ?? 0}</strong>
+                                        <small>BOX</small>
+                                    </div>
+                                    <div className="simulation-metric-card">
+                                        <span>출고</span>
+                                        <strong>{summary?.generatedOutboundCommands ?? 0}</strong>
+                                        <small>BOX</small>
+                                    </div>
+                                    <div className="simulation-metric-card">
+                                        <span>빈 선반 칸</span>
+                                        <strong>{summary?.emptyStorageSlots ?? 0}</strong>
+                                        <small>{summary?.totalStorageSlots ?? 0}</small>
+                                    </div>
                                 </div>
 
                                 <div
-                                    className="compact-plan-list"
-                                    aria-label="명령별 AI 배정 결과"
+                                    className="compact-operation-list"
+                                    aria-label="생성된 입출고 명령 목록"
                                 >
                                     {commands.map((command) => {
-                                        const logicalOperation = logicalOperations.find(
-                                            (operation) => field(operation, "operation_id", "operationId")
-                                                === command.operationId
-                                        );
-                                        const robotId = field(
-                                            logicalOperation,
-                                            "assigned_robot_id",
-                                            "assignedRobotId"
-                                        );
-                                        const selected =
-                                            command.operationId
-                                            === selectedCommand?.operationId;
+                                        const selected = command.operationId === selectedCommand?.operationId;
+                                        const operationType = command.operationType;
+
                                         return (
                                             <button
                                                 type="button"
-                                                className={`compact-plan-row ${selected ? "selected" : ""}`}
+                                                className={`compact-operation-row ${selected ? "selected" : ""}`}
                                                 key={command.operationId}
                                                 onClick={() => setSelectedOperationId(command.operationId)}
                                             >
-                                                <span>
-                                                    {OPERATION_LABEL[command.operationType]
-                                                        ?? command.operationType}
+                                                <span className={`operation-type-badge ${operationType?.toLowerCase()}`}>
+                                                    {OPERATION_LABEL[operationType] ?? operationType}
                                                 </span>
-                                                <strong>{command.productCode}</strong>
-                                                <b className={robotId ? "assigned" : "deferred"}>
-                                                    {robotId ?? "보류"}
-                                                </b>
+                                                <span className="operation-product">
+                                                    <strong>{command.productName ?? command.productCode}</strong>
+                                                    <small>{command.productCode}</small>
+                                                </span>
+                                                <span className="operation-quantity">
+                                                    {command.boxCount ?? 1} BOX
+                                                    <small>{command.quantity ?? 0} EA</small>
+                                                </span>
                                             </button>
                                         );
                                     })}
                                 </div>
-
-                                {selectedCommand && (
-                                    <div className="selected-plan-detail">
-                                        <div>
-                                            <span>선택 명령</span>
-                                            <strong>{selectedCommand.operationId}</strong>
-                                        </div>
-                                        <div>
-                                            <span>담당 로봇</span>
-                                            <strong>{selectedRobotId ?? "배정되지 않음"}</strong>
-                                        </div>
-                                        <div>
-                                            <span>완료 예정</span>
-                                            <strong>
-                                                {selectedRobot
-                                                    ? formatDuration(
-                                                        field(
-                                                            selectedRobot,
-                                                            "finish_at_ms",
-                                                            "finishAtMs"
-                                                        )
-                                                    )
-                                                    : "-"}
-                                            </strong>
-                                        </div>
-                                        {selectedRouteNodes.length > 0 && (
-                                            <div className="selected-plan-route">
-                                                {selectedRouteNodes.map((node, index) => (
-                                                    <span key={`${node}-${index}`}>
-                                                        <b>{node}</b>
-                                                        {index < selectedRouteNodes.length - 1 && <i>→</i>}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
                             </>
                         )}
 
-                        {planWarnings.length > 0 && (
-                            <div className="plan-alert warning">{planWarnings.join(" ")}</div>
-                        )}
-                        {planErrors.length > 0 && (
-                            <div className="plan-alert error">
-                                {planErrors.map((error) => error.message).join(", ")}
+                        {warnings.length > 0 && (
+                            <div className="plan-alert warning">
+                                {warnings.join(" ")}
                             </div>
                         )}
-                    </div>
-                )}
+                    </section>
+
+                    {/* 사전 점검 상태와 AI 실행 계획 결과를 표시한다. */}
+                    <section className="simulation-panel-section">
+                        <div className="simulation-panel-section-heading">
+                            <h3>AI 실행 계획</h3>
+                            <span className={`simulation-status-chip ${preflight.state}`}>
+                                {preflight.state === "ready" && "READY"}
+                                {preflight.state === "loading" && "확인 중"}
+                                {preflight.state === "blocked" && "NOT READY"}
+                                {preflight.state === "error" && "연결 오류"}
+                                {preflight.state === "idle" && "실행 대기"}
+                            </span>
+                        </div>
+
+                        {preflight.state === "blocked" && preflightProblemText && (
+                            <div className="plan-alert warning">
+                                {preflightProblemText}
+                            </div>
+                        )}
+
+                        {preflight.state === "error" && (
+                            <div className="plan-alert error">
+                                {preflight.error}
+                            </div>
+                        )}
+
+                        {workflow.state === "error" && distinctWorkflowError && (
+                            <div className="plan-alert error">
+                                {distinctWorkflowError}
+                            </div>
+                        )}
+
+                        {planIsBusy && (
+                            <div className="plan-loading" aria-live="polite">
+                                <div className="plan-loading-dots" aria-hidden="true">
+                                    <span />
+                                    <span />
+                                    <span />
+                                </div>
+                                <div className="plan-loading-copy">
+                                    <strong>{planElapsedSeconds}초 경과</strong>
+                                    <p>생성된 명령과 창고 실시간 상태로 AI 계획을 계산하고 있습니다.</p>
+                                    <small>작업량과 로봇 상태에 따라 약 30초~1분 소요될 수 있습니다.</small>
+                                </div>
+                            </div>
+                        )}
+
+                        {!planIsBusy
+                            && !result
+                            && workflow.state !== "error"
+                            && preflight.state !== "error" && (
+                                <div className="simulation-panel-empty-state">
+                                    <strong>생성된 AI 실행 계획이 없습니다.</strong>
+                                    <span>
+                                        입출고 명령이 생성되면 AI가 실행 계획을 계산합니다.
+                                    </span>
+                                </div>
+                            )}
+
+                        {result && (
+                            <div className="plan-result" aria-live="polite">
+                                <div className={`plan-result-status ${result.status}`}>
+                                    <div>
+                                        <span>계획 상태</span>
+                                        <strong>{PLAN_STATUS_LABEL[result.status] ?? result.status}</strong>
+                                    </div>
+                                    <b>{field(result, "final_route", "finalRoute") ?? "-"}</b>
+                                </div>
+
+                                {plan && (
+                                    <>
+                                        <div className="simulation-metric-grid plan-metrics">
+                                            <div className="simulation-metric-card">
+                                                <span>계획 명령</span>
+                                                <strong>{logicalOperations.length}</strong>
+                                                <small>/ {commands.length}</small>
+                                            </div>
+                                            <div className="simulation-metric-card">
+                                                <span>배정 로봇</span>
+                                                <strong>{robotPlans.length}</strong>
+                                                <small>대</small>
+                                            </div>
+                                            <div className="simulation-metric-card">
+                                                <span>예상 완료</span>
+                                                <strong className="metric-text">
+                                                    {formatDuration(field(plan, "makespan_ms", "makespanMs"))}
+                                                </strong>
+                                            </div>
+                                        </div>
+
+                                        <div className="plan-identity compact">
+                                            <span>계획 ID</span>
+                                            <strong>{field(plan, "plan_id", "planId")}</strong>
+                                        </div>
+
+                                        <div
+                                            className="compact-plan-list"
+                                            aria-label="명령별 AI 배정 결과"
+                                        >
+                                            {commands.map((command) => {
+                                                const logicalOperation = logicalOperations.find(
+                                                    (operation) => field(operation, "operation_id", "operationId")
+                                                        === command.operationId
+                                                );
+                                                const robotId = field(
+                                                    logicalOperation,
+                                                    "assigned_robot_id",
+                                                    "assignedRobotId"
+                                                );
+                                                const selected =
+                                                    command.operationId === selectedCommand?.operationId;
+
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        className={`compact-plan-row ${selected ? "selected" : ""}`}
+                                                        key={command.operationId}
+                                                        onClick={() => setSelectedOperationId(command.operationId)}
+                                                    >
+                                                        <span>
+                                                            {OPERATION_LABEL[command.operationType]
+                                                                ?? command.operationType}
+                                                        </span>
+                                                        <strong>{command.productCode}</strong>
+                                                        <b className={robotId ? "assigned" : "deferred"}>
+                                                            {robotId ?? "보류"}
+                                                        </b>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </>
+                                )}
+
+                                {planWarnings.length > 0 && (
+                                    <div className="plan-alert warning">
+                                        {planWarnings.join(" ")}
+                                    </div>
+                                )}
+
+                                {planErrors.length > 0 && (
+                                    <div className="plan-alert error">
+                                        {planErrors.map((error) => error.message).join(", ")}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </section>
+                </div>
             </section>
         </aside>
     );
