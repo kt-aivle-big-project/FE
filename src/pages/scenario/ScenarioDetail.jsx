@@ -573,7 +573,6 @@ const formatDateTime = (dateTime) => {
     })
         .format(date)
         .replace(/\. /g, ".")
-        .replace(".", "");
 };
 
 const field = (source, snakeCase, camelCase) =>
@@ -1311,7 +1310,7 @@ function ScenarioDetail({
                         </div>
 
                         <div className="scenario-detail-sub-info">
-                            <span>{scenario.scenarioCode || "-"}</span>
+                            <span>{scenario.scenarioId || "-"}</span>
                             <span>·</span>
                             <span>
                                 최근 수정 {formatDateTime(scenario.updatedAt)}
@@ -1362,7 +1361,7 @@ function ScenarioDetail({
                     <div className="scenario-detail-section-header">
                         <div>
                             <h3>시나리오 정보</h3>
-                            <p>현재 시나리오의 핵심 운영 조건입니다.</p>
+                            <p>현재 시나리오의 운영 조건입니다.</p>
                         </div>
                     </div>
 
@@ -1375,10 +1374,7 @@ function ScenarioDetail({
 
                             <div className="scenario-info-description">
                                 <span className="scenario-info-label">설명</span>
-                                <p>
-                                    {scenario.description ||
-                                        "등록된 시나리오 설명이 없습니다."}
-                                </p>
+                                <p>{scenario.description || "등록된 시나리오 설명이 없습니다."}</p>
                             </div>
                         </div>
 
@@ -1401,22 +1397,13 @@ function ScenarioDetail({
                             </article>
 
                             <article className="scenario-info-setting-item">
-                                <span>재생 배속</span>
-                                <strong>{scenario.simulationSpeed ?? 1}배</strong>
-                            </article>
-
-                            <article className="scenario-info-setting-item">
                                 <span>자동 재계획</span>
-                                <strong>
-                                    {scenario.autoReplan ? "사용" : "사용 안 함"}
-                                </strong>
+                                <strong>{scenario.autoReplan ? "사용" : "사용 안 함"}</strong>
                             </article>
 
                             <article className="scenario-info-setting-item">
                                 <span>장애물 발생</span>
-                                <strong>
-                                    {scenario.obstacleEnabled ? "포함" : "미포함"}
-                                </strong>
+                                <strong>{scenario.obstacleEnabled ? "포함" : "미포함"}</strong>
                             </article>
                         </div>
                     </div>
@@ -1454,10 +1441,7 @@ function ScenarioDetail({
                             {/* 1행: 실행 정보 / AI 입력 */}
                             <div className="scenario-ai-report-row">
                                 <article className="scenario-ai-report-panel scenario-ai-report-identity">
-                                    <div className="scenario-ai-report-section-title">
-                                        <span>AI EXECUTION REPORT</span>
-                                        <strong>실행 리포트</strong>
-                                    </div>
+
 
                                     <div className="scenario-ai-report-plan-heading">
                                         <div>
@@ -1490,11 +1474,15 @@ function ScenarioDetail({
                                                 : "-"}
                                         </span>
                                     </div>
+                                    
+                                    <div className="scenario-ai-validation-result">
+                                        <span>최종 결과</span>
+                                        <strong>{finalRoute ?? "-"}</strong>
+                                    </div>
                                 </article>
 
                                 <article className="scenario-ai-report-panel scenario-ai-input-panel">
                                     <div className="scenario-ai-report-section-title">
-                                        <span>AI INPUT</span>
                                         <strong>
                                             {naturalLanguageRequest
                                                 ? "AI 입력 명령"
@@ -1531,7 +1519,6 @@ function ScenarioDetail({
                             <div className="scenario-ai-report-row">
                                 <article className="scenario-ai-report-panel">
                                     <div className="scenario-ai-report-section-title">
-                                        <span>PLAN OVERVIEW</span>
                                         <strong>계획 요약</strong>
                                     </div>
 
@@ -1569,7 +1556,6 @@ function ScenarioDetail({
 
                                 <article className="scenario-ai-report-panel scenario-ai-validation-panel">
                                     <div className="scenario-ai-report-section-title">
-                                        <span>VALIDATION</span>
                                         <strong>계획 검증</strong>
                                     </div>
 
@@ -1613,20 +1599,14 @@ function ScenarioDetail({
                                             </strong>
                                         </div>
                                     </div>
-
-                                    <div className="scenario-ai-validation-result">
-                                        <span>최종 결과</span>
-                                        <strong>{finalRoute ?? "-"}</strong>
-                                    </div>
                                 </article>
                             </div>
 
                             {/* 3행: 작업 계획 / 로봇 배정 */}
                             <div className="scenario-ai-report-row scenario-ai-report-row-table">
                                 <article className="scenario-ai-report-panel">
-                                    <div className="scenario-ai-report-section-title scenario-ai-report-section-title-row">
+                                    <div className="scenario-ai-report-section-title">
                                         <div>
-                                            <span>OPERATION PLAN</span>
                                             <strong>작업 실행 계획</strong>
                                         </div>
                                         <small>
@@ -1734,9 +1714,8 @@ function ScenarioDetail({
                                 </article>
 
                                 <article className="scenario-ai-report-panel">
-                                    <div className="scenario-ai-report-section-title scenario-ai-report-section-title-row">
+                                    <div className="scenario-ai-report-section-title">
                                         <div>
-                                            <span>ROBOT ASSIGNMENT</span>
                                             <strong>로봇 배정 분석</strong>
                                         </div>
                                         <small>
@@ -1804,7 +1783,6 @@ function ScenarioDetail({
                             <div className="scenario-ai-report-row">
                                 <article className="scenario-ai-report-panel">
                                     <div className="scenario-ai-report-section-title">
-                                        <span>ROUTE ANALYSIS</span>
                                         <strong>실행 경로 분석</strong>
                                     </div>
 
@@ -1847,9 +1825,8 @@ function ScenarioDetail({
                                 </article>
 
                                 <article className="scenario-ai-report-panel scenario-ai-event-panel">
-                                    <div className="scenario-ai-report-section-title scenario-ai-report-section-title-row">
+                                    <div className="scenario-ai-report-section-title">
                                         <div>
-                                            <span>EVENT</span>
                                             <strong>실행 이벤트</strong>
                                         </div>
                                         <small>{reportEvents.length} EVENTS</small>
