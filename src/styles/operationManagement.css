@@ -144,7 +144,6 @@
 .operation-panel {
     min-width: 0;
     padding: 16px;
-    border-radius: var(--laro-radius-control);
     box-shadow: none;
 }
 
@@ -180,7 +179,6 @@
     padding: 6px 10px;
     border: 1px solid var(--laro-border-dark);
     font-size: var(--laro-font-caption);
-    border-radius: var(--laro-radius-pill);
 }
 
 /* ============================================================
@@ -426,7 +424,6 @@
 .operation-panel {
     border: 1px solid var(--laro-border);
     background: var(--laro-surface);
-    border-radius: var(--laro-radius-control);
     box-shadow: none;
 }
 

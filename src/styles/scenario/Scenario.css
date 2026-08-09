@@ -50,19 +50,12 @@
 
 .scenario-list-card {
     position: sticky;
-
     display: flex;
     min-width: 0;
     width: 100%;
     flex-direction: column;
-
-    margin: 0;
-
     overflow: hidden;
-
     border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
     background: var(--laro-surface);
 }
 
