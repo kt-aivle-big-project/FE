@@ -67,7 +67,6 @@
     margin-bottom: var(--laro-gap-content);
     padding: 4px;
     border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-control);
     background: var(--laro-surface);
     box-shadow: none;
 }
@@ -209,7 +208,6 @@
     gap: var(--laro-gap-page);
     min-height: 52px;
     padding: 12px 14px;
-    border-bottom: 1px solid var(--laro-border);
     background: var(--laro-surface);
 }
 
