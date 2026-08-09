@@ -949,7 +949,7 @@ function Simulation() {
                             <select
                                 value={selectedScenarioId ?? ""}
                                 onChange={handleScenarioChange}
-                                disabled={scenarios.length === 0 || Boolean(simulationRunId)}
+                                disabled={scenarios.length === 0}
                                 aria-label="시나리오 선택"
                             >
                                 {scenarios.length === 0 ? (
