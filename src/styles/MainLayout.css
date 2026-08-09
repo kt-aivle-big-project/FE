@@ -1,6 +1,6 @@
-/* =========================
-   공통 변수
-========================= */
+/* ============================================================
+   1. LARO 디자인 
+============================================================ */
 :root {
     /* 대표색 */
     --laro-primary: #2589F4;
@@ -62,7 +62,6 @@
     --laro-font-body: 14px;
     --laro-font-caption: 12px;
 
-
     /* 글자 굵기 */
     --laro-font-weight-regular: 400;
     --laro-font-weight-medium: 500;
@@ -76,10 +75,10 @@
     --laro-gap-content: 10px;
 }
 
-/* =========================
-   전체 기본 설정
-========================= */
 
+/* ============================================================
+   2. 전체 기본 설정
+============================================================ */
 * {
     margin: 0;
     padding: 0;
@@ -95,66 +94,53 @@ body,
     padding: 0;
 }
 
-/* =========================
-   전체 레이아웃
-========================= */
-
-.main-layout {
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    align-items: stretch;
+body {
+    background: var(--laro-background);
+    color: var(--laro-text);
 }
 
-/* =========================
-   Page Content
-========================= */
+/* ============================================================
+   3. 메인 레이아웃
+============================================================ */
+.main-layout {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    min-height: 100vh;
+    background: var(--laro-background);
+}
 
-/* 각 페이지의 최상위 요소가 전체 너비를 사용하도록 설정한다. */
-.page-content>* {
+.main-content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    min-height: 100vh;
+    border-left: 0;
+}
+
+.page-content > * {
     width: 100%;
     max-width: none;
     min-width: 0;
     min-height: 100vh;
 }
 
-/* 사이드바와 메인 콘텐츠 사이의 구분선을 제거한다. */
+/* 사이드바랑 메인 콘텐츠 사이의 구분선 제거*/
 .sidebar {
     border-right: 0 !important;
 }
 
-.main-content,
-.page-content {
-    border-left: 0;
-}
-
-
-/* =========================
-    Footer
-========================= */
-.main-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-
-    width: 100%;
-    min-width: 0;
-    min-height: 100vh;
-}
-
-.page-content {
-    flex: 1;
-    min-width: 0;
-}
-
+/* ============================================================
+   4. Footer
+============================================================ */
 .footer {
     width: 100%;
     flex-shrink: 0;
-
     padding: 18px 24px;
-
     border-top: 1px solid var(--laro-border);
-    background: var(--laro-white);
+    background: var(--laro-surface);
 }
 
 .footer-content {
@@ -162,14 +148,13 @@ body,
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-
-    gap: 16px;
-
-    font-size: 13px;
+    gap: var(--laro-gap-page);
     color: var(--laro-subtext);
+    font-size: var(--laro-font-body);
 }
 
 .footer-content strong {
-    font-size: 16px;
     color: var(--laro-navy);
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
 }

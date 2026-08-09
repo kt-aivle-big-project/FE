@@ -1,0 +1,291 @@
+/* ============================================================
+   1. 로봇 목록 헤더
+============================================================ */
+
+.simulation-robot-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.simulation-robot-list-header > div:first-child {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+}
+
+.simulation-robot-list-title {
+    margin: 0;
+    color: var(--laro-navy);
+    font-size: 15px;
+    font-weight: var(--laro-font-weight-bold);
+    letter-spacing: 0;
+}
+
+.simulation-robot-list-count {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    white-space: nowrap;
+}
+
+.simulation-robot-list-summary {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 5px 10px;
+    color: var(--laro-subtext);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+.simulation-robot-list-summary .is-danger {
+    color: var(--laro-danger);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+/* ============================================================
+   2. 로봇 테이블
+============================================================ */
+
+.simulation-robot-list-table-wrapper {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--laro-border-dark) transparent;
+}
+
+.simulation-robot-list-table-wrapper::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+.simulation-robot-list-table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--laro-border-dark);
+}
+
+.simulation-robot-list-table {
+    width: 100%;
+    min-width: 500px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.simulation-robot-list-table th,
+.simulation-robot-list-table td {
+    padding: 5px 5px;
+    border-bottom: 1px solid var(--laro-border);
+    color: var(--laro-text);
+    font-size: 11px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.simulation-robot-list-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    height: 30px;
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-semibold);
+    white-space: nowrap;
+}
+
+.simulation-robot-list-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.simulation-robot-list-table tbody tr:hover td {
+    background: var(--laro-surface-hover);
+}
+
+.simulation-robot-list-table th:nth-child(1) { width: 50px; }
+.simulation-robot-list-table th:nth-child(2) { width: 50px; }
+.simulation-robot-list-table th:nth-child(3) { width: 50px; }
+.simulation-robot-list-table th:nth-child(4) { width: 100px; }
+.simulation-robot-list-table th:nth-child(5) { width: 80px; }
+.simulation-robot-list-table th:nth-child(6) { width: 80px; }
+.simulation-robot-list-table th:nth-child(7) { width: 50px; }
+.simulation-robot-list-table th:nth-child(8) { width: 60px; }
+
+/* ============================================================
+   3. 로봇 데이터
+============================================================ */
+
+.simulation-robot-list-id,
+.simulation-robot-list-location,
+.simulation-robot-list-next-location,
+.simulation-robot-list-eta {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.simulation-robot-list-id {
+    color: var(--laro-navy) !important;
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.simulation-robot-list-location,
+.simulation-robot-list-next-location {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.simulation-robot-list-next-location {
+    color: var(--laro-primary) !important;
+}
+
+.simulation-robot-list-battery,
+.simulation-robot-list-progress {
+    display: grid;
+    grid-template-columns: minmax(46px, 1fr) 36px;
+    align-items: center;
+    gap: 7px;
+}
+
+.simulation-robot-list-battery-track,
+.simulation-robot-list-progress-track {
+    height: 6px;
+    overflow: hidden;
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-muted-light);
+}
+
+.simulation-robot-list-battery-track span,
+.simulation-robot-list-progress-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+}
+
+.simulation-robot-list-battery-track span {
+    background: var(--laro-success);
+}
+
+.simulation-robot-list-battery.is-warning .simulation-robot-list-battery-track span {
+    background: var(--laro-warning);
+}
+
+.simulation-robot-list-battery.is-danger .simulation-robot-list-battery-track span {
+    background: var(--laro-danger);
+}
+
+.simulation-robot-list-battery.is-empty .simulation-robot-list-battery-track span {
+    background: var(--laro-muted);
+}
+
+.simulation-robot-list-progress-track span {
+    background: var(--laro-primary);
+}
+
+.simulation-robot-list-battery strong,
+.simulation-robot-list-progress strong {
+    color: var(--laro-subtext);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.simulation-robot-list-task {
+    min-width: 0;
+}
+
+.simulation-robot-list-task strong,
+.simulation-robot-list-task small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.simulation-robot-list-task strong {
+    color: var(--laro-text);
+    font-size: 11px;
+    font-weight: var(--laro-font-weight-medium);
+}
+
+.simulation-robot-list-task small {
+    margin-top: 3px;
+    color: var(--laro-subtext);
+    font-size: 9px;
+}
+
+.simulation-robot-list-eta {
+    color: var(--laro-subtext) !important;
+    font-size: 10px !important;
+}
+
+.simulation-robot-list-status-cell {
+    min-width: 0;
+}
+
+.simulation-robot-list-status-cell small {
+    display: block;
+    overflow: hidden;
+    margin-top: 4px;
+    color: var(--laro-subtext);
+    font-size: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.simulation-robot-list-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 22px;
+    padding: 0 7px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-pill);
+    font-size: 9px;
+    font-weight: var(--laro-font-weight-semibold);
+    white-space: nowrap;
+}
+
+.simulation-robot-list-status.status-pending,
+.simulation-robot-list-status.status-default {
+    background: var(--laro-muted-light);
+    color: var(--laro-subtext);
+}
+
+.simulation-robot-list-status.status-assigned,
+.simulation-robot-list-status.status-in-progress {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-hover);
+}
+
+.simulation-robot-list-status.status-charging {
+    border-color: var(--laro-success);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.simulation-robot-list-status.status-failed {
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
+.simulation-robot-list-status.status-cancelled {
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+}
+
+.simulation-robot-list-empty {
+    height: 150px;
+    color: var(--laro-muted) !important;
+    text-align: center !important;
+}
