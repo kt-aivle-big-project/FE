@@ -1,20 +1,18 @@
-/* =========================================================
-   Scenario page
-   ========================================================= */
+/* ============================================================
+   1. 공통 설정
+============================================================ */
+
+.scenario-page,
+.scenario-page * {
+    box-sizing: border-box;
+}
 
 .scenario-page {
     width: 100%;
-
-    padding: 10px;
-
+    min-width: 0;
+    padding: var(--laro-padding-large);
     background: var(--laro-background);
     color: var(--laro-text);
-}
-
-.scenario-page *,
-.scenario-page *::before,
-.scenario-page *::after {
-    box-sizing: border-box;
 }
 
 .scenario-page button,
@@ -23,56 +21,66 @@
     font: inherit;
 }
 
+.scenario-page button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
 
-/* =========================================================
-   Scenario workspace
-   왼쪽 목록 + 오른쪽 상세 영역
-   ========================================================= */
+.scenario-page button:focus,
+.scenario-page button:focus-visible,
+.scenario-page button:active,
+.scenario-page input:focus,
+.scenario-page input:focus-visible,
+.scenario-page select:focus,
+.scenario-page select:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+/* ============================================================
+   2. 페이지 레이아웃
+============================================================ */
 
 .scenario-workspace {
     display: grid;
-    grid-template-columns:
-        minmax(400px, 500px)
-        minmax(0, 1fr);
-
     align-items: start;
-    gap: 10px;
-
+    gap: var(--laro-gap-content);
     width: 100%;
-
-    margin: 0 auto;
+    min-width: 0;
 }
 
+.scenario-workspace.is-list-only {
+    grid-template-columns: minmax(0, 1fr);
+}
 
-/* =========================================================
-   Scenario list card
-   ========================================================= */
+.scenario-workspace.has-side-panel {
+    grid-template-columns: minmax(400px, 500px) minmax(0, 1fr);
+}
 
 .scenario-list-card {
-    position: sticky;
     display: flex;
     min-width: 0;
     width: 100%;
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid var(--laro-border);
+    border-radius: 0;
     background: var(--laro-surface);
 }
 
-
-/* =========================================================
-   Header
-   ========================================================= */
+/* ============================================================
+   3. 목록 헤더 및 공통 버튼
+============================================================ */
 
 .scenario-list-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 20px;
-
-    padding: 20px;
-
+    gap: var(--laro-gap-page);
+    min-height: 72px;
+    padding: 14px;
     border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-surface);
 }
 
 .scenario-list-heading {
@@ -81,358 +89,269 @@
 
 .scenario-list-heading h1 {
     margin: 0;
-
     color: var(--laro-navy);
-
-    font-size: 24px;
-    font-weight: 800;
+    font-size: var(--laro-font-page-title);
+    font-weight: var(--laro-font-weight-bold);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
 }
 
 .scenario-list-heading p {
-    margin: 7px 0 0;
-
+    margin: 6px 0 0;
     color: var(--laro-subtext);
-
-    font-size: 12px;
+    font-size: var(--laro-font-body);
     line-height: 1.5;
 }
 
-
-/* =========================================================
-   Shared button
-   ========================================================= */
-
-.scenario-button {
+.scenario-button,
+.scenario-reset-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-
     flex: 0 0 auto;
-
     min-height: 40px;
-    padding: 0 14px;
-
-    border: 0;
-    border-radius: var(--laro-radius-medium);
-
-    font-size: 12px;
-    font-weight: 700;
+    padding: 0 16px;
+    border: 1px solid var(--laro-border-dark);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-navy);
+    font-weight: var(--laro-font-weight-semibold);
     white-space: nowrap;
-
     cursor: pointer;
-
     transition:
-        border-color 0.18s ease,
-        background 0.18s ease,
-        color 0.18s ease;
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.scenario-button:hover,
+.scenario-reset-button:hover {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
 }
 
 .scenario-button-primary {
+    border-color: var(--laro-primary);
     background: var(--laro-primary);
-    color: var(--laro-surface);
+    color: var(--laro-white);
 }
 
 .scenario-button-primary:hover {
+    border-color: var(--laro-primary-hover);
     background: var(--laro-primary-hover);
+    color: var(--laro-white);
 }
 
+.scenario-button-primary:active {
+    border-color: var(--laro-primary-active);
+    background: var(--laro-primary-active);
+    color: var(--laro-white);
+}
 
-/* =========================================================
-   Toolbar
-   검색, 상태, 정렬, 초기화 수평 배치
-   ========================================================= */
+/* ============================================================
+   4. 검색 및 필터
+============================================================ */
 
 .scenario-list-toolbar {
     display: grid;
-    grid-template-columns:
-        minmax(200px, 1fr)
-        minmax(80px, 1fr)
-        minmax(80px, 1fr)
-        70px;
-
+    grid-template-columns: minmax(220px, 1fr) 140px 140px 86px;
     align-items: center;
-    gap: 10px;
-
-    padding: 20px;
+    gap: var(--laro-gap-content);
+    padding: 12px;
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-surface);
 }
 
-
-/* 검색창 */
 .scenario-search {
     position: relative;
-
     min-width: 0;
 }
 
 .scenario-search-icon {
     position: absolute;
     top: 50%;
-    left: 13px;
+    left: 10px;
     z-index: 1;
-
     color: var(--laro-subtext);
-
-    font-size: 20px;
-
+    font-size: var(--laro-font-card-title);
+    line-height: 1;
     pointer-events: none;
-
     transform: translateY(-50%);
 }
 
-.scenario-page .scenario-search input {
-    width: 100%;
-    height: 40px;
-
-    padding: 0 14px 0 39px;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-    outline: none;
-
-    background: var(--laro-surface);
-    color: var(--laro-text);
-
-    font-size: 13px;
-
-    transition:
-        border-color 0.18s ease,
-        box-shadow 0.18s ease;
-}
-
-.scenario-page .scenario-search input::placeholder {
-    color: var(--laro-subtext);
-}
-
-.scenario-page .scenario-search input:hover {
-    border-color: var(--laro-primary);
-}
-
-.scenario-page .scenario-search input:focus {
-    border-color: var(--laro-primary);
-
-    box-shadow: none;
-}
-
-
-/* 상태 필터 및 정렬 */
+.scenario-page .scenario-search input,
 .scenario-page .scenario-filter-select {
     width: 100%;
     min-width: 0;
     height: 40px;
-
-    padding: 0 30px 0 12px;
-
     border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-    outline: none;
-
+    border-radius: var(--laro-radius-control);
     background: var(--laro-surface);
     color: var(--laro-text);
-
-    font-size: 12px;
-
-    cursor: pointer;
-
-    transition:
-        border-color 0.18s ease,
-        box-shadow 0.18s ease;
 }
 
+.scenario-page .scenario-search input {
+    padding: 0 10px 0 34px;
+}
+
+.scenario-page .scenario-filter-select {
+    padding: 0 30px 0 10px;
+    cursor: pointer;
+}
+
+.scenario-page .scenario-search input::placeholder {
+    color: var(--laro-placeholder);
+}
+
+.scenario-page .scenario-search input:hover,
 .scenario-page .scenario-filter-select:hover {
+    border-color: var(--laro-border-dark);
+}
+
+.scenario-page .scenario-search input:focus,
+.scenario-page .scenario-search input:focus-visible,
+.scenario-page .scenario-filter-select:focus,
+.scenario-page .scenario-filter-select:focus-visible {
     border-color: var(--laro-primary);
 }
 
-.scenario-page .scenario-filter-select:focus {
-    border-color: var(--laro-primary);
-
-    box-shadow: none;
-}
-
-
-/* 초기화 */
 .scenario-reset-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    height: 40px;
-
+    width: 100%;
     padding: 0 10px;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
-    background: var(--laro-surface);
-    color: var(--laro-subtext);
-
-    font-size: 12px;
-
-    cursor: pointer;
 }
-
-.scenario-reset-button:hover {
-    border-color: var(--laro-primary);
-
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-}
-
-
-/* =========================================================
-   List count
-   ========================================================= */
 
 .scenario-list-count {
-    padding: 0 20px 12px;
-
+    min-height: 32px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--laro-border);
     color: var(--laro-subtext);
-
-    font-size: 12px;
+    font-size: var(--laro-font-body);
+    line-height: 16px;
 }
 
 .scenario-list-count strong {
     color: var(--laro-primary);
-
-    font-weight: 800;
+    font-weight: var(--laro-font-weight-bold);
 }
 
+/* 상세 패널이 열리면 좁아진 목록 너비에 맞춰 필터를 재배치한다. */
+.scenario-workspace.has-side-panel .scenario-list-toolbar {
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(110px, 1fr)
+        76px;
+}
 
-/* =========================================================
-   Table
-   ========================================================= */
+.scenario-workspace.has-side-panel .scenario-search {
+    grid-column: 1 / -1;
+}
+
+.scenario-workspace.has-side-panel .scenario-filter-select:first-of-type {
+    grid-column: 1;
+}
+
+.scenario-workspace.has-side-panel .scenario-filter-select:nth-of-type(2) {
+    grid-column: 2;
+}
+
+.scenario-workspace.has-side-panel .scenario-reset-button {
+    grid-column: 3;
+}
+/* ============================================================
+   5. 시나리오 목록 테이블
+============================================================ */
 
 .scenario-table-wrapper {
     width: 100%;
-    min-height: 0;
-    flex: 1;
-
+    min-width: 0;
+    min-height: 480px;
     overflow: auto;
-
-    border-top: 1px solid var(--laro-border);
-    border-bottom: 1px solid var(--laro-border);
 }
 
 .scenario-table {
     width: 100%;
     min-width: 560px;
-
     border-collapse: collapse;
     table-layout: fixed;
 }
 
-
-/* 열 너비 */
 .scenario-table th:nth-child(1) {
-    width: 40%;
+    width: 46%;
 }
 
 .scenario-table th:nth-child(2) {
-    width: 10%;
+    width: 18%;
 }
 
 .scenario-table th:nth-child(3) {
-    width: 15%;
+    width: 26%;
 }
 
 .scenario-table th:nth-child(4) {
-    width: 5%;
+    width: 10%;
 }
 
-.scenario-table thead {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-
-    background: var(--laro-background);
+.scenario-table th,
+.scenario-table td {
+    height: 48px;
+    padding: 8px;
+    border-right: 1px solid var(--laro-border);
+    border-bottom: 1px solid var(--laro-border);
+    color: var(--laro-text);
+    font-size: var(--laro-font-body);
+    vertical-align: middle;
 }
 
 .scenario-table th {
-    height: 3cqw;
-
-    padding: 0 10px;
-
-    border-bottom: 1px solid var(--laro-border);
-
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--laro-background);
     color: var(--laro-subtext);
-
-    font-size: 12px;
-    font-weight: 700;
+    font-weight: var(--laro-font-weight-semibold);
     text-align: left;
     white-space: nowrap;
 }
 
-.scenario-table td {
-    height: 50px;
-
-    padding: 10px 10px;
-
-    border-bottom: 1px solid var(--laro-border);
-
-    color: var(--laro-text);
-
-    font-size: 12px;
-    vertical-align: middle;
+.scenario-table th:last-child,
+.scenario-table td:last-child {
+    border-right: 0;
 }
 
 .scenario-table tbody tr {
     cursor: pointer;
-
-    transition:
-        background 0.18s ease,
-        box-shadow 0.18s ease;
+    transition: background-color 0.15s ease;
 }
 
 .scenario-table tbody tr:hover {
     background: var(--laro-surface-hover);
 }
 
+.scenario-table tbody tr.is-selected {
+    box-shadow: inset 3px 0 0 var(--laro-primary);
+    background: var(--laro-primary-light);
+}
+
 .scenario-table tbody tr:last-child td {
     border-bottom: 0;
 }
 
-
-/* 현재 선택된 시나리오 */
-.scenario-table tbody tr.is-selected {
-    background: var(--laro-primary-light);
-
-    box-shadow: none;
-}
-
-.scenario-table tbody tr.is-selected td {
-    border-bottom-color: var(--laro-primary-light);
-}
-
-.scenario-table
-    tbody
-    tr.is-selected
-    .scenario-name-content
-    strong {
-    color: var(--laro-primary);
-}
-
-
-/* =========================================================
-   Scenario name
-   ========================================================= */
+/* ============================================================
+   6. 시나리오명 및 상태
+============================================================ */
 
 .scenario-name-button {
     display: flex;
     align-items: center;
-    gap: 10px;
-
+    gap: 8px;
     width: 100%;
     min-width: 0;
-
     padding: 0;
-
     border: 0;
-
     background: transparent;
     color: inherit;
-
     text-align: left;
-
     cursor: pointer;
 }
 
@@ -444,108 +363,68 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     flex: 0 0 auto;
-
-    width: 34px;
-    height: 34px;
-
+    width: 32px;
+    height: 32px;
     border-radius: var(--laro-radius-control);
-
     background: var(--laro-primary-light);
     color: var(--laro-primary);
-
-    font-size: 17px;
+    font-weight: var(--laro-font-weight-bold);
 }
 
 .scenario-name-content {
     display: flex;
     min-width: 0;
     flex-direction: column;
-    gap: 5px;
+    gap: 2px;
+}
+
+.scenario-name-content strong,
+.scenario-name-content small,
+.scenario-date {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .scenario-name-content strong {
-    overflow: hidden;
-
     color: var(--laro-navy);
-
-    font-size: 13px;
-    font-weight: 800;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-bold);
 }
 
-.scenario-name-content small {
-    overflow: hidden;
-
-    color: var(--laro-subtext);
-
-    font-size: 11px;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.scenario-name-button:hover strong {
-    color: var(--laro-primary);
-}
-
-
-/* =========================================================
-   Table contents
-   ========================================================= */
-
-.scenario-table-text,
-.scenario-date {
-    display: block;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.scenario-table-text {
-    color: var(--laro-text);
-}
-
+.scenario-name-content small,
 .scenario-date {
     color: var(--laro-subtext);
-
-    font-size: 12px;
+    font-size: var(--laro-font-caption);
 }
 
-
-/* =========================================================
-   Status
-   ========================================================= */
+.scenario-name-button:hover strong,
+.scenario-table tbody tr.is-selected .scenario-name-content strong {
+    color: var(--laro-primary-active);
+}
 
 .scenario-status {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
-    min-height: 25px;
-
-    padding: 0 10px;
-
+    min-height: 24px;
+    padding: 2px 10px;
+    border: 1px solid transparent;
     border-radius: var(--laro-radius-pill);
-
-    font-size: 12px;
-    font-weight: 700;
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
     white-space: nowrap;
 }
 
+.scenario-status-dot {
+    display: none;
+}
 
-/*
- * JSX에 status-dot 요소가 남아 있어도
- * 기존 UI처럼 표시되지 않도록 숨깁니다.
- */
-.scenario-status.is-draft {
+.scenario-status.is-draft,
+.scenario-status.is-default {
     background: var(--laro-muted-light);
-    color: var(--laro-subtext);
+    color: var(--laro-muted);
 }
 
 .scenario-status.is-validating {
@@ -558,59 +437,104 @@
     color: var(--laro-success);
 }
 
-.scenario-status.is-archived {
-    background: var(--laro-muted-light);
-    color: var(--laro-subtext);
+/* ============================================================
+   7. 행 메뉴
+============================================================ */
+
+.scenario-row-menu-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
 }
-
-.scenario-status.is-default {
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-}
-
-
-/* =========================================================
-   More button
-   ========================================================= */
 
 .scenario-more-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
-    width: 32px;
-    height: 32px;
-
+    width: 34px;
+    height: 34px;
     padding: 0;
-
     border: 0;
     border-radius: var(--laro-radius-control);
-
     background: transparent;
     color: var(--laro-subtext);
-
-    font-size: 18px;
-
+    font-size: var(--laro-font-metric);
+    line-height: 1;
     cursor: pointer;
-
-    transition:
-        background 0.18s ease,
-        color 0.18s ease;
 }
 
 .scenario-more-button:hover {
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
+    background: var(--laro-surface-hover);
+    color: var(--laro-navy);
 }
 
+.scenario-row-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 20;
+    width: 150px;
+    padding: 6px;
+    border: 1px solid var(--laro-border-dark);
+    border-radius: 0;
+    background: var(--laro-surface);
+    box-shadow: 0 8px 24px var(--laro-shadow);
+}
 
-/* =========================================================
-   Empty
-   ========================================================= */
+.scenario-row-status-menu {
+    display: grid;
+    gap: 2px;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-row-menu-label {
+    padding: 4px 8px;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.scenario-row-menu-button {
+    width: 100%;
+    min-height: 34px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: var(--laro-radius-control);
+    background: transparent;
+    color: var(--laro-text);
+    text-align: left;
+    cursor: pointer;
+}
+
+.scenario-row-menu-button:hover:not(:disabled) {
+    background: var(--laro-surface-hover);
+    color: var(--laro-navy);
+}
+
+.scenario-row-menu-button.is-active {
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.scenario-row-menu-button.is-danger {
+    color: var(--laro-danger);
+}
+
+.scenario-row-menu-button.is-danger:hover {
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
+/* ============================================================
+   8. 빈 상태 및 페이지네이션
+============================================================ */
 
 .scenario-empty {
-    height: 280px !important;
-
+    height: 240px !important;
+    color: var(--laro-subtext);
     text-align: center;
 }
 
@@ -618,170 +542,102 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
-    width: 46px;
-    height: 46px;
-
-    margin-bottom: 12px;
-
-    border-radius: var(--laro-radius-small);
-
+    width: 44px;
+    height: 44px;
+    margin-bottom: 10px;
+    border-radius: var(--laro-radius-control);
     background: var(--laro-primary-light);
     color: var(--laro-primary);
-
-    font-size: 23px;
+    font-size: var(--laro-font-metric);
 }
 
 .scenario-empty strong {
     display: block;
-
     color: var(--laro-navy);
-
-    font-size: 14px;
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
 }
 
 .scenario-empty p {
-    margin: 7px 0 0;
-
+    margin: 6px 0 0;
     color: var(--laro-subtext);
-
-    font-size: 12px;
+    font-size: var(--laro-font-body);
 }
-
-
-/* =========================================================
-   Footer and pagination
-   ========================================================= */
 
 .scenario-list-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
-
-    flex: 0 0 auto;
-
-    min-height: 70px;
-
-    padding: 14px 20px;
-
+    gap: var(--laro-gap-page);
+    min-height: 56px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--laro-border);
     background: var(--laro-surface);
 }
 
 .scenario-list-footer > span {
     color: var(--laro-subtext);
-
-    font-size: 11px;
+    font-size: var(--laro-font-caption);
 }
 
 .scenario-pagination {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
 }
 
 .scenario-pagination button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     min-width: 34px;
     height: 34px;
-
     padding: 0 8px;
-
     border: 1px solid transparent;
     border-radius: var(--laro-radius-control);
-
     background: transparent;
     color: var(--laro-subtext);
-
-    font-size: 12px;
-    font-weight: 700;
-
+    font-weight: var(--laro-font-weight-semibold);
     cursor: pointer;
-
-    transition:
-        border-color 0.18s ease,
-        background 0.18s ease,
-        color 0.18s ease;
 }
 
 .scenario-pagination button:hover:not(:disabled) {
     border-color: var(--laro-border);
-
     background: var(--laro-surface-hover);
     color: var(--laro-navy);
 }
 
 .scenario-pagination button.is-active {
     border-color: var(--laro-primary);
-
     background: var(--laro-primary);
-    color: var(--laro-surface);
+    color: var(--laro-white);
 }
 
-.scenario-pagination button:disabled {
-    cursor: not-allowed;
+/* ============================================================
+   9. 반응형
+============================================================ */
 
-    opacity: 0.35;
-}
-
-
-/* =========================================================
-   Focus
-   ========================================================= */
-
-.scenario-page button:focus-visible,
-.scenario-page input:focus-visible,
-.scenario-page select:focus-visible {
-    outline: none;
-
-    box-shadow: none;
-}
-
-
-/* =========================================================
-   Responsive
-   ========================================================= */
-
-@media (max-width: 1300px) {
-    .scenario-workspace {
-        grid-template-columns:
-            minmax(480px, 540px)
-            minmax(0, 1fr);
+@media (max-width: 1200px) {
+    .scenario-workspace.has-side-panel {
+        grid-template-columns: minmax(380px, 460px) minmax(0, 1fr);
     }
 
     .scenario-list-toolbar {
-        grid-template-columns:
-            minmax(180px, 1fr)
-            minmax(100px, 115px)
-            minmax(105px, 125px)
-            65px;
-
-        gap: 8px;
-    }
-
-    .scenario-reset-button {
-        min-width: 65px;
-
-        padding: 0 8px;
+        grid-template-columns: minmax(180px, 1fr) 125px 125px 80px;
     }
 }
 
 @media (max-width: 1050px) {
-    .scenario-workspace {
+    .scenario-workspace.has-side-panel {
         grid-template-columns: 1fr;
     }
 
     .scenario-list-card {
         position: static;
-
-        max-width: none;
-        max-height: none;
     }
 
     .scenario-table-wrapper {
+        min-height: 0;
         max-height: 430px;
     }
 }
@@ -800,31 +656,12 @@
         align-self: flex-start;
     }
 
-    /*
-     * 작은 화면에서만 필터를 두 줄로 변경합니다.
-     * 데스크톱에서는 계속 한 줄 수평 정렬입니다.
-     */
     .scenario-list-toolbar {
-        grid-template-columns:
-            minmax(0, 1fr)
-            minmax(110px, 130px)
-            70px;
+        grid-template-columns: 1fr 1fr;
     }
 
     .scenario-search {
         grid-column: 1 / -1;
-    }
-
-    .scenario-filter-select:first-of-type {
-        grid-column: 1;
-    }
-
-    .scenario-filter-select:nth-of-type(2) {
-        grid-column: 2;
-    }
-
-    .scenario-reset-button {
-        grid-column: 3;
     }
 }
 
@@ -833,10 +670,7 @@
         grid-template-columns: 1fr;
     }
 
-    .scenario-search,
-    .scenario-filter-select:first-of-type,
-    .scenario-filter-select:nth-of-type(2),
-    .scenario-reset-button {
+    .scenario-search {
         grid-column: auto;
     }
 
@@ -844,62 +678,4 @@
         align-items: flex-start;
         flex-direction: column;
     }
-}
-
-/* 새 root 적용 */
-.scenario-page {
-    background: var(--laro-background);
-    color: var(--laro-text);
-}
-
-/* 일반 페이지 헤더 */
-.scenario-list-header {
-    background: var(--laro-surface);
-    color: var(--laro-text);
-}
-
-.scenario-list-heading h1 {
-    color: var(--laro-navy);
-    font-size: var(--laro-font-page-title);
-    font-weight: var(--laro-font-weight-bold);
-}
-
-.scenario-list-heading p {
-    color: var(--laro-subtext);
-    font-size: var(--laro-font-body);
-}
-
-/* 버튼 */
-.scenario-button,
-.scenario-reset-button,
-.scenario-pagination button {
-    border-radius: var(--laro-radius-control);
-}
-
-.scenario-button-primary:active {
-    background: var(--laro-primary-active);
-    color: var(--laro-white);
-}
-
-/* 입력 */
-.scenario-page .scenario-search input,
-.scenario-page .scenario-filter-select {
-    border-radius: var(--laro-radius-control);
-    background: var(--laro-surface);
-}
-
-.scenario-page button:focus,
-.scenario-page button:focus-visible,
-.scenario-page input:focus,
-.scenario-page input:focus-visible,
-.scenario-page select:focus,
-.scenario-page select:focus-visible {
-    outline: none;
-    box-shadow: none;
-}
-
-/* 선택 */
-.scenario-table tbody tr.is-selected {
-    background: var(--laro-primary-light);
-    box-shadow: none;
 }
