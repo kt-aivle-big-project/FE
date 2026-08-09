@@ -474,15 +474,10 @@ function Board() {
         <section className="board-page">
             <header className="board-page-header">
                 <div>
-                    <p className="board-eyebrow">
-                        LARO SUPPORT
-                    </p>
-
                     <h1>지원센터</h1>
 
                     <p>
-                        공지사항, 사용 매뉴얼과 자유 게시판을
-                        확인할 수 있습니다.
+                        공지사항, 사용 매뉴얼과 자유 게시판을 확인할 수 있습니다.
                     </p>
                 </div>
             </header>
@@ -554,8 +549,7 @@ function Board() {
                                     <h2>공지사항</h2>
 
                                     <p>
-                                        서비스 주요 소식과 점검
-                                        내용을 확인합니다.
+                                        서비스 주요 소식과 점검 내용을 확인합니다.
                                     </p>
                                 </div>
 
@@ -668,8 +662,7 @@ function Board() {
                             <h2>사용 매뉴얼</h2>
 
                             <p>
-                                주요 기능별 이용 순서를
-                                확인합니다.
+                                주요 기능별 이용 순서를 확인합니다.
                             </p>
                         </div>
                     </div>
@@ -720,16 +713,12 @@ function Board() {
                                     </span>
 
                                     <h2>
-                                        {
-                                            selectedArchivePost.title
-                                        }
+                                        {selectedArchivePost.title}
                                     </h2>
 
                                     <p>
                                         작성{" "}
-                                        {
-                                            selectedArchivePost.createdAt
-                                        }
+                                        {selectedArchivePost.createdAt}
 
                                         {selectedArchivePost.updatedAt &&
                                             ` · 수정 ${selectedArchivePost.updatedAt}`}
@@ -824,8 +813,7 @@ function Board() {
                                     <h2>자유 게시판</h2>
 
                                     <p>
-                                        게시글과 관련 파일을
-                                        등록하고 관리합니다.
+                                        게시글과 관련 파일을 등록하고 관리합니다.
                                     </p>
                                 </div>
 
@@ -837,15 +825,12 @@ function Board() {
 
                                         <input
                                             type="search"
-                                            value={
-                                                archiveKeyword
-                                            }
+                                            value={archiveKeyword}
                                             onChange={(event) =>
                                                 setArchiveKeyword(
                                                     event.target
                                                         .value
-                                                )
-                                            }
+                                                )}
                                             placeholder="제목 또는 내용 검색"
                                         />
                                     </label>
