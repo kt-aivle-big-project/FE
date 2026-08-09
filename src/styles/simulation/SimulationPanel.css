@@ -1,23 +1,14 @@
 /* ============================================================
    1. 패널 전체 구조
 ============================================================ */
-
-.simulation-panel {
-    height: 650px;
-    min-width: 0;
-    min-height: 0;
-}
-
 .simulation-panel-card {
+    position: relative;
+    z-index: 20;
     display: flex;
     flex-direction: column;
     width: 100%;
     height: 100%;
-    min-width: 0;
-    min-height: 0;
-    overflow: hidden;
     border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-control);
     background: var(--laro-surface);
     color: var(--laro-text);
 }
@@ -65,10 +56,7 @@
 .simulation-panel-scroll {
     flex: 1;
     min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--laro-border-dark) transparent;
+    overflow: visible;
 }
 
 .simulation-panel-scroll::-webkit-scrollbar,
@@ -132,7 +120,7 @@
     border-radius: var(--laro-radius-pill);
     background: var(--laro-background);
     color: var(--laro-subtext);
-    font-size: 9px;
+    font-size: 10px;
     font-weight: var(--laro-font-weight-bold);
     white-space: nowrap;
 }
@@ -201,7 +189,7 @@
 
 .command-expression-copy strong {
     color: var(--laro-text);
-    font-size: 10px;
+    font-size: var(--laro-font-caption);
     font-weight: var(--laro-font-weight-semibold);
 }
 
@@ -209,7 +197,7 @@
     margin-top: 3px;
     overflow: hidden;
     color: var(--laro-subtext);
-    font-size: 8px;
+    font-size: 10px;
     line-height: 1.35;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -223,6 +211,7 @@
 
 .command-expression-switch {
     position: relative;
+    z-index: 30;
     width: 34px;
     height: 18px;
     padding: 0;
@@ -266,7 +255,7 @@
 
 .command-expression-switch::after {
     position: absolute;
-    z-index: 30;
+    z-index: 100;
     top: calc(100% + 8px);
     right: 0;
     width: 220px;
@@ -275,7 +264,7 @@
     background: var(--laro-navy);
     color: var(--laro-white);
     content: attr(data-tooltip);
-    font-size: 8px;
+    font-size: 10px;
     font-weight: var(--laro-font-weight-medium);
     line-height: 1.45;
     opacity: 0;
