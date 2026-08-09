@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import "../../styles/simulation/Simulation.css";
 
 import WarehouseSVG from "../../components/warehouse/viewer/WarehouseSVG";
-import SimulationPanel from "./SimulationPanel";
-import SimulationTaskList from "./SimulationTaskList";
-import SimulationRobotList from "./SimulationRobotList";
-import SimulationEventList from "./SimulationEventList";
+import SimulationPanel from "../../components/simulation/SimulationPanel";
+import SimulationTaskList from "../../components/simulation/SimulationTaskList";
+import SimulationRobotList from "../../components/simulation/SimulationRobotList";
+import SimulationEventList from "../../components/simulation/SimulationEventList";
 import useRobotAvoidanceTracker from "../../hooks/useRobotAvoidanceTracker";
 
 import useStompSubscriptions from "../../hooks/useStompSubscriptions";

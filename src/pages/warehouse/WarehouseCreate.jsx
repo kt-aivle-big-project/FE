@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { warehouseApi } from "../api/client";
-import WarehouseLayoutEditor from "../components/warehouse/editor/WarehouseLayoutEditor";
+import { warehouseApi } from "../../api/client";
+import WarehouseLayoutEditor from "../../components/warehouse/editor/WarehouseLayoutEditor";
 import { WarehouseMapPreview } from "./WarehouseManagement";
-import { layoutResponseToMapData } from "../utils/warehouseLayoutAdapter";
-import { createLayoutDraftFromMap } from "../utils/warehouseLayoutBuilder";
-import "../styles/WarehouseCreate.css";
+import { layoutResponseToMapData } from "../../utils/warehouseLayoutAdapter";
+import { createLayoutDraftFromMap } from "../../utils/warehouseLayoutBuilder";
+import "../../styles/warehouse/WarehouseCreate.css";
 
 // ============================================================
 // 1. 상수와 초기값

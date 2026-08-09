@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/OperationManagement.css";
+import "../../styles/operation/OperationManagement.css";
 
-import { operationApi, warehouseApi } from "../api/client";
-import { TOPICS } from "../api/config";
-import useStompSubscriptions from "../hooks/useStompSubscriptions";
+import { operationApi, warehouseApi } from "../../api/client";
+import { TOPICS } from "../../api/config";
+import useStompSubscriptions from "../../hooks/useStompSubscriptions";
 
 // 실시간 갱신을 몰아서 처리하는 간격(ms).
 // 시뮬레이션이 돌면 작업 변경이 몰아서 오기 때문에

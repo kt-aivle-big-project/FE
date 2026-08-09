@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import "../styles/RobotManagement.css";
+import "../../styles/RobotManagement.css";
 import {
     robotApi,
     robotSpecApi,
     simulationRunApi,
     taskApi,
     warehouseApi,
-} from "../api/client";
-import { TOPICS } from "../api/config";
-import useStompSubscriptions from "../hooks/useStompSubscriptions";
+} from "../../api/client";
+import { TOPICS } from "../../api/config";
+import useStompSubscriptions from "../../hooks/useStompSubscriptions";
 
 const SUMMARY_GROUPS = [
     {

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import "../styles/WarehouseManagement.css";
+import "../../styles/warehouse/WarehouseManagement.css";
 
-import { warehouseApi } from "../api/client";
-import { layoutResponseToMapData } from "../utils/warehouseLayoutAdapter";
+import { warehouseApi } from "../../api/client";
+import { layoutResponseToMapData } from "../../utils/warehouseLayoutAdapter";
 
-import warehouseGraph1 from "../assets/warehouse-maps/warehouse_graph_1.json";
+import warehouseGraph1 from "../../assets/warehouse-maps/warehouse_graph_1.json";
 
 // 백엔드 상태값 <-> 화면 표기
 const STATUS_TO_LABEL = {
