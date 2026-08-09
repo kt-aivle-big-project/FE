@@ -115,15 +115,12 @@ body {
     flex: 1;
     flex-direction: column;
     width: 100%;
-    min-width: 0;
     min-height: 100vh;
-    border-left: 0;
 }
 
 .page-content > * {
     width: 100%;
     max-width: none;
-    min-width: 0;
     min-height: 100vh;
 }
 
@@ -138,7 +135,7 @@ body {
 .footer {
     width: 100%;
     flex-shrink: 0;
-    padding: 18px 24px;
+    padding: 5px;
     border-top: 1px solid var(--laro-border);
     background: var(--laro-surface);
 }

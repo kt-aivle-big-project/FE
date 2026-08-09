@@ -1,8 +1,103 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import useStompSubscriptions from "../../hooks/useStompSubscriptions";
+import { TOPICS } from "../../api/config";
+import { simulationRunApi } from "../../api/client";
 import "../../styles/common/Sidebar.css";
+
+const RUN_ID_KEY = "simulationRunId";
+
+// 실제 시뮬레이션이 동작 중이라고 판단할 백엔드 상태
+const RUNNING_SIMULATION_STATUSES = [
+    "RUNNING",
+    "QUIESCING",
+    "REPLANNING",
+    "PENDING_ACTIVATION",
+];
 
 function Sidebar() {
     const navigate = useNavigate();
+    // 저장된 실행 ID를 기준으로 현재 시뮬레이션을 추적한다.
+    const [simulationRunId, setSimulationRunId] = useState(() => {
+        const savedRunId = localStorage.getItem(RUN_ID_KEY);
+
+        return savedRunId ? Number(savedRunId) : null;
+    });
+
+    const [simulationStatus, setSimulationStatus] = useState("IDLE");
+
+    // Simulation.jsx에서 실행 ID가 변경되면 Sidebar에도 즉시 반영한다.
+    useEffect(() => {
+        const handleSimulationRunChange = (event) => {
+            const runId = event.detail?.runId ?? null;
+
+            setSimulationRunId(runId);
+
+            if (!runId) {
+                setSimulationStatus("IDLE");
+            }
+        };
+
+        window.addEventListener(
+            "simulation-run-change",
+            handleSimulationRunChange
+        );
+
+        return () => {
+            window.removeEventListener(
+                "simulation-run-change",
+                handleSimulationRunChange
+            );
+        };
+    }, []);
+
+    // 페이지 진입 또는 새로고침 시 현재 실행 상태를 복구한다.
+    useEffect(() => {
+        if (!simulationRunId) {
+            setSimulationStatus("IDLE");
+            return;
+        }
+
+        const loadSimulationStatus = async () => {
+            try {
+                const current = await simulationRunApi.getStatus(
+                    simulationRunId
+                );
+
+                setSimulationStatus(current?.status ?? "IDLE");
+            } catch (error) {
+                console.warn(
+                    "사이드바 시뮬레이션 상태 조회 실패:",
+                    error.message
+                );
+
+                setSimulationStatus("IDLE");
+            }
+        };
+
+        loadSimulationStatus();
+    }, [simulationRunId]);
+
+    // 실행 중인 시뮬레이션의 상태 변경을 실시간으로 받는다.
+    const simulationSubscriptions = simulationRunId
+        ? {
+            [TOPICS.SIMULATION_RUNS]: (run) => {
+                if (run.simulationRunId !== simulationRunId) {
+                    return;
+                }
+
+                setSimulationStatus(run.status ?? "IDLE");
+            },
+        }
+        : {};
+
+    useStompSubscriptions(
+        simulationSubscriptions,
+        Boolean(simulationRunId)
+    );
+
+    const isSimulationRunning =
+        RUNNING_SIMULATION_STATUSES.includes(simulationStatus);
 
     const handleLogout = () => {
         const isLogout = window.confirm("로그아웃 하시겠습니까?");
@@ -16,9 +111,9 @@ function Sidebar() {
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
         localStorage.removeItem("testUser");
-	localStorage.removeItem("simulationRunId");
+        localStorage.removeItem("simulationRunId");
 
-	sessionStorage.removeItem("simulationRunId");
+        sessionStorage.removeItem("simulationRunId");
         sessionStorage.removeItem("accessToken");
         sessionStorage.removeItem("refreshToken");
         sessionStorage.removeItem("user");
@@ -65,7 +160,7 @@ function Sidebar() {
                                 `sidebar-link${isActive ? " active" : ""}`
                             }
                         >
-                            로봇
+                            로봇 관리
                         </NavLink>
                     </li>
 
@@ -76,7 +171,7 @@ function Sidebar() {
                                 `sidebar-link${isActive ? " active" : ""}`
                             }
                         >
-                            창고
+                            창고 관리
                         </NavLink>
                     </li>
 
@@ -87,7 +182,7 @@ function Sidebar() {
                                 `sidebar-link${isActive ? " active" : ""}`
                             }
                         >
-                            운영/대시보드
+                            대시보드
                         </NavLink>
                     </li>
 
@@ -104,14 +199,33 @@ function Sidebar() {
                 </ul>
             </nav>
 
-            <div className="sidebar-logout">
-                <button
-                    type="button"
-                    className="sidebar-logout-button"
-                    onClick={handleLogout}
+            <div className="sidebar-bottom">
+                <section
+                    className={`sidebar-simulation-status ${isSimulationRunning ? "is-running" : "is-idle"
+                        }`}
                 >
-                    로그아웃
-                </button>
+                    <span className="sidebar-simulation-status__label">
+                        SIMULATION STATUS
+                    </span>
+
+                    <div className="sidebar-simulation-status__state">
+                        <span className="sidebar-simulation-status__indicator" />
+
+                        <span className="sidebar-simulation-status__text">
+                            {isSimulationRunning ? "RUNNING" : "IDLE"}
+                        </span>
+                    </div>
+                </section>
+
+                <div className="sidebar-logout">
+                    <button
+                        type="button"
+                        className="sidebar-logout-button"
+                        onClick={handleLogout}
+                    >
+                        로그아웃
+                    </button>
+                </div>
             </div>
         </aside>
     );

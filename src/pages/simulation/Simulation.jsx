@@ -182,7 +182,15 @@ function Simulation() {
         } else {
             localStorage.removeItem(RUN_ID_KEY);
         }
+
         setSimulationRunIdState(runId);
+
+        // 같은 탭의 Sidebar에도 실행 ID 변경을 알린다.
+        window.dispatchEvent(
+            new CustomEvent("simulation-run-change", {
+                detail: { runId: runId ?? null },
+            })
+        );
     };
 
     // 시작하면 그 실행의 작업으로 채워지고, 이후 WebSocket 으로 갱신된다.
