@@ -448,7 +448,6 @@ function WarehouseCreate() {
                         ← 창고 목록
                     </button>
                     <div className="warehouse-create-title">
-                        <span>WAREHOUSE BUILDER</span>
                         <h1>{pageTitle}</h1>
                         <p>{pageDescription}</p>
                     </div>
