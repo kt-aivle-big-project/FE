@@ -369,15 +369,15 @@
 }
 
 .simulation-header-button.new-run {
-    border-color: var(--laro-border-dark);
+    border-color: var(--laro-success);
     background: var(--laro-surface);
-    color: var(--laro-navy);
+    color: var(--laro-success);
 }
 
 .simulation-header-button.new-run:hover {
-    border-color: var(--laro-primary);
-    background: var(--laro-primary-light);
-    color: var(--laro-primary-active);
+    border-color: var(--laro-success);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
 }
 
 

@@ -1081,6 +1081,7 @@ function Simulation() {
                             type="button"
                             className="simulation-header-button start"
                             onClick={handleStart}
+                            title="현재 작업으로 시뮬레이션을 실행합니다"
                         >
                             ▶ 시작
                         </button>
@@ -1088,6 +1089,7 @@ function Simulation() {
                             type="button"
                             className="simulation-header-button"
                             onClick={handlePause}
+                            title="현재 작업을 잠시 멈춥니다"
                         >
                             Ⅱ 일시정지
                         </button>
@@ -1095,6 +1097,7 @@ function Simulation() {
                             type="button"
                             className="simulation-header-button"
                             onClick={handleReset}
+                            title="현재 작업을 처음부터 다시 실행합니다"
                         >
                             ↻ 초기화
                         </button>
@@ -1102,6 +1105,7 @@ function Simulation() {
                             type="button"
                             className="simulation-header-button replan"
                             onClick={handleReplan}
+                            title="실행 중인 작업에서 로봇 상태를 재계획합니다"
                         >
                             재계획
                         </button>
@@ -1109,7 +1113,7 @@ function Simulation() {
                             type="button"
                             className="simulation-header-button new-run"
                             onClick={handleNewRun}
-                            title="현재 작업을 버리고 지금 설정으로 작업을 새로 생성합니다"
+                            title="현재 작업을 버리고 지금 설정으로 새로운 작업을 생성합니다"
                         >
                             새 작업
                         </button>
