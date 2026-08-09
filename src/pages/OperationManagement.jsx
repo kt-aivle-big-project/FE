@@ -36,32 +36,32 @@ const ROBOT_STATUS_META = [
     {
         key: "AVAILABLE",
         label: "사용 가능",
-        color: "#4f7df3",
+        color: "var(--laro-primary)",
     },
     {
         key: "WORKING",
         label: "작업 중",
-        color: "#39a96b",
+        color: "var(--laro-success)",
     },
     {
         key: "CHARGING",
         label: "충전 중",
-        color: "#f59f2f",
+        color: "var(--laro-warning)",
     },
     {
         key: "UNAVAILABLE",
         label: "사용 불가",
-        color: "#8a93a2",
+        color: "var(--laro-muted)",
     },
     {
         key: "OFFLINE",
         label: "오프라인",
-        color: "#7b61d1",
+        color: "var(--laro-subtext)",
     },
     {
         key: "ERROR",
         label: "오류",
-        color: "#e95b5b",
+        color: "var(--laro-danger)",
     },
 ];
 
@@ -221,7 +221,7 @@ const buildDonutGradient = (items) => {
 
     // 데이터가 없어도 도넛 그래프의 기본 틀은 남깁니다.
     if (total === 0) {
-        return "conic-gradient(#e5e5e5 0deg 360deg)";
+        return "conic-gradient(var(--laro-muted-light) 0deg 360deg)";
     }
 
     let accumulated = 0;
@@ -1038,12 +1038,12 @@ function OperationManagement() {
                                 >
                                     <stop
                                         offset="0%"
-                                        stopColor="#6d5dfc"
+                                        stopColor="var(--laro-primary)"
                                         stopOpacity="0.25"
                                     />
                                     <stop
                                         offset="100%"
-                                        stopColor="#6d5dfc"
+                                        stopColor="var(--laro-primary)"
                                         stopOpacity="0"
                                     />
                                 </linearGradient>
