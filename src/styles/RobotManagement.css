@@ -1,0 +1,915 @@
+.robot-management-wrapper,
+.robot-management-wrapper * {
+    box-sizing: border-box;
+}
+
+.robot-management-wrapper {
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
+    color: #111;
+    background: #fff;
+    font-family: Arial, "Noto Sans KR", sans-serif;
+}
+
+/* 헤더 */
+.robot-management-wrapper .robot-management-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid #777;
+    background: #fff;
+}
+
+.robot-management-wrapper .robot-management-title {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.2;
+}
+
+.robot-management-wrapper .robot-management-description {
+    margin: 6px 0 0;
+    font-size: 14px;
+}
+
+.robot-management-wrapper .robot-management-header-buttons {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.robot-management-wrapper .robot-management-button,
+.robot-management-wrapper .robot-filter-reset,
+.robot-management-wrapper .robot-modal-actions button {
+    min-height: 38px;
+    padding: 0 16px;
+    border: 1px solid #777;
+    border-radius: 0;
+    background: #fff;
+    color: #111;
+    font: inherit;
+    cursor: pointer;
+}
+
+.robot-management-wrapper .robot-management-button.primary,
+.robot-management-wrapper .robot-modal-actions button.primary {
+    border-color: #000;
+    background: #000;
+    color: #fff;
+}
+
+.robot-management-wrapper button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* 상단 상태 요약 */
+.robot-management-wrapper .robot-summary {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(110px, 1fr));
+    gap: 8px;
+    width: 100%;
+    margin-top: 8px;
+    overflow-x: auto;
+}
+
+.robot-management-wrapper .robot-summary-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 130px;
+    min-height: 78px;
+    padding: 10px;
+    border: 1px solid #777;
+    border-radius: 0;
+    background: #fff;
+    color: #111;
+    font: inherit;
+    cursor: pointer;
+}
+
+.robot-management-wrapper .robot-summary-card:hover,
+.robot-management-wrapper .robot-summary-card.active {
+    background: #f2f2f2;
+    outline: 2px solid #222;
+    outline-offset: -2px;
+}
+
+.robot-management-wrapper .robot-summary-icon {
+    width: 18px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.robot-management-wrapper .robot-summary-copy {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 2px;
+}
+
+.robot-management-wrapper .robot-summary-label {
+    font-size: 14px;
+}
+
+.robot-management-wrapper .robot-summary-value {
+    font-size: 24px;
+    line-height: 1;
+}
+
+/* 필터 */
+.robot-management-wrapper .robot-filter-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.robot-management-wrapper .robot-filter {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) 150px 120px 100px;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid #777;
+    background: #fff;
+}
+
+.robot-management-wrapper .robot-filter-search,
+.robot-management-wrapper .robot-filter-select,
+.robot-management-wrapper .robot-modal-field input,
+.robot-management-wrapper .robot-modal-field select {
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    padding: 0 10px;
+    border: 1px solid #777;
+    border-radius: 0;
+    background: #fff;
+    color: #111;
+    font: inherit;
+}
+
+.robot-management-wrapper .robot-filter-guide {
+    min-height: 28px;
+    padding: 0 2px;
+    font-size: 14px;
+    line-height: 28px;
+}
+
+/* 목록 + 상세 레이아웃 */
+.robot-management-wrapper .robot-content-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 320px !important;
+    gap: 10px;
+    align-items: start;
+    width: 100%;
+    min-width: 0;
+    margin-top: 8px;
+}
+
+.robot-management-wrapper .robot-list,
+.robot-management-wrapper .robot-detail {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #777;
+    background: #fff;
+}
+
+.robot-management-wrapper .robot-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 46px;
+    padding: 0 12px;
+    border-bottom: 1px solid #777;
+}
+
+.robot-management-wrapper .robot-section-header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.robot-management-wrapper .robot-section-header span {
+    font-size: 13px;
+    color: #666;
+}
+
+/* 로봇 표 */
+.robot-management-wrapper .robot-table-wrapper {
+    width: 100%;
+    min-width: 0;
+    min-height: 500px;
+    overflow: auto;
+}
+
+.robot-management-wrapper .robot-table {
+    width: 100%;
+    min-width: 850px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.robot-management-wrapper .robot-table th,
+.robot-management-wrapper .robot-table td {
+    height: 48px;
+    padding: 8px;
+    border-right: 1px solid #777;
+    border-bottom: 1px solid #777;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 13px;
+    word-break: keep-all;
+}
+
+.robot-management-wrapper .robot-table th:last-child,
+.robot-management-wrapper .robot-table td:last-child {
+    border-right: 0;
+}
+
+.robot-management-wrapper .robot-table th {
+    background: #f5f5f5;
+    font-weight: 700;
+}
+
+.robot-management-wrapper .robot-table tbody tr {
+    cursor: pointer;
+}
+
+.robot-management-wrapper .robot-table tbody tr:hover,
+.robot-management-wrapper .robot-table tbody tr.selected {
+    background: #eef4fb;
+}
+
+.robot-management-wrapper .robot-table tbody tr.selected {
+    box-shadow: inset 3px 0 0 #333;
+}
+
+.robot-management-wrapper .robot-table-message {
+    height: 120px;
+}
+
+.robot-management-wrapper .robot-number-cell {
+    font-weight: 700;
+}
+
+.robot-management-wrapper .robot-row-icon {
+    display: inline-block;
+    margin-right: 4px;
+    font-size: 10px;
+}
+
+.robot-management-wrapper .robot-model-cell {
+    font-weight: 600;
+}
+
+/* 상태 배지 */
+.robot-management-wrapper .robot-status,
+.robot-management-wrapper .task-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 2px 10px;
+    border: 1px solid #777;
+    border-radius: 999px;
+    background: #fff;
+    white-space: nowrap;
+    font-size: 12px;
+}
+
+.robot-management-wrapper .status-available {
+    background: #f1f8f1;
+}
+
+.robot-management-wrapper .status-working,
+.robot-management-wrapper .task-in-progress,
+.robot-management-wrapper .task-assigned {
+    background: #eef4fb;
+}
+
+.robot-management-wrapper .status-charging {
+    background: #fff8e8;
+}
+
+.robot-management-wrapper .status-unavailable,
+.robot-management-wrapper .status-error,
+.robot-management-wrapper .task-failed {
+    background: #fff0f0;
+}
+
+.robot-management-wrapper .status-offline {
+    background: #f2f2f2;
+    color: #666;
+}
+
+/* 배터리 */
+.robot-management-wrapper .robot-battery {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.robot-management-wrapper .robot-battery-track,
+.robot-management-wrapper .robot-detail-battery-track {
+    height: 7px;
+    overflow: hidden;
+    border: 1px solid #777;
+    background: #fff;
+}
+
+.robot-management-wrapper .robot-battery-track {
+    width: 74px;
+}
+
+.robot-management-wrapper .robot-battery-fill,
+.robot-management-wrapper .robot-detail-battery-fill {
+    height: 100%;
+    background: #178b25;
+}
+
+/* 상세 패널 */
+.robot-management-wrapper .robot-detail {
+    min-height: 500px;
+}
+
+.robot-management-wrapper .robot-detail-content {
+    padding: 14px;
+}
+
+.robot-management-wrapper .robot-detail-empty {
+    padding: 30px 14px;
+    text-align: center;
+    color: #666;
+}
+
+.robot-management-wrapper .robot-detail-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #777;
+}
+
+.robot-management-wrapper .robot-detail-id,
+.robot-management-wrapper .robot-detail-model {
+    display: block;
+    color: #777;
+    font-size: 13px;
+}
+
+.robot-management-wrapper .robot-detail-name {
+    margin: 4px 0;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.robot-management-wrapper .robot-detail-section {
+    padding: 14px 0;
+    border-bottom: 1px solid #777;
+}
+
+.robot-management-wrapper .robot-detail-section:last-child {
+    border-bottom: 0;
+}
+
+.robot-management-wrapper .robot-detail-section h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+}
+
+.robot-management-wrapper .robot-detail-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 28px;
+    font-size: 13px;
+}
+
+.robot-management-wrapper .robot-detail-item span {
+    color: #777;
+}
+
+.robot-management-wrapper .robot-detail-item strong {
+    text-align: right;
+}
+
+.robot-management-wrapper .robot-detail-battery-track {
+    width: 100%;
+    margin: 4px 0 12px;
+}
+
+.robot-management-wrapper .robot-task-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+/* 등록 모달 */
+.robot-management-wrapper .robot-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.robot-management-wrapper .robot-modal {
+    width: min(520px, 100%);
+    max-height: 90vh;
+    overflow: auto;
+    border: 1px solid #333;
+    background: #fff;
+}
+
+.robot-management-wrapper .robot-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px;
+    border-bottom: 1px solid #777;
+}
+
+.robot-management-wrapper .robot-modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.robot-management-wrapper .robot-modal-close {
+    border: 0;
+    background: transparent;
+    font-size: 26px;
+    cursor: pointer;
+}
+
+.robot-management-wrapper .robot-modal-content {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+}
+
+.robot-management-wrapper .robot-modal-field {
+    display: grid;
+    gap: 6px;
+}
+
+.robot-management-wrapper .robot-modal-field > span {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.robot-management-wrapper .robot-modal-input-unit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.robot-management-wrapper .robot-modal-input-unit input {
+    flex: 1;
+}
+
+.robot-management-wrapper .robot-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 14px 16px;
+    border-top: 1px solid #777;
+}
+
+
+/* 로봇 삭제 버튼 */
+.robot-management-wrapper .robot-delete-button {
+    min-height: 34px;
+    padding: 0 13px;
+    border: 1px solid #c62828;
+    border-radius: 0;
+    background: #fff;
+    color: #c62828;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.robot-management-wrapper .robot-delete-button:hover:not(:disabled) {
+    background: #fff0f0;
+}
+
+.robot-management-wrapper .robot-delete-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* 반응형 */
+@media (max-width: 1200px) {
+    .robot-management-wrapper .robot-content-grid {
+        grid-template-columns: minmax(0, 1fr) 290px !important;
+    }
+
+    .robot-management-wrapper .robot-summary {
+        grid-template-columns: repeat(4, minmax(130px, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .robot-management-wrapper .robot-management-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .robot-management-wrapper .robot-filter {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .robot-management-wrapper .robot-content-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .robot-management-wrapper .robot-detail {
+        min-height: auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .robot-management-wrapper {
+        padding: 8px;
+    }
+
+    .robot-management-wrapper .robot-summary {
+        grid-template-columns: repeat(2, minmax(130px, 1fr));
+    }
+
+    .robot-management-wrapper .robot-filter {
+        grid-template-columns: 1fr;
+    }
+
+    .robot-management-wrapper .robot-management-header-buttons {
+        width: 100%;
+    }
+
+    .robot-management-wrapper .robot-management-button {
+        flex: 1;
+    }
+}
+
+/* ============================================================
+   LARO 관제센터 스타일
+   기존 구조와 동작은 유지하고 색상과 표면 디자인을 통일한다.
+============================================================ */
+
+.robot-management-wrapper {
+    padding: 12px;
+    border-left: 0;
+    background: var(--laro-background);
+    color: var(--laro-text);
+}
+
+/* 페이지 헤더 */
+.robot-management-wrapper .robot-management-header {
+    min-height: auto;
+    padding: 8px 4px 14px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.robot-management-wrapper .robot-management-title {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-page-title);
+    font-weight: var(--laro-font-weight-bold);
+    letter-spacing: -0.02em;
+}
+
+.robot-management-wrapper .robot-management-description {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-body);
+}
+
+/* 버튼 */
+.robot-management-wrapper .robot-management-button,
+.robot-management-wrapper .robot-filter-reset,
+.robot-management-wrapper .robot-modal-actions button {
+    min-height: 40px;
+    border: 1px solid var(--laro-border-dark);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-navy);
+    font-weight: var(--laro-font-weight-semibold);
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.robot-management-wrapper .robot-management-button:hover,
+.robot-management-wrapper .robot-filter-reset:hover,
+.robot-management-wrapper .robot-modal-actions button:hover {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.robot-management-wrapper .robot-management-button.primary,
+.robot-management-wrapper .robot-modal-actions button.primary {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary);
+    color: var(--laro-white);
+}
+
+.robot-management-wrapper .robot-management-button.primary:hover,
+.robot-management-wrapper .robot-modal-actions button.primary:hover {
+    border-color: var(--laro-primary-hover);
+    background: var(--laro-primary-hover);
+    color: var(--laro-white);
+}
+
+
+.robot-management-wrapper .robot-management-button.primary:active,
+.robot-management-wrapper .robot-modal-actions button.primary:active {
+    border-color: var(--laro-primary-active);
+    background: var(--laro-primary-active);
+    color: var(--laro-white);
+}
+
+.robot-management-wrapper button:focus,
+.robot-management-wrapper button:focus-visible,
+.robot-management-wrapper button:active {
+    outline: none;
+    box-shadow: none;
+}
+
+/* 상태 요약 */
+.robot-management-wrapper .robot-summary {
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.robot-management-wrapper .robot-summary-card {
+    min-height: 76px;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    box-shadow: none;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.robot-management-wrapper .robot-summary-card:hover {
+    border-color: var(--laro-border-dark);
+    background: var(--laro-surface-hover);
+    outline: none;
+}
+
+.robot-management-wrapper .robot-summary-card.active {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+    outline: none;
+    box-shadow: none;
+}
+
+.robot-management-wrapper .robot-summary-icon {
+    color: var(--laro-primary);
+}
+
+.robot-management-wrapper .robot-summary-label {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-body);
+}
+
+.robot-management-wrapper .robot-summary-value {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-metric);
+    font-weight: var(--laro-font-weight-bold);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 검색 및 필터 */
+.robot-management-wrapper .robot-filter {
+    padding: 12px;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+}
+
+.robot-management-wrapper .robot-filter-search,
+.robot-management-wrapper .robot-filter-select,
+.robot-management-wrapper .robot-modal-field input,
+.robot-management-wrapper .robot-modal-field select {
+    min-height: 38px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    outline: none;
+}
+
+.robot-management-wrapper .robot-filter-search::placeholder,
+.robot-management-wrapper .robot-modal-field input::placeholder {
+    color: var(--laro-placeholder);
+}
+
+.robot-management-wrapper .robot-filter-search:hover,
+.robot-management-wrapper .robot-filter-select:hover,
+.robot-management-wrapper .robot-modal-field input:hover,
+.robot-management-wrapper .robot-modal-field select:hover {
+    border-color: var(--laro-border-dark);
+}
+
+.robot-management-wrapper .robot-filter-search:focus,
+.robot-management-wrapper .robot-filter-search:focus-visible,
+.robot-management-wrapper .robot-filter-select:focus,
+.robot-management-wrapper .robot-filter-select:focus-visible,
+.robot-management-wrapper .robot-modal-field input:focus,
+.robot-management-wrapper .robot-modal-field input:focus-visible,
+.robot-management-wrapper .robot-modal-field select:focus,
+.robot-management-wrapper .robot-modal-field select:focus-visible {
+    border-color: var(--laro-primary);
+    outline: none;
+    box-shadow: none;
+}
+
+.robot-management-wrapper .robot-filter-guide {
+    color: var(--laro-subtext);
+}
+
+/* 목록 및 상세 패널 */
+.robot-management-wrapper .robot-list,
+.robot-management-wrapper .robot-detail {
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+    box-shadow: none;
+}
+
+.robot-management-wrapper .robot-section-header {
+    min-height: 48px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.robot-management-wrapper .robot-section-header h2 {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-section-title);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.robot-management-wrapper .robot-section-header span {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+}
+
+/* 로봇 표 */
+.robot-management-wrapper .robot-table th,
+.robot-management-wrapper .robot-table td {
+    border-right-color: var(--laro-border);
+    border-bottom-color: var(--laro-border);
+    color: var(--laro-text);
+}
+
+.robot-management-wrapper .robot-table th {
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.robot-management-wrapper .robot-table tbody tr:hover {
+    background: var(--laro-surface-hover);
+}
+
+.robot-management-wrapper .robot-table tbody tr.selected {
+    background: var(--laro-primary-light);
+    box-shadow: none;
+}
+
+/* 상태 배지 */
+.robot-management-wrapper .robot-status,
+.robot-management-wrapper .task-status {
+    border-color: transparent;
+    border-radius: var(--laro-radius-pill);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.robot-management-wrapper .status-available {
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.robot-management-wrapper .status-working,
+.robot-management-wrapper .task-in-progress,
+.robot-management-wrapper .task-assigned {
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.robot-management-wrapper .status-charging {
+    background: var(--laro-warning-light);
+    color: var(--laro-warning-hover);
+}
+
+.robot-management-wrapper .status-unavailable,
+.robot-management-wrapper .status-error,
+.robot-management-wrapper .task-failed {
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
+.robot-management-wrapper .status-offline {
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+}
+
+/* 배터리 */
+.robot-management-wrapper .robot-battery-track,
+.robot-management-wrapper .robot-detail-battery-track {
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-muted-light);
+}
+
+.robot-management-wrapper .robot-battery-fill,
+.robot-management-wrapper .robot-detail-battery-fill {
+    background: var(--laro-success);
+}
+
+/* 상세 정보 */
+.robot-management-wrapper .robot-detail-content {
+    color: var(--laro-text);
+}
+
+.robot-management-wrapper .robot-detail-empty,
+.robot-management-wrapper .robot-detail-id,
+.robot-management-wrapper .robot-detail-model,
+.robot-management-wrapper .robot-detail-item span {
+    color: var(--laro-subtext);
+}
+
+.robot-management-wrapper .robot-detail-name {
+    color: var(--laro-navy);
+}
+
+.robot-management-wrapper .robot-detail-main,
+.robot-management-wrapper .robot-detail-section {
+    border-bottom-color: var(--laro-border);
+}
+
+/* 등록 모달 */
+.robot-management-wrapper .robot-modal-overlay {
+    background: var(--laro-overlay);
+}
+
+.robot-management-wrapper .robot-modal {
+    border: 1px solid var(--laro-border-dark);
+    border-radius: 0;
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    box-shadow: 0 18px 44px var(--laro-shadow-medium);
+}
+
+.robot-management-wrapper .robot-modal-header,
+.robot-management-wrapper .robot-modal-actions {
+    border-color: var(--laro-border);
+}
+
+.robot-management-wrapper .robot-modal-header h2 {
+    color: var(--laro-navy);
+}
+
+.robot-management-wrapper .robot-modal-close {
+    color: var(--laro-subtext);
+}
+
+.robot-management-wrapper .robot-modal-close:hover {
+    color: var(--laro-danger);
+    background: transparent;
+}
+
+@media (max-width: 900px) {
+    .robot-management-wrapper .robot-management-header {
+        height: auto;
+        min-height: auto;
+        padding: 8px 4px 14px;
+    }
+}
+
+@media (max-width: 600px) {
+    .robot-management-wrapper {
+        padding: 8px;
+    }
+}
+

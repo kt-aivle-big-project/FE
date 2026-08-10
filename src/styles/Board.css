@@ -1,0 +1,1138 @@
+.board-page {
+    width: 100%;
+    min-height: 100vh;
+    padding: 36px;
+    box-sizing: border-box;
+    background: var(--laro-background);
+    color: var(--laro-text);
+}
+
+.board-page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.board-page-header h1 {
+    margin: 4px 0 8px;
+    font-size: 32px;
+    line-height: 1.2;
+}
+
+.board-page-header p {
+    margin: 0;
+    color: var(--laro-subtext);
+    line-height: 1.6;
+}
+
+.board-eyebrow {
+    color: var(--laro-primary) !important;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.board-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding: 6px;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+}
+
+.board-tab {
+    min-width: 120px;
+    padding: 11px 18px;
+    border: 0;
+    border-radius: var(--laro-radius-control);
+    background: transparent;
+    color: var(--laro-subtext);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.board-tab:hover {
+    background: var(--laro-surface-hover);
+}
+
+.board-tab.is-active {
+    background: var(--laro-primary);
+    color: var(--laro-surface);
+}
+
+.board-panel {
+    overflow: hidden;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+    box-shadow: 0 12px 30px var(--laro-shadow);
+}
+
+.board-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 24px 26px;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.board-toolbar h2 {
+    margin: 0 0 6px;
+    font-size: 21px;
+}
+
+.board-toolbar p {
+    margin: 0;
+    color: var(--laro-subtext);
+    font-size: 14px;
+}
+
+.board-search input {
+    width: 280px;
+    height: 42px;
+    padding: 0 14px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    font: inherit;
+    box-sizing: border-box;
+}
+
+.board-search input:focus {
+    border-color: var(--laro-primary);
+    outline: none;
+    box-shadow: none;
+}
+
+.board-table-wrapper {
+    overflow-x: auto;
+}
+
+.board-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.board-table th,
+.board-table td {
+    padding: 15px 14px;
+    border-bottom: 1px solid var(--laro-border);
+    text-align: center;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.board-table th {
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-weight: 700;
+}
+
+.board-table tbody tr:hover {
+    background: var(--laro-surface-hover);
+}
+
+.notice-table th:nth-child(1),
+.notice-table td:nth-child(1) {
+    width: 76px;
+}
+
+.notice-table th:nth-child(2),
+.notice-table td:nth-child(2) {
+    width: 110px;
+}
+
+.notice-table th:nth-child(4),
+.notice-table td:nth-child(4) {
+    width: 100px;
+}
+
+.notice-table th:nth-child(5),
+.notice-table td:nth-child(5) {
+    width: 130px;
+}
+
+.board-title-cell {
+    text-align: left !important;
+}
+
+.board-title-cell button {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--laro-text);
+    text-align: left;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.board-title-cell button:hover {
+    color: var(--laro-primary);
+}
+
+.notice-category,
+.archive-category {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 4px 9px;
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.notice-detail,
+.archive-detail {
+    padding: 28px;
+}
+
+.notice-detail-heading,
+.archive-detail-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.notice-detail-heading h2,
+.archive-detail-heading h2 {
+    margin: 12px 0 8px;
+    font-size: 25px;
+}
+
+.notice-detail-heading p,
+.archive-detail-heading p {
+    margin: 0;
+    color: var(--laro-subtext);
+    font-size: 14px;
+}
+
+.notice-detail-content,
+.archive-detail-content {
+    min-height: 220px;
+    padding: 30px 4px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.board-secondary-button {
+    min-height: 42px;
+    padding: 0 18px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.board-secondary-button:hover {
+    background: var(--laro-surface-hover);
+}
+
+.board-danger-button {
+    min-height: 42px;
+    padding: 0 18px;
+    border: 1px solid var(--laro-danger);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-danger);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.board-danger-button:hover {
+    background: var(--laro-danger-light);
+}
+
+.manual-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    padding: 24px;
+}
+
+.manual-card {
+    position: relative;
+    padding: 24px;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+}
+
+.manual-number {
+    position: absolute;
+    top: 20px;
+    right: 22px;
+    color: var(--laro-primary-light);
+    font-size: 34px;
+    font-weight: 800;
+}
+
+.manual-card h3 {
+    margin: 0 0 8px;
+    padding-right: 48px;
+    font-size: 19px;
+}
+
+.manual-card > p {
+    margin: 0 0 20px;
+    color: var(--laro-subtext);
+    line-height: 1.6;
+}
+
+.manual-card ol {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.manual-card li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--laro-text);
+    line-height: 1.5;
+}
+
+.manual-card li span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    border-radius: 50%;
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* 자유 게시판 상단 */
+
+.archive-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.archive-new-button {
+    min-width: 112px;
+    height: 42px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-primary);
+    color: var(--laro-surface);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.archive-new-button:hover {
+    background: var(--laro-primary-hover);
+}
+
+.archive-list-message {
+    margin: 18px 22px 0;
+    padding: 11px 14px;
+    border: 1px solid var(--laro-success);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+    font-size: 13px;
+}
+
+.archive-list-section {
+    min-width: 0;
+    background: var(--laro-surface);
+}
+
+.archive-list-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 66px;
+    padding: 0 22px;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.archive-list-summary strong {
+    font-size: 16px;
+}
+
+.archive-list-summary span {
+    color: var(--laro-subtext);
+    font-size: 13px;
+}
+
+/* 자유 게시판 테이블 */
+
+.archive-table {
+    min-width: 800px;
+}
+
+.archive-table th:nth-child(1),
+.archive-table td:nth-child(1) {
+    width: 70px;
+}
+
+.archive-table th:nth-child(3),
+.archive-table td:nth-child(3) {
+    width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.archive-table th:nth-child(4),
+.archive-table td:nth-child(4) {
+    width: 175px;
+}
+
+.archive-table th:nth-child(5),
+.archive-table td:nth-child(5) {
+    width: 135px;
+}
+
+.archive-manage-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.archive-edit-button {
+    min-width: 52px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-primary);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.archive-edit-button:hover {
+    background: var(--laro-primary-light);
+}
+
+.archive-delete-button {
+    min-width: 52px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--laro-danger);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-danger);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.archive-delete-button:hover {
+    background: var(--laro-danger-light);
+}
+
+/* 게시글 상세 */
+
+.archive-detail-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.archive-detail-actions .archive-edit-button {
+    min-width: 68px;
+    height: 42px;
+    padding: 0 18px;
+    border-radius: var(--laro-radius-control);
+}
+
+.archive-detail-attachment {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 17px 18px;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: #f8fbff;
+}
+
+.archive-detail-attachment div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.archive-detail-attachment span {
+    margin-bottom: 5px;
+    color: var(--laro-subtext);
+    font-size: 12px;
+}
+
+.archive-detail-attachment strong {
+    overflow: hidden;
+    color: var(--laro-text);
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.archive-detail-attachment small {
+    margin-top: 4px;
+    color: var(--laro-subtext);
+    font-size: 12px;
+}
+
+.archive-detail-attachment a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 15px;
+    flex-shrink: 0;
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-primary);
+    color: var(--laro-surface);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.archive-detail-attachment a:hover {
+    background: var(--laro-primary-hover);
+}
+
+/* 작성·수정 팝업 */
+
+.archive-modal-overlay {
+    position: fixed;
+    z-index: 2000;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--laro-overlay);
+    backdrop-filter: blur(2px);
+}
+
+.archive-modal {
+    width: min(620px, 100%);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+    box-shadow: 0 24px 70px var(--laro-shadow-medium);
+}
+
+.archive-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 24px 26px;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.archive-modal-header h2 {
+    margin: 0 0 7px;
+    color: var(--laro-text);
+    font-size: 23px;
+}
+
+.archive-modal-header p {
+    margin: 0;
+    color: var(--laro-subtext);
+    font-size: 14px;
+}
+
+.archive-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--laro-radius-control);
+    background: transparent;
+    color: var(--laro-subtext);
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.archive-modal-close:hover {
+    background: var(--laro-surface-hover);
+}
+
+.archive-modal-form {
+    padding: 24px 26px 26px;
+}
+
+.archive-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.archive-form-field > span {
+    color: var(--laro-text);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.archive-form-field input[type="text"],
+.archive-form-field input[type="file"],
+.archive-form-field textarea {
+    width: 100%;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    font: inherit;
+    box-sizing: border-box;
+}
+
+.archive-form-field input[type="text"] {
+    height: 44px;
+    padding: 0 13px;
+}
+
+.archive-form-field input[type="file"] {
+    padding: 10px;
+    color: var(--laro-subtext);
+    font-size: 13px;
+}
+
+.archive-form-field input[type="file"]::file-selector-button {
+    margin-right: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-background);
+    color: var(--laro-text);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.archive-form-field textarea {
+    min-height: 190px;
+    padding: 13px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.archive-form-field input:focus,
+.archive-form-field textarea:focus {
+    border-color: var(--laro-primary);
+    outline: none;
+    box-shadow: none;
+}
+
+.archive-form-field small {
+    color: var(--laro-subtext);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.archive-selected-file,
+.archive-current-file {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border-radius: var(--laro-radius-control);
+    font-size: 13px;
+}
+
+.archive-selected-file {
+    border: 1px solid var(--laro-border);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.archive-current-file {
+    border: 1px solid var(--laro-border);
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+}
+
+.archive-selected-file strong,
+.archive-current-file strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.archive-selected-file span,
+.archive-current-file span {
+    flex-shrink: 0;
+}
+
+.archive-message {
+    margin: 0 0 16px;
+    padding: 11px 13px;
+    border-radius: var(--laro-radius-control);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.archive-message.is-error {
+    border: 1px solid var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
+.archive-submit-button {
+    min-width: 120px;
+    min-height: 46px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-primary);
+    color: var(--laro-surface);
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.archive-submit-button:hover {
+    background: var(--laro-primary-hover);
+}
+
+.archive-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--laro-border);
+}
+
+.board-empty {
+    padding: 42px !important;
+    color: var(--laro-subtext);
+    text-align: center;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 760px) {
+    .board-page {
+        padding: 20px;
+    }
+
+    .board-tabs {
+        overflow-x: auto;
+    }
+
+    .board-tab {
+        min-width: 105px;
+        white-space: nowrap;
+    }
+
+    .board-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .board-search,
+    .board-search input {
+        width: 100%;
+    }
+
+    .archive-toolbar-actions {
+        width: 100%;
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .archive-toolbar-actions .board-search,
+    .archive-toolbar-actions .board-search input,
+    .archive-new-button {
+        width: 100%;
+    }
+
+    .manual-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .notice-table th:nth-child(4),
+    .notice-table td:nth-child(4) {
+        display: none;
+    }
+
+    .notice-detail-heading,
+    .archive-detail-heading {
+        flex-direction: column;
+    }
+
+    .archive-detail-actions {
+        width: 100%;
+    }
+
+    .archive-detail-actions button {
+        flex: 1;
+    }
+
+    .archive-detail-attachment {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .archive-detail-attachment a {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .archive-modal-overlay {
+        align-items: flex-start;
+        padding: 14px;
+        overflow-y: auto;
+    }
+
+    .archive-modal {
+        max-height: none;
+        margin: 20px 0;
+    }
+
+    .archive-modal-header,
+    .archive-modal-form {
+        padding: 20px;
+    }
+
+    .archive-modal-footer {
+        flex-direction: column-reverse;
+    }
+
+    .archive-modal-footer button,
+    .archive-modal-footer .archive-submit-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .board-page {
+        padding: 16px 12px;
+    }
+
+    .board-page-header h1 {
+        font-size: 27px;
+    }
+
+    .board-toolbar,
+    .notice-detail,
+    .archive-detail {
+        padding: 20px;
+    }
+
+    .manual-grid {
+        padding: 18px;
+    }
+
+    .archive-selected-file,
+    .archive-current-file {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+/* 새 root 적용 */
+.board-page {
+    background: var(--laro-background);
+    color: var(--laro-text);
+}
+
+/* 일반 페이지 헤더 */
+.board-page-header {
+    background: transparent;
+    color: var(--laro-text);
+}
+
+.board-page-header h1 {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-page-title);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.board-page-header p {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-body);
+}
+
+/* 탭 */
+.board-tabs {
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+}
+
+.board-tab {
+    border-radius: var(--laro-radius-control);
+    color: var(--laro-subtext);
+}
+
+.board-tab:hover {
+    background: var(--laro-surface-hover);
+}
+
+.board-tab.is-active {
+    background: var(--laro-primary);
+    color: var(--laro-white);
+}
+
+/* 메인 패널 */
+.board-panel {
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+    box-shadow: none;
+}
+
+.board-toolbar {
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.board-toolbar h2 {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-section-title);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+/* 검색 */
+.board-search input {
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    outline: none;
+}
+
+.board-search input::placeholder {
+    color: var(--laro-placeholder);
+}
+
+.board-search input:hover {
+    border-color: var(--laro-border-dark);
+}
+
+.board-search input:focus,
+.board-search input:focus-visible {
+    border-color: var(--laro-primary);
+    outline: none;
+    box-shadow: none;
+}
+
+/* 테이블 */
+.board-table th,
+.board-table td {
+    border-bottom: 1px solid var(--laro-border);
+    color: var(--laro-text);
+}
+
+.board-table th {
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.board-table tbody tr:hover {
+    background: var(--laro-surface-hover);
+}
+
+/* 버튼 */
+.board-secondary-button,
+.archive-edit-button {
+    border-color: var(--laro-border-dark);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-primary);
+}
+
+.board-secondary-button:hover,
+.archive-edit-button:hover {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.board-danger-button,
+.archive-delete-button {
+    border-color: var(--laro-danger);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-danger);
+}
+
+.board-danger-button:hover,
+.archive-delete-button:hover {
+    background: var(--laro-danger-light);
+}
+
+.archive-new-button,
+.archive-submit-button,
+.archive-detail-attachment a {
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-primary);
+    color: var(--laro-white);
+}
+
+.archive-new-button:hover,
+.archive-submit-button:hover,
+.archive-detail-attachment a:hover {
+    background: var(--laro-primary-hover);
+}
+
+/* 매뉴얼 */
+.manual-card {
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+}
+
+.manual-card li {
+    color: var(--laro-text);
+}
+
+/* 자유 게시판 */
+.archive-list-message {
+    border-color: var(--laro-success);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.archive-list-section {
+    background: var(--laro-surface);
+}
+
+.archive-detail-attachment {
+    border-color: var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-primary-light);
+}
+
+.archive-detail-attachment strong {
+    color: var(--laro-text);
+}
+
+/* 모달 */
+.archive-modal-overlay {
+    background: var(--laro-overlay);
+}
+
+.archive-modal {
+    border: 1px solid var(--laro-border-dark);
+    border-radius: var(--laro-radius-small);
+    background: var(--laro-surface);
+    box-shadow: 0 18px 44px var(--laro-shadow-medium);
+}
+
+.archive-modal-header {
+    border-bottom-color: var(--laro-border);
+}
+
+.archive-modal-header h2 {
+    color: var(--laro-navy);
+}
+
+.archive-modal-close {
+    border-radius: var(--laro-radius-control);
+    color: var(--laro-subtext);
+}
+
+.archive-form-field > span {
+    color: var(--laro-text);
+}
+
+.archive-form-field input[type="text"],
+.archive-form-field input[type="file"],
+.archive-form-field textarea {
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    outline: none;
+}
+
+.archive-form-field input::placeholder,
+.archive-form-field textarea::placeholder {
+    color: var(--laro-placeholder);
+}
+
+.archive-form-field input:focus,
+.archive-form-field input:focus-visible,
+.archive-form-field textarea:focus,
+.archive-form-field textarea:focus-visible,
+.board-page button:focus,
+.board-page button:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+.archive-form-field input:focus,
+.archive-form-field textarea:focus {
+    border-color: var(--laro-primary);
+}
+
+.archive-selected-file {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.archive-current-file {
+    border-color: var(--laro-border);
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+}
+
+.archive-message.is-error {
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
