@@ -4,19 +4,6 @@ import ScenarioCreatePanel from "./ScenarioCreatePanel";
 import { scenarioApi } from "../../api/client";
 import "../../styles/scenario/Scenario.css";
 
-// 상태 옵션
-const STATUS_OPTIONS = [
-    { value: "ALL", label: "전체 상태" },
-    { value: "DRAFT", label: "초안" },
-    { value: "VALIDATING", label: "검증 중" },
-    { value: "VALIDATED", label: "검증 완료" },
-];
-
-// 사용자가 직접 변경할 수 있는 시나리오 상태
-const SCENARIO_STATUS_OPTIONS = STATUS_OPTIONS.filter(
-    (option) => option.value !== "ALL"
-);
-
 // 정렬 옵션
 const SORT_OPTIONS = [
     { value: "UPDATED_DESC", label: "최근 수정 순" },
@@ -24,22 +11,6 @@ const SORT_OPTIONS = [
 ];
 
 const PAGE_SIZE = 10;
-
-// 시나리오 상태 표시 정보
-const SCENARIO_STATUS_MAP = {
-    DRAFT: {
-        label: "초안",
-        className: "is-draft",
-    },
-    VALIDATING: {
-        label: "검증 중",
-        className: "is-validating",
-    },
-    VALIDATED: {
-        label: "검증 완료",
-        className: "is-validated",
-    },
-};
 
 // 날짜 표시 형식
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
@@ -51,12 +22,6 @@ const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
     hour12: false,
 });
 
-// 시나리오 상태를 화면 표시 정보로 변환
-const getScenarioStatus = (status) =>
-    SCENARIO_STATUS_MAP[status] ?? {
-        label: status || "-",
-        className: "is-default",
-    };
 
 // ISO 날짜를 화면 표시용 형식으로 변환
 const formatDateTime = (dateTime) => {
@@ -84,7 +49,6 @@ function Scenario() {
     const [openMenuScenarioId, setOpenMenuScenarioId] = useState(null);
     const [selectedScenarioId, setSelectedScenarioId] = useState(null);
     const [searchText, setSearchText] = useState("");
-    const [statusFilter, setStatusFilter] = useState("ALL");
     const [sortOption, setSortOption] = useState("UPDATED_DESC");
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -110,7 +74,7 @@ function Scenario() {
         loadScenarios();
     }, []);
 
-    // 검색, 상태 필터, 정렬 결과를 계산한다.
+    // 검색 및 정렬 결과를 계산한다.
     const filteredScenarios = useMemo(() => {
         const normalizedSearchText = searchText.trim().toLowerCase();
 
@@ -129,11 +93,7 @@ function Scenario() {
                 !normalizedSearchText ||
                 searchableText.includes(normalizedSearchText);
 
-            const matchesStatus =
-                statusFilter === "ALL" ||
-                scenario.status === statusFilter;
-
-            return matchesSearch && matchesStatus;
+            return matchesSearch;
         });
 
         // 수정일 기준 오름차순 또는 내림차순 정렬
@@ -146,7 +106,7 @@ function Scenario() {
                     getUpdatedTime(secondScenario)) *
                 sortDirection
         );
-    }, [scenarios, searchText, statusFilter, sortOption]);
+    }, [scenarios, searchText, sortOption]);
 
     // 전체 페이지 수 계산
     const totalPages = Math.max(
@@ -181,11 +141,6 @@ function Scenario() {
         setCurrentPage(1);
     };
 
-    // 상태 필터 변경
-    const handleStatusChange = (event) => {
-        setStatusFilter(event.target.value);
-        setCurrentPage(1);
-    };
 
     // 정렬 조건 변경
     const handleSortChange = (event) => {
@@ -193,10 +148,9 @@ function Scenario() {
         setCurrentPage(1);
     };
 
-    // 검색 및 필터 초기화
+    // 검색 및 정렬 조건 초기화
     const handleResetFilter = () => {
         setSearchText("");
-        setStatusFilter("ALL");
         setSortOption("UPDATED_DESC");
         setCurrentPage(1);
     };
@@ -422,27 +376,12 @@ function Scenario() {
                             <input
                                 type="search"
                                 value={searchText}
-                                placeholder="시나리오명, ID, 창고 검색"
+                                placeholder="시나리오명, ID 검색"
                                 onChange={handleSearchChange}
                                 aria-label="시나리오 검색"
                             />
                         </div>
 
-                        <select
-                            className="scenario-filter-select"
-                            value={statusFilter}
-                            onChange={handleStatusChange}
-                            aria-label="시나리오 상태 필터"
-                        >
-                            {STATUS_OPTIONS.map((option) => (
-                                <option
-                                    key={option.value}
-                                    value={option.value}
-                                >
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
 
                         <select
                             className="scenario-filter-select"
@@ -481,7 +420,6 @@ function Scenario() {
                             <thead>
                                 <tr>
                                     <th>시나리오</th>
-                                    <th>상태</th>
                                     <th>최근 수정</th>
                                     <th aria-label="작업" />
                                 </tr>
@@ -490,7 +428,6 @@ function Scenario() {
                             <tbody>
                                 {currentScenarios.length > 0 ? (
                                     currentScenarios.map((scenario) => {
-                                        const status = getScenarioStatus(scenario.status);
                                         const isSelected = scenario.id === selectedScenarioId;
 
                                         return (
@@ -524,18 +461,6 @@ function Scenario() {
                                                     </button>
                                                 </td>
 
-                                                <td>
-                                                    <span
-                                                        className={`scenario-status ${status.className}`}
-                                                    >
-                                                        <span
-                                                            className="scenario-status-dot"
-                                                            aria-hidden="true"
-                                                        />
-
-                                                        {status.label}
-                                                    </span>
-                                                </td>
 
                                                 <td>
                                                     <span className="scenario-date">
@@ -566,36 +491,6 @@ function Scenario() {
                                                                     role="menu"
                                                                     aria-label={`${scenario.scenarioName} 작업 메뉴`}
                                                                 >
-                                                                    <div className="scenario-row-status-menu">
-                                                                        <span className="scenario-row-menu-label">
-                                                                            상태 변경
-                                                                        </span>
-
-                                                                        {SCENARIO_STATUS_OPTIONS.map(
-                                                                            (option) => {
-                                                                                const isCurrentStatus = scenario.status === option.value;
-
-                                                                                return (
-                                                                                    <button
-                                                                                        key={option.value}
-                                                                                        type="button"
-                                                                                        className={`scenario-row-menu-button ${isCurrentStatus
-                                                                                            ? "is-active"
-                                                                                            : ""
-                                                                                            }`}
-                                                                                        role="menuitemradio"
-                                                                                        aria-checked={isCurrentStatus}
-                                                                                        disabled={isCurrentStatus}
-                                                                                        onClick={() => handleScenarioStatusChange(
-                                                                                            scenario,
-                                                                                            option.value
-                                                                                        )}
-                                                                                    >
-                                                                                        {option.label}
-                                                                                    </button>
-                                                                                );
-                                                                            })}
-                                                                    </div>
 
                                                                     <button
                                                                         type="button"
@@ -624,7 +519,7 @@ function Scenario() {
                                 ) : (
                                     <tr>
                                         <td
-                                            colSpan={4}
+                                            colSpan={3}
                                             className="scenario-empty"
                                         >
                                             <div className="scenario-empty-icon">

@@ -1361,25 +1361,11 @@ function ScenarioDetail({
                     <div className="scenario-detail-section-header">
                         <div>
                             <h3>시나리오 정보</h3>
-                            <p>현재 시나리오의 운영 조건입니다.</p>
+                            <p>{scenario.description || "등록된 시나리오 설명이 없습니다."}</p>
                         </div>
                     </div>
 
                     <div className="scenario-info-card">
-                        <div className="scenario-info-main">
-                            <div className="scenario-info-warehouse">
-                                <span className="scenario-info-label">적용 창고</span>
-                                <strong>{scenario.warehouseName || "-"}</strong>
-                            </div>
-
-                            <div className="scenario-info-description">
-                                <span className="scenario-info-label">설명</span>
-                                <p>{scenario.description || "등록된 시나리오 설명이 없습니다."}</p>
-                            </div>
-                        </div>
-
-                        <div className="scenario-info-divider" />
-
                         <div className="scenario-info-setting-grid">
                             <article className="scenario-info-setting-item">
                                 <span>초기 배터리</span>
