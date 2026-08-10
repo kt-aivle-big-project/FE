@@ -121,6 +121,16 @@ const toRobotView = (state) => {
 };
 
 function Simulation() {
+    const [currentDateTime, setCurrentDateTime] = useState(() => new Date());
+
+    useEffect(() => {
+        const timerId = window.setInterval(() => {
+            setCurrentDateTime(new Date());
+        }, 1000);
+
+        return () => window.clearInterval(timerId);
+    }, []);
+
     /* =========================================================
        상단 헤더 - 시뮬레이션 실행
     ========================================================= */
@@ -1080,10 +1090,19 @@ function Simulation() {
                         </select>
                     </div>
 
-                    {/* 사용자와 현재 날짜·시간은 관련 데이터가 연결되면 교체한다. */}
                     <div className="simulation-topbar-meta">
                         <p className="simulation-topbar-datetime">
-                            현재 날짜·시간 표시 기능 연결 필요
+                            {currentDateTime.toLocaleString("ko-KR", {
+                                timeZone: "Asia/Seoul",
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                                weekday: "short",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                                hour12: false,
+                            })}
                         </p>
                     </div>
                 </div>
