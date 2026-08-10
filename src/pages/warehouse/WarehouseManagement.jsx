@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import "../styles/WarehouseManagement.css";
+import "../../styles/warehouse/WarehouseManagement.css";
 
-import { warehouseApi } from "../api/client";
-import { layoutResponseToMapData } from "../utils/warehouseLayoutAdapter";
+import { warehouseApi } from "../../api/client";
+import { layoutResponseToMapData } from "../../utils/warehouseLayoutAdapter";
 
-import warehouseGraph1 from "../assets/warehouse-maps/warehouse_graph_1.json";
+import warehouseGraph1 from "../../assets/warehouse-maps/warehouse_graph_1.json";
 
 // 백엔드 상태값 <-> 화면 표기
 const STATUS_TO_LABEL = {
@@ -306,48 +306,48 @@ export function WarehouseMapPreview({ mapData, compact = false }) {
 
     const getNodeColor = (type) => {
         if (type === "charging_slot") {
-            return "#2563eb";
+            return "var(--laro-primary)";
         }
 
         if (type === "route_charge_junction") {
-            return "#7c3aed";
+            return "var(--laro-primary-active)";
         }
 
         if (
             type === "inbound" ||
             type === "inbound_access"
         ) {
-            return "#16a34a";
+            return "var(--laro-success)";
         }
 
         if (
             type === "outbound" ||
             type === "outbound_access"
         ) {
-            return "#f97316";
+            return "var(--laro-warning)";
         }
 
         if (type === "rack_access") {
-            return "#94a3b8";
+            return "var(--laro-muted)";
         }
 
         if (type === "rack_storage") {
-            return "#64748b";
+            return "var(--laro-subtext)";
         }
 
         if (type === "inbound_handoff_access") {
-            return "#16a34a";
+            return "var(--laro-success)";
         }
 
         if (type === "outbound_station_access") {
-            return "#f97316";
+            return "var(--laro-warning)";
         }
 
         if (type === "empty_tote_buffer_access") {
-            return "#eab308";
+            return "var(--laro-warning)";
         }
 
-        return "#ffffff";
+        return "var(--laro-surface)";
     };
 
     return (
@@ -362,7 +362,7 @@ export function WarehouseMapPreview({ mapData, compact = false }) {
                 width: "100%",
                 height: "100%",
                 minHeight: compact ? "220px" : "420px",
-                backgroundColor: "#ffffff",
+                backgroundColor: "var(--laro-surface)",
             }}
         >
             <g>
@@ -381,7 +381,7 @@ export function WarehouseMapPreview({ mapData, compact = false }) {
                             y1={Number(sourceNode.y)}
                             x2={Number(targetNode.x)}
                             y2={Number(targetNode.y)}
-                            stroke="#cbd5e1"
+                            stroke="var(--laro-border-dark)"
                             strokeWidth="1.2"
                             vectorEffect="non-scaling-stroke"
                         />
@@ -397,7 +397,7 @@ export function WarehouseMapPreview({ mapData, compact = false }) {
                         cy={Number(node.y)}
                         r={nodeRadius}
                         fill={getNodeColor(node.type)}
-                        stroke="#334155"
+                        stroke="var(--laro-text)"
                         strokeWidth="0.8"
                         vectorEffect="non-scaling-stroke"
                     >
@@ -572,6 +572,7 @@ function WarehouseManagement() {
         <div className="warehouse-management">
             <div className="management-header">
                 <h1>창고 관리</h1>
+                <p>창고 구조와 시설 정보를 등록하고 운영 상태를 관리합니다.</p>
             </div>
 
             <aside className="warehouse-list-panel">

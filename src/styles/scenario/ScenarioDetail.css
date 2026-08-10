@@ -1,7 +1,11 @@
-/* =========================================================
-   ScenarioDetail
-   오른쪽 패널용 시나리오 상세 화면
-   ========================================================= */
+/* ============================================================
+   1. 시나리오 상세 패널
+============================================================ */
+
+.scenario-detail-card,
+.scenario-detail-card * {
+    box-sizing: border-box;
+}
 
 .scenario-detail-card {
     width: 100%;
@@ -14,14 +18,56 @@
     box-shadow: none;
 }
 
-/* Header */
+/* ============================================================
+   2. 상세 헤더
+============================================================ */
+
+.scenario-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--laro-border-dark);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-navy);
+    font: inherit;
+    font-weight: var(--laro-font-weight-semibold);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.scenario-button-primary {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary);
+    color: var(--laro-white);
+}
+
+.scenario-button-primary:hover {
+    border-color: var(--laro-primary-hover);
+    background: var(--laro-primary-hover);
+    color: var(--laro-white);
+}
+
+.scenario-button-primary:active {
+    border-color: var(--laro-primary-active);
+    background: var(--laro-primary-active);
+    color: var(--laro-white);
+}
+
 .scenario-inline-detail-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: var(--laro-gap-page);
     min-height: 72px;
-    padding: 12px 18px;
+    padding: 12px 14px;
     border-bottom: 1px solid var(--laro-border);
     background: var(--laro-surface);
 }
@@ -30,7 +76,7 @@
     display: flex;
     align-items: center;
     min-width: 0;
-    gap: 10px;
+    gap: 8px;
 }
 
 .scenario-detail-title-icon {
@@ -38,12 +84,13 @@
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: var(--laro-radius-control);
     background: var(--laro-primary-light);
     color: var(--laro-primary);
-    font-size: 18px;
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
 }
 
 .scenario-inline-title-content {
@@ -60,9 +107,9 @@
     margin: 0;
     overflow: hidden;
     color: var(--laro-navy);
-    font-size: 17px;
-    font-weight: 800;
-    line-height: 1.35;
+    font-size: var(--laro-font-section-title);
+    font-weight: var(--laro-font-weight-bold);
+    line-height: 1.3;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -71,10 +118,10 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 5px;
+    gap: 4px 8px;
     margin-top: 4px;
     color: var(--laro-subtext);
-    font-size: 10px;
+    font-size: var(--laro-font-caption);
 }
 
 .scenario-detail-header-actions {
@@ -84,7 +131,8 @@
     gap: 6px;
 }
 
-.scenario-button-secondary {
+.scenario-button-secondary,
+.scenario-button-danger {
     border: 1px solid var(--laro-border-dark);
     border-radius: var(--laro-radius-control);
     background: var(--laro-surface);
@@ -97,18 +145,55 @@
     color: var(--laro-primary-active);
 }
 
-/* Body */
+.scenario-button-danger {
+    border-color: var(--laro-danger);
+    color: var(--laro-danger);
+}
+
+.scenario-button-danger:hover {
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
+.scenario-detail-close-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--laro-radius-control);
+    background: transparent;
+    color: var(--laro-subtext);
+    font: inherit;
+    font-size: var(--laro-font-metric);
+    line-height: 1;
+    cursor: pointer;
+}
+
+.scenario-detail-close-button:hover {
+    background: var(--laro-surface-hover);
+    color: var(--laro-navy);
+}
+
+/* ============================================================
+   3. 상세 본문 및 공통 섹션
+============================================================ */
+
 .scenario-inline-detail-body {
     display: flex;
+    min-width: 0;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--laro-gap-content);
     padding: 12px;
     background: var(--laro-background);
 }
 
 .scenario-detail-section {
     min-width: 0;
-    padding: 16px;
+    padding: 14px;
     border: 1px solid var(--laro-border);
     border-radius: 0;
     background: var(--laro-surface);
@@ -119,26 +204,30 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 13px;
+    gap: var(--laro-gap-page);
+    margin-bottom: 12px;
 }
 
 .scenario-detail-section-header h3 {
     margin: 0;
     color: var(--laro-navy);
-    font-size: 14px;
-    font-weight: 800;
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
 }
 
 .scenario-detail-section-header p {
     margin: 4px 0 0;
     color: var(--laro-subtext);
-    font-size: 10px;
+    font-size: var(--laro-font-caption);
     line-height: 1.5;
 }
 
-/* Scenario info */
+/* ============================================================
+   4. 시나리오 정보
+============================================================ */
+
 .scenario-info-card {
+    overflow: hidden;
     border: 1px solid var(--laro-border);
     background: var(--laro-surface);
 }
@@ -151,7 +240,7 @@
 .scenario-info-warehouse,
 .scenario-info-description {
     min-width: 0;
-    padding: 14px;
+    padding: 12px;
 }
 
 .scenario-info-warehouse {
@@ -161,17 +250,17 @@
 .scenario-info-label {
     display: block;
     color: var(--laro-subtext);
-    font-size: 10px;
-    font-weight: 700;
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
 }
 
 .scenario-info-warehouse strong {
     display: block;
-    margin-top: 8px;
+    margin-top: 6px;
     overflow: hidden;
     color: var(--laro-navy);
-    font-size: 13px;
-    font-weight: 800;
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-bold);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -182,10 +271,10 @@
 
 .scenario-info-description p,
 .scenario-replan-message p {
-    margin: 7px 0 0;
+    margin: 6px 0 0;
     color: var(--laro-text);
-    font-size: 11px;
-    line-height: 1.65;
+    font-size: var(--laro-font-body);
+    line-height: 1.6;
     word-break: keep-all;
 }
 
@@ -194,87 +283,652 @@
     background: var(--laro-border);
 }
 
-.scenario-info-robot-area {
-    padding: 13px 14px;
-    border-bottom: 1px solid var(--laro-border);
-}
-
-.scenario-info-row-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 9px;
-}
-
-.scenario-info-count {
-    color: var(--laro-primary);
-    font-size: 10px;
-    font-weight: 800;
-}
-
-.scenario-info-robot-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.scenario-info-robot-tag {
-    display: inline-flex;
-    align-items: center;
-    min-height: 28px;
-    padding: 0 9px;
-    border: 1px solid var(--laro-border);
-    background: var(--laro-background);
-    color: var(--laro-navy);
-    font-size: 10px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.scenario-info-empty {
-    color: var(--laro-subtext);
-    font-size: 10px;
-}
-
 .scenario-info-setting-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .scenario-info-setting-item {
     display: flex;
     min-width: 0;
-    min-height: 66px;
+    min-height: 64px;
     flex-direction: column;
     justify-content: center;
-    gap: 6px;
-    padding: 12px 14px;
+    gap: 5px;
+    padding: 10px 12px;
     border-right: 1px solid var(--laro-border);
     background: var(--laro-surface);
 }
 
-.scenario-info-setting-item:last-child {
-    border-right: 0;
-}
-
 .scenario-info-setting-item > span {
     color: var(--laro-subtext);
-    font-size: 9px;
-    font-weight: 600;
+    font-size: var(--laro-font-caption);
 }
 
 .scenario-info-setting-item > strong {
     overflow: hidden;
     color: var(--laro-navy);
-    font-size: 12px;
-    font-weight: 800;
+    font-size: var(--laro-font-);
+    font-weight: var(--laro-font-weight-bold);
     line-height: 1.4;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-/* Recent replan */
+/* ============================================================
+   5. AI 실행 계획 공통 상태
+============================================================ */
+
+.scenario-ai-plan-section-header {
+    align-items: center;
+}
+
+.scenario-ai-plan-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 24px;
+    padding: 2px 10px;
+    border: 1px solid transparent;
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+    white-space: nowrap;
+}
+
+.scenario-ai-plan-status.is-success {
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.scenario-ai-plan-status.is-default {
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+}
+
+.scenario-ai-plan-empty,
+.scenario-ai-plan-list-empty {
+    color: var(--laro-subtext);
+    text-align: center;
+}
+
+.scenario-ai-plan-empty {
+    display: flex;
+    min-height: 120px;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px;
+    border: 1px dashed var(--laro-border-dark);
+    background: var(--laro-background);
+}
+
+.scenario-ai-plan-empty strong {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.scenario-ai-plan-empty p {
+    margin: 6px 0 0;
+    font-size: var(--laro-font-body);
+    line-height: 1.5;
+}
+
+.scenario-ai-plan-empty.is-error strong {
+    color: var(--laro-danger);
+}
+
+.scenario-ai-plan-list-empty {
+    padding: 24px 12px;
+    font-size: var(--laro-font-body);
+}
+
+/* ============================================================
+   6. AI 실행 리포트
+============================================================ */
+
+.scenario-ai-report,
+.scenario-ai-report-two-column {
+    overflow: hidden;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+}
+
+.scenario-ai-report-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-ai-report-row:last-child {
+    border-bottom: 0;
+}
+
+.scenario-ai-report-panel {
+    min-width: 0;
+    padding: 14px;
+    border-right: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+}
+
+.scenario-ai-report-panel:last-child {
+    border-right: 0;
+}
+
+.scenario-ai-report-identity,
+.scenario-ai-input-panel {
+    background: var(--laro-background);
+}
+
+.scenario-ai-validation-panel,
+.scenario-ai-event-panel {
+    background: var(--laro-surface);
+}
+
+.scenario-ai-report-section-title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: var(--laro-gap-content);
+    margin-bottom: 10px;
+}
+
+.scenario-ai-report-section-title > span,
+.scenario-ai-report-section-title-row > div > span {
+    color: var(--laro-primary);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-bold);
+    letter-spacing: 0.05em;
+}
+
+.scenario-ai-report-section-title > strong,
+.scenario-ai-report-section-title-row > div > strong {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+/* 제목 오른쪽 보조 정보 */
+.scenario-ai-report-section-title > small {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+    white-space: nowrap;
+}
+
+.scenario-ai-report-section-title-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--laro-gap-page);
+}
+
+.scenario-ai-report-section-title-row > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.scenario-ai-report-section-title-row > small {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+/* 실행 리포트 */
+.scenario-ai-report-plan-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--laro-gap-page);
+}
+
+.scenario-ai-report-plan-heading > div {
+    display: flex;
+    min-width: 0;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.scenario-ai-report-plan-heading > div > strong {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-section-title);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.scenario-ai-report-plan-heading > div > span {
+    overflow: hidden;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-body);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-ai-report-meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-top: 8px;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+}
+
+/* AI 입력 */
+.scenario-ai-input-command {
+    min-height: 44px;
+    margin: 0;
+    color: var(--laro-text);
+    font-size: var(--laro-font-body);
+    line-height: 1.6;
+}
+
+.scenario-ai-input-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--laro-border);
+}
+
+.scenario-ai-input-meta span {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+}
+
+.scenario-ai-input-meta strong {
+    color: var(--laro-navy);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+/* 계획 요약 / 검증 */
+.scenario-ai-compact-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: hidden;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+}
+
+.scenario-ai-compact-metrics > div {
+    min-width: 0;
+    min-height: 64px;
+    padding: 10px 12px;
+    border-right: 1px solid var(--laro-border);
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-ai-compact-metrics > div:nth-child(2n) {
+    border-right: 0;
+}
+
+.scenario-ai-compact-metrics > div:nth-last-child(-n + 2) {
+    border-bottom: 0;
+}
+
+.scenario-ai-compact-metrics span {
+    display: block;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+}
+
+.scenario-ai-compact-metrics strong {
+    display: inline-block;
+    margin-top: 5px;
+    color: var(--laro-navy);
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.scenario-ai-compact-metrics strong.is-success {
+    color: var(--laro-success);
+}
+
+.scenario-ai-compact-metrics small {
+    margin-left: 4px;
+    color: var(--laro-primary);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.scenario-ai-validation-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-background);
+}
+
+.scenario-ai-validation-result span {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+}
+
+.scenario-ai-validation-result strong {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+/* ============================================================
+   7. AI 작업 계획 및 로봇 배정 표
+============================================================ */
+
+.scenario-ai-report-row-table .scenario-ai-report-panel {
+    min-height: 250px;
+}
+
+.scenario-ai-report-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.scenario-ai-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.scenario-ai-report-table-compact {
+    min-width: 0;
+}
+
+.scenario-ai-report-table th,
+.scenario-ai-report-table td {
+    height: 30px;
+    padding: 0px 8px;
+    border: 1px solid var(--laro-border);
+    font-size: var(--laro-font-body);
+    vertical-align: middle;
+}
+
+.scenario-ai-report-table th {
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-weight: var(--laro-font-weight-semibold);
+    text-align: left;
+}
+
+.scenario-ai-report-table td {
+    color: var(--laro-text);
+}
+
+.scenario-ai-report-table tbody tr:hover {
+    background: var(--laro-surface-hover);
+}
+
+.scenario-ai-report-table td strong {
+    color: var(--laro-navy);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.scenario-ai-operation-table th:nth-child(1),
+.scenario-ai-operation-table td:nth-child(1) {
+    width: 30%;
+}
+
+.scenario-ai-operation-table th:nth-child(2),
+.scenario-ai-operation-table td:nth-child(2) {
+    width: 15%;
+}
+
+.scenario-ai-operation-table th:nth-child(3),
+.scenario-ai-operation-table td:nth-child(3) {
+    width: 35%;
+}
+
+.scenario-ai-operation-table th:nth-child(4),
+.scenario-ai-operation-table td:nth-child(4) {
+    width: 15%;
+}
+
+.scenario-ai-operation-name {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 6px;
+}
+
+.scenario-ai-operation-name > strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-ai-operation-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 22px;
+    padding: 2px 7px;
+    border: 1px solid transparent;
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.scenario-ai-operation-badge.inbound {
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.scenario-ai-operation-badge.outbound {
+    background: var(--laro-warning-light);
+    color: var(--laro-warning);
+}
+
+.scenario-ai-route-cell {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    color: var(--laro-subtext);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-ai-route-cell b {
+    color: var(--laro-primary);
+}
+
+.scenario-ai-assigned-robot {
+    color: var(--laro-primary-active) !important;
+}
+
+.scenario-ai-report-more {
+    padding-top: 8px;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    text-align: right;
+}
+
+/* ============================================================
+   8. 경로 분석 및 이벤트
+============================================================ */
+
+.scenario-ai-route-list {
+    border-top: 1px solid var(--laro-border);
+}
+
+.scenario-ai-route-list-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 20px;
+    min-height: 40px;
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-ai-route-list-row > span {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.scenario-ai-route-list-row > strong {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.scenario-ai-route-list-row > small {
+    min-width: 64px;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    text-align: right;
+}
+
+.scenario-ai-route-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-background);
+}
+
+.scenario-ai-route-total span {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+}
+
+.scenario-ai-route-total strong {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.scenario-ai-event-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.scenario-ai-event-item {
+    display: grid;
+    grid-template-columns: 50px minmax(0, 1fr);
+    gap: 10px;
+    min-height: 40px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.scenario-ai-event-item:last-child {
+    border-bottom: 0;
+}
+
+.scenario-ai-event-time {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.scenario-ai-event-content {
+    min-width: 0;
+}
+
+.scenario-ai-event-content > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.scenario-ai-event-content strong {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.scenario-ai-event-content p {
+    margin: 4px 0 2px;
+    color: var(--laro-text);
+    font-size: var(--laro-font-body);
+    line-height: 1.45;
+}
+
+.scenario-ai-event-content small {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+}
+
+.scenario-ai-event-type {
+    display: inline-flex;
+    align-items: center;
+    min-height: 20px;
+    padding: 1px 7px;
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.scenario-ai-event-type.is-replan {
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.scenario-ai-event-type.is-wait {
+    background: var(--laro-warning-light);
+    color: var(--laro-warning);
+}
+
+.scenario-ai-event-type.is-charge {
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.scenario-ai-event-empty {
+    display: flex;
+    min-height: 130px;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    padding: 18px;
+    border: 1px dashed var(--laro-border-dark);
+    border-radius: 0;
+    background: var(--laro-background);
+    text-align: center;
+}
+
+.scenario-ai-event-empty strong {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.scenario-ai-event-empty p {
+    margin: 6px 0 0;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    line-height: 1.5;
+}
+
+/* ============================================================
+   9. 최근 재계획
+============================================================ */
+
 .scenario-replan-section-header {
     align-items: center;
 }
@@ -282,45 +936,54 @@
 .scenario-replan-header-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex: 0 0 auto;
+    gap: 6px;
 }
 
-.scenario-replan-latest-badge,
+.scenario-replan-latest-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 2px 9px;
+    border: 1px solid transparent;
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
 .scenario-replan-all-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 28px;
-    padding: 0 10px;
-    border: 1px solid var(--laro-border);
+    min-height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--laro-border-dark);
     border-radius: var(--laro-radius-control);
-    font-size: 10px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.scenario-replan-latest-badge {
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-}
-
-.scenario-replan-all-button {
     background: var(--laro-surface);
-    color: var(--laro-primary);
+    color: var(--laro-navy);
+    font: inherit;
+    font-weight: var(--laro-font-weight-semibold);
     cursor: pointer;
-    transition:
-        border-color 0.15s ease,
-        background-color 0.15s ease;
 }
 
-.scenario-replan-all-button:hover {
+.scenario-replan-all-button:hover:not(:disabled) {
     border-color: var(--laro-primary);
     background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.scenario-replan-all-button:disabled {
+    background: var(--laro-background);
+    color: var(--laro-placeholder);
+    cursor: not-allowed;
 }
 
 .scenario-replan-compact {
+    overflow: hidden;
     border: 1px solid var(--laro-border);
+    border-radius: 0;
     background: var(--laro-surface);
 }
 
@@ -332,11 +995,11 @@
 .scenario-replan-summary-item {
     display: flex;
     min-width: 0;
-    min-height: 70px;
+    min-height: 64px;
     flex-direction: column;
     justify-content: center;
-    gap: 7px;
-    padding: 12px 14px;
+    gap: 5px;
+    padding: 10px 12px;
     border-right: 1px solid var(--laro-border);
     border-bottom: 1px solid var(--laro-border);
 }
@@ -345,230 +1008,78 @@
     border-right: 0;
 }
 
+.scenario-replan-summary-item:nth-last-child(-n + 2) {
+    border-bottom: 0;
+}
+
 .scenario-replan-summary-item > span,
 .scenario-replan-meta span {
     color: var(--laro-subtext);
-    font-size: 9px;
-    font-weight: 600;
+    font-size: var(--laro-font-caption);
 }
 
 .scenario-replan-summary-item > strong {
     overflow: hidden;
     color: var(--laro-navy);
-    font-size: 12px;
-    font-weight: 800;
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-bold);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
+.scenario-replan-status {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 24px;
+    padding: 2px 9px;
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+}
+
 .scenario-replan-status.is-success {
+    background: var(--laro-success-light);
     color: var(--laro-success);
 }
 
 .scenario-replan-status.is-failed {
+    background: var(--laro-danger-light);
     color: var(--laro-danger);
 }
 
 .scenario-replan-status.is-processing {
-    color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
 }
 
 .scenario-replan-status.is-pending,
 .scenario-replan-status.is-default {
-    color: var(--laro-subtext);
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
 }
 
 .scenario-replan-message {
-    padding: 14px;
-    border-bottom: 1px solid var(--laro-border);
+    padding: 12px;
+    border-top: 1px solid var(--laro-border);
     background: var(--laro-background);
 }
 
 .scenario-replan-meta {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--laro-border);
 }
 
 .scenario-replan-meta > div {
     display: flex;
     min-width: 0;
+    min-height: 56px;
     flex-direction: column;
-    gap: 5px;
-    padding: 11px 14px;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 12px;
     border-right: 1px solid var(--laro-border);
-}
-
-.scenario-replan-meta > div:last-child {
-    border-right: 0;
-}
-
-.scenario-replan-meta strong {
-    overflow: hidden;
-    color: var(--laro-navy);
-    font-size: 10px;
-    font-weight: 700;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.scenario-replan-empty {
-    display: flex;
-    min-height: 130px;
-    align-items: center;
-    flex-direction: column;
-    justify-content: center;
-    padding: 20px;
-    border: 1px dashed var(--laro-border);
-    background: var(--laro-background);
-    text-align: center;
-}
-
-.scenario-replan-empty strong {
-    color: var(--laro-navy);
-    font-size: 12px;
-}
-
-.scenario-replan-empty p {
-    margin: 6px 0 0;
-    color: var(--laro-subtext);
-    font-size: 10px;
-}
-
-/* Empty detail */
-.scenario-detail-placeholder {
-    display: flex;
-    min-height: 520px;
-    align-items: center;
-    flex-direction: column;
-    justify-content: center;
-    padding: 32px;
-    text-align: center;
-}
-
-.scenario-detail-placeholder-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 46px;
-    height: 46px;
-    margin-bottom: 12px;
-    border-radius: var(--laro-radius-control);
-    background: var(--laro-primary-light);
-    color: var(--laro-primary);
-    font-size: 21px;
-}
-
-.scenario-detail-placeholder h2 {
-    margin: 0;
-    color: var(--laro-navy);
-    font-size: 16px;
-}
-
-.scenario-detail-placeholder p {
-    max-width: 300px;
-    margin: 7px 0 0;
-    color: var(--laro-subtext);
-    font-size: 10px;
-    line-height: 1.6;
-}
-
-.scenario-detail-card button:focus,
-.scenario-detail-card button:focus-visible,
-.scenario-detail-card button:active {
-    outline: none;
-    box-shadow: none;
-}
-
-@media (max-width: 1080px) {
-    .scenario-inline-detail-header {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .scenario-detail-header-actions {
-        justify-content: flex-end;
-    }
-}
-
-@media (max-width: 760px) {
-    .scenario-info-main {
-        grid-template-columns: 1fr;
-    }
-
-    .scenario-info-warehouse {
-        border-right: 0;
-        border-bottom: 1px solid var(--laro-border);
-    }
-
-    .scenario-info-setting-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .scenario-info-setting-item:nth-child(2) {
-        border-right: 0;
-    }
-
-    .scenario-info-setting-item.is-wide {
-        grid-column: 1 / -1;
-        border-top: 1px solid var(--laro-border);
-        border-right: 0;
-    }
-}
-
-@media (max-width: 560px) {
-    .scenario-inline-detail-header {
-        padding: 13px 14px;
-    }
-
-    .scenario-detail-header-actions {
-        width: 100%;
-        flex-wrap: wrap;
-    }
-
-    .scenario-inline-detail-body {
-        padding: 9px;
-    }
-
-    .scenario-detail-section {
-        padding: 13px;
-    }
-
-    .scenario-replan-section-header {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .scenario-replan-summary-grid,
-    .scenario-replan-meta,
-    .scenario-info-setting-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .scenario-replan-summary-item,
-    .scenario-replan-meta > div,
-    .scenario-info-setting-item {
-        border-right: 0;
-    }
-}
-
-/* 재계획 API 연동 상태 */
-.scenario-replan-all-button:disabled {
-    border-color: var(--laro-border);
-    background: var(--laro-background);
-    color: var(--laro-placeholder);
-    cursor: not-allowed;
-}
-
-.scenario-replan-all-button:disabled:hover {
-    border-color: var(--laro-border);
-    background: var(--laro-background);
-}
-
-.scenario-replan-summary-item:nth-last-child(-n + 2) {
-    border-bottom: 0;
-}
-
-.scenario-replan-meta > div {
     border-bottom: 1px solid var(--laro-border);
 }
 
@@ -580,422 +1091,169 @@
     border-bottom: 0;
 }
 
-.scenario-replan-empty.is-error {
-    border-color: color-mix(
-        in srgb,
-        var(--laro-danger) 35%,
-        var(--laro-border)
-    );
+.scenario-replan-meta strong {
+    overflow: hidden;
+    color: var(--laro-navy);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scenario-replan-empty {
+    display: flex;
+    min-height: 130px;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px;
+    border: 1px dashed var(--laro-border-dark);
+    background: var(--laro-background);
+    text-align: center;
+}
+
+.scenario-replan-empty strong {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.scenario-replan-empty p {
+    margin: 6px 0 0;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
 }
 
 .scenario-replan-empty.is-error strong {
     color: var(--laro-danger);
 }
 
-@media (max-width: 560px) {
-    .scenario-replan-summary-item,
-    .scenario-replan-summary-item:nth-last-child(-n + 2),
-    .scenario-replan-meta > div,
-    .scenario-replan-meta > div:nth-last-child(-n + 2) {
-        border-bottom: 1px solid var(--laro-border);
-    }
+/* ============================================================
+   10. 상세 미선택 상태
+============================================================ */
 
-    .scenario-replan-summary-item:last-child,
-    .scenario-replan-meta > div:last-child {
-        border-bottom: 0;
-    }
-}
-
-
-/* =========================================================
-   AI 실행 계획
-   ========================================================= */
-
-.scenario-ai-plan-section-header {
+.scenario-detail-placeholder {
+    display: flex;
+    min-height: 500px;
     align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    padding: 30px 14px;
+    background: var(--laro-surface);
+    text-align: center;
 }
 
-.scenario-ai-plan-status {
+.scenario-detail-placeholder-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 auto;
-
-    min-height: 28px;
-    padding: 0 10px;
-
-    border: 1px solid var(--laro-border);
+    width: 44px;
+    height: 44px;
+    margin-bottom: 10px;
     border-radius: var(--laro-radius-control);
-
-    background: var(--laro-background);
-    color: var(--laro-subtext);
-
-    font-size: 10px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.scenario-ai-plan-status.is-success {
-    border-color: var(--laro-success-light);
-    background: var(--laro-success-light);
-    color: var(--laro-success);
-}
-
-.scenario-ai-plan-card {
-    overflow: hidden;
-
-    border: 1px solid var(--laro-border);
-    background: var(--laro-surface);
-}
-
-/* 계획 요약 */
-.scenario-ai-plan-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-
-    border-bottom: 1px solid var(--laro-border);
-}
-
-.scenario-ai-plan-summary-item {
-    display: flex;
-    min-width: 0;
-    min-height: 78px;
-    flex-direction: column;
-    justify-content: center;
-    gap: 7px;
-
-    padding: 13px 15px;
-
-    border-right: 1px solid var(--laro-border);
-}
-
-.scenario-ai-plan-summary-item:last-child {
-    border-right: 0;
-}
-
-.scenario-ai-plan-summary-item > span {
-    color: var(--laro-subtext);
-
-    font-size: 9px;
-    font-weight: 600;
-}
-
-.scenario-ai-plan-summary-item > div {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-}
-
-.scenario-ai-plan-summary-item strong {
-    color: var(--laro-navy);
-
-    font-size: 18px;
-    font-weight: 900;
-}
-
-.scenario-ai-plan-summary-item small {
-    color: var(--laro-subtext);
-
-    font-size: 9px;
-    font-weight: 700;
-}
-
-.scenario-ai-plan-summary-item
-    .scenario-ai-plan-duration {
-    font-size: 13px;
-}
-
-/* Plan ID */
-.scenario-ai-plan-id {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-
-    min-height: 42px;
-    padding: 0 15px;
-
-    border-bottom: 1px solid var(--laro-border);
-
-    background: var(--laro-background);
-}
-
-.scenario-ai-plan-id span {
-    color: var(--laro-subtext);
-
-    font-size: 9px;
-    font-weight: 800;
-}
-
-.scenario-ai-plan-id strong {
-    overflow: hidden;
-
-    color: var(--laro-primary);
-
-    font-size: 10px;
-    font-weight: 800;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* 작업 배정 */
-.scenario-ai-plan-assignments {
-    background: var(--laro-surface);
-}
-
-.scenario-ai-plan-list-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-
-    padding: 12px 15px;
-
-    border-bottom: 1px solid var(--laro-border);
-}
-
-.scenario-ai-plan-list-header strong {
-    display: block;
-
-    color: var(--laro-navy);
-
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.scenario-ai-plan-list-header p {
-    margin: 3px 0 0;
-
-    color: var(--laro-subtext);
-
-    font-size: 9px;
-}
-
-.scenario-ai-plan-list-header > span {
-    flex: 0 0 auto;
-
-    color: var(--laro-primary);
-
-    font-size: 9px;
-    font-weight: 800;
-}
-
-.scenario-ai-plan-list {
-    display: flex;
-    flex-direction: column;
-}
-
-.scenario-ai-plan-row {
-    display: grid;
-    grid-template-columns:
-        58px
-        minmax(0, 1fr)
-        minmax(90px, 0.28fr);
-    align-items: center;
-    gap: 10px;
-
-    min-height: 52px;
-    padding: 8px 15px;
-
-    border-bottom: 1px solid var(--laro-border);
-}
-
-.scenario-ai-plan-row:last-child {
-    border-bottom: 0;
-}
-
-.scenario-ai-operation-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    min-height: 25px;
-    padding: 0 7px;
-
-    border: 1px solid var(--laro-border);
-
-    background: var(--laro-background);
-    color: var(--laro-navy);
-
-    font-size: 9px;
-    font-weight: 800;
-}
-
-.scenario-ai-operation-badge.inbound,
-.scenario-ai-operation-badge.inbound_item {
     background: var(--laro-primary-light);
     color: var(--laro-primary);
+    font-size: var(--laro-font-metric);
 }
 
-.scenario-ai-operation-badge.outbound,
-.scenario-ai-operation-badge.outbound_order {
-    background: var(--laro-warning-light);
-    color: var(--laro-warning);
-}
-
-.scenario-ai-plan-product {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.scenario-ai-plan-product strong {
-    overflow: hidden;
-
+.scenario-detail-placeholder h2 {
+    margin: 0;
     color: var(--laro-navy);
-
-    font-size: 10px;
-    font-weight: 800;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: var(--laro-font-section-title);
+    font-weight: var(--laro-font-weight-bold);
 }
 
-.scenario-ai-plan-product small {
-    overflow: hidden;
-
-    color: var(--laro-subtext);
-
-    font-size: 9px;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.scenario-ai-plan-robot {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 3px;
-}
-
-.scenario-ai-plan-robot span {
-    color: var(--laro-subtext);
-
-    font-size: 8px;
-}
-
-.scenario-ai-plan-robot strong {
-    color: var(--laro-subtext);
-
-    font-size: 10px;
-    font-weight: 800;
-}
-
-.scenario-ai-plan-robot strong.is-assigned {
-    color: var(--laro-primary);
-}
-
-.scenario-ai-plan-robot strong.is-pending {
-    color: var(--laro-warning);
-}
-
-/* 하단 실행 정보 */
-.scenario-ai-plan-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-
-    min-height: 40px;
-    padding: 0 15px;
-
-    border-top: 1px solid var(--laro-border);
-
-    background: var(--laro-background);
-}
-
-.scenario-ai-plan-footer span {
-    color: var(--laro-subtext);
-
-    font-size: 9px;
-    font-weight: 600;
-}
-
-.scenario-ai-plan-footer strong {
-    overflow: hidden;
-
-    color: var(--laro-navy);
-
-    font-size: 10px;
-    font-weight: 800;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* 계획 없음 / 로딩 / 오류 */
-.scenario-ai-plan-empty {
-    display: flex;
-    min-height: 115px;
-    align-items: center;
-    flex-direction: column;
-    justify-content: center;
-
-    padding: 20px;
-
-    border: 1px dashed var(--laro-border);
-
-    background: var(--laro-background);
-
-    text-align: center;
-}
-
-.scenario-ai-plan-empty strong {
-    color: var(--laro-navy);
-
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.scenario-ai-plan-empty p {
+.scenario-detail-placeholder p {
     margin: 6px 0 0;
-
     color: var(--laro-subtext);
-
-    font-size: 9px;
+    font-size: var(--laro-font-body);
+    line-height: 1.5;
 }
 
-.scenario-ai-plan-empty.is-error strong {
-    color: var(--laro-danger);
+.scenario-detail-card button:focus,
+.scenario-detail-card button:focus-visible,
+.scenario-detail-card button:active {
+    outline: none;
+    box-shadow: none;
 }
 
-.scenario-ai-plan-list-empty {
-    padding: 22px 15px;
+/* ============================================================
+   11. 반응형
+============================================================ */
 
-    color: var(--laro-subtext);
-
-    font-size: 10px;
-    text-align: center;
-}
-
-@media (max-width: 680px) {
-    .scenario-ai-plan-section-header {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .scenario-ai-plan-summary-grid {
+@media (max-width: 1080px) {
+    .scenario-ai-report-row {
         grid-template-columns: 1fr;
     }
 
-    .scenario-ai-plan-summary-item {
+    .scenario-ai-report-panel {
         border-right: 0;
         border-bottom: 1px solid var(--laro-border);
     }
 
-    .scenario-ai-plan-summary-item:last-child {
+    .scenario-ai-report-panel:last-child {
+        border-bottom: 0;
+    }
+}
+
+@media (max-width: 760px) {
+    .scenario-inline-detail-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .scenario-detail-header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .scenario-info-main,
+    .scenario-info-setting-grid,
+    .scenario-replan-summary-grid,
+    .scenario-replan-meta {
+        grid-template-columns: 1fr;
+    }
+
+    .scenario-info-warehouse,
+    .scenario-info-setting-item,
+    .scenario-replan-summary-item,
+    .scenario-replan-meta > div {
+        border-right: 0;
+        border-bottom: 1px solid var(--laro-border);
+    }
+
+    .scenario-info-setting-item:last-child,
+    .scenario-replan-summary-item:last-child,
+    .scenario-replan-meta > div:last-child {
         border-bottom: 0;
     }
 
-    .scenario-ai-plan-row {
-        grid-template-columns: 54px minmax(0, 1fr);
+    .scenario-ai-report-table {
+        min-width: 620px;
+    }
+}
+
+@media (max-width: 560px) {
+    .scenario-detail-section-header,
+    .scenario-replan-section-header {
+        align-items: flex-start;
+        flex-direction: column;
     }
 
-    .scenario-ai-plan-robot {
-        grid-column: 2;
-        align-items: flex-start;
+    .scenario-replan-header-actions {
+        width: 100%;
+    }
+
+    .scenario-ai-compact-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .scenario-ai-compact-metrics > div {
+        border-right: 0;
+        border-bottom: 1px solid var(--laro-border);
+    }
+
+    .scenario-ai-compact-metrics > div:last-child {
+        border-bottom: 0;
     }
 }

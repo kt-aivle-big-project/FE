@@ -22,7 +22,9 @@ const parseResponseData = async (response) => {
 };
 
 const buildHeaders = (options = {}) => ({
-    "Content-Type": "application/json",
+    ...(options.body instanceof FormData
+        ? {}
+        : { "Content-Type": "application/json" }),
     ...authHeaders(),
     ...(options.headers ?? {}),
 });
@@ -100,6 +102,33 @@ const request = async (path, options = {}) => {
     return data;
 };
 
+const requestBlob = async (path) => {
+    let response = await fetch(`${API_URL}${path}`, {
+        method: "GET",
+        credentials: "include",
+        headers: authHeaders(),
+    });
+
+    if (response.status === 401) {
+        await getRefreshedAccessToken();
+        response = await fetch(`${API_URL}${path}`, {
+            method: "GET",
+            credentials: "include",
+            headers: authHeaders(),
+        });
+    }
+
+    if (!response.ok) {
+        const data = await parseResponseData(response);
+        const error = new Error(data?.message ?? `Request failed. (HTTP ${response.status})`);
+        error.status = response.status;
+        error.code = data?.code;
+        throw error;
+    }
+
+    return response.blob();
+};
+
 export const api = {
     get: (path) => request(path, { method: "GET" }),
 
@@ -121,7 +150,42 @@ export const api = {
             body: body === undefined ? undefined : JSON.stringify(body),
         }),
 
-    delete: (path) => request(path, { method: "DELETE" }),
+    delete: (path, body) =>
+        request(path, {
+            method: "DELETE",
+            body: body === undefined ? undefined : JSON.stringify(body),
+        }),
+
+    postForm: (path, formData) =>
+        request(path, {
+            method: "POST",
+            body: formData,
+        }),
+};
+
+export const userAccountApi = {
+    getProfile: () => api.get("/users/me"),
+    updateProfile: (name) => api.patch("/users/me", { name }),
+    changePassword: (currentPassword, newPassword) =>
+        api.patch("/users/me/password", { currentPassword, newPassword }),
+    withdraw: (password) => api.delete("/users/me", { password }),
+};
+
+export const boardPostApi = {
+    getAll: () => api.get("/board-posts"),
+    get: (postId) => api.get(`/board-posts/${postId}`),
+    create: (payload) => api.post("/board-posts", payload),
+    update: (postId, payload) => api.patch(`/board-posts/${postId}`, payload),
+    remove: (postId) => api.delete(`/board-posts/${postId}`),
+    uploadAttachment: (postId, file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        return api.postForm(`/board-posts/${postId}/attachment`, formData);
+    },
+    downloadAttachment: (postId) =>
+        requestBlob(`/board-posts/${postId}/attachment`),
+    deleteAttachment: (postId) =>
+        api.delete(`/board-posts/${postId}/attachment`),
 };
 
 export const simulationRunApi = {

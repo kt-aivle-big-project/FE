@@ -1,0 +1,377 @@
+/* ============================================================
+   1. 페이지 기본 구조 및 헤더
+============================================================ */
+
+.warehouse-create-page {
+grid-column: 1 / -1;
+width: 100%;
+min-width: 0;
+min-height: 100vh;
+padding: var(--laro-padding-large);
+background: var(--laro-background);
+color: var(--laro-text);
+}
+
+.warehouse-create-page-header {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+gap: 24px;
+margin-bottom: 16px;
+padding: 4px 2px;
+border: 0;
+background: transparent;
+}
+
+.warehouse-create-page-header > div:first-child {
+display: flex;
+align-items: flex-start;
+gap: 22px;
+}
+
+.warehouse-create-back {
+min-width: 110px;
+height: 38px;
+padding: 0 12px;
+border: 1px solid var(--laro-border-dark);
+background: var(--laro-surface);
+color: var(--laro-navy);
+border-radius: var(--laro-radius-control);
+}
+
+.warehouse-create-title h1 {
+margin: 0 0 6px;
+font-size: var(--laro-font-page-title);
+line-height: 1.2;
+color: var(--laro-navy);
+font-weight: var(--laro-font-weight-bold);
+}
+
+.warehouse-create-title p,
+.warehouse-create-section-heading p {
+margin: 0;
+color: var(--laro-subtext);
+font-size: var(--laro-font-body);
+}
+
+.warehouse-create-header-actions,
+.warehouse-create-footer > div {
+display: flex;
+gap: 8px;
+}
+
+.warehouse-create-cancel,
+.warehouse-create-save {
+min-width: 104px;
+height: 42px;
+padding: 0 16px;
+font-weight: var(--laro-font-weight-bold);
+}
+
+.warehouse-create-cancel {
+border: 1px solid var(--laro-border-dark);
+background: var(--laro-surface);
+color: var(--laro-navy);
+border-radius: var(--laro-radius-control);
+}
+
+.warehouse-create-save {
+border: 1px solid var(--laro-primary);
+background: var(--laro-primary);
+color: var(--laro-white);
+border-radius: var(--laro-radius-control);
+}
+
+.warehouse-create-save:hover {
+background: var(--laro-primary-hover);
+border-color: var(--laro-primary-hover);
+}
+
+.warehouse-create-save:disabled {
+border-color: var(--laro-border-dark);
+background: var(--laro-muted-light);
+color: var(--laro-muted);
+cursor: not-allowed;
+}
+
+/* ============================================================
+   2. 기본 정보 입력
+============================================================ */
+
+.warehouse-create-basic-card,
+.warehouse-create-design-card,
+.warehouse-create-footer {
+border: 1px solid var(--laro-border);
+background: var(--laro-surface);
+}
+
+.warehouse-create-basic-card {
+margin-bottom: 18px;
+padding: 20px 24px 22px;
+}
+
+.warehouse-create-section-heading {
+display: flex;
+align-items: flex-start;
+gap: 12px;
+}
+
+.warehouse-create-section-heading > span {
+display: inline-flex;
+width: 32px;
+height: 32px;
+align-items: center;
+justify-content: center;
+flex: 0 0 auto;
+border: 1px solid var(--laro-primary-light);
+background: var(--laro-primary-light);
+color: var(--laro-primary-active);
+font-size: var(--laro-font-caption);
+font-weight: 800;
+}
+
+.warehouse-create-section-heading h2 {
+margin: 0 0 4px;
+font-size: var(--laro-font-section-title);
+color: var(--laro-navy);
+}
+
+.warehouse-create-form-grid {
+display: grid;
+grid-template-columns: repeat(3, minmax(0, 1fr));
+gap: 14px 16px;
+margin-top: 18px;
+}
+
+.warehouse-create-form-grid label {
+display: flex;
+min-width: 0;
+flex-direction: column;
+gap: 7px;
+}
+
+.warehouse-create-form-grid label > span,
+.warehouse-create-json-panel > label {
+color: var(--laro-text);
+font-size: var(--laro-font-caption);
+font-weight: var(--laro-font-weight-bold);
+}
+
+.warehouse-create-form-grid input,
+.warehouse-create-form-grid select {
+width: 100%;
+height: 40px;
+padding: 0 11px;
+border: 1px solid var(--laro-border);
+background: var(--laro-surface);
+color: var(--laro-text);
+outline: none;
+}
+
+/* ============================================================
+   3. 창고 설계 방식 선택
+============================================================ */
+
+.warehouse-create-design-card {
+padding: 20px 24px 24px;
+}
+
+.warehouse-create-design-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 20px;
+margin-bottom: 18px;
+}
+
+.warehouse-create-source-tabs {
+display: inline-flex;
+padding: 3px;
+border: 1px solid var(--laro-border);
+background: var(--laro-muted-light);
+border-radius: var(--laro-radius-control);
+}
+
+.warehouse-create-source-tabs button {
+min-width: 112px;
+height: 34px;
+padding: 0 12px;
+border: 0;
+background: transparent;
+color: var(--laro-subtext);
+}
+
+.warehouse-create-source-tabs button.active {
+background: var(--laro-surface);
+color: var(--laro-primary);
+font-weight: var(--laro-font-weight-bold);
+box-shadow: none;
+}
+
+/* ============================================================
+   4. JSON 업로드 및 미리보기
+============================================================ */
+
+.warehouse-create-json-panel {
+min-height: 460px;
+display: flex;
+flex-direction: column;
+gap: 12px;
+padding: 24px;
+border: 1px dashed var(--laro-border-dark);
+background: var(--laro-background);
+border-radius: var(--laro-radius-control);
+color: var(--laro-subtext);
+}
+
+.warehouse-create-loading {
+min-height: 460px;
+display: flex;
+align-items: center;
+justify-content: center;
+border: 1px dashed var(--laro-border-dark);
+background: var(--laro-background);
+color: var(--laro-subtext);
+font-size: var(--laro-font-body);
+border-radius: var(--laro-radius-control);
+}
+
+.warehouse-create-json-preview {
+display: grid;
+grid-template-columns: 220px minmax(0, 1fr);
+gap: 20px;
+min-height: 340px;
+margin-top: 8px;
+padding: 16px;
+border: 1px solid var(--laro-border);
+background: var(--laro-surface);
+border-radius: var(--laro-radius-control);
+}
+
+.warehouse-create-json-preview > div:first-child {
+display: flex;
+flex-direction: column;
+gap: 7px;
+}
+
+.warehouse-create-json-preview span {
+color: var(--laro-subtext);
+font-size: var(--laro-font-body);
+}
+
+/* ============================================================
+   5. 상태 메시지 및 하단 액션
+============================================================ */
+
+.warehouse-create-error {
+margin: 8px 0 0;
+padding: 10px 12px;
+border: 1px solid var(--laro-danger);
+background: var(--laro-danger-light);
+color: var(--laro-danger);
+font-size: var(--laro-font-body);
+border-radius: var(--laro-radius-control);
+}
+
+.warehouse-create-footer {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 20px;
+margin-top: 18px;
+padding: 16px 20px;
+}
+
+.warehouse-create-footer > span {
+color: var(--laro-subtext);
+font-size: var(--laro-font-body);
+}
+
+.save-error {
+margin-top: 12px;
+}
+
+/* ============================================================
+   6. 입력 필드 인터랙션
+============================================================ */
+
+.warehouse-create-form-grid input:hover,
+.warehouse-create-form-grid select:hover {
+border-color: var(--laro-border-dark);
+}
+
+.warehouse-create-form-grid input:focus,
+.warehouse-create-form-grid input:focus-visible,
+.warehouse-create-form-grid select:focus,
+.warehouse-create-form-grid select:focus-visible {
+border-color: var(--laro-primary);
+outline: none;
+box-shadow: none;
+}
+
+/* ============================================================
+   7. 모바일
+============================================================ */
+
+@media (max-width: 480px) {
+.warehouse-create-page {
+padding: 12px;
+}
+
+.warehouse-create-page-header {
+align-items: stretch;
+flex-direction: column;
+}
+
+.warehouse-create-page-header > div:first-child {
+align-items: stretch;
+flex-direction: column;
+}
+
+.warehouse-create-header-actions {
+width: 100%;
+}
+
+.warehouse-create-header-actions button {
+flex: 1;
+}
+
+.warehouse-create-basic-card,
+.warehouse-create-design-card {
+padding: 16px;
+}
+
+.warehouse-create-form-grid {
+grid-template-columns: 1fr;
+}
+
+.warehouse-create-design-header {
+align-items: stretch;
+flex-direction: column;
+}
+
+.warehouse-create-source-tabs {
+width: 100%;
+}
+
+.warehouse-create-source-tabs button {
+flex: 1;
+}
+
+.warehouse-create-json-preview {
+grid-template-columns: 1fr;
+}
+
+.warehouse-create-footer {
+align-items: stretch;
+flex-direction: column;
+}
+
+.warehouse-create-footer > div {
+width: 100%;
+}
+
+.warehouse-create-footer button {
+flex: 1;
+}
+}

@@ -5,14 +5,11 @@
 .simulation-wrapper {
     display: grid;
     grid-template-areas:
-        "simulation-header simulation-header"
-        "simulation-view   simulation-panel"
-        "simulation-task   simulation-event"
-        "simulation-setting simulation-setting"
-        "footer footer";
-    grid-template-columns: minmax(0, 1fr) 390px;
-    grid-template-rows: 148px 650px minmax(230px, auto) auto auto 100px;
-    gap: 12px;
+        "simulation-header    simulation-header    simulation-header"
+        "simulation-view      simulation-view      simulation-panel"
+        "simulation-task-list simulation-robot-list simulation-event-list";
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 400px;
+    grid-template-rows: 60px 600px minmax(230px, auto);
 
     width: 100%;
     min-height: 100vh;
@@ -26,120 +23,83 @@
 /* ============================================================
    2. 상단 헤더
 ============================================================ */
-
 .simulation-header {
     grid-area: simulation-header;
-
-    display: grid;
-    grid-template-rows: 64px 72px;
-    gap: 12px;
-
+    display: block;
     width: 100%;
-    height: 148px;
     min-width: 0;
-
     box-sizing: border-box;
 }
 
-/* 상단 네이비 영역 */
+/* 상단 네이비 바 */
 .simulation-topbar {
-    display: grid;
-    grid-template-columns:
-        minmax(220px, 1fr)
-        minmax(360px, 520px)
-        auto;
+    display: flex;
     align-items: center;
-
+    justify-content: space-between;
     min-width: 0;
-    height: 64px;
-
+    height: 60px;
+    padding: 0 10px;
     box-sizing: border-box;
     background: var(--laro-navy);
-    color: var(--laro-dark-text);
+    color: var(--laro-white);
+}
+
+.simulation-topbar-left,
+.simulation-topbar-right {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    height: 100%;
+}
+
+.simulation-topbar-left {
+    gap: 80px;
+}
+
+.simulation-topbar-right {
+    justify-content: flex-end;
+    margin-left: auto;
 }
 
 .simulation-topbar-title {
     display: flex;
     align-items: center;
-    min-width: 0;
-    height: 100%;
-    padding: 0 20px;
+    flex-shrink: 0;
 }
 
 .simulation-topbar-title h2 {
     margin: 0;
     color: var(--laro-white);
-    font-size: 21px;
+    font-size: 20px;
     font-weight: var(--laro-font-weight-bold);
     line-height: 1.2;
     letter-spacing: -0.02em;
 }
 
-.simulation-topbar-scenario {
+.simulation-topbar-selector {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 12px;
-
+    gap: 8px;
     min-width: 0;
-    height: 100%;
-    padding: 0 20px;
 }
 
-.simulation-topbar-label {
-    flex-shrink: 0;
-    color: var(--laro-dark-subtext);
-    font-size: 11px;
-    font-weight: var(--laro-font-weight-semibold);
-}
-
-.simulation-topbar-scenario p {
-    width: min(320px, 100%);
-    min-width: 0;
+.simulation-topbar-selector select {
+    width: 150px;
     height: 36px;
-    margin: 0;
-    padding: 0 12px;
-
-    display: flex;
-    align-items: center;
-
-    box-sizing: border-box;
-    overflow: hidden;
-    border: 1px solid var(--laro-dark-border);
-    background: var(--laro-dark-surface);
-    color: var(--laro-dark-text);
-
-    font-size: 12px;
-    font-weight: var(--laro-font-weight-medium);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* 브라우저 기본 렌더링을 끄지 않으면 배경·글자색이 시스템 기본값으로 덮인다. */
-.simulation-topbar-scenario select {
-    width: min(320px, 100%);
-    min-width: 0;
-    height: 36px;
-    margin: 0;
-    padding: 0 32px 0 12px;
-
+    padding: 0 30px 0 12px;
     box-sizing: border-box;
     appearance: none;
     -webkit-appearance: none;
-    border: 1px solid var(--laro-dark-border);
-    border-radius: 6px;
-    background-color: var(--laro-dark-surface);
-    color: var(--laro-dark-text);
-
-    /* 화살표를 직접 그린다 (appearance 를 끄면 사라지기 때문) */
-    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
-        linear-gradient(135deg, currentColor 50%, transparent 50%);
+    border: 1px solid color-mix(in srgb, var(--laro-navy-light) 30%, transparent);
+    border-radius: var(--laro-radius-control);
+    background-color: color-mix(in srgb, var(--laro-white) 5%, transparent);
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
     background-position: calc(100% - 16px) 15px, calc(100% - 11px) 15px;
     background-size: 5px 5px, 5px 5px;
     background-repeat: no-repeat;
-
+    color: var(--laro-white);
     font-family: inherit;
-    font-size: 12px;
+    font-size: var(--laro-font-caption);
     font-weight: var(--laro-font-weight-medium);
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -147,218 +107,256 @@
     cursor: pointer;
 }
 
-/* 펼쳤을 때의 목록은 OS 가 그리므로 색을 따로 지정한다. */
-.simulation-topbar-scenario select option {
-    background-color: var(--laro-surface);
-    color: var(--laro-text);
+.simulation-topbar-selector.scenario select {
+    width: 240px;
 }
 
-.simulation-topbar-scenario select:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-.simulation-topbar-meta {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-
-    min-width: 0;
-    height: 100%;
-    padding: 0 20px;
-}
-
-.simulation-topbar-user {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-
-    min-width: 0;
-    padding: 0 18px;
-    border-left: 1px solid var(--laro-dark-divider);
-    border-right: 1px solid var(--laro-dark-divider);
-}
-
-.simulation-topbar-user p,
-.simulation-topbar-datetime {
-    margin: 0;
-    overflow: hidden;
-    color: var(--laro-dark-text);
-    font-size: 11px;
-    font-weight: var(--laro-font-weight-medium);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.simulation-topbar-datetime {
-    padding-left: 18px;
-    font-variant-numeric: tabular-nums;
-}
-
-/* 하단 설정 및 제어 영역 */
-.simulation-controlbar {
-    display: grid;
-    grid-template-columns: minmax(560px, 1fr) auto;
-    align-items: stretch;
-
-    width: 100%;
-    height: 72px;
-    min-width: 0;
-
-    box-sizing: border-box;
-    border: 1px solid var(--laro-border);
-    background: var(--laro-surface);
-    color: var(--laro-text);
-}
-
-.simulation-header-info {
-    display: grid;
-    grid-template-columns:
-        minmax(210px, 1.4fr)
-        115px
-        145px
-        135px;
-    align-items: stretch;
-
-    min-width: 0;
-    height: 100%;
-}
-
-.simulation-header-info-item {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 5px;
-
-    min-width: 0;
-    height: 100%;
-    padding: 8px 14px;
-
-    box-sizing: border-box;
-    border-right: 1px solid var(--laro-border);
-}
-
-.simulation-header-label {
-    display: flex;
-    align-items: center;
-
-    width: 100%;
-    margin: 0;
-    padding: 0;
-
-    color: var(--laro-subtext);
-    font-size: 11px;
-    font-weight: var(--laro-font-weight-semibold);
-    line-height: 1;
-}
-
-.simulation-header-info-item select {
-    width: 100%;
-    height: 34px;
-    margin: 0;
-    padding: 0 10px;
-
-    box-sizing: border-box;
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-control);
-    background: var(--laro-surface);
-    color: var(--laro-text);
-
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: var(--laro-font-weight-medium);
-    outline: none;
-    cursor: pointer;
-    transition:
-        border-color 0.15s ease,
-        background-color 0.15s ease;
-}
-
-.simulation-header-info-item select:hover {
-    border-color: var(--laro-border-dark);
-    background: var(--laro-surface-hover);
-}
-
-.simulation-header-info-item select:focus,
-.simulation-header-info-item select:focus-visible {
+.simulation-topbar-selector select:hover,
+.simulation-topbar-selector select:focus,
+.simulation-topbar-selector select:focus-visible {
     border-color: var(--laro-primary);
     outline: none;
     box-shadow: none;
 }
 
-.simulation-header-status {
-    display: flex;
-    align-items: center;
-    gap: 7px;
+.simulation-topbar-selector select option {
+    background: var(--laro-surface);
+    color: var(--laro-text);
+}
 
-    min-height: 20px;
-    color: var(--laro-success);
-    font-size: 14px;
+.simulation-topbar-label {
+    flex-shrink: 0;
+    color: color-mix(in srgb, var(--laro-navy-light) 78%, transparent);
+    font-size: var(--laro-font-caption);
     font-weight: var(--laro-font-weight-semibold);
 }
 
-.simulation-header-status::before {
-    width: 8px;
-    height: 8px;
-    flex-shrink: 0;
+.simulation-topbar-metric {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 118px;
+    height: 38px;
+    padding: 0 20px;
+    border-left: 1px solid color-mix(in srgb, var(--laro-navy-light) 20%, transparent);
+}
 
-    border-radius: 50%;
+.simulation-topbar-metric>span {
+    color: color-mix(in srgb, var(--laro-navy-light) 68%, transparent);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-medium);
+    line-height: 1.2;
+}
+
+.simulation-topbar-metric strong {
+    margin-top: 3px;
+    color: var(--laro-white);
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-bold);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+/* 시스템 상태 상단 */
+.simulation-topbar-status-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.simulation-topbar-status-header > span {
+    color: color-mix(in srgb, var(--laro-navy-light) 68%, transparent);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-medium);
+    line-height: 1.2;
+}
+
+/* 실시간 연결 */
+.simulation-topbar-connection {
+    color: var(--laro-primary);
+    font-size: 8px;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* 현재 상태 */
+.simulation-topbar-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+}
+
+.simulation-topbar-status::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+    border-radius: var(--laro-radius-pill);
     background: var(--laro-success);
     content: "";
 }
 
-.simulation-header-socket {
-    color: var(--laro-subtext);
-    font-size: 9px;
+.simulation-topbar-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--laro-success) !important;
+}
+
+.simulation-topbar-socket {
+    position: absolute;
+    right: 20px;
+    bottom: -1px;
+    color: color-mix(in srgb, var(--laro-navy-light) 56%, transparent);
+    font-size: 8px;
     line-height: 1;
     white-space: nowrap;
 }
 
-.simulation-header-time {
+.simulation-topbar-user {
     display: flex;
     align-items: center;
-
-    min-height: 34px;
-    color: var(--laro-navy);
-    font-size: 18px;
-    font-weight: var(--laro-font-weight-semibold);
-    font-variant-numeric: tabular-nums;
+    gap: 8px;
+    height: 40px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
 }
 
-.simulation-header-buttons {
+.simulation-topbar-user:hover {
+    opacity: 0.8;
+}
+
+.simulation-topbar-avatar {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-navy-light);
+    color: var(--laro-navy);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-bold);
+}
 
-    height: 100%;
-    padding: 0 12px;
+.simulation-topbar-user strong {
+    color: var(--laro-white);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+}
 
+.simulation-topbar-chevron {
+    color: color-mix(in srgb, var(--laro-navy-light) 70%, transparent);
+    font-size: var(--laro-font-caption);
+}
+
+/* WAREHOUSE LIVE VIEW 제어 바 */
+.simulation-controlbar {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 56px;
+    min-width: 0;
+    padding: 0 14px;
     box-sizing: border-box;
+    background: var(--laro-surface);
+    color: var(--laro-text);
+}
+
+.simulation-controlbar-title {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.simulation-controlbar-title strong {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
+    letter-spacing: -0.01em;
+}
+
+.simulation-controlbar-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
+}
+
+.simulation-plan-badge {
+    padding: 5px 9px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+}
+
+.simulation-plan-badge.active {
+    border-color: var(--laro-success);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.simulation-controlbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 14px;
+    padding-left: 14px;
+    border-left: 1px solid var(--laro-border);
+    white-space: nowrap;
+}
+
+.simulation-header-speed {
+    width: 76px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    font-family: inherit;
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-medium);
+    outline: none;
+    cursor: pointer;
+}
+
+.simulation-header-speed:hover,
+.simulation-header-speed:focus,
+.simulation-header-speed:focus-visible {
+    border-color: var(--laro-primary);
+    outline: none;
+    box-shadow: none;
 }
 
 .simulation-header-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
-    height: 40px;
-    padding: 0 18px;
-
+    height: 34px;
+    padding: 0 12px;
     border: 1px solid var(--laro-border-dark);
     border-radius: var(--laro-radius-control);
     background: var(--laro-surface);
     color: var(--laro-navy);
-
     font-family: inherit;
-    font-size: 13px;
+    font-size: var(--laro-font-caption);
     font-weight: var(--laro-font-weight-semibold);
     cursor: pointer;
-    transition:
-        border-color 0.15s ease,
-        background-color 0.15s ease,
-        color 0.15s ease;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 
 .simulation-header-button:hover {
@@ -368,8 +366,7 @@
 }
 
 .simulation-header-button:focus,
-.simulation-header-button:focus-visible,
-.simulation-header-button:active {
+.simulation-header-button:focus-visible {
     outline: none;
     box-shadow: none;
 }
@@ -386,48 +383,45 @@
     color: var(--laro-white);
 }
 
-
 .simulation-header-button.start:active {
     border-color: var(--laro-primary-active);
     background: var(--laro-primary-active);
 }
 
-.simulation-header-button.new-run:active {
-    border-color: var(--laro-primary-active);
-    background: var(--laro-primary-light);
-    color: var(--laro-primary-active);
-}
-
-/* 현재 설정으로 새로운 작업을 생성한다. */
 .simulation-header-button.new-run {
-    border-color: var(--laro-primary);
+    border-color: var(--laro-success);
     background: var(--laro-surface);
-    color: var(--laro-primary);
-    white-space: nowrap;
+    color: var(--laro-success);
 }
 
 .simulation-header-button.new-run:hover {
+    border-color: var(--laro-success);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+
+.simulation-header-button.replan {
+    border-color: var(--laro-primary);
+    background: var(--laro-surface);
+    color: var(--laro-primary);
+}
+
+.simulation-header-button.replan:hover {
+    border-color: var(--laro-primary-hover);
     background: var(--laro-primary-light);
     color: var(--laro-primary-active);
 }
 
-/* 실행을 완전히 종료한다. */
 .simulation-header-button.stop {
-    border-color: var(--laro-danger);
-    background: var(--laro-danger-light);
+    border-color: color-mix(in srgb, var(--laro-danger) 45%, var(--laro-border));
     color: var(--laro-danger);
 }
 
 .simulation-header-button.stop:hover {
-    border-color: var(--laro-danger-hover);
-    background: var(--laro-danger);
-    color: var(--laro-white);
-}
-
-/* 마지막 재계획 버튼을 브랜드 액션으로 구분한다. */
-.simulation-header-button:last-child:not(.stop) {
-    border-color: var(--laro-primary);
-    color: var(--laro-primary);
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
 }
 
 .simulation-header-button:disabled,
@@ -445,24 +439,29 @@
 
 .simulation-view {
     grid-area: simulation-view;
-
     display: flex;
-    align-items: center;
-    justify-content: center;
-
+    flex-direction: column;
     width: 100%;
-    height: 650px;
-    min-width: 0;
-    min-height: 400px;
-    overflow: hidden;
-
     box-sizing: border-box;
     border: 1px solid var(--laro-border);
     background: var(--laro-surface);
     color: var(--laro-text);
+    z-index: 1;
+}
 
-    font-size: 40px;
-    font-weight: var(--laro-font-weight-regular);
+.simulation-view .simulation-controlbar {
+    flex-shrink: 0;
+    border: 0;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.simulation-view-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
 }
 
 /* ============================================================
@@ -472,86 +471,77 @@
 .simulation-panel {
     grid-area: simulation-panel;
     align-self: start;
+    height: 100%;
 }
 
 /* ============================================================
-   5. 작업 현황 및 최근 이벤트
+   5. 작업 / 로봇 / 이벤트 목록
 ============================================================ */
 
-.simulation-task {
-    grid-area: simulation-task;
-}
-
-.simulation-event {
-    grid-area: simulation-event;
-}
-
-.simulation-task,
-.simulation-event {
+.simulation-list {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-
     width: 100%;
-    min-height: 230px;
     padding: 0;
-
     box-sizing: border-box;
     border: 1px solid var(--laro-border);
     background: var(--laro-surface);
 }
 
-/* ============================================================
-   6. 반응형 보완
-============================================================ */
+.simulation-task-list {
+    grid-area: simulation-task-list;
+}
 
+.simulation-robot-list {
+    grid-area: simulation-robot-list;
+}
+
+.simulation-event-list {
+    grid-area: simulation-event-list;
+}
+
+/* ============================================================
+   6. 반응형 
+============================================================ */
 @media (max-width: 1450px) {
     .simulation-wrapper {
-        grid-template-columns: minmax(0, 1fr) 350px;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 350px;
     }
 
     .simulation-topbar {
-        grid-template-columns:
-            minmax(190px, 1fr)
-            minmax(300px, 430px)
-            auto;
-    }
-
-    .simulation-topbar-title {
         padding: 0 16px;
     }
 
-    .simulation-topbar-title h2 {
-        font-size: 19px;
+    .simulation-topbar-left {
+        gap: 12px;
     }
 
-    .simulation-topbar-meta {
+    .simulation-topbar-selector select {
+        width: 130px;
+    }
+
+    .simulation-topbar-selector.scenario select {
+        width: 200px;
+    }
+
+    .simulation-topbar-metric {
+        min-width: 108px;
         padding: 0 14px;
     }
 
-    .simulation-topbar-user {
-        padding: 0 12px;
+    .simulation-controlbar-summary {
+        gap: 8px;
     }
 
-    .simulation-controlbar {
-        grid-template-columns: minmax(500px, 1fr) auto;
-    }
-
-    .simulation-header-info {
-        grid-template-columns:
-            minmax(180px, 1.3fr)
-            100px
-            125px
-            115px;
-    }
-
-    .simulation-header-info-item {
-        padding: 8px 11px;
+    .simulation-controlbar-actions {
+        gap: 6px;
+        margin-left: 10px;
+        padding-left: 10px;
     }
 
     .simulation-header-button {
-        padding: 0 13px;
-        font-size: 12px;
+        padding: 0 9px;
     }
 }
 
@@ -561,48 +551,51 @@
             "simulation-header"
             "simulation-view"
             "simulation-panel"
-            "simulation-task"
-            "simulation-event"
-            "simulation-setting"
-            "footer";
+            "simulation-task-list"
+            "simulation-robot-list"
+            "simulation-event-list";
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto auto auto auto auto auto 100px;
+        grid-template-rows: auto auto auto auto auto auto;
     }
 
     .simulation-header {
         height: auto;
-        grid-template-rows: auto auto;
     }
 
     .simulation-topbar {
-        grid-template-columns: 180px minmax(0, 1fr);
         min-height: 64px;
         height: auto;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px 16px;
     }
 
-    .simulation-topbar-meta {
-        grid-column: 1 / -1;
-        min-height: 48px;
-        border-top: 1px solid var(--laro-dark-divider);
+    .simulation-topbar-right {
+        margin-left: 0;
     }
 
     .simulation-controlbar {
-        grid-template-columns: minmax(0, 1fr);
         height: auto;
+        min-height: 56px;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px 14px;
     }
 
-    .simulation-header-info {
-        min-height: 72px;
+    .simulation-controlbar-summary {
+        margin-left: auto;
     }
 
-    .simulation-header-buttons {
-        justify-content: flex-start;
-        min-height: 58px;
+    .simulation-controlbar-actions {
+        width: 100%;
+        margin-left: 0;
+        padding-top: 10px;
+        padding-left: 0;
         border-top: 1px solid var(--laro-border);
+        border-left: 0;
     }
 
     .simulation-panel {
         width: 100%;
     }
 }
-
