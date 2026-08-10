@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "../../../styles/warehouse/WarehouseSVG.css";
 import { productApi, warehouseApi, warehouseItemApi } from "../../../api/client";
 
-import WarehouseCanvas from "./WarehouseCanvas";
+import WarehouseCanvas from "./warehouseCanvas";
 import {
     clamp01,
     closestNodeByY,

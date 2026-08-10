@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import "../../styles/warehouse/WarehouseManagement.css";
+import "../../styles/warehouse/warehouseManagement.css";
 
 import { warehouseApi } from "../../api/client";
 import { layoutResponseToMapData } from "../../utils/warehouseLayoutAdapter";

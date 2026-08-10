@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { boardPostApi } from "../../api/client";
 import { isGuestSession } from "../../api/auth";
-import "../../styles/board/Board.css";
+import "../../styles/board/board.css";
 
 const BOARD_TABS = [
     { id: "notice", label: "공지사항" },
