@@ -147,11 +147,11 @@ body {
     flex-wrap: wrap;
     gap: var(--laro-gap-page);
     color: var(--laro-subtext);
-    font-size: var(--laro-font-body);
+    font-size: 10px;
 }
 
 .footer-content strong {
     color: var(--laro-navy);
-    font-size: var(--laro-font-card-title);
+    font-size: var(--laro-font-body);
     font-weight: var(--laro-font-weight-bold);
 }
