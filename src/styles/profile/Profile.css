@@ -195,18 +195,6 @@
     font-size: 14px;
 }
 
-.profile-role {
-    display: inline-flex;
-    align-items: center;
-    min-height: 28px;
-    padding: 0 10px;
-    border: 1px solid #cbdceb;
-    background: var(--laro-primary-light, #eaf4ff);
-    color: var(--laro-primary, #2589f4);
-    font-size: 12px;
-    font-weight: 700;
-}
-
 .profile-actions {
     display: flex;
     justify-content: flex-end;

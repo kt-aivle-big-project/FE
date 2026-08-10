@@ -6,13 +6,7 @@ import "../../styles/profile/Profile.css";
 const INITIAL_PROFILE = {
     name: "admin",
     email: "admin@laro.com",
-    role: "ADMIN",
-    joinedAt: "2026.08.10",
-};
-
-const ROLE_LABEL = {
-    ADMIN: "관리자",
-    USER: "일반 사용자",
+    createdAt: "2026.08.10",
 };
 
 function Profile() {
@@ -202,20 +196,10 @@ function Profile() {
                         </div>
 
                         <div className="profile-field">
-                            <span className="profile-field-label">권한</span>
-
-                            <div className="profile-static-value">
-                                <span className="profile-role">
-                                    {ROLE_LABEL[profile.role] || profile.role}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="profile-field">
                             <span className="profile-field-label">가입일</span>
 
                             <div className="profile-static-value">
-                                {profile.joinedAt}
+                                {profile.createdAt}
                             </div>
                         </div>
 
@@ -310,8 +294,7 @@ function Profile() {
                         <div>
                             <h2>회원 탈퇴</h2>
                             <p>
-                                탈퇴 후에는 계정을 사용할 수 없으며
-                                삭제된 계정은 복구할 수 없습니다.
+                                탈퇴 후에는 계정을 사용할 수 없으며 삭제된 계정은 복구할 수 없습니다.
                             </p>
                         </div>
 
