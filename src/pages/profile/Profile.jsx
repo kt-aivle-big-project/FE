@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { userAccountApi } from "../../api/client";
+import { clearAuth } from "../../api/auth";
 import "../../styles/profile/Profile.css";
 
 // 백엔드 연동 전 임시 사용자 정보
 const INITIAL_PROFILE = {
-    name: "admin",
-    email: "admin@laro.com",
-    createdAt: "2026.08.10",
+    name: "",
+    email: "",
+    createdAt: "-",
 };
 
 function Profile() {
@@ -27,6 +29,20 @@ function Profile() {
     const profileInitial =
         profile.name?.trim().charAt(0).toUpperCase() || "U";
 
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const data = await userAccountApi.getProfile();
+                setProfile((prev) => ({ ...prev, ...data }));
+                setName(data.name ?? "");
+            } catch (error) {
+                console.error("사용자 정보 조회 실패:", error);
+                alert(error.message || "사용자 정보를 불러오지 못했습니다.");
+            }
+        };
+        fetchProfile();
+    }, []);
+
     // 사용자 이름 입력값 변경
     const handleNameChange = (event) => {
         setName(event.target.value);
@@ -44,10 +60,9 @@ function Profile() {
         }
 
         try {
-            setProfile((prev) => ({
-                ...prev,
-                name: trimmedName,
-            }));
+            const updatedProfile = await userAccountApi.updateProfile(trimmedName);
+            setProfile((prev) => ({ ...prev, ...updatedProfile }));
+            localStorage.setItem("name", updatedProfile.name);
 
             alert("사용자 정보가 수정되었습니다.");
         } catch (error) {
@@ -92,6 +107,7 @@ function Profile() {
         }
 
         try {
+            await userAccountApi.changePassword(currentPassword, newPassword);
             alert("비밀번호가 변경되었습니다.");
 
             setPasswordForm({
@@ -122,6 +138,8 @@ function Profile() {
         }
 
         try {
+            await userAccountApi.withdraw(deletePassword);
+            clearAuth();
             alert("회원 탈퇴가 완료되었습니다.");
             navigate("/login", { replace: true });
         } catch (error) {
