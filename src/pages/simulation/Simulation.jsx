@@ -123,7 +123,15 @@ const toRobotView = (state) => {
 };
 
 function Simulation() {
-    const navigate = useNavigate();
+    const [currentDateTime, setCurrentDateTime] = useState(() => new Date());
+
+    useEffect(() => {
+        const timerId = window.setInterval(() => {
+            setCurrentDateTime(new Date());
+        }, 1000);
+
+        return () => window.clearInterval(timerId);
+    }, []);
 
     /* =========================================================
        상단 헤더 - 시뮬레이션 실행
@@ -494,8 +502,6 @@ function Simulation() {
         return {
             warehouseId: selectedWarehouseId,
             simulationSpeed: Number(simulationSpeed),
-            // 고른 시나리오가 있으면 그 설정으로 실행한다.
-            scenarioId: selectedScenarioId ?? null,
         };
     };
 
