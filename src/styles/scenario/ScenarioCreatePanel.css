@@ -1,68 +1,55 @@
-/* =========================================================
-   Scenario create panel
-   ========================================================= */
-
-.scenario-create-panel {
-    position: sticky;
-    top: var(--laro-gap-content);
-
-    display: flex;
-    min-width: 0;
-    width: 100%;
-    max-height: calc(100vh - var(--laro-gap-content) - var(--laro-gap-content));
-    flex-direction: column;
-
-    overflow: hidden;
-
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
-    background: var(--laro-surface);
-}
+/* ============================================================
+   1. 생성/수정 패널
+============================================================ */
 
 .scenario-create-panel,
 .scenario-create-panel * {
     box-sizing: border-box;
 }
 
+.scenario-create-panel {
+    position: sticky;
+    top: var(--laro-gap-content);
+    display: flex;
+    min-width: 0;
+    width: 100%;
+    max-height: calc(100vh - var(--laro-gap-content) - var(--laro-gap-content));
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-surface);
+    color: var(--laro-text);
+}
 
-/* =========================================================
-   Header
-   ========================================================= */
+/* ============================================================
+   2. 패널 헤더
+============================================================ */
 
 .scenario-create-panel-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: var(--laro-gap-page);
-
     flex: 0 0 auto;
-
-    padding: var(--laro-padding-large)
-        calc(var(--laro-padding-large) + var(--laro-gap-content));
-
+    min-height: 72px;
+    padding: 14px;
     border-bottom: 1px solid var(--laro-border);
-
     background: var(--laro-surface);
 }
 
 .scenario-create-panel-header h2 {
     margin: 0;
-
     color: var(--laro-navy);
-
     font-size: var(--laro-font-section-title);
     font-weight: var(--laro-font-weight-bold);
-    line-height: 1.4;
+    line-height: 1.3;
 }
 
 .scenario-create-panel-header p {
-    margin: calc(var(--laro-gap-content) / 2) 0 0;
-
+    margin: 6px 0 0;
     color: var(--laro-subtext);
-
-    font-size: var(--laro-font-caption);
-    font-weight: var(--laro-font-weight-regular);
+    font-size: var(--laro-font-body);
     line-height: 1.5;
 }
 
@@ -70,28 +57,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     flex: 0 0 auto;
-
     width: 34px;
     height: 34px;
     padding: 0;
-
     border: 0;
     border-radius: var(--laro-radius-control);
-
     background: transparent;
     color: var(--laro-subtext);
-
     font-size: var(--laro-font-metric);
-    font-weight: var(--laro-font-weight-regular);
     line-height: 1;
-
     cursor: pointer;
-
-    transition:
-        background 0.18s ease,
-        color 0.18s ease;
 }
 
 .scenario-create-close-button:hover {
@@ -99,45 +75,36 @@
     color: var(--laro-navy);
 }
 
-
-/* =========================================================
-   Body
-   ========================================================= */
+/* ============================================================
+   3. 본문 및 섹션
+============================================================ */
 
 .scenario-create-panel-body {
     display: flex;
     min-height: 0;
     flex: 1;
     flex-direction: column;
-    gap: var(--laro-gap-page);
-
+    gap: var(--laro-gap-content);
     overflow-y: auto;
-
-    padding: var(--laro-padding-large)
-        calc(var(--laro-padding-large) + var(--laro-gap-content));
-
-    background: var(--laro-surface);
+    padding: 12px;
+    background: var(--laro-background);
 }
 
-
-/* =========================================================
-   Section
-   ========================================================= */
-
 .scenario-create-section {
-    padding: var(--laro-padding-large);
-
+    padding: 14px;
     border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-small);
-
+    border-radius: 0;
     background: var(--laro-surface);
 }
 
 .scenario-create-section-heading {
     display: flex;
     align-items: flex-start;
+    margin-bottom: 14px;
+}
 
-    margin-bottom: var(--laro-gap-page);
+.scenario-create-section-heading-simple {
+    justify-content: flex-start;
 }
 
 .scenario-create-section-heading > div {
@@ -146,28 +113,28 @@
 
 .scenario-create-section-heading h3 {
     margin: 0;
-
     color: var(--laro-navy);
-
     font-size: var(--laro-font-card-title);
     font-weight: var(--laro-font-weight-bold);
     line-height: 1.4;
 }
 
 .scenario-create-section-heading p {
-    margin: calc(var(--laro-gap-content) / 2) 0 0;
-
+    margin: 4px 0 0;
     color: var(--laro-subtext);
-
     font-size: var(--laro-font-caption);
-    font-weight: var(--laro-font-weight-regular);
     line-height: 1.5;
 }
 
+/* ============================================================
+   4. 입력 필드
+============================================================ */
 
-/* =========================================================
-   Form field
-   ========================================================= */
+.scenario-create-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px var(--laro-gap-page);
+}
 
 .scenario-create-field {
     display: flex;
@@ -176,20 +143,16 @@
 }
 
 .scenario-create-field > span {
-    margin-bottom: 7px;
-
+    margin-bottom: 6px;
     color: var(--laro-navy);
-
-    font-size: var(--laro-font-caption);
+    font-size: var(--laro-font-body);
     font-weight: var(--laro-font-weight-bold);
 }
 
 .scenario-create-field em,
 .scenario-create-required-note em {
     margin-left: 3px;
-
     color: var(--laro-danger);
-
     font-style: normal;
 }
 
@@ -197,33 +160,23 @@
 .scenario-create-panel select,
 .scenario-create-panel textarea {
     width: 100%;
-
     border: 1px solid var(--laro-border);
     border-radius: var(--laro-radius-control);
     outline: none;
-
     background: var(--laro-surface);
     color: var(--laro-text);
-
-    font-size: var(--laro-font-body);
-    font-weight: var(--laro-font-weight-regular);
-
-    transition:
-        border-color 0.18s ease,
-        box-shadow 0.18s ease,
-        background 0.18s ease;
+    font: inherit;
 }
 
 .scenario-create-panel input,
 .scenario-create-panel select {
     height: 40px;
-    padding: 0 var(--laro-padding-small);
+    padding: 0 10px;
 }
 
 .scenario-create-panel textarea {
     min-height: 86px;
-    padding: var(--laro-padding-small);
-
+    padding: 10px;
     line-height: 1.6;
     resize: vertical;
 }
@@ -240,10 +193,14 @@
 }
 
 .scenario-create-panel input:focus,
+.scenario-create-panel input:focus-visible,
 .scenario-create-panel select:focus,
-.scenario-create-panel textarea:focus {
+.scenario-create-panel select:focus-visible,
+.scenario-create-panel textarea:focus,
+.scenario-create-panel textarea:focus-visible {
     border-color: var(--laro-primary);
-    box-shadow: 0 0 0 3px var(--laro-focus-ring);
+    outline: none;
+    box-shadow: none;
 }
 
 .scenario-create-panel input.is-error,
@@ -257,20 +214,7 @@
 .scenario-create-panel textarea:disabled {
     background: var(--laro-muted-light);
     color: var(--laro-muted);
-
     cursor: not-allowed;
-}
-
-
-/* =========================================================
-   Basic information
-   ========================================================= */
-
-.scenario-create-info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--laro-padding-large)
-        calc(var(--laro-padding-large) + var(--laro-gap-content));
 }
 
 .scenario-create-full-field {
@@ -281,45 +225,41 @@
     align-self: start;
 }
 
-
-/* =========================================================
-   Warehouse select
-   ========================================================= */
-
 .scenario-create-warehouse-select {
     position: relative;
-
     display: flex;
     align-items: center;
 }
 
 .scenario-create-warehouse-select > span {
     position: absolute;
-    left: var(--laro-padding-small);
+    left: 10px;
     z-index: 1;
-
     color: var(--laro-primary);
-
     font-size: var(--laro-font-card-title);
-
     pointer-events: none;
 }
 
 .scenario-create-warehouse-select select {
-    padding-left: calc(
-        var(--laro-padding-large) + var(--laro-gap-page)
-    );
+    padding-left: 34px;
 }
 
-
-/* =========================================================
-   Battery settings
-   ========================================================= */
+/* ============================================================
+   5. 배터리 설정
+============================================================ */
 
 .scenario-create-battery-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: calc(var(--laro-padding-large) + var(--laro-gap-content));
+    gap: var(--laro-gap-content);
+}
+
+.scenario-create-setting-card {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--laro-border);
+    border-radius: 0;
+    background: var(--laro-background);
 }
 
 .scenario-create-suffix-input {
@@ -327,83 +267,60 @@
 }
 
 .scenario-create-suffix-input input {
-    padding-right: calc(
-        var(--laro-padding-large) + var(--laro-gap-page)
-    );
+    padding-right: 34px;
 }
 
 .scenario-create-suffix-input > span {
     position: absolute;
     top: 50%;
-    right: var(--laro-padding-small);
-
+    right: 10px;
     color: var(--laro-subtext);
-
     font-size: var(--laro-font-caption);
     font-weight: var(--laro-font-weight-semibold);
-
     pointer-events: none;
     transform: translateY(-50%);
 }
 
 .scenario-create-help {
     margin-top: 6px;
-
     color: var(--laro-subtext);
-
     font-size: var(--laro-font-caption);
-    font-weight: var(--laro-font-weight-regular);
     line-height: 1.5;
 }
 
-
-/* =========================================================
-   Validation
-   ========================================================= */
-
 .scenario-create-error {
-    margin-top: calc(var(--laro-gap-content) / 2);
-
+    margin-top: 4px;
     color: var(--laro-danger);
-
     font-size: var(--laro-font-caption);
-    font-weight: var(--laro-font-weight-medium);
+    font-weight: var(--laro-font-weight-semibold);
     line-height: 1.4;
 }
 
-
-/* =========================================================
-   Footer
-   ========================================================= */
+/* ============================================================
+   6. 하단 버튼
+============================================================ */
 
 .scenario-create-panel-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--laro-padding-large);
-
+    gap: var(--laro-gap-page);
     flex: 0 0 auto;
-
-    min-height: 68px;
-    padding: var(--laro-padding-small)
-        calc(var(--laro-padding-large) + var(--laro-gap-content));
-
+    min-height: 64px;
+    padding: 10px 14px;
     border-top: 1px solid var(--laro-border);
-
     background: var(--laro-surface);
 }
 
 .scenario-create-required-note {
     color: var(--laro-subtext);
-
     font-size: var(--laro-font-caption);
-    font-weight: var(--laro-font-weight-regular);
 }
 
 .scenario-create-footer-actions {
     display: flex;
     align-items: center;
-    gap: var(--laro-gap-content);
+    gap: 8px;
 }
 
 .scenario-create-cancel-button,
@@ -411,91 +328,64 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
-    min-width: 138px;
-    height: 42px;
-    padding: 0 var(--laro-padding-large);
-
+    min-width: 110px;
+    min-height: 40px;
+    padding: 0 16px;
     border-radius: var(--laro-radius-control);
-
-    font-size: var(--laro-font-body);
-    font-weight: var(--laro-font-weight-bold);
-
+    font: inherit;
+    font-weight: var(--laro-font-weight-semibold);
     cursor: pointer;
-
     transition:
-        border-color 0.18s ease,
-        background 0.18s ease,
-        color 0.18s ease,
-        opacity 0.18s ease;
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        color 0.15s ease;
 }
 
 .scenario-create-cancel-button {
-    border: 1px solid var(--laro-primary);
-
+    border: 1px solid var(--laro-border-dark);
     background: var(--laro-surface);
-    color: var(--laro-primary);
+    color: var(--laro-navy);
 }
 
 .scenario-create-cancel-button:hover {
+    border-color: var(--laro-primary);
     background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
 }
 
 .scenario-create-submit-button {
     border: 1px solid var(--laro-primary);
-
     background: var(--laro-primary);
     color: var(--laro-white);
 }
 
 .scenario-create-submit-button:hover {
     border-color: var(--laro-primary-hover);
-
     background: var(--laro-primary-hover);
 }
 
 .scenario-create-submit-button:active {
     border-color: var(--laro-primary-active);
-
     background: var(--laro-primary-active);
 }
 
 .scenario-create-submit-button:disabled {
     border-color: var(--laro-border);
-
     background: var(--laro-muted-light);
     color: var(--laro-muted);
-
     cursor: not-allowed;
-    opacity: 0.8;
 }
 
-
-/* =========================================================
-   Focus
-   ========================================================= */
-
-.scenario-create-panel button:focus-visible {
+.scenario-create-panel button:focus,
+.scenario-create-panel button:focus-visible,
+.scenario-create-panel button:active {
     outline: none;
-    box-shadow: 0 0 0 3px var(--laro-focus-ring);
+    box-shadow: none;
 }
 
-
-/* =========================================================
-   Responsive
-   ========================================================= */
-
-@media (max-width: 768px) {
-    .scenario-create-info-grid,
-    .scenario-create-battery-grid {
-        grid-template-columns: 1fr;
-        gap: var(--laro-gap-page);
-    }
-
-    .scenario-create-full-field {
-        grid-column: auto;
-    }
-}
+/* ============================================================
+   7. 반응형
+============================================================ */
 
 @media (max-width: 1050px) {
     .scenario-create-panel {
@@ -504,31 +394,19 @@
     }
 }
 
-@media (max-width: 600px) {
-    .scenario-create-panel-header,
-    .scenario-create-panel-body,
-    .scenario-create-panel-footer {
-        padding-right: var(--laro-padding-large);
-        padding-left: var(--laro-padding-large);
+@media (max-width: 700px) {
+    .scenario-create-info-grid,
+    .scenario-create-battery-grid {
+        grid-template-columns: 1fr;
     }
 
-    .scenario-create-panel-body {
-        padding-top: var(--laro-gap-page);
-        padding-bottom: var(--laro-gap-page);
-    }
-
-    .scenario-create-section {
-        padding: var(--laro-gap-page);
+    .scenario-create-full-field {
+        grid-column: auto;
     }
 
     .scenario-create-panel-footer {
         align-items: stretch;
         flex-direction: column;
-        gap: var(--laro-gap-content);
-    }
-
-    .scenario-create-required-note {
-        align-self: flex-start;
     }
 
     .scenario-create-footer-actions {
@@ -537,7 +415,6 @@
 
     .scenario-create-cancel-button,
     .scenario-create-submit-button {
-        min-width: 0;
         flex: 1;
     }
 }

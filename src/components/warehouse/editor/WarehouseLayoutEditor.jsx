@@ -7,7 +7,7 @@ import {
     getLayoutConnectionPoint,
     snapLayoutPoint,
 } from "../../../utils/warehouseLayoutBuilder";
-import "../../../styles/WarehouseLayoutEditor.css";
+import "../../../styles/warehouse/WarehouseLayoutEditor.css";
 
 import WarehouseEditorCanvas from "./WarehouseEditorCanvas";
 import WarehouseEditorSidebar from "./WarehouseEditorSidebar";

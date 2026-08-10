@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import "../styles/Board.css";
+import "../../styles/board/Board.css";
 
 const BOARD_TABS = [
     { id: "notice", label: "공지사항" },
@@ -10,6 +10,8 @@ const BOARD_TABS = [
 const STORAGE_KEY = "laro-board-posts";
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
+const normalizeKeyword = (value) => value.trim().toLowerCase();
+
 const NOTICES = [
     {
         id: 1,
@@ -18,8 +20,7 @@ const NOTICES = [
         author: "관리자",
         date: "2026.08.05",
         pinned: true,
-        content:
-            "LARO는 창고 운영, 로봇 관리, 시뮬레이션 및 작업 최적화를 지원하는 서비스입니다. 서비스 이용 전 창고와 로봇 정보를 먼저 등록해 주세요.",
+        content: "LARO는 창고 운영, 로봇 관리, 시뮬레이션 및 작업 최적화를 지원하는 서비스입니다. 서비스 이용 전 창고와 로봇 정보를 먼저 등록해 주세요.",
     },
     {
         id: 2,
@@ -28,8 +29,7 @@ const NOTICES = [
         author: "관리자",
         date: "2026.08.04",
         pinned: true,
-        content:
-            "AI 계획 생성, 작업 배정, 충돌 검증 및 재계획 기능이 업데이트되었습니다. 시뮬레이션 메뉴에서 확인할 수 있습니다.",
+        content: "AI 계획 생성, 작업 배정, 충돌 검증 및 재계획 기능이 업데이트되었습니다. 시뮬레이션 메뉴에서 확인할 수 있습니다.",
     },
     {
         id: 3,
@@ -38,8 +38,7 @@ const NOTICES = [
         author: "관리자",
         date: "2026.08.01",
         pinned: false,
-        content:
-            "서비스 안정화를 위한 정기 점검이 예정되어 있습니다. 점검 시간에는 일부 기능 이용이 제한될 수 있습니다.",
+        content: "서비스 안정화를 위한 정기 점검이 예정되어 있습니다. 점검 시간에는 일부 기능 이용이 제한될 수 있습니다.",
     },
     {
         id: 4,
@@ -48,8 +47,7 @@ const NOTICES = [
         author: "관리자",
         date: "2026.07.30",
         pinned: false,
-        content:
-            "창고 메뉴에서 창고를 생성한 뒤 노드, 통로, 랙, 입출고장 및 충전소 정보를 등록할 수 있습니다.",
+        content: "창고 메뉴에서 창고를 생성한 뒤 노드, 통로, 랙, 입출고장 및 충전소 정보를 등록할 수 있습니다.",
     },
 ];
 
@@ -57,8 +55,7 @@ const MANUALS = [
     {
         id: 1,
         title: "시뮬레이션 시작",
-        description:
-            "창고와 로봇을 선택하고 시뮬레이션을 실행하는 방법입니다.",
+        description: "창고와 로봇을 선택하고 시뮬레이션을 실행하는 방법입니다.",
         steps: [
             "시뮬레이션 메뉴로 이동합니다.",
             "실행할 창고를 선택합니다.",
@@ -69,8 +66,7 @@ const MANUALS = [
     {
         id: 2,
         title: "창고 등록 및 수정",
-        description:
-            "창고 지도와 시설 정보를 등록하고 수정하는 방법입니다.",
+        description: "창고 지도와 시설 정보를 등록하고 수정하는 방법입니다.",
         steps: [
             "창고 메뉴에서 신규 창고 등록을 선택합니다.",
             "창고명과 기본 정보를 입력합니다.",
@@ -81,8 +77,7 @@ const MANUALS = [
     {
         id: 3,
         title: "로봇 관리",
-        description:
-            "로봇 상태와 배터리, 현재 위치를 확인하는 방법입니다.",
+        description: "로봇 상태와 배터리, 현재 위치를 확인하는 방법입니다.",
         steps: [
             "로봇 메뉴로 이동합니다.",
             "대상 창고를 선택합니다.",
@@ -93,8 +88,7 @@ const MANUALS = [
     {
         id: 4,
         title: "재계획 실행",
-        description:
-            "고장이나 장애물 발생 시 계획을 다시 생성하는 방법입니다.",
+        description: "고장이나 장애물 발생 시 계획을 다시 생성하는 방법입니다.",
         steps: [
             "시뮬레이션 이벤트에서 문제 상황을 확인합니다.",
             "재계획 버튼을 선택합니다.",
@@ -108,9 +102,7 @@ const loadStoredPosts = () => {
     try {
         const storedPosts = localStorage.getItem(STORAGE_KEY);
 
-        if (!storedPosts) {
-            return [];
-        }
+        if (!storedPosts) return [];
 
         const parsedPosts = JSON.parse(storedPosts);
 
@@ -127,44 +119,25 @@ const readFileAsDataUrl = (file) =>
 
         reader.onload = () => resolve(reader.result);
 
-        reader.onerror = () => {
-            reject(
-                new Error(
-                    "첨부파일을 읽는 중 오류가 발생했습니다."
-                )
-            );
-        };
+        reader.onerror = () => reject(new Error("첨부파일을 읽는 중 오류가 발생했습니다."));
 
         reader.readAsDataURL(file);
     });
 
 const formatFileSize = (size) => {
-    if (!size) {
-        return "0 B";
-    }
-
-    if (size < 1024) {
-        return `${size} B`;
-    }
-
-    if (size < 1024 * 1024) {
-        return `${(size / 1024).toFixed(1)} KB`;
-    }
+    if (!size) return "0 B";
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
 
     return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 };
 
 const createPostId = () => {
-    if (
-        globalThis.crypto &&
-        typeof globalThis.crypto.randomUUID === "function"
-    ) {
+    if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
         return globalThis.crypto.randomUUID();
     }
 
-    return `${Date.now()}-${Math.random()
-        .toString(16)
-        .slice(2)}`;
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
 function Board() {
@@ -175,16 +148,13 @@ function Board() {
     const [noticeKeyword, setNoticeKeyword] = useState("");
     const [selectedNotice, setSelectedNotice] = useState(null);
 
-    const [archivePosts, setArchivePosts] =
-        useState(loadStoredPosts);
+    const [archivePosts, setArchivePosts] = useState(loadStoredPosts);
 
-    const [selectedArchivePost, setSelectedArchivePost] =
-        useState(null);
+    const [selectedArchivePost, setSelectedArchivePost] = useState(null);
 
     const [archiveKeyword, setArchiveKeyword] = useState("");
 
-    const [isWriteModalOpen, setIsWriteModalOpen] =
-        useState(false);
+    const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
 
     const [editingPostId, setEditingPostId] = useState(null);
 
@@ -195,14 +165,14 @@ function Board() {
     const [formError, setFormError] = useState("");
     const [formSuccess, setFormSuccess] = useState("");
 
-    const filteredNotices = useMemo(() => {
-        const normalizedKeyword = noticeKeyword
-            .trim()
-            .toLowerCase();
+    const editingPost = editingPostId
+        ? archivePosts.find((post) => post.id === editingPostId) ?? null
+        : null;
 
-        if (!normalizedKeyword) {
-            return NOTICES;
-        }
+    const filteredNotices = useMemo(() => {
+        const normalizedKeyword = normalizeKeyword(noticeKeyword);
+
+        if (!normalizedKeyword) return NOTICES;
 
         return NOTICES.filter((notice) =>
             `${notice.category} ${notice.title} ${notice.author}`
@@ -212,13 +182,9 @@ function Board() {
     }, [noticeKeyword]);
 
     const filteredArchivePosts = useMemo(() => {
-        const normalizedKeyword = archiveKeyword
-            .trim()
-            .toLowerCase();
+        const normalizedKeyword = normalizeKeyword(archiveKeyword);
 
-        if (!normalizedKeyword) {
-            return archivePosts;
-        }
+        if (!normalizedKeyword) return archivePosts;
 
         return archivePosts.filter((post) =>
             `${post.title} ${post.content}`
@@ -229,22 +195,21 @@ function Board() {
 
     const saveArchivePosts = (nextPosts) => {
         try {
-            localStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify(nextPosts)
-            );
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(nextPosts));
 
             setArchivePosts(nextPosts);
             return true;
         } catch (error) {
             console.error("게시글 저장 실패:", error);
 
-            setFormError(
-                "브라우저 저장 공간이 부족합니다. 첨부파일 크기를 줄이거나 기존 게시글을 삭제해 주세요."
-            );
+            setFormError("브라우저 저장 공간이 부족합니다. 첨부파일 크기를 줄이거나 기존 게시글을 삭제해 주세요.");
 
             return false;
         }
+    };
+
+    const resetFileInput = () => {
+        if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
     const resetPostForm = () => {
@@ -252,10 +217,7 @@ function Board() {
         setPostContent("");
         setSelectedFile(null);
         setFormError("");
-
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
+        resetFileInput();
     };
 
     const handleOpenWriteModal = () => {
@@ -273,10 +235,7 @@ function Board() {
         setFormError("");
         setFormSuccess("");
 
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-
+        resetFileInput();
         setIsWriteModalOpen(true);
     };
 
@@ -287,9 +246,7 @@ function Board() {
     };
 
     const handleModalBackgroundClick = (event) => {
-        if (event.target === event.currentTarget) {
-            handleCloseWriteModal();
-        }
+        if (event.target === event.currentTarget) handleCloseWriteModal();
     };
 
     const handleTabChange = (tabId) => {
@@ -315,9 +272,7 @@ function Board() {
         if (file.size > MAX_FILE_SIZE) {
             setSelectedFile(null);
 
-            setFormError(
-                "첨부파일은 최대 2MB까지 등록할 수 있습니다."
-            );
+            setFormError("첨부파일은 최대 2MB까지 등록할 수 있습니다.");
 
             event.target.value = "";
             return;
@@ -345,22 +300,15 @@ function Board() {
         }
 
         try {
-            const editingPost = archivePosts.find(
-                (post) => post.id === editingPostId
-            );
-
             let attachment = editingPost?.attachment ?? null;
 
             if (selectedFile) {
-                const dataUrl =
-                    await readFileAsDataUrl(selectedFile);
+                const dataUrl = await readFileAsDataUrl(selectedFile);
 
                 attachment = {
                     name: selectedFile.name,
                     size: selectedFile.size,
-                    type:
-                        selectedFile.type ||
-                        "application/octet-stream",
+                    type: selectedFile.type || "application/octet-stream",
                     dataUrl,
                 };
             }
@@ -373,23 +321,16 @@ function Board() {
                               title: normalizedTitle,
                               content: normalizedContent,
                               attachment,
-                              updatedAt:
-                                  new Date().toLocaleString(
-                                      "ko-KR"
-                                  ),
+                              updatedAt: new Date().toLocaleString("ko-KR"),
                           }
                         : post
                 );
 
                 const saved = saveArchivePosts(nextPosts);
 
-                if (!saved) {
-                    return;
-                }
+                if (!saved) return;
 
-                const updatedPost = nextPosts.find(
-                    (post) => post.id === editingPostId
-                );
+                const updatedPost = nextPosts.find((post) => post.id === editingPostId);
 
                 setSelectedArchivePost((currentPost) =>
                     currentPost?.id === editingPostId
@@ -406,8 +347,7 @@ function Board() {
                 id: createPostId(),
                 title: normalizedTitle,
                 content: normalizedContent,
-                createdAt:
-                    new Date().toLocaleString("ko-KR"),
+                createdAt: new Date().toLocaleString("ko-KR"),
                 updatedAt: null,
                 attachment,
             };
@@ -416,42 +356,27 @@ function Board() {
 
             const saved = saveArchivePosts(nextPosts);
 
-            if (!saved) {
-                return;
-            }
+            if (!saved) return;
 
             handleCloseWriteModal();
             setFormSuccess("게시글이 등록되었습니다.");
         } catch (error) {
-            console.error(
-                "게시글 등록 또는 수정 실패:",
-                error
-            );
+            console.error("게시글 등록 또는 수정 실패:", error);
 
-            setFormError(
-                "게시글을 저장하는 중 오류가 발생했습니다."
-            );
+            setFormError("게시글을 저장하는 중 오류가 발생했습니다.");
         }
     };
 
     const handleDeletePost = (postId) => {
-        const shouldDelete = window.confirm(
-            "이 게시글을 삭제하시겠습니까?"
-        );
+        const shouldDelete = window.confirm("이 게시글을 삭제하시겠습니까?");
 
-        if (!shouldDelete) {
-            return;
-        }
+        if (!shouldDelete) return;
 
-        const nextPosts = archivePosts.filter(
-            (post) => post.id !== postId
-        );
+        const nextPosts = archivePosts.filter((post) => post.id !== postId);
 
         const saved = saveArchivePosts(nextPosts);
 
-        if (!saved) {
-            return;
-        }
+        if (!saved) return;
 
         if (selectedArchivePost?.id === postId) {
             setSelectedArchivePost(null);
@@ -461,29 +386,18 @@ function Board() {
     };
 
     const getPostNumber = (postId) => {
-        const postIndex = archivePosts.findIndex(
-            (post) => post.id === postId
-        );
+        const postIndex = archivePosts.findIndex((post) => post.id === postId);
 
-        return postIndex >= 0
-            ? archivePosts.length - postIndex
-            : "-";
+        return postIndex >= 0 ? archivePosts.length - postIndex : "-";
     };
 
     return (
         <section className="board-page">
             <header className="board-page-header">
                 <div>
-                    <p className="board-eyebrow">
-                        LARO SUPPORT
-                    </p>
-
                     <h1>지원센터</h1>
 
-                    <p>
-                        공지사항, 사용 매뉴얼과 자유 게시판을
-                        확인할 수 있습니다.
-                    </p>
+                    <p>공지사항, 사용 매뉴얼과 자유 게시판을 확인할 수 있습니다.</p>
                 </div>
             </header>
 
@@ -503,9 +417,7 @@ function Board() {
                                 ? "is-active"
                                 : ""
                         }`}
-                        onClick={() =>
-                            handleTabChange(tab.id)
-                        }
+                        onClick={() => handleTabChange(tab.id)}
                     >
                         {tab.label}
                     </button>
@@ -527,17 +439,14 @@ function Board() {
                                     </h2>
 
                                     <p>
-                                        {selectedNotice.author} ·{" "}
-                                        {selectedNotice.date}
+                                        {selectedNotice.author} · {selectedNotice.date}
                                     </p>
                                 </div>
 
                                 <button
                                     type="button"
                                     className="board-secondary-button"
-                                    onClick={() =>
-                                        setSelectedNotice(null)
-                                    }
+                                    onClick={() => setSelectedNotice(null)}
                                 >
                                     목록으로
                                 </button>
@@ -553,10 +462,7 @@ function Board() {
                                 <div>
                                     <h2>공지사항</h2>
 
-                                    <p>
-                                        서비스 주요 소식과 점검
-                                        내용을 확인합니다.
-                                    </p>
+                                    <p>서비스 주요 소식과 점검 내용을 확인합니다.</p>
                                 </div>
 
                                 <label className="board-search">
@@ -567,11 +473,7 @@ function Board() {
                                     <input
                                         type="search"
                                         value={noticeKeyword}
-                                        onChange={(event) =>
-                                            setNoticeKeyword(
-                                                event.target.value
-                                            )
-                                        }
+                                        onChange={(event) => setNoticeKeyword(event.target.value)}
                                         placeholder="제목 또는 분류 검색"
                                     />
                                 </label>
@@ -590,14 +492,11 @@ function Board() {
                                     </thead>
 
                                     <tbody>
-                                        {filteredNotices.length >
-                                        0 ? (
+                                        {filteredNotices.length > 0 ? (
                                             filteredNotices.map(
                                                 (notice) => (
                                                     <tr
-                                                        key={
-                                                            notice.id
-                                                        }
+                                                        key={notice.id}
                                                     >
                                                         <td>
                                                             {notice.pinned
@@ -607,9 +506,7 @@ function Board() {
 
                                                         <td>
                                                             <span className="notice-category">
-                                                                {
-                                                                    notice.category
-                                                                }
+                                                                {notice.category}
                                                             </span>
                                                         </td>
 
@@ -622,22 +519,16 @@ function Board() {
                                                                     )
                                                                 }
                                                             >
-                                                                {
-                                                                    notice.title
-                                                                }
+                                                                {notice.title}
                                                             </button>
                                                         </td>
 
                                                         <td>
-                                                            {
-                                                                notice.author
-                                                            }
+                                                            {notice.author}
                                                         </td>
 
                                                         <td>
-                                                            {
-                                                                notice.date
-                                                            }
+                                                            {notice.date}
                                                         </td>
                                                     </tr>
                                                 )
@@ -667,10 +558,7 @@ function Board() {
                         <div>
                             <h2>사용 매뉴얼</h2>
 
-                            <p>
-                                주요 기능별 이용 순서를
-                                확인합니다.
-                            </p>
+                            <p>주요 기능별 이용 순서를 확인합니다.</p>
                         </div>
                     </div>
 
@@ -720,16 +608,12 @@ function Board() {
                                     </span>
 
                                     <h2>
-                                        {
-                                            selectedArchivePost.title
-                                        }
+                                        {selectedArchivePost.title}
                                     </h2>
 
                                     <p>
                                         작성{" "}
-                                        {
-                                            selectedArchivePost.createdAt
-                                        }
+                                        {selectedArchivePost.createdAt}
 
                                         {selectedArchivePost.updatedAt &&
                                             ` · 수정 ${selectedArchivePost.updatedAt}`}
@@ -740,11 +624,7 @@ function Board() {
                                     <button
                                         type="button"
                                         className="board-secondary-button"
-                                        onClick={() =>
-                                            setSelectedArchivePost(
-                                                null
-                                            )
-                                        }
+                                        onClick={() => setSelectedArchivePost(null)}
                                     >
                                         목록으로
                                     </button>
@@ -752,11 +632,7 @@ function Board() {
                                     <button
                                         type="button"
                                         className="archive-edit-button"
-                                        onClick={() =>
-                                            handleOpenEditModal(
-                                                selectedArchivePost
-                                            )
-                                        }
+                                        onClick={() => handleOpenEditModal(selectedArchivePost)}
                                     >
                                         수정
                                     </button>
@@ -764,11 +640,7 @@ function Board() {
                                     <button
                                         type="button"
                                         className="board-danger-button"
-                                        onClick={() =>
-                                            handleDeletePost(
-                                                selectedArchivePost.id
-                                            )
-                                        }
+                                        onClick={() => handleDeletePost(selectedArchivePost.id)}
                                     >
                                         삭제
                                     </button>
@@ -776,9 +648,7 @@ function Board() {
                             </div>
 
                             <div className="archive-detail-content">
-                                {
-                                    selectedArchivePost.content
-                                }
+                                {selectedArchivePost.content}
                             </div>
 
                             {selectedArchivePost.attachment && (
@@ -787,10 +657,7 @@ function Board() {
                                         <span>첨부파일</span>
 
                                         <strong>
-                                            {
-                                                selectedArchivePost
-                                                    .attachment.name
-                                            }
+                                            {selectedArchivePost.attachment.name}
                                         </strong>
 
                                         <small>
@@ -823,10 +690,7 @@ function Board() {
                                 <div>
                                     <h2>자유 게시판</h2>
 
-                                    <p>
-                                        게시글과 관련 파일을
-                                        등록하고 관리합니다.
-                                    </p>
+                                    <p>게시글과 관련 파일을 등록하고 관리합니다.</p>
                                 </div>
 
                                 <div className="archive-toolbar-actions">
@@ -837,15 +701,12 @@ function Board() {
 
                                         <input
                                             type="search"
-                                            value={
-                                                archiveKeyword
-                                            }
+                                            value={archiveKeyword}
                                             onChange={(event) =>
                                                 setArchiveKeyword(
                                                     event.target
                                                         .value
-                                                )
-                                            }
+                                                )}
                                             placeholder="제목 또는 내용 검색"
                                         />
                                     </label>
@@ -853,9 +714,7 @@ function Board() {
                                     <button
                                         type="button"
                                         className="archive-new-button"
-                                        onClick={
-                                            handleOpenWriteModal
-                                        }
+                                        onClick={handleOpenWriteModal}
                                     >
                                         새 글 작성
                                     </button>
@@ -893,14 +752,11 @@ function Board() {
                                         </thead>
 
                                         <tbody>
-                                            {filteredArchivePosts.length >
-                                            0 ? (
+                                            {filteredArchivePosts.length > 0 ? (
                                                 filteredArchivePosts.map(
                                                     (post) => (
                                                         <tr
-                                                            key={
-                                                                post.id
-                                                            }
+                                                            key={post.id}
                                                         >
                                                             <td>
                                                                 {getPostNumber(
@@ -917,24 +773,16 @@ function Board() {
                                                                         )
                                                                     }
                                                                 >
-                                                                    {
-                                                                        post.title
-                                                                    }
+                                                                    {post.title}
                                                                 </button>
                                                             </td>
 
                                                             <td>
-                                                                {post.attachment
-                                                                    ? post
-                                                                          .attachment
-                                                                          .name
-                                                                    : "-"}
+                                                                {post.attachment ? post.attachment.name : "-"}
                                                             </td>
 
                                                             <td>
-                                                                {
-                                                                    post.createdAt
-                                                                }
+                                                                {post.createdAt}
                                                             </td>
 
                                                             <td>
@@ -942,11 +790,7 @@ function Board() {
                                                                     <button
                                                                         type="button"
                                                                         className="archive-edit-button"
-                                                                        onClick={() =>
-                                                                            handleOpenEditModal(
-                                                                                post
-                                                                            )
-                                                                        }
+                                                                        onClick={() => handleOpenEditModal(post)}
                                                                     >
                                                                         수정
                                                                     </button>
@@ -954,11 +798,7 @@ function Board() {
                                                                     <button
                                                                         type="button"
                                                                         className="archive-delete-button"
-                                                                        onClick={() =>
-                                                                            handleDeletePost(
-                                                                                post.id
-                                                                            )
-                                                                        }
+                                                                        onClick={() => handleDeletePost(post.id)}
                                                                     >
                                                                         삭제
                                                                     </button>
@@ -991,40 +831,30 @@ function Board() {
                 isWriteModalOpen && (
                     <div
                         className="archive-modal-overlay"
-                        onMouseDown={
-                            handleModalBackgroundClick
-                        }
+                        onMouseDown={handleModalBackgroundClick}
                     >
                         <div
                             className="archive-modal"
                             role="dialog"
                             aria-modal="true"
                             aria-labelledby="archive-modal-title"
-                            onMouseDown={(event) =>
-                                event.stopPropagation()
-                            }
+                            onMouseDown={(event) => event.stopPropagation()}
                         >
                             <div className="archive-modal-header">
                                 <div>
                                     <h2 id="archive-modal-title">
-                                        {editingPostId
-                                            ? "게시글 수정"
-                                            : "새 글 작성"}
+                                        {editingPostId ? "게시글 수정" : "새 글 작성"}
                                     </h2>
 
                                     <p>
-                                        {editingPostId
-                                            ? "게시글 내용과 첨부파일을 수정합니다."
-                                            : "게시글과 첨부파일을 등록합니다."}
+                                        {editingPostId ? "게시글 내용과 첨부파일을 수정합니다." : "게시글과 첨부파일을 등록합니다."}
                                     </p>
                                 </div>
 
                                 <button
                                     type="button"
                                     className="archive-modal-close"
-                                    onClick={
-                                        handleCloseWriteModal
-                                    }
+                                    onClick={handleCloseWriteModal}
                                     aria-label="팝업 닫기"
                                 >
                                     ×
@@ -1041,11 +871,7 @@ function Board() {
                                     <input
                                         type="text"
                                         value={postTitle}
-                                        onChange={(event) =>
-                                            setPostTitle(
-                                                event.target.value
-                                            )
-                                        }
+                                        onChange={(event) => setPostTitle(event.target.value)}
                                         placeholder="게시글 제목을 입력하세요."
                                         maxLength={100}
                                         autoFocus
@@ -1057,11 +883,7 @@ function Board() {
 
                                     <textarea
                                         value={postContent}
-                                        onChange={(event) =>
-                                            setPostContent(
-                                                event.target.value
-                                            )
-                                        }
+                                        onChange={(event) => setPostContent(event.target.value)}
                                         placeholder="게시글 내용을 입력하세요."
                                         rows={9}
                                         maxLength={2000}
@@ -1074,60 +896,29 @@ function Board() {
                                     <input
                                         ref={fileInputRef}
                                         type="file"
-                                        onChange={
-                                            handleFileChange
-                                        }
+                                        onChange={handleFileChange}
                                     />
 
                                     <small>
-                                        파일 1개, 최대 2MB까지
-                                        등록할 수 있습니다.
-                                        {editingPostId &&
-                                            " 새 파일을 선택하지 않으면 기존 파일이 유지됩니다."}
+                                        파일 1개, 최대 2MB까지 등록할 수 있습니다.
+                                        {editingPostId && " 새 파일을 선택하지 않으면 기존 파일이 유지됩니다."}
                                     </small>
                                 </label>
 
                                 {selectedFile && (
                                     <div className="archive-selected-file">
-                                        <strong>
-                                            {selectedFile.name}
-                                        </strong>
+                                        <strong>{selectedFile.name}</strong>
 
-                                        <span>
-                                            {formatFileSize(
-                                                selectedFile.size
-                                            )}
-                                        </span>
+                                        <span>{formatFileSize(selectedFile.size)}</span>
                                     </div>
                                 )}
 
-                                {editingPostId &&
-                                    !selectedFile &&
-                                    archivePosts.find(
-                                        (post) =>
-                                            post.id ===
-                                            editingPostId
-                                    )?.attachment && (
-                                        <div className="archive-current-file">
-                                            <span>
-                                                현재 첨부파일
-                                            </span>
-
-                                            <strong>
-                                                {
-                                                    archivePosts.find(
-                                                        (
-                                                            post
-                                                        ) =>
-                                                            post.id ===
-                                                            editingPostId
-                                                    )
-                                                        ?.attachment
-                                                        ?.name
-                                                }
-                                            </strong>
-                                        </div>
-                                    )}
+                                {editingPostId && !selectedFile && editingPost?.attachment && (
+                                    <div className="archive-current-file">
+                                        <span>현재 첨부파일</span>
+                                        <strong>{editingPost.attachment.name}</strong>
+                                    </div>
+                                )}
 
                                 {formError && (
                                     <p
@@ -1142,9 +933,7 @@ function Board() {
                                     <button
                                         type="button"
                                         className="board-secondary-button"
-                                        onClick={
-                                            handleCloseWriteModal
-                                        }
+                                        onClick={handleCloseWriteModal}
                                     >
                                         취소
                                     </button>
@@ -1153,9 +942,7 @@ function Board() {
                                         type="submit"
                                         className="archive-submit-button"
                                     >
-                                        {editingPostId
-                                            ? "수정 완료"
-                                            : "게시글 등록"}
+                                        {editingPostId ? "수정 완료" : "게시글 등록"}
                                     </button>
                                 </div>
                             </form>

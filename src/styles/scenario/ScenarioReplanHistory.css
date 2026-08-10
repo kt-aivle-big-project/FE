@@ -1,33 +1,37 @@
-/* =========================================================
-   ScenarioReplanHistory
-   재계획 히스토리 전체 화면
-   ========================================================= */
+/* ============================================================
+   1. 재계획 히스토리 페이지
+============================================================ */
+
+.scenario-replan-history-page,
+.scenario-replan-history-page * {
+    box-sizing: border-box;
+}
 
 .scenario-replan-history-page {
     width: 100%;
     min-width: 0;
     min-height: 100%;
-    padding: 24px;
+    padding: var(--laro-padding-large);
     background: var(--laro-background);
     color: var(--laro-text);
 }
 
-/* =========================================================
-   Header
-   ========================================================= */
+/* ============================================================
+   2. 페이지 헤더
+============================================================ */
 
 .scenario-replan-history-header {
-    margin-bottom: 18px;
+    padding: 4px 2px 14px;
 }
 
 .scenario-replan-history-back {
-    margin: 0 0 12px;
+    margin: 0 0 10px;
     padding: 0;
     border: 0;
     background: transparent;
     color: var(--laro-primary);
-    font-size: 12px;
-    font-weight: 700;
+    font: inherit;
+    font-weight: var(--laro-font-weight-semibold);
     cursor: pointer;
 }
 
@@ -38,15 +42,16 @@
 .scenario-replan-history-header h1 {
     margin: 0;
     color: var(--laro-navy);
-    font-size: 26px;
-    font-weight: 900;
-    line-height: 1.35;
+    font-size: var(--laro-font-page-title);
+    font-weight: var(--laro-font-weight-bold);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
 }
 
 .scenario-replan-history-header p {
-    margin: 7px 0 0;
+    margin: 6px 0 0;
     color: var(--laro-subtext);
-    font-size: 12px;
+    font-size: var(--laro-font-body);
     line-height: 1.5;
 }
 
@@ -55,46 +60,47 @@
     align-items: center;
     min-height: 26px;
     margin-top: 10px;
-    padding: 0 9px;
+    padding: 2px 9px;
     border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-pill);
     background: var(--laro-primary-light);
-    color: var(--laro-primary);
-    font-size: 10px;
-    font-weight: 800;
+    color: var(--laro-primary-active);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
 }
 
-/* =========================================================
-   Summary
-   ========================================================= */
+/* ============================================================
+   3. 요약 카드
+============================================================ */
 
 .scenario-replan-history-summary {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-    margin-bottom: 14px;
+    gap: 8px;
+    margin-bottom: 8px;
 }
 
 .scenario-replan-history-summary-card {
     min-width: 0;
-    min-height: 100px;
-    padding: 18px;
+    min-height: 76px;
+    padding: 12px;
     border: 1px solid var(--laro-border);
+    border-radius: 0;
     background: var(--laro-surface);
 }
 
 .scenario-replan-history-summary-card > span {
     display: block;
     color: var(--laro-subtext);
-    font-size: 11px;
-    font-weight: 700;
+    font-size: var(--laro-font-body);
 }
 
 .scenario-replan-history-summary-card > strong {
     display: block;
-    margin-top: 12px;
+    margin-top: 8px;
     color: var(--laro-navy);
-    font-size: 25px;
-    font-weight: 900;
+    font-size: var(--laro-font-metric);
+    font-weight: var(--laro-font-weight-bold);
 }
 
 .scenario-replan-history-summary-card > strong.is-success {
@@ -106,17 +112,18 @@
 }
 
 .scenario-replan-history-summary-card > strong.is-date {
-    font-size: 13px;
-    line-height: 1.6;
+    font-size: var(--laro-font-body);
+    line-height: 1.5;
 }
 
-/* =========================================================
-   Main content
-   ========================================================= */
+/* ============================================================
+   4. 이력 목록
+============================================================ */
 
 .scenario-replan-history-content {
     min-width: 0;
     border: 1px solid var(--laro-border);
+    border-radius: 0;
     background: var(--laro-surface);
 }
 
@@ -124,22 +131,23 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 18px 20px;
+    gap: var(--laro-gap-page);
+    min-height: 48px;
+    padding: 10px 14px;
     border-bottom: 1px solid var(--laro-border);
 }
 
 .scenario-replan-history-content-header h2 {
     margin: 0;
     color: var(--laro-navy);
-    font-size: 17px;
-    font-weight: 900;
+    font-size: var(--laro-font-section-title);
+    font-weight: var(--laro-font-weight-bold);
 }
 
 .scenario-replan-history-content-header p {
-    margin: 5px 0 0;
+    margin: 4px 0 0;
     color: var(--laro-subtext);
-    font-size: 10px;
+    font-size: var(--laro-font-caption);
 }
 
 .scenario-replan-history-count {
@@ -147,19 +155,16 @@
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
-    min-height: 28px;
-    padding: 0 10px;
+    min-height: 26px;
+    padding: 2px 9px;
     border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-pill);
     background: var(--laro-primary-light);
-    color: var(--laro-primary);
-    font-size: 10px;
-    font-weight: 800;
+    color: var(--laro-primary-active);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
     white-space: nowrap;
 }
-
-/* =========================================================
-   Table
-   ========================================================= */
 
 .scenario-replan-history-table-wrapper {
     width: 100%;
@@ -168,37 +173,33 @@
 
 .scenario-replan-history-table {
     width: 100%;
-    min-width: 1500px;
+    min-width: 1300px;
     border-collapse: collapse;
     table-layout: auto;
 }
 
-.scenario-replan-history-table thead {
-    background: var(--laro-background);
-}
-
-.scenario-replan-history-table th {
-    padding: 12px 13px;
-    border-bottom: 1px solid var(--laro-border);
-    color: var(--laro-subtext);
-    font-size: 10px;
-    font-weight: 800;
-    text-align: left;
-    white-space: nowrap;
-}
-
+.scenario-replan-history-table th,
 .scenario-replan-history-table td {
-    padding: 14px 13px;
+    height: 48px;
+    padding: 8px;
+    border-right: 1px solid var(--laro-border);
     border-bottom: 1px solid var(--laro-border);
     color: var(--laro-text);
-    font-size: 11px;
-    line-height: 1.5;
+    font-size: var(--laro-font-body);
     vertical-align: middle;
     white-space: nowrap;
 }
 
-.scenario-replan-history-table tbody tr {
-    transition: background-color 0.15s ease;
+.scenario-replan-history-table th {
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-weight: var(--laro-font-weight-semibold);
+    text-align: left;
+}
+
+.scenario-replan-history-table th:last-child,
+.scenario-replan-history-table td:last-child {
+    border-right: 0;
 }
 
 .scenario-replan-history-table tbody tr:hover {
@@ -209,28 +210,33 @@
     border-bottom: 0;
 }
 
-.scenario-replan-history-table td strong {
-    color: var(--laro-navy);
-    font-weight: 800;
-}
-
+.scenario-replan-history-table td strong,
 .scenario-replan-history-count-value {
     color: var(--laro-navy);
-    font-weight: 800;
+    font-weight: var(--laro-font-weight-bold);
 }
 
-/* =========================================================
-   Status
-   ========================================================= */
+.scenario-replan-history-description {
+    min-width: 260px;
+    max-width: 440px;
+    white-space: normal !important;
+    line-height: 1.5;
+}
+
+/* ============================================================
+   5. 상태
+============================================================ */
 
 .scenario-replan-history-status {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 26px;
-    padding: 0 9px;
-    font-size: 10px;
-    font-weight: 800;
+    min-height: 24px;
+    padding: 2px 10px;
+    border: 1px solid transparent;
+    border-radius: var(--laro-radius-pill);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
     white-space: nowrap;
 }
 
@@ -246,68 +252,63 @@
 
 .scenario-replan-history-status.is-processing {
     background: var(--laro-primary-light);
-    color: var(--laro-primary);
+    color: var(--laro-primary-active);
 }
 
 .scenario-replan-history-status.is-pending,
 .scenario-replan-history-status.is-default {
     background: var(--laro-muted-light);
-    color: var(--laro-subtext);
+    color: var(--laro-muted);
 }
 
-.scenario-replan-history-description {
-    min-width: 320px;
-    max-width: 460px;
-    white-space: normal !important;
-    word-break: keep-all;
-}
-
-/* =========================================================
-   Loading / Error / Empty
-   ========================================================= */
+/* ============================================================
+   6. 로딩 / 오류 / 빈 상태
+============================================================ */
 
 .scenario-replan-history-state,
 .scenario-replan-history-empty {
     display: flex;
+    min-height: 220px;
     align-items: center;
     flex-direction: column;
     justify-content: center;
-    min-height: 260px;
-    padding: 30px;
+    padding: 30px 14px;
     background: var(--laro-background);
+    color: var(--laro-subtext);
     text-align: center;
 }
 
 .scenario-replan-history-state strong,
 .scenario-replan-history-empty strong {
     color: var(--laro-navy);
-    font-size: 14px;
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
 }
 
 .scenario-replan-history-state p,
 .scenario-replan-history-empty p {
-    margin: 7px 0 0;
+    margin: 6px 0 0;
     color: var(--laro-subtext);
-    font-size: 11px;
+    font-size: var(--laro-font-body);
 }
 
 .scenario-replan-history-state.is-error strong {
     color: var(--laro-danger);
 }
 
-/* =========================================================
-   Responsive
-   ========================================================= */
+/* ============================================================
+   7. 반응형
+============================================================ */
 
-@media (max-width: 1100px) {
+@media (max-width: 900px) {
     .scenario-replan-history-summary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 520px) {
     .scenario-replan-history-page {
-        padding: 14px;
+        padding: 12px;
     }
 
     .scenario-replan-history-summary {

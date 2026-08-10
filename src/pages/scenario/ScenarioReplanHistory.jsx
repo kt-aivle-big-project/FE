@@ -33,12 +33,11 @@ const getStatusInfo = (status) => {
 
 const getReoptimizationReasonLabel = (reason) => {
     const reasonMap = {
+        ROBOT_TASK_COMPLETED: "작업 조기 완료",
         ROBOT_FAILURE: "로봇 고장",
         LOW_BATTERY: "배터리 부족",
-        PATH_BLOCKED: "통로 차단",
-        ORDER_INCREASE: "주문 증가",
-        INVENTORY_SHORTAGE: "재고 부족",
-        TASK_DELAY: "작업 지연",
+        OBSTACLE_DETECTED: "장애물 감지",
+        NEW_TASK_ADDED: "신규 작업 추가",
         MANUAL_REQUEST: "관리자 요청",
     };
 
@@ -68,19 +67,24 @@ const formatDateTime = (dateTime) => {
 };
 
 const normalizeHistoryList = (response) => {
-    if (Array.isArray(response)) {
-        return response;
-    }
+    const histories = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.content)
+            ? response.content
+            : Array.isArray(response?.items)
+                ? response.items
+                : [];
 
-    if (Array.isArray(response?.content)) {
-        return response.content;
-    }
-
-    if (Array.isArray(response?.items)) {
-        return response.items;
-    }
-
-    return [];
+    // 재계획 API의 중첩 목록이 null이어도 화면에서 안전하게 사용할 수 있도록 정리한다.
+    return histories.map((history) => ({
+        ...history,
+        routes: Array.isArray(history?.routes)
+            ? history.routes
+            : [],
+        taskAssignments: Array.isArray(history?.taskAssignments)
+            ? history.taskAssignments
+            : [],
+    }));
 };
 
 function ScenarioReplanHistory() {
@@ -291,17 +295,10 @@ function ScenarioReplanHistory() {
                             <tbody>
                                 {replanHistory.map((history, index) => {
                                     const status = getStatusInfo(history.status);
-                                    const reason =
-                                        history.reason
-                                        ?? history.reoptimizationReason;
-                                    const taskAssignmentCount = Array.isArray(
-                                        history.taskAssignments
-                                    )
-                                        ? history.taskAssignments.length
-                                        : 0;
-                                    const routeCount = Array.isArray(history.routes)
-                                        ? history.routes.length
-                                        : 0;
+                                    const reason = history.reason;
+                                    const taskAssignmentCount =
+                                        history.taskAssignments.length;
+                                    const routeCount = history.routes.length;
 
                                     return (
                                         <tr

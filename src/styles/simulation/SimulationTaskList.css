@@ -1,0 +1,213 @@
+/* ============================================================
+   1. 작업 목록 헤더
+============================================================ */
+
+.simulation-task-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.simulation-task-list-header > div:first-child {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+}
+
+.simulation-task-list-title {
+    margin: 0;
+    color: var(--laro-navy);
+    font-size: 15px;
+    font-weight: var(--laro-font-weight-bold);
+    letter-spacing: 0;
+}
+
+.simulation-task-list-count {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    white-space: nowrap;
+}
+
+.simulation-task-list-summary {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 5px 10px;
+    color: var(--laro-subtext);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+.simulation-task-list-summary .is-danger {
+    color: var(--laro-danger);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+/* ============================================================
+   2. 작업 테이블
+============================================================ */
+
+.simulation-task-list-table-wrapper {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--laro-border-dark) transparent;
+}
+
+.simulation-task-list-table-wrapper::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+.simulation-task-list-table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--laro-border-dark);
+}
+
+.simulation-task-list-table {
+    width: 100%;
+    min-width: 500px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.simulation-task-list-table th,
+.simulation-task-list-table td {
+    padding: 5px 5px;
+    border-bottom: 1px solid var(--laro-border);
+    color: var(--laro-text);
+    font-size: 11px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.simulation-task-list-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    height: 30px;
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-semibold);
+    white-space: nowrap;
+}
+
+.simulation-task-list-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.simulation-task-list-table tbody tr:hover td {
+    background: var(--laro-surface-hover);
+}
+
+.simulation-task-list-table th:nth-child(1) { width: 50px; }
+.simulation-task-list-table th:nth-child(2) { width: 60px; }
+.simulation-task-list-table th:nth-child(3) { width: 80px; }
+.simulation-task-list-table th:nth-child(4) { width: 50px; }
+.simulation-task-list-table th:nth-child(5) { width: 60px; }
+.simulation-task-list-table th:nth-child(6) { width: 100px; }
+.simulation-task-list-table th:nth-child(7) { width: 50px; }
+.simulation-task-list-table th:nth-child(8) { width: 50px; }
+
+/* ============================================================
+   3. 작업 데이터
+============================================================ */
+
+.simulation-task-list-id,
+.simulation-task-list-robot,
+.simulation-task-list-time {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.simulation-task-list-id,
+.simulation-task-list-robot {
+    color: var(--laro-navy) !important;
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.simulation-task-list-content,
+.simulation-task-list-route {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.simulation-task-list-type {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    height: 22px;
+    padding: 0 6px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-size: 9px;
+    font-weight: var(--laro-font-weight-semibold);
+    white-space: nowrap;
+}
+
+.simulation-task-list-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 46px;
+    height: 22px;
+    padding: 0 7px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-pill);
+    font-size: 9px;
+    font-weight: var(--laro-font-weight-semibold);
+    white-space: nowrap;
+}
+
+.simulation-task-list-status.status-pending,
+.simulation-task-list-status.status-default {
+    background: var(--laro-muted-light);
+    color: var(--laro-subtext);
+}
+
+.simulation-task-list-status.status-assigned,
+.simulation-task-list-status.status-in-progress {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-hover);
+}
+
+.simulation-task-list-status.status-completed {
+    border-color: var(--laro-success);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.simulation-task-list-status.status-failed {
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
+.simulation-task-list-status.status-cancelled {
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+}
+
+.simulation-task-list-time {
+    color: var(--laro-subtext) !important;
+    font-size: 10px !important;
+}
+
+.simulation-task-list-empty {
+    height: 150px;
+    color: var(--laro-muted) !important;
+    text-align: center !important;
+}

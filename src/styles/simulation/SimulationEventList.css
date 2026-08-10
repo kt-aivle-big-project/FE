@@ -1,0 +1,205 @@
+/* ============================================================
+   1. 이벤트 목록 헤더
+============================================================ */
+
+.simulation-event-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.simulation-event-list-header > div {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+}
+
+.simulation-event-list-title {
+    margin: 0;
+    color: var(--laro-navy);
+    font-size: 15px;
+    font-weight: var(--laro-font-weight-bold);
+    letter-spacing: 0;
+}
+
+.simulation-event-list-count {
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    white-space: nowrap;
+}
+
+/* ============================================================
+   2. 이벤트 테이블
+============================================================ */
+
+.simulation-event-list-table-wrapper {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--laro-border-dark) transparent;
+}
+
+.simulation-event-list-table-wrapper::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+.simulation-event-list-table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--laro-border-dark);
+}
+
+.simulation-event-list-table {
+    width: 100%;
+    min-width: 500px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.simulation-event-list-table th,
+.simulation-event-list-table td {
+    padding: 5px 5px;
+    border-bottom: 1px solid var(--laro-border);
+    color: var(--laro-text);
+    font-size: 11px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.simulation-event-list-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    height: 30px;
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-semibold);
+    white-space: nowrap;
+}
+
+.simulation-event-list-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.simulation-event-list-table tbody tr:hover td {
+    background: var(--laro-surface-hover);
+}
+
+.simulation-event-list-table tr.is-avoidance td:first-child {
+    box-shadow: inset 2px 0 0 var(--laro-warning);
+}
+
+.simulation-event-list-table th:nth-child(1) { width: 50px; }
+.simulation-event-list-table th:nth-child(2) { width: 50px; }
+.simulation-event-list-table th:nth-child(3) { width: 100px; }
+.simulation-event-list-table th:nth-child(4) { width: 100px; }
+.simulation-event-list-table th:nth-child(5) { width: 50px; }
+.simulation-event-list-table th:nth-child(6) { width: 50px; }
+
+/* ============================================================
+   3. 이벤트 데이터
+============================================================ */
+
+.simulation-event-list-time,
+.simulation-event-list-waiting {
+    color: var(--laro-subtext) !important;
+    font-size: 10px !important;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.simulation-event-list-level,
+.simulation-event-list-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    height: 21px;
+    padding: 0 6px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-pill);
+    font-size: 9px;
+    font-weight: var(--laro-font-weight-semibold);
+    white-space: nowrap;
+}
+
+.simulation-event-list-level.is-info {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-hover);
+}
+
+.simulation-event-list-level.is-warning {
+    border-color: var(--laro-warning);
+    background: var(--laro-warning-light);
+    color: var(--laro-warning);
+}
+
+.simulation-event-list-level.is-danger {
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
+.simulation-event-list-event {
+    min-width: 0;
+}
+
+.simulation-event-list-event strong,
+.simulation-event-list-event small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.simulation-event-list-event strong {
+    color: var(--laro-navy);
+    font-size: 11px;
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.simulation-event-list-event small {
+    margin-top: 3px;
+    color: var(--laro-subtext);
+    font-size: 9px;
+}
+
+.simulation-event-list-related {
+    overflow: hidden;
+    color: var(--laro-subtext) !important;
+    font-size: 10px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.simulation-event-list-status.is-resolved {
+    border-color: var(--laro-success);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.simulation-event-list-status.is-waiting {
+    border-color: var(--laro-warning);
+    background: var(--laro-warning-light);
+    color: var(--laro-warning);
+}
+
+.simulation-event-list-status.is-unresolved {
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
+.simulation-event-list-empty {
+    height: 150px;
+    color: var(--laro-muted) !important;
+    text-align: center !important;
+}
