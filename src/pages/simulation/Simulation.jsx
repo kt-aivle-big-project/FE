@@ -498,11 +498,112 @@ function Simulation() {
      * 실행 컨테이너만 만든다. 입출고 명령은 시작 후 0분·5분·10분에
      * 백엔드 command cycle이 재고를 읽어 자동 생성한다.
      */
-    const buildCreatePayload = () => {
+    const buildCreatePayload = ({
+        warehouseId = selectedWarehouseId,
+        scenarioId = selectedScenarioId,
+    } = {}) => {
         return {
-            warehouseId: selectedWarehouseId,
+            warehouseId,
+            scenarioId,
             simulationSpeed: Number(simulationSpeed),
         };
+    };
+
+    const getCopiedWarehouseId = (copyResponse) => {
+        const warehouseId =
+            copyResponse?.warehouseId
+            ?? copyResponse?.personalWarehouseId
+            ?? copyResponse?.id
+            ?? copyResponse;
+        const numericWarehouseId = Number(warehouseId);
+
+        if (!Number.isFinite(numericWarehouseId)) {
+            throw new Error(
+                "개인 창고 복제 응답에서 warehouseId를 확인할 수 없습니다."
+            );
+        }
+
+        return numericWarehouseId;
+    };
+
+    /**
+     * 공유 템플릿은 직접 실행할 수 없으므로 로그인 유형에 맞는 개인 복사본으로
+     * 전환한다. 템플릿에서 선택한 시나리오는 복사본의 scenarioCode/name과
+     * 다시 매칭해 동일한 실행 설정을 유지한다.
+     */
+    const resolveSimulationTarget = async () => {
+        let warehouse = warehouses.find(
+            (item) => Number(item.id) === Number(selectedWarehouseId)
+        );
+
+        if (!warehouse) {
+            warehouse = await warehouseApi.get(selectedWarehouseId);
+        }
+
+        let warehouseId = Number(warehouse.id ?? selectedWarehouseId);
+        let copied = false;
+        const selectedScenario = scenarios.find(
+            (scenario) => Number(scenario.id) === Number(selectedScenarioId)
+        );
+
+        if (warehouse.shared === true) {
+            copied = true;
+            const copyResponse = isGuestSession()
+                ? await warehouseApi.createGuestPersonalCopy(warehouseId)
+                : await warehouseApi.createPersonalCopy(warehouseId);
+
+            warehouseId = getCopiedWarehouseId(copyResponse);
+
+            const copiedWarehouseResponse = await warehouseApi.get(warehouseId);
+            const copiedWarehouse = {
+                ...copiedWarehouseResponse,
+                id: warehouseId,
+                shared: false,
+            };
+
+            setWarehouses((currentWarehouses) => [
+                copiedWarehouse,
+                ...currentWarehouses.filter(
+                    (item) => Number(item.id) !== warehouseId
+                ),
+            ]);
+            setSelectedWarehouseId(warehouseId);
+            setSimulationRunId(null);
+        }
+
+        const copiedScenariosResponse = await scenarioApi.getAll(warehouseId);
+        const copiedScenarios = Array.isArray(copiedScenariosResponse)
+            ? copiedScenariosResponse
+            : [];
+
+        if (copiedScenarios.length === 0) {
+            throw new Error("선택한 창고에 실행 가능한 시나리오가 없습니다.");
+        }
+
+        const matchedScenario = copiedScenarios.find(
+            (scenario) =>
+                selectedScenario?.scenarioCode
+                && scenario.scenarioCode === selectedScenario.scenarioCode
+        ) ?? copiedScenarios.find(
+            (scenario) =>
+                selectedScenario?.scenarioName
+                && scenario.scenarioName === selectedScenario.scenarioName
+        ) ?? copiedScenarios.find(
+            (scenario) => Number(scenario.id) === Number(selectedScenarioId)
+        ) ?? copiedScenarios[0];
+
+        const scenarioId = Number(matchedScenario.id ?? matchedScenario.scenarioId);
+
+        if (!Number.isFinite(scenarioId)) {
+            throw new Error(
+                "개인 창고의 시나리오 응답에서 scenarioId를 확인할 수 없습니다."
+            );
+        }
+
+        setScenarios(copiedScenarios);
+        setSelectedScenarioId(scenarioId);
+
+        return { warehouseId, scenarioId, copied };
     };
 
     /**
@@ -532,11 +633,13 @@ function Simulation() {
         }
 
         try {
+            const simulationTarget = await resolveSimulationTarget();
+
             // 이 창고에서 돌고 있는 시뮬레이션을 모두 중지한다.
             // (다른 탭이나 이전 세션에서 실행 중인 것까지 정리해야
             //  새 실행을 시작할 수 있다 - 창고당 1개만 활성 가능)
             try {
-                await simulationRunApi.stopActive(selectedWarehouseId);
+                await simulationRunApi.stopActive(simulationTarget.warehouseId);
             } catch (error) {
                 console.warn("기존 시뮬레이션 중지 실패", error.message);
             }
@@ -547,9 +650,9 @@ function Simulation() {
             setEventList([]);
             setSimulationTime(0);
             setSimulationStatus("대기");
-            await loadRestingRobots(selectedWarehouseId);
+            await loadRestingRobots(simulationTarget.warehouseId);
 
-            const payload = buildCreatePayload();
+            const payload = buildCreatePayload(simulationTarget);
             console.log("새 시뮬레이션 생성 요청:", payload);
 
             const created = await simulationRunApi.create(payload);
@@ -642,16 +745,23 @@ function Simulation() {
             return;
         }
 
-        const createPayload = buildCreatePayload();
-
         try {
+            const simulationTarget = await resolveSimulationTarget();
+            const createPayload = buildCreatePayload(simulationTarget);
+
+            if (simulationTarget.copied) {
+                await loadRestingRobots(simulationTarget.warehouseId);
+            }
+
             // 이미 만들어둔 실행이 있으면 재사용한다.
             // (초기화 후 다시 시작할 때 새 실행이 생겨 기존 작업이 누락되는 것을 막는다)
             //
             // 다만 저장된 실행이 이미 끝났거나 중지된 상태일 수 있으므로
             // (예: 어제 실행을 localStorage 가 기억하고 있는 경우)
             // 상태를 확인해서 시작 가능한 형태로 맞춘다.
-            let runId = await resolveStartableRunId();
+            let runId = simulationTarget.copied
+                ? null
+                : await resolveStartableRunId();
 
             if (runId === "ALREADY_RUNNING") {
                 return;
