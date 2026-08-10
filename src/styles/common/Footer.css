@@ -1,0 +1,339 @@
+.app-footer {
+    width: 100%;
+    min-height: 30px;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+     justify-content: center; /* 전체 푸터 콘텐츠 중앙 정렬 */
+    gap: 20px;
+    box-sizing: border-box;
+    border-top: 1px solid #d7e0e8;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+}
+
+.app-footer-brand,
+.app-footer-meta,
+.app-footer-links {
+    display: flex;
+    align-items: center;
+}
+
+.app-footer-brand {
+    min-width: 0;
+    gap: 24px;
+}
+
+.app-footer-logo {
+    flex-shrink: 0;
+    color: var(--laro-navy);
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.app-footer-description {
+    white-space: nowrap;
+}
+
+.app-footer-meta {
+    justify-content: flex-end;
+    gap: 22px;
+    white-space: nowrap;
+}
+
+.app-footer-links {
+    gap: 10px;
+}
+
+.app-footer-links button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #5f7183;
+    font: inherit;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.app-footer-links button:first-child {
+    color: #314d68;
+    font-weight: 600;
+}
+
+.app-footer-links button:hover {
+    color: #0f3658;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.app-footer-divider {
+    color: #a2adba;
+}
+
+.app-footer-copyright {
+    color: #728194;
+}
+
+/* 정책 모달 */
+.footer-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    padding: 32px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(13, 28, 43, 0.46);
+    backdrop-filter: blur(2px);
+}
+
+.footer-policy-modal {
+    width: min(720px, 100%);
+    max-height: min(780px, calc(100vh - 64px));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #d5dee7;
+    box-shadow: 0 18px 50px rgba(13, 31, 48, 0.18);
+}
+
+.footer-policy-header {
+    flex-shrink: 0;
+    padding: 24px 28px 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    border-bottom: 1px solid #e3e9ef;
+}
+
+.footer-policy-header h2 {
+    margin: 0;
+    color: #112b43;
+    font-size: 23px;
+    font-weight: 750;
+    line-height: 1.35;
+    letter-spacing: -0.4px;
+}
+
+.footer-policy-header p {
+    margin: 7px 0 0;
+    color: #758595;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.footer-policy-close-icon {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #667789;
+    font-size: 27px;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.footer-policy-close-icon:hover {
+    color: #183a59;
+    background: #f3f6f9;
+}
+
+.footer-policy-content {
+    min-height: 0;
+    padding: 8px 28px 28px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    color: #455666;
+    scrollbar-width: thin;
+    scrollbar-color: #a9b6c2 transparent;
+}
+
+.footer-policy-section {
+    padding: 24px 0 2px;
+}
+
+.footer-policy-section + .footer-policy-section {
+    border-top: 1px solid #edf1f4;
+}
+
+.footer-policy-section h3 {
+    margin: 0 0 12px;
+    color: #1d354c;
+    font-size: 15px;
+    font-weight: 750;
+    line-height: 1.5;
+}
+
+.footer-policy-section p {
+    margin: 0 0 9px;
+    font-size: 13px;
+    line-height: 1.75;
+    word-break: keep-all;
+}
+
+.footer-policy-section ul {
+    margin: 8px 0 10px;
+    padding-left: 20px;
+}
+
+.footer-policy-section li {
+    margin: 5px 0;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.footer-policy-table-wrap {
+    width: 100%;
+    margin: 14px 0 16px;
+    overflow-x: auto;
+    border: 1px solid #dce4eb;
+}
+
+.footer-policy-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 580px;
+    table-layout: fixed;
+    font-size: 12.5px;
+}
+
+.footer-policy-table th,
+.footer-policy-table td {
+    padding: 11px 12px;
+    border-right: 1px solid #e0e6ec;
+    border-bottom: 1px solid #e0e6ec;
+    text-align: left;
+    vertical-align: top;
+    line-height: 1.55;
+}
+
+.footer-policy-table th {
+    background: #f5f8fa;
+    color: #30485f;
+    font-weight: 700;
+}
+
+.footer-policy-table th:last-child,
+.footer-policy-table td:last-child {
+    border-right: 0;
+}
+
+.footer-policy-table tr:last-child td,
+.footer-policy-table tr:last-child th {
+    border-bottom: 0;
+}
+
+.footer-policy-contact-table {
+    min-width: 0;
+}
+
+.footer-policy-contact-table th {
+    width: 120px;
+}
+
+.footer-policy-bottom {
+    flex-shrink: 0;
+    min-height: 62px;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border-top: 1px solid #e3e9ef;
+    background: #fbfcfd;
+}
+
+.footer-policy-bottom span {
+    color: #7a8998;
+    font-size: 12px;
+}
+
+.footer-policy-bottom button {
+    min-width: 72px;
+    height: 34px;
+    padding: 0 18px;
+    border: 1px solid #274b69;
+    background: #274b69;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.footer-policy-bottom button:hover {
+    background: #1e405d;
+    border-color: #1e405d;
+}
+
+@media (max-width: 980px) {
+    .app-footer {
+        padding: 10px 24px;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .app-footer-meta {
+        width: 100%;
+        justify-content: space-between;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 680px) {
+    .app-footer {
+        padding: 12px 16px;
+        font-size: 12px;
+    }
+
+    .app-footer-brand {
+        gap: 12px;
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .app-footer-logo {
+        font-size: 18px;
+    }
+
+    .app-footer-description {
+        white-space: normal;
+    }
+
+    .app-footer-meta {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+        white-space: normal;
+    }
+
+    .footer-modal-overlay {
+        padding: 16px;
+        align-items: stretch;
+    }
+
+    .footer-policy-modal {
+        max-height: calc(100vh - 32px);
+    }
+
+    .footer-policy-header,
+    .footer-policy-content {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .footer-policy-header h2 {
+        font-size: 20px;
+    }
+
+    .footer-policy-bottom {
+        padding: 0 20px;
+    }
+}

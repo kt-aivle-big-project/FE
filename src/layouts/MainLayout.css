@@ -123,35 +123,3 @@ body {
     max-width: none;
     min-height: 100vh;
 }
-
-/* 사이드바랑 메인 콘텐츠 사이의 구분선 제거*/
-.sidebar {
-    border-right: 0 !important;
-}
-
-/* ============================================================
-   4. Footer
-============================================================ */
-.footer {
-    width: 100%;
-    flex-shrink: 0;
-    padding: 5px;
-    border-top: 1px solid var(--laro-border);
-    background: var(--laro-surface);
-}
-
-.footer-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: var(--laro-gap-page);
-    color: var(--laro-subtext);
-    font-size: 10px;
-}
-
-.footer-content strong {
-    color: var(--laro-navy);
-    font-size: var(--laro-font-body);
-    font-weight: var(--laro-font-weight-bold);
-}
