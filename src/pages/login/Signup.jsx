@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AuthCircuitBackground from "../../pages/login/AuthCircuitBackground";
+import AuthCircuitBackground from "./AuthCircuitBackground";
 import "../../styles/login/AuthCommon.css";
 import "../../styles/login/Signup.css";
 import { UserIcon, EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";

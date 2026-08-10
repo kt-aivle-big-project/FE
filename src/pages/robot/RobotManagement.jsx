@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import "../../styles/RobotManagement.css";
+import "../../styles/robot/RobotManagement.css";
 import {
     robotApi,
     robotSpecApi,
