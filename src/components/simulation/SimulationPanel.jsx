@@ -299,13 +299,22 @@ function SimulationPanel({
                         : generatedCommands[0].operationId
                 );
             }
-            setWorkflow({
+            setWorkflow((current) => ({
                 state: CYCLE_TO_WORKFLOW_STATE[status.state] ?? "idle",
-                generated,
-                planResponse: status.planResponse ?? null,
+
+                // 현재 사이클이 실패하면 마지막 정상 생성 결과를 유지한다.
+                generated:
+                    status.generated
+                    ?? (status.state === "ERROR" ? current.generated : null),
+
+                // 계획 실패 시에도 마지막 정상 계획을 화면에 유지한다.
+                planResponse:
+                    status.planResponse
+                    ?? (status.state === "ERROR" ? current.planResponse : null),
+
                 error: status.error ?? "",
                 errorStage: status.state === "ERROR" ? "cycle" : null,
-            });
+            }));
         };
 
         const refresh = async () => {
