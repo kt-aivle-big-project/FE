@@ -979,82 +979,72 @@ function Simulation() {
                             </select>
                         </div>
 
-                        <div className="simulation-topbar-meta">
-                            <p className="simulation-topbar-datetime">
-
-                            </p>
+                        {/* 창고 선택 */}
+                        <div className="simulation-topbar-selector">
+                            <span className="simulation-topbar-label">창고 선택</span>
+                            <select
+                                value={selectedWarehouseId}
+                                onChange={(e) => handleWarehouseChange(e.target.value)}
+                                disabled={warehouses.length === 0}
+                                aria-label="창고 선택"
+                            >
+                                {warehouses.length === 0 ? (
+                                    <option value={selectedWarehouseId}>
+                                        불러오는 중...
+                                    </option>
+                                ) : (
+                                    warehouses.map((warehouse) => (
+                                        <option
+                                            key={warehouse.id}
+                                            value={warehouse.id}
+                                        >
+                                            {warehouse.name}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
                         </div>
                     </div>
 
-                    {/* 시뮬레이션 설정 및 제어 영역 */}
-                    <div className="simulation-controlbar">
-                        <div className="simulation-header-info">
-                            {/* 창고 선택 */}
-                            <div className="simulation-topbar-selector">
-                                <span className="simulation-topbar-label">창고 선택</span>
-                                <select
-                                    value={selectedWarehouseId}
-                                    onChange={(e) => handleWarehouseChange(e.target.value)}
-                                    disabled={warehouses.length === 0}
-                                    aria-label="창고 선택"
-                                >
-                                    {warehouses.length === 0 ? (
-                                        <option value={selectedWarehouseId}>
-                                            불러오는 중...
-                                        </option>
-                                    ) : (
-                                        warehouses.map((warehouse) => (
-                                            <option
-                                                key={warehouse.id}
-                                                value={warehouse.id}
-                                            >
-                                                {warehouse.name}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                            </div>
+                    <div className="simulation-topbar-right">
+                        {/* 시뮬레이션 시간 */}
+                        <div className="simulation-topbar-metric">
+                            <span>시뮬레이션 시간</span>
+                            <strong>{formatSimulationTime(simulationTime)}</strong>
                         </div>
 
-                        <div className="simulation-topbar-right">
-                            {/* 시뮬레이션 시간 */}
-                            <div className="simulation-topbar-metric">
-                                <span>시뮬레이션 시간</span>
-                                <strong>{formatSimulationTime(simulationTime)}</strong>
+                        {/* 현재 시스템 상태 */}
+                        <div className="simulation-topbar-metric">
+                            <div className="simulation-topbar-status-header">
+                                <span>시스템 상태</span>
+
+                                {simulationRunId && (
+                                    <small className="simulation-topbar-connection">
+                                        {connected ? "실시간 연결" : "연결 대기"}
+                                    </small>
+                                )}
                             </div>
 
-                            {/* 현재 시스템 상태 */}
-                            <div className="simulation-topbar-metric">
-                                <div className="simulation-topbar-status-header">
-                                    <span>시스템 상태</span>
+                            <strong className="simulation-topbar-status">
+                                {simulationStatus}
+                            </strong>
+                        </div>
 
-                                    {simulationRunId && (
-                                        <small className="simulation-topbar-connection">
-                                            {connected ? "실시간 연결" : "연결 대기"}
-                                        </small>
-                                    )}
-                                </div>
-
-                                <strong className="simulation-topbar-status">
-                                    {simulationStatus}
-                                </strong>
-                            </div>
-
-                            {/* 사용자 정보 */}
-                            <div className="simulation-topbar-user">
-                                <button
-                                    type="button"
-                                    className="simulation-topbar-user"
-                                    onClick={() => navigate("/profile")}
-                                    aria-label="내 프로필로 이동"
-                                >
-                                    <span className="simulation-topbar-avatar">A</span>
-                                    <strong>admin</strong>
-                                </button>
-                            </div>
+                        {/* 사용자 정보 */}
+                        <div className="simulation-topbar-user">
+                            <button
+                                type="button"
+                                className="simulation-topbar-user"
+                                onClick={() => navigate("/profile")}
+                                aria-label="내 프로필로 이동"
+                            >
+                                <span className="simulation-topbar-avatar">A</span>
+                                <strong>admin</strong>
+                            </button>
                         </div>
                     </div>
                 </div>
+
             </header>
 
             {/* 시뮬레이션 화면 */}
