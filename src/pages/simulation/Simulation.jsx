@@ -501,8 +501,6 @@ function Simulation() {
             warehouseId,
             scenarioId,
             simulationSpeed: Number(simulationSpeed),
-            // 고른 시나리오가 있으면 그 설정으로 실행한다.
-            scenarioId: selectedScenarioId ?? null,
         };
     };
 
