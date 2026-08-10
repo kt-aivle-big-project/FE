@@ -1,10 +1,8 @@
-// 백엔드 서버 주소
-export const API_BASE_URL = "http://localhost:8080";
+const baseUrl =
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
-// REST API prefix
+export const API_BASE_URL = baseUrl.replace(/\/$/, "");
 export const API_URL = `${API_BASE_URL}/api`;
-
-// WebSocket(SockJS) 연결 엔드포인트
 export const WS_URL = `${API_BASE_URL}/ws`;
 
 // 구독 토픽
