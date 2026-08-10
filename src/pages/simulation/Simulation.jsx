@@ -19,6 +19,7 @@ import {
     fulfillmentCommandApi,
     scenarioApi,
 } from "../../api/client";
+import { isGuestSession } from "../../api/auth";
 
 
 // 창고 목록을 못 불러왔을 때 쓸 기본 창고

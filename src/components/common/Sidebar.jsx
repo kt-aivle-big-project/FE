@@ -112,6 +112,7 @@ function Sidebar() {
         localStorage.removeItem("user");
         localStorage.removeItem("testUser");
         localStorage.removeItem("simulationRunId");
+        localStorage.removeItem("loginType");
 
         sessionStorage.removeItem("simulationRunId");
         sessionStorage.removeItem("accessToken");

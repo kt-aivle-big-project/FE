@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AuthCircuitBackground from "../../pages/login/AuthCircuitBackground";
+import LoginCircuitBackground from "./AuthCircuitBackground";
 import "../../styles/login/AuthCommon.css";
 import "../../styles/login/Login.css";
-import { EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";
+import {
+    EmailIcon,
+    LockIcon,
+    PasswordToggleIcon,
+} from "../../components/common/icon";
 import { API_URL } from "../../api/config";
 
 function Login() {
@@ -62,6 +66,8 @@ function Login() {
                 localStorage.setItem("email", data.email);
             }
 
+            localStorage.setItem("loginType", "user");
+
             navigate("/simulation", { replace: true });
         } catch (error) {
             console.error("로그인 실패:", error);
@@ -113,11 +119,11 @@ function Login() {
     const isLoading = isLoginLoading || isGuestLoading;
 
     return (
-        <div className="auth-page">
-            <AuthCircuitBackground />
+        <div className="login-page">
+            <LoginCircuitBackground />
 
-            <main className="auth-card">
-                <section className="auth-content">
+            <main className="login-card login-card-integrated">
+                <section className="login-content">
                     <div className="login-brand">
                         <h1 className="login-brand-name">LARO</h1>
 
@@ -130,16 +136,16 @@ function Login() {
                     </div>
 
                     <form
-                        className="auth-form"
+                        className="login-form"
                         onSubmit={handleLogin}
                     >
-                        <div className="auth-field">
+                        <div className="login-field">
                             <label htmlFor="email">
                                 이메일
                             </label>
 
-                            <div className="auth-input-wrapper">
-                                <span className="auth-input-icon">
+                            <div className="login-input-wrapper">
+                                <span className="login-input-icon">
                                     <EmailIcon />
                                 </span>
 
@@ -154,7 +160,7 @@ function Login() {
                             </div>
                         </div>
 
-                        <div className="auth-field">
+                        <div className="login-field">
                             <div className="login-label-row">
                                 <label htmlFor="password">
                                     비밀번호
@@ -170,15 +176,15 @@ function Login() {
                                 </button>
                             </div>
 
-                            <div className="auth-input-wrapper">
-                                <span className="auth-input-icon">
+                            <div className="login-input-wrapper">
+                                <span className="login-input-icon">
                                     <LockIcon />
                                 </span>
 
                                 <input
                                     id="password"
                                     type={showPassword ? "text" : "password"}
-                                    className="auth-password-input"
+                                    className="login-password-input"
                                     value={password}
                                     placeholder="비밀번호를 입력하세요"
                                     onChange={(event) => setPassword(event.target.value)}
@@ -188,7 +194,7 @@ function Login() {
 
                                 <button
                                     type="button"
-                                    className="auth-password-toggle"
+                                    className="login-password-toggle"
                                     onClick={() => setShowPassword((prev) => !prev)}
                                     aria-label={
                                         showPassword
@@ -205,7 +211,7 @@ function Login() {
 
                         <button
                             type="submit"
-                            className="auth-button auth-button-primary"
+                            className="login-button login-button-primary"
                             disabled={isLoading}
                         >
                             {isLoginLoading ? "로그인 중..." : "로그인"}
@@ -222,7 +228,7 @@ function Login() {
 
                     <button
                         type="button"
-                        className="auth-button login-guest-button"
+                        className="login-button login-guest-button"
                         onClick={handleGuestLogin}
                         disabled={isLoading}
                     >
@@ -236,7 +242,7 @@ function Login() {
                     </p>
                 </section>
 
-                <footer className="auth-footer">
+                <footer className="login-footer">
                     <span>아직 계정이 없으신가요?</span>
 
                     <button
