@@ -46,13 +46,27 @@ const SERVICE_KIND_LABEL = {
     PARK: "대기 위치 이동",
 };
 
+const ACTIVE_ROBOT_STATUSES = new Set([
+    "ASSIGNED",
+    "MOVING",
+    "WORKING",
+    "BUSY",
+    "IN_PROGRESS",
+    "SERVICING",
+    "PICKING",
+    "DROPPING",
+    "LOADING",
+    "UNLOADING",
+]);
+
+const IDLE_ROBOT_STATUSES = new Set([
+    "IDLE",
+    "WAITING",
+    "AVAILABLE",
+]);
+
 const normalizeValue = (value) =>
     typeof value === "string" ? value.toUpperCase() : value;
-
-// 작업 중인 로봇을 우선 표시한다.
-const workingRobots = robotList.filter(
-    (robot) => robot.currentTaskId
-);
 
 // 세부 동작 상태가 있으면 로봇의 기본 상태보다 우선 표시한다.
 const getRobotDisplayStatus = (robot) => {
@@ -67,6 +81,7 @@ const getRobotDisplayStatus = (robot) => {
 
 const getRobotStatusLabel = (robot) => {
     const status = getRobotDisplayStatus(robot);
+
     return ROBOT_STATUS_LABEL[status] ?? status ?? "-";
 };
 
@@ -166,6 +181,23 @@ const getRobotTaskId = (robot) =>
     ?? robot.currentTaskId
     ?? robot.taskId
     ?? robot.task_id;
+
+// 작업 ID가 있거나 실행 상태이면 현재 AI 실행 계획에서 사용 중인 로봇으로 판단한다.
+const isRobotInUse = (robot) => {
+    const taskId = getRobotTaskId(robot);
+    const status = getRobotDisplayStatus(robot);
+
+    const hasTask =
+        taskId !== null
+        && taskId !== undefined
+        && taskId !== "";
+
+    return hasTask || ACTIVE_ROBOT_STATUSES.has(status);
+};
+
+// 대기 상태의 로봇인지 확인한다.
+const isIdleRobot = (robot) =>
+    IDLE_ROBOT_STATUSES.has(getRobotDisplayStatus(robot));
 
 const getRobotTaskType = (robot) =>
     robot.task_type
@@ -344,11 +376,29 @@ const getRobotSummary = (robotList) =>
 function SimulationRobotList({ robotList = [] }) {
     const robotSummary = getRobotSummary(robotList);
 
+    // robotList는 이 컴포넌트의 props이므로 목록 필터링도 컴포넌트 내부에서 처리한다.
+    const activeRobots = robotList.filter(isRobotInUse);
+    const idleRobots = robotList.filter(
+        (robot) => !isRobotInUse(robot) && isIdleRobot(robot)
+    );
+
+    // 사용 중인 로봇이 있으면 우선 표시하고, 5대 미만일 때만 대기 로봇으로 채운다.
+    // 사용 중인 로봇이 없으면 대기 로봇을 최대 5대까지 표시한다.
+    const visibleRobots = activeRobots.length === 0
+        ? idleRobots.slice(0, 5)
+        : [
+            ...activeRobots,
+            ...idleRobots.slice(0, Math.max(0, 5 - activeRobots.length)),
+        ];
+
     return (
         <section className="simulation-list simulation-robot-list">
             <header className="simulation-robot-list-header">
                 <div>
-                    <h2 className="simulation-robot-list-title">ROBOT LIST</h2>
+                    <h2 className="simulation-robot-list-title">
+                        ROBOT LIST
+                    </h2>
+
                     <span className="simulation-robot-list-count">
                         전체 {robotList.length}대
                     </span>
@@ -386,17 +436,17 @@ function SimulationRobotList({ robotList = [] }) {
                     </thead>
 
                     <tbody>
-                        {robotList.length === 0 ? (
+                        {visibleRobots.length === 0 ? (
                             <tr>
                                 <td
                                     className="simulation-robot-list-empty"
                                     colSpan={8}
                                 >
-                                    현재 등록된 로봇이 없습니다.
+                                    현재 대기 또는 작업 중인 로봇이 없습니다.
                                 </td>
                             </tr>
                         ) : (
-                            workingRobots.slice(0, 5).map((robot, index) => {
+                            visibleRobots.map((robot, index) => {
                                 const battery = normalizeBattery(robot.battery);
                                 const progress = getRobotProgress(robot);
                                 const taskId = getRobotTaskId(robot);
@@ -480,6 +530,7 @@ function SimulationRobotList({ robotList = [] }) {
                                                                 }}
                                                             />
                                                         </div>
+
                                                         <strong>
                                                             {Math.round(progress)}%
                                                         </strong>
@@ -504,7 +555,9 @@ function SimulationRobotList({ robotList = [] }) {
                                             </span>
 
                                             {statusDetail && (
-                                                <small>{statusDetail}</small>
+                                                <small>
+                                                    {statusDetail}
+                                                </small>
                                             )}
                                         </td>
                                     </tr>
