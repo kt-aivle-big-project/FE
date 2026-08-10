@@ -325,7 +325,7 @@ function SimulationEventList({ eventList = [] }) {
                                 </td>
                             </tr>
                         ) : (
-                            sortedEventList.map((event, index) => {
+                            sortedEventList.slice(0, 5).map((event, index) => {
                                 const eventType = normalizeValue(
                                     getEventType(event)
                                 );
