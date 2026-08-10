@@ -1,4 +1,6 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { boardPostApi } from "../../api/client";
+import { isGuestSession } from "../../api/auth";
 import "../../styles/board/Board.css";
 
 const BOARD_TABS = [
@@ -98,46 +100,12 @@ const MANUALS = [
     },
 ];
 
-const loadStoredPosts = () => {
-    try {
-        const storedPosts = localStorage.getItem(STORAGE_KEY);
-
-        if (!storedPosts) return [];
-
-        const parsedPosts = JSON.parse(storedPosts);
-
-        return Array.isArray(parsedPosts) ? parsedPosts : [];
-    } catch (error) {
-        console.error("게시글 불러오기 실패:", error);
-        return [];
-    }
-};
-
-const readFileAsDataUrl = (file) =>
-    new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onload = () => resolve(reader.result);
-
-        reader.onerror = () => reject(new Error("첨부파일을 읽는 중 오류가 발생했습니다."));
-
-        reader.readAsDataURL(file);
-    });
-
 const formatFileSize = (size) => {
     if (!size) return "0 B";
     if (size < 1024) return `${size} B`;
     if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
 
     return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-};
-
-const createPostId = () => {
-    if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
-        return globalThis.crypto.randomUUID();
-    }
-
-    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
 function Board() {
@@ -148,7 +116,8 @@ function Board() {
     const [noticeKeyword, setNoticeKeyword] = useState("");
     const [selectedNotice, setSelectedNotice] = useState(null);
 
-    const [archivePosts, setArchivePosts] = useState(loadStoredPosts);
+    const [archivePosts, setArchivePosts] = useState([]);
+    const guest = isGuestSession();
 
     const [selectedArchivePost, setSelectedArchivePost] = useState(null);
 
@@ -168,6 +137,38 @@ function Board() {
     const editingPost = editingPostId
         ? archivePosts.find((post) => post.id === editingPostId) ?? null
         : null;
+
+    const formatPost = (post) => ({
+        ...post,
+        createdAt: post.createdAt
+            ? new Date(post.createdAt).toLocaleString("ko-KR")
+            : "-",
+        updatedAt: post.updatedAt
+            ? new Date(post.updatedAt).toLocaleString("ko-KR")
+            : null,
+        attachment: post.attachment
+            ? {
+                  id: post.attachment.id,
+                  name: post.attachment.fileName,
+                  size: post.attachment.size,
+                  type: post.attachment.contentType,
+              }
+            : null,
+    });
+
+    const fetchArchivePosts = async () => {
+        try {
+            const posts = await boardPostApi.getAll();
+            setArchivePosts(Array.isArray(posts) ? posts.map(formatPost) : []);
+        } catch (error) {
+            console.error("게시글 조회 실패:", error);
+            setFormError(error.message || "게시글을 불러오지 못했습니다.");
+        }
+    };
+
+    useEffect(() => {
+        fetchArchivePosts();
+    }, []);
 
     const filteredNotices = useMemo(() => {
         const normalizedKeyword = normalizeKeyword(noticeKeyword);
@@ -193,21 +194,6 @@ function Board() {
         );
     }, [archiveKeyword, archivePosts]);
 
-    const saveArchivePosts = (nextPosts) => {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(nextPosts));
-
-            setArchivePosts(nextPosts);
-            return true;
-        } catch (error) {
-            console.error("게시글 저장 실패:", error);
-
-            setFormError("브라우저 저장 공간이 부족합니다. 첨부파일 크기를 줄이거나 기존 게시글을 삭제해 주세요.");
-
-            return false;
-        }
-    };
-
     const resetFileInput = () => {
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
@@ -221,6 +207,7 @@ function Board() {
     };
 
     const handleOpenWriteModal = () => {
+        if (guest) return;
         resetPostForm();
         setEditingPostId(null);
         setFormSuccess("");
@@ -300,66 +287,33 @@ function Board() {
         }
 
         try {
-            let attachment = editingPost?.attachment ?? null;
+            const payload = {
+                title: normalizedTitle,
+                content: normalizedContent,
+            };
+
+            let savedPost;
+            if (editingPostId) {
+                savedPost = await boardPostApi.update(editingPostId, payload);
+                setFormSuccess("게시글이 수정되었습니다.");
+            } else {
+                savedPost = await boardPostApi.create(payload);
+                setFormSuccess("게시글이 등록되었습니다.");
+                if (selectedFile) {
+                    setEditingPostId(savedPost.id);
+                }
+            }
 
             if (selectedFile) {
-                const dataUrl = await readFileAsDataUrl(selectedFile);
-
-                attachment = {
-                    name: selectedFile.name,
-                    size: selectedFile.size,
-                    type: selectedFile.type || "application/octet-stream",
-                    dataUrl,
-                };
+                savedPost = await boardPostApi.uploadAttachment(savedPost.id, selectedFile);
             }
 
             if (editingPostId) {
-                const nextPosts = archivePosts.map((post) =>
-                    post.id === editingPostId
-                        ? {
-                              ...post,
-                              title: normalizedTitle,
-                              content: normalizedContent,
-                              attachment,
-                              updatedAt: new Date().toLocaleString("ko-KR"),
-                          }
-                        : post
-                );
-
-                const saved = saveArchivePosts(nextPosts);
-
-                if (!saved) return;
-
-                const updatedPost = nextPosts.find((post) => post.id === editingPostId);
-
-                setSelectedArchivePost((currentPost) =>
-                    currentPost?.id === editingPostId
-                        ? updatedPost
-                        : currentPost
-                );
-
-                handleCloseWriteModal();
-                setFormSuccess("게시글이 수정되었습니다.");
-                return;
+                setSelectedArchivePost(formatPost(savedPost));
             }
 
-            const newPost = {
-                id: createPostId(),
-                title: normalizedTitle,
-                content: normalizedContent,
-                createdAt: new Date().toLocaleString("ko-KR"),
-                updatedAt: null,
-                attachment,
-            };
-
-            const nextPosts = [newPost, ...archivePosts];
-
-            const saved = saveArchivePosts(nextPosts);
-
-            if (!saved) return;
-
             handleCloseWriteModal();
-            setFormSuccess("게시글이 등록되었습니다.");
+            await fetchArchivePosts();
         } catch (error) {
             console.error("게시글 등록 또는 수정 실패:", error);
 
@@ -367,22 +321,56 @@ function Board() {
         }
     };
 
-    const handleDeletePost = (postId) => {
+    const handleDeletePost = async (postId) => {
         const shouldDelete = window.confirm("이 게시글을 삭제하시겠습니까?");
 
         if (!shouldDelete) return;
 
-        const nextPosts = archivePosts.filter((post) => post.id !== postId);
-
-        const saved = saveArchivePosts(nextPosts);
-
-        if (!saved) return;
-
-        if (selectedArchivePost?.id === postId) {
-            setSelectedArchivePost(null);
+        try {
+            await boardPostApi.remove(postId);
+            if (selectedArchivePost?.id === postId) {
+                setSelectedArchivePost(null);
+            }
+            setFormSuccess("게시글이 삭제되었습니다.");
+            await fetchArchivePosts();
+        } catch (error) {
+            console.error("게시글 삭제 실패:", error);
+            setFormError(error.message || "게시글 삭제에 실패했습니다.");
         }
+    };
 
-        setFormSuccess("게시글이 삭제되었습니다.");
+    const handleDownloadAttachment = async (post) => {
+        try {
+            const blob = await boardPostApi.downloadAttachment(post.id);
+            const objectUrl = URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            anchor.href = objectUrl;
+            anchor.download = post.attachment.name;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            URL.revokeObjectURL(objectUrl);
+        } catch (error) {
+            console.error("첨부파일 다운로드 실패:", error);
+            setFormError(error.message || "첨부파일 다운로드에 실패했습니다.");
+        }
+    };
+
+    const handleDeleteAttachment = async () => {
+        if (!editingPostId || !editingPost?.attachment) return;
+        try {
+            await boardPostApi.deleteAttachment(editingPostId);
+            setArchivePosts((posts) => posts.map((post) =>
+                post.id === editingPostId ? { ...post, attachment: null } : post
+            ));
+            setSelectedArchivePost((post) =>
+                post?.id === editingPostId ? { ...post, attachment: null } : post
+            );
+            setFormSuccess("첨부파일이 삭제되었습니다.");
+        } catch (error) {
+            console.error("첨부파일 삭제 실패:", error);
+            setFormError(error.message || "첨부파일 삭제에 실패했습니다.");
+        }
     };
 
     const getPostNumber = (postId) => {
@@ -612,7 +600,8 @@ function Board() {
                                     </h2>
 
                                     <p>
-                                        작성{" "}
+                                        {selectedArchivePost.authorName || "탈퇴한 사용자"}
+                                        {" · 작성 "}
                                         {selectedArchivePost.createdAt}
 
                                         {selectedArchivePost.updatedAt &&
@@ -629,21 +618,25 @@ function Board() {
                                         목록으로
                                     </button>
 
-                                    <button
-                                        type="button"
-                                        className="archive-edit-button"
-                                        onClick={() => handleOpenEditModal(selectedArchivePost)}
-                                    >
-                                        수정
-                                    </button>
+                                    {selectedArchivePost.mine && (
+                                        <>
+                                            <button
+                                                type="button"
+                                                className="archive-edit-button"
+                                                onClick={() => handleOpenEditModal(selectedArchivePost)}
+                                            >
+                                                수정
+                                            </button>
 
-                                    <button
-                                        type="button"
-                                        className="board-danger-button"
-                                        onClick={() => handleDeletePost(selectedArchivePost.id)}
-                                    >
-                                        삭제
-                                    </button>
+                                            <button
+                                                type="button"
+                                                className="board-danger-button"
+                                                onClick={() => handleDeletePost(selectedArchivePost.id)}
+                                            >
+                                                삭제
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
@@ -669,18 +662,13 @@ function Board() {
                                         </small>
                                     </div>
 
-                                    <a
-                                        href={
-                                            selectedArchivePost
-                                                .attachment.dataUrl
-                                        }
-                                        download={
-                                            selectedArchivePost
-                                                .attachment.name
-                                        }
+                                    <button
+                                        type="button"
+                                        className="board-secondary-button"
+                                        onClick={() => handleDownloadAttachment(selectedArchivePost)}
                                     >
                                         다운로드
-                                    </a>
+                                    </button>
                                 </div>
                             )}
                         </article>
@@ -711,13 +699,15 @@ function Board() {
                                         />
                                     </label>
 
-                                    <button
-                                        type="button"
-                                        className="archive-new-button"
-                                        onClick={handleOpenWriteModal}
-                                    >
-                                        새 글 작성
-                                    </button>
+                                    {!guest && (
+                                        <button
+                                            type="button"
+                                            className="archive-new-button"
+                                            onClick={handleOpenWriteModal}
+                                        >
+                                            새 글 작성
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
@@ -745,6 +735,7 @@ function Board() {
                                             <tr>
                                                 <th>번호</th>
                                                 <th>제목</th>
+                                                <th>작성자</th>
                                                 <th>첨부파일</th>
                                                 <th>작성일</th>
                                                 <th>관리</th>
@@ -778,6 +769,10 @@ function Board() {
                                                             </td>
 
                                                             <td>
+                                                                {post.authorName || "탈퇴한 사용자"}
+                                                            </td>
+
+                                                            <td>
                                                                 {post.attachment ? post.attachment.name : "-"}
                                                             </td>
 
@@ -786,6 +781,7 @@ function Board() {
                                                             </td>
 
                                                             <td>
+                                                                {post.mine && (
                                                                 <div className="archive-manage-actions">
                                                                     <button
                                                                         type="button"
@@ -803,6 +799,7 @@ function Board() {
                                                                         삭제
                                                                     </button>
                                                                 </div>
+                                                                )}
                                                             </td>
                                                         </tr>
                                                     )
@@ -811,7 +808,7 @@ function Board() {
                                                 <tr>
                                                     <td
                                                         className="board-empty"
-                                                        colSpan="5"
+                                                        colSpan="6"
                                                     >
                                                         등록된 게시글이
                                                         없습니다.
@@ -917,6 +914,13 @@ function Board() {
                                     <div className="archive-current-file">
                                         <span>현재 첨부파일</span>
                                         <strong>{editingPost.attachment.name}</strong>
+                                        <button
+                                            type="button"
+                                            className="board-danger-button"
+                                            onClick={handleDeleteAttachment}
+                                        >
+                                            첨부파일 삭제
+                                        </button>
                                     </div>
                                 )}
 
