@@ -49,6 +49,11 @@ const SERVICE_KIND_LABEL = {
 const normalizeValue = (value) =>
     typeof value === "string" ? value.toUpperCase() : value;
 
+// 작업 중인 로봇을 우선 표시한다.
+const workingRobots = robotList.filter(
+    (robot) => robot.currentTaskId
+);
+
 // 세부 동작 상태가 있으면 로봇의 기본 상태보다 우선 표시한다.
 const getRobotDisplayStatus = (robot) => {
     const activity = normalizeValue(robot.activity);
@@ -391,7 +396,7 @@ function SimulationRobotList({ robotList = [] }) {
                                 </td>
                             </tr>
                         ) : (
-                            robotList.map((robot, index) => {
+                            workingRobots.slice(0, 5).map((robot, index) => {
                                 const battery = normalizeBattery(robot.battery);
                                 const progress = getRobotProgress(robot);
                                 const taskId = getRobotTaskId(robot);

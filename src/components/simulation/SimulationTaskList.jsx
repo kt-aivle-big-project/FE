@@ -232,7 +232,7 @@ function SimulationTaskList({ taskList = [] }) {
                                 </td>
                             </tr>
                         ) : (
-                            taskList.map((task, index) => {
+                             taskList.slice(0, 5).map((task, index) => {
                                 const taskId = getTaskId(task);
                                 const robotId = getTaskRobotId(task);
 

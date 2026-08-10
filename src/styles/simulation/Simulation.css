@@ -9,7 +9,7 @@
         "simulation-view      simulation-view      simulation-panel"
         "simulation-task-list simulation-robot-list simulation-event-list";
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 400px;
-    grid-template-rows: 60px 700px minmax(230px, auto);
+    grid-template-rows: 60px 600px minmax(230px, auto);
 
     width: 100%;
     min-height: 100vh;
