@@ -41,6 +41,60 @@ const DEFAULT_COMMAND_EXPRESSION_MIX = {
     naturalLanguageEnabled: false,
 };
 
+// 패널 리사이즈 최소 크기
+const RESIZE_HANDLE_SIZE = 8;
+const MIN_VIEW_WIDTH = 520;
+const CONTROLBAR_MIN_WIDTH_GAP = 8;
+const MIN_PANEL_WIDTH = 320;
+const MIN_MAIN_HEIGHT = 360;
+const MIN_LIST_HEIGHT = 230;
+const MIN_LIST_WIDTH = 260;
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+// 제어바의 실제 내용 폭을 기준으로 지도 영역의 최소 너비를 계산한다.
+// 제목/요약/제어 버튼이 한 줄로 유지되는 범위보다 작게는 리사이즈되지 않는다.
+const getControlbarMinWidth = (layoutElement) => {
+    const controlbar = layoutElement?.querySelector(".simulation-controlbar");
+
+    if (!controlbar) {
+        return MIN_VIEW_WIDTH;
+    }
+
+    const title = controlbar.querySelector(".simulation-controlbar-title");
+    const summary = controlbar.querySelector(".simulation-controlbar-summary");
+    const actions = controlbar.querySelector(".simulation-controlbar-actions");
+    const controlbarStyle = window.getComputedStyle(controlbar);
+    const actionsStyle = actions ? window.getComputedStyle(actions) : null;
+
+    const horizontalPadding =
+        (Number.parseFloat(controlbarStyle.paddingLeft) || 0)
+        + (Number.parseFloat(controlbarStyle.paddingRight) || 0);
+
+    const getLogicalWidth = (element) => {
+        if (!element) {
+            return 0;
+        }
+
+        // offsetWidth/scrollWidth는 transform: scale()의 영향을 받지 않는 CSS px 값이다.
+        return Math.max(element.offsetWidth, element.scrollWidth);
+    };
+
+    // summary의 margin-left:auto는 남는 공간 전체로 계산되므로 최소 폭에 포함하면 안 된다.
+    // actions의 고정 margin-left만 실제 컨텐츠 간격으로 더한다.
+    const actionsMarginLeft = Number.parseFloat(actionsStyle?.marginLeft) || 0;
+    const contentWidth =
+        getLogicalWidth(title)
+        + getLogicalWidth(summary)
+        + getLogicalWidth(actions)
+        + actionsMarginLeft;
+
+    return Math.max(
+        MIN_VIEW_WIDTH,
+        Math.ceil(horizontalPadding + contentWidth + CONTROLBAR_MIN_WIDTH_GAP)
+    );
+};
+
 const loadCommandExpressionMix = () => {
     try {
         const saved = JSON.parse(localStorage.getItem(COMMAND_EXPRESSION_MIX_KEY));
@@ -123,15 +177,7 @@ const toRobotView = (state) => {
 };
 
 function Simulation() {
-    const [currentDateTime, setCurrentDateTime] = useState(() => new Date());
-
-    useEffect(() => {
-        const timerId = window.setInterval(() => {
-            setCurrentDateTime(new Date());
-        }, 1000);
-
-        return () => window.clearInterval(timerId);
-    }, []);
+    const navigate = useNavigate();
 
     /* =========================================================
        상단 헤더 - 시뮬레이션 실행
@@ -168,6 +214,28 @@ function Simulation() {
     const [simulationSpeed, setSimulationSpeed] = useState(1);
     const [simulationStatus, setSimulationStatus] = useState("대기");
     const [simulationTime, setSimulationTime] = useState(0);
+
+    // 게스트 시뮬레이션의 로컬 이동 실행을 구분한다.
+    // 초기화 후 이전 이동 루프가 계속 실행되지 않도록 실행 번호를 바꾼다.
+    const movementRunRef = useRef(0);
+
+    // 게스트는 백엔드 실행 시계 대신 기존 프론트 시뮬레이션 시간을 사용한다.
+    useEffect(() => {
+        if (!isGuestSession()) {
+            return undefined;
+        }
+
+        if (simulationStatus !== "실행" && simulationStatus !== "재계획") {
+            return undefined;
+        }
+
+        const timer = setInterval(() => {
+            setSimulationTime((time) => time + simulationSpeed);
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [simulationStatus, simulationSpeed]);
+
     const [commandExpressionMix, setCommandExpressionMixState] = useState(
         loadCommandExpressionMix
     );
@@ -209,6 +277,276 @@ function Simulation() {
     const [taskList, setTaskList] = useState([]);
     const [eventList, setEventList] = useState([]);
     const [generatedCommands, setGeneratedCommands] = useState([]);
+
+    /* =========================================================
+       화면 패널 리사이즈
+    ========================================================= */
+
+    const workspaceRef = useRef(null);
+    const mainLayoutRef = useRef(null);
+    const listLayoutRef = useRef(null);
+    const activeResizeRef = useRef(null);
+
+    const [panelWidth, setPanelWidth] = useState(400);
+    const [viewMinWidth, setViewMinWidth] = useState(MIN_VIEW_WIDTH);
+    const [mainHeight, setMainHeight] = useState(700);
+    const [listWidths, setListWidths] = useState({
+        task: null,
+        robot: null,
+        event: null,
+    });
+
+    // 드래그 중 텍스트 선택을 막고 포인터 이동량만 레이아웃 상태에 반영한다.
+    useEffect(() => {
+        const handlePointerMove = (event) => {
+            const resize = activeResizeRef.current;
+
+            if (!resize) {
+                return;
+            }
+
+            if (resize.type === "panel") {
+                // pointer 좌표는 화면 px이므로 responsive frame의 scale을 제거해 CSS px로 환산한다.
+                const deltaX = (event.clientX - resize.startX) / resize.scaleX;
+                const maxPanelWidth = Math.max(
+                    MIN_PANEL_WIDTH,
+                    resize.containerWidth - resize.minViewWidth - RESIZE_HANDLE_SIZE
+                );
+
+                setPanelWidth(
+                    clamp(
+                        resize.startPanelWidth - deltaX,
+                        MIN_PANEL_WIDTH,
+                        maxPanelWidth
+                    )
+                );
+                return;
+            }
+
+            if (resize.type === "main-height") {
+                const deltaY = (event.clientY - resize.startY) / resize.scaleY;
+                const maxMainHeight = Math.max(
+                    MIN_MAIN_HEIGHT,
+                    resize.workspaceHeight - MIN_LIST_HEIGHT - RESIZE_HANDLE_SIZE
+                );
+
+                setMainHeight(
+                    clamp(
+                        resize.startMainHeight + deltaY,
+                        MIN_MAIN_HEIGHT,
+                        maxMainHeight
+                    )
+                );
+                return;
+            }
+
+            const deltaX = (event.clientX - resize.startX) / resize.scaleX;
+
+            if (resize.type === "task-robot") {
+                const task = clamp(
+                    resize.startTaskWidth + deltaX,
+                    MIN_LIST_WIDTH,
+                    resize.pairWidth - MIN_LIST_WIDTH
+                );
+
+                const robot = resize.pairWidth - task;
+                const totalWidth = resize.pairWidth + resize.eventWidth;
+
+                setListWidths({
+                    task: task / totalWidth,
+                    robot: robot / totalWidth,
+                    event: resize.eventWidth / totalWidth,
+                });
+                return;
+            }
+
+            if (resize.type === "robot-event") {
+                const robot = clamp(
+                    resize.startRobotWidth + deltaX,
+                    MIN_LIST_WIDTH,
+                    resize.pairWidth - MIN_LIST_WIDTH
+                );
+
+                const eventWidth = resize.pairWidth - robot;
+                const totalWidth = resize.taskWidth + resize.pairWidth;
+
+                setListWidths({
+                    task: resize.taskWidth / totalWidth,
+                    robot: robot / totalWidth,
+                    event: eventWidth / totalWidth,
+                });
+            }
+        };
+
+        const handlePointerUp = () => {
+            if (!activeResizeRef.current) {
+                return;
+            }
+
+            activeResizeRef.current = null;
+            document.body.classList.remove("simulation-is-resizing");
+            document.body.style.removeProperty("cursor");
+        };
+
+        // 창 크기가 바뀌어도 최소 폭/높이 범위를 벗어나지 않도록 현재 크기를 보정한다.
+        const handleWindowResize = () => {
+            if (window.innerWidth <= 1180) {
+                return;
+            }
+
+            if (mainLayoutRef.current) {
+                const minViewWidth = getControlbarMinWidth(mainLayoutRef.current);
+                setViewMinWidth(minViewWidth);
+
+                const maxPanelWidth = Math.max(
+                    MIN_PANEL_WIDTH,
+                    mainLayoutRef.current.clientWidth
+                        - minViewWidth
+                        - RESIZE_HANDLE_SIZE
+                );
+
+                setPanelWidth((current) =>
+                    clamp(current, MIN_PANEL_WIDTH, maxPanelWidth)
+                );
+            }
+
+            if (workspaceRef.current) {
+                const maxMainHeight = Math.max(
+                    MIN_MAIN_HEIGHT,
+                    workspaceRef.current.clientHeight
+                        - MIN_LIST_HEIGHT
+                        - RESIZE_HANDLE_SIZE
+                );
+
+                setMainHeight((current) =>
+                    clamp(current, MIN_MAIN_HEIGHT, maxMainHeight)
+                );
+            }
+        };
+
+        window.addEventListener("pointermove", handlePointerMove);
+        window.addEventListener("pointerup", handlePointerUp);
+        window.addEventListener("pointercancel", handlePointerUp);
+        window.addEventListener("resize", handleWindowResize);
+
+        // 첫 렌더에서도 제어바 최소 너비를 반영해 패널 폭을 한 번 보정한다.
+        const resizeFrame = window.requestAnimationFrame(handleWindowResize);
+
+        return () => {
+            window.removeEventListener("pointermove", handlePointerMove);
+            window.removeEventListener("pointerup", handlePointerUp);
+            window.removeEventListener("pointercancel", handlePointerUp);
+            window.removeEventListener("resize", handleWindowResize);
+            window.cancelAnimationFrame(resizeFrame);
+            document.body.classList.remove("simulation-is-resizing");
+            document.body.style.removeProperty("cursor");
+        };
+    }, []);
+
+    const startPanelResize = (event) => {
+        if (!mainLayoutRef.current) {
+            return;
+        }
+
+        const panel = mainLayoutRef.current.querySelector(".simulation-panel");
+
+        if (!panel) {
+            return;
+        }
+
+        const layoutRect = mainLayoutRef.current.getBoundingClientRect();
+        const layoutWidth = mainLayoutRef.current.offsetWidth;
+        const scaleX = layoutWidth > 0 ? layoutRect.width / layoutWidth : 1;
+        const minViewWidth = getControlbarMinWidth(mainLayoutRef.current);
+
+        // JS clamp뿐 아니라 Grid 자체에도 같은 최소 폭을 적용한다.
+        // 드래그 상태가 빠르게 갱신돼도 제어바 아래로 패널이 침범하지 않는다.
+        setViewMinWidth(minViewWidth);
+
+        activeResizeRef.current = {
+            type: "panel",
+            startX: event.clientX,
+            startPanelWidth: panel.offsetWidth,
+            containerWidth: mainLayoutRef.current.clientWidth,
+            minViewWidth,
+            scaleX: scaleX > 0 ? scaleX : 1,
+        };
+
+        document.body.classList.add("simulation-is-resizing");
+        document.body.style.cursor = "col-resize";
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        event.preventDefault();
+    };
+
+    const startMainHeightResize = (event) => {
+        if (!workspaceRef.current || !mainLayoutRef.current) {
+            return;
+        }
+
+        const workspaceRect = workspaceRef.current.getBoundingClientRect();
+        const workspaceHeight = workspaceRef.current.offsetHeight;
+        const scaleY = workspaceHeight > 0
+            ? workspaceRect.height / workspaceHeight
+            : 1;
+
+        activeResizeRef.current = {
+            type: "main-height",
+            startY: event.clientY,
+            startMainHeight: mainLayoutRef.current.offsetHeight,
+            workspaceHeight: workspaceRef.current.clientHeight,
+            scaleY: scaleY > 0 ? scaleY : 1,
+        };
+
+        document.body.classList.add("simulation-is-resizing");
+        document.body.style.cursor = "row-resize";
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        event.preventDefault();
+    };
+
+    const startListResize = (type, event) => {
+        if (!listLayoutRef.current) {
+            return;
+        }
+
+        const task = listLayoutRef.current.querySelector(".simulation-task-list");
+        const robot = listLayoutRef.current.querySelector(".simulation-robot-list");
+        const eventListElement = listLayoutRef.current.querySelector(".simulation-event-list");
+
+        if (!task || !robot || !eventListElement) {
+            return;
+        }
+
+        const layoutRect = listLayoutRef.current.getBoundingClientRect();
+        const layoutWidth = listLayoutRef.current.offsetWidth;
+        const scaleX = layoutWidth > 0 ? layoutRect.width / layoutWidth : 1;
+
+        const taskWidth = task.offsetWidth;
+        const robotWidth = robot.offsetWidth;
+        const eventWidth = eventListElement.offsetWidth;
+
+        activeResizeRef.current = type === "task-robot"
+            ? {
+                type,
+                startX: event.clientX,
+                startTaskWidth: taskWidth,
+                pairWidth: taskWidth + robotWidth,
+                eventWidth,
+                scaleX: scaleX > 0 ? scaleX : 1,
+            }
+            : {
+                type,
+                startX: event.clientX,
+                startRobotWidth: robotWidth,
+                pairWidth: robotWidth + eventWidth,
+                taskWidth,
+                scaleX: scaleX > 0 ? scaleX : 1,
+            };
+
+        document.body.classList.add("simulation-is-resizing");
+        document.body.style.cursor = "col-resize";
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        event.preventDefault();
+    };
 
     useEffect(() => {
         setGeneratedCommands([]);
@@ -502,6 +840,8 @@ function Simulation() {
         return {
             warehouseId: selectedWarehouseId,
             simulationSpeed: Number(simulationSpeed),
+            // 고른 시나리오가 있으면 그 설정으로 실행한다.
+            scenarioId: selectedScenarioId ?? null,
         };
     };
 
@@ -630,6 +970,68 @@ function Simulation() {
         }
     };
 
+    // 게스트 시뮬레이션에서 사용하는 기존 프론트 테스트 경로
+    const guestTestPath = [
+        "R6_0",
+        "R5_0",
+        "R4_0",
+        "R4_1",
+        "R4_2",
+        "R4_3",
+        "R4_4",
+        "R4_5",
+        "R4_6",
+        "R4_7",
+        "R4_8",
+        "R4_9",
+        "R4_10",
+        "R3_10",
+        "O_D",
+    ];
+
+    const sleep = (ms) => {
+        return new Promise((resolve) => {
+            setTimeout(resolve, ms);
+        });
+    };
+
+    // 게스트에서는 백엔드 실행 API를 호출하지 않고 기존 로컬 이동 로직을 사용한다.
+    const moveGuestRobot = async (robotId, path) => {
+        const currentRun = movementRunRef.current;
+
+        for (const nodeId of path) {
+            if (currentRun !== movementRunRef.current) {
+                return;
+            }
+
+            while (isPausedRef.current) {
+                if (currentRun !== movementRunRef.current) {
+                    return;
+                }
+
+                await sleep(100);
+            }
+
+            setRobotList((prevRobotList) =>
+                prevRobotList.map((robot) =>
+                    robot.robot_id === robotId
+                        ? {
+                            ...robot,
+                            node_id: nodeId,
+                        }
+                        : robot
+                )
+            );
+
+            const delay = 500 / Number(simulationSpeed);
+            await sleep(delay);
+        }
+
+        if (currentRun === movementRunRef.current) {
+            setSimulationStatus("완료");
+        }
+    };
+
     // 시뮬레이션 시작
     const handleStart = async () => {
         // 일시정지 상태면 재개
@@ -639,6 +1041,15 @@ function Simulation() {
         }
 
         if (!validateSettings()) {
+            return;
+        }
+
+        // 게스트는 기존 프론트 로컬 시뮬레이션 로직으로 실행한다.
+        if (isGuestSession()) {
+            setSimulationStatus("실행");
+            isPausedRef.current = false;
+            movementRunRef.current += 1;
+            moveGuestRobot(1, guestTestPath);
             return;
         }
 
@@ -743,6 +1154,10 @@ function Simulation() {
     const handleReset = async () => {
         isPausedRef.current = false;
 
+        if (isGuestSession()) {
+            movementRunRef.current += 1;
+        }
+
         if (simulationRunId) {
             try {
                 await simulationRunApi.reset(simulationRunId);
@@ -841,6 +1256,35 @@ function Simulation() {
     ========================================================= */
 
     const [robotList, setRobotList] = useState([]);
+
+    // 제어바의 카운트/상태 문구가 바뀌어 필요한 폭이 달라지면 즉시 최소 폭을 다시 맞춘다.
+    useEffect(() => {
+        if (window.innerWidth <= 1180 || !mainLayoutRef.current) {
+            return undefined;
+        }
+
+        const frame = window.requestAnimationFrame(() => {
+            if (!mainLayoutRef.current) {
+                return;
+            }
+
+            const minViewWidth = getControlbarMinWidth(mainLayoutRef.current);
+            const maxPanelWidth = Math.max(
+                MIN_PANEL_WIDTH,
+                mainLayoutRef.current.clientWidth
+                    - minViewWidth
+                    - RESIZE_HANDLE_SIZE
+            );
+
+            setViewMinWidth(minViewWidth);
+            setPanelWidth((current) =>
+                clamp(current, MIN_PANEL_WIDTH, maxPanelWidth)
+            );
+        });
+
+        return () => window.cancelAnimationFrame(frame);
+    }, [generatedCommands.length, taskList.length, robotList.length]);
+
     const isPausedRef = useRef(false);
     const isSimulationRunning =
         simulationStatus === "실행"
@@ -1044,130 +1488,194 @@ function Simulation() {
                         </div>
                     </div>
                 </div>
-
             </header>
 
-            {/* 시뮬레이션 화면 */}
-            <main className="simulation-view">
-                {/* 시안의 WAREHOUSE LIVE VIEW 제어 바 */}
-                <div className="simulation-controlbar">
-                    <div className="simulation-controlbar-title">
-                        <strong>WAREHOUSE LIVE VIEW</strong>
-                    </div>
+            <div
+                ref={workspaceRef}
+                className="simulation-workspace"
+                style={{
+                    "--simulation-main-height": `${mainHeight}px`,
+                }}
+            >
+                {/* 창고 지도 / AI 패널 */}
+                <div
+                    ref={mainLayoutRef}
+                    className="simulation-main-layout"
+                    style={{
+                        "--simulation-view-min-width": `${viewMinWidth}px`,
+                        "--simulation-panel-width": `${panelWidth}px`,
+                    }}
+                >
+                    <main className="simulation-view">
+                        <div className="simulation-controlbar">
+                            <div className="simulation-controlbar-title">
+                                <strong>WAREHOUSE LIVE VIEW</strong>
+                            </div>
 
-                    <div className="simulation-controlbar-summary">
-                        <span
-                            className={`simulation-plan-badge ${generatedCommands.length > 0 ? "active" : ""
-                                }`}
-                        >
-                            AI PLAN {generatedCommands.length > 0 ? "ACTIVE" : "READY"}
-                        </span>
-                        <span>{taskList.length} TASKS</span>
-                        <span>{robotList.length} ROBOTS</span>
-                    </div>
+                            <div className="simulation-controlbar-summary">
+                                <span
+                                    className={`simulation-plan-badge ${
+                                        generatedCommands.length > 0 ? "active" : ""
+                                    }`}
+                                >
+                                    AI PLAN {generatedCommands.length > 0 ? "ACTIVE" : "READY"}
+                                </span>
+                                <span>{taskList.length} TASKS</span>
+                                <span>{robotList.length} ROBOTS</span>
+                            </div>
 
-                    <div className="simulation-controlbar-actions">
-                        <select
-                            className="simulation-header-speed"
-                            value={simulationSpeed}
-                            onChange={(e) =>
-                                handleSpeedChange(Number(e.target.value))
-                            }
-                            aria-label="시뮬레이션 실행 속도"
-                        >
-                            <option value={0.5}>0.5배</option>
-                            <option value={1}>1배</option>
-                            <option value={2}>2배</option>
-                            <option value={3}>3배</option>
-                        </select>
+                            <div className="simulation-controlbar-actions">
+                                <select
+                                    className="simulation-header-speed"
+                                    value={simulationSpeed}
+                                    onChange={(e) =>
+                                        handleSpeedChange(Number(e.target.value))
+                                    }
+                                    aria-label="시뮬레이션 실행 속도"
+                                >
+                                    <option value={0.5}>0.5배</option>
+                                    <option value={1}>1배</option>
+                                    <option value={2}>2배</option>
+                                    <option value={3}>3배</option>
+                                </select>
 
-                        <button
-                            type="button"
-                            className="simulation-header-button start"
-                            onClick={handleStart}
-                            title="현재 작업으로 시뮬레이션을 실행합니다"
-                        >
-                            ▶ 시작
-                        </button>
-                        <button
-                            type="button"
-                            className="simulation-header-button"
-                            onClick={handlePause}
-                            title="현재 작업을 잠시 멈춥니다"
-                        >
-                            Ⅱ 일시정지
-                        </button>
-                        <button
-                            type="button"
-                            className="simulation-header-button"
-                            onClick={handleReset}
-                            title="현재 작업을 처음부터 다시 실행합니다"
-                        >
-                            ↻ 초기화
-                        </button>
-                        <button
-                            type="button"
-                            className="simulation-header-button replan"
-                            onClick={handleReplan}
-                            title="실행 중인 작업에서 로봇 상태를 재계획합니다"
-                        >
-                            재계획
-                        </button>
-                        <button
-                            type="button"
-                            className="simulation-header-button new-run"
-                            onClick={handleNewRun}
-                            title="현재 작업을 버리고 지금 설정으로 새로운 작업을 생성합니다"
-                        >
-                            새 작업
-                        </button>
-                        <button
-                            type="button"
-                            className="simulation-header-button stop"
-                            onClick={handleStop}
-                            disabled={!simulationRunId}
-                            title="이 실행을 완전히 종료합니다. 다시 시작하려면 새 작업을 만들어야 합니다."
-                        >
-                            ■ 중지
-                        </button>
-                    </div>
-                </div>
+                                <button
+                                    type="button"
+                                    className="simulation-header-button start"
+                                    onClick={handleStart}
+                                    title="현재 작업으로 시뮬레이션을 실행합니다"
+                                >
+                                    ▶ 시작
+                                </button>
+                                <button
+                                    type="button"
+                                    className="simulation-header-button"
+                                    onClick={handlePause}
+                                    title="현재 작업을 잠시 멈춥니다"
+                                >
+                                    Ⅱ 일시정지
+                                </button>
+                                <button
+                                    type="button"
+                                    className="simulation-header-button"
+                                    onClick={handleReset}
+                                    title="현재 작업을 처음부터 다시 실행합니다"
+                                >
+                                    ↻ 초기화
+                                </button>
+                                <button
+                                    type="button"
+                                    className="simulation-header-button replan"
+                                    onClick={handleReplan}
+                                    title="실행 중인 작업에서 로봇 상태를 재계획합니다"
+                                >
+                                    재계획
+                                </button>
+                                <button
+                                    type="button"
+                                    className="simulation-header-button new-run"
+                                    onClick={handleNewRun}
+                                    title="현재 작업을 버리고 지금 설정으로 새로운 작업을 생성합니다"
+                                >
+                                    새 작업
+                                </button>
+                                <button
+                                    type="button"
+                                    className="simulation-header-button stop"
+                                    onClick={handleStop}
+                                    disabled={!simulationRunId}
+                                    title="이 실행을 완전히 종료합니다. 다시 시작하려면 새 작업을 만들어야 합니다."
+                                >
+                                    ■ 중지
+                                </button>
+                            </div>
+                        </div>
 
-                <div className="simulation-view-content">
-                    <WarehouseSVG
-                        warehouseId={selectedWarehouseId}
-                        robots={robotList}
-                        tasks={taskList}
-                        generatedCommands={generatedCommands}
-                        avoidanceStates={avoidanceStates}
-                        isRunning={isSimulationRunning}
+                        <div className="simulation-view-content">
+                            <WarehouseSVG
+                                warehouseId={selectedWarehouseId}
+                                robots={robotList}
+                                tasks={taskList}
+                                generatedCommands={generatedCommands}
+                                avoidanceStates={avoidanceStates}
+                                isRunning={isSimulationRunning}
+                            />
+                        </div>
+                    </main>
+
+                    <div
+                        className="simulation-resize-handle simulation-resize-handle-vertical"
+                        role="separator"
+                        aria-orientation="vertical"
+                        aria-label="창고 지도와 AI 패널 너비 조절"
+                        onPointerDown={startPanelResize}
+                    />
+
+                    <SimulationPanel
+                        simulationRunId={simulationRunId}
+                        onSimulatedTimeChange={setSimulationTime}
+                        commandExpressionMix={commandExpressionMix}
+                        onCommandExpressionMixChange={setCommandExpressionMix}
+                        onGeneratedCommandsChange={setGeneratedCommands}
                     />
                 </div>
-            </main>
 
-            {/* 입출고 설정 / 자연어 명령 패널 */}
-            <SimulationPanel
-                simulationRunId={simulationRunId}
-                onSimulatedTimeChange={setSimulationTime}
-                commandExpressionMix={commandExpressionMix}
-                onCommandExpressionMixChange={setCommandExpressionMix}
-                onGeneratedCommandsChange={setGeneratedCommands}
-            />
+                <div
+                    className="simulation-resize-handle simulation-resize-handle-horizontal"
+                    role="separator"
+                    aria-orientation="horizontal"
+                    aria-label="지도 영역과 목록 영역 높이 조절"
+                    onPointerDown={startMainHeightResize}
+                />
 
-            {/* 작업 목록 (WebSocket 실시간 갱신) */}
-            <SimulationTaskList taskList={taskList} />
+                {/* 작업 / 로봇 / 이벤트 목록 */}
+                <div
+                    ref={listLayoutRef}
+                    className="simulation-list-layout"
+                    style={{
+                        "--simulation-task-list-width": listWidths.task
+                            ? `${listWidths.task}fr`
+                            : "1fr",
+                        "--simulation-robot-list-width": listWidths.robot
+                            ? `${listWidths.robot}fr`
+                            : "1fr",
+                        "--simulation-event-list-width": listWidths.event
+                            ? `${listWidths.event}fr`
+                            : "1fr",
+                    }}
+                >
+                    <SimulationTaskList taskList={taskList} />
 
-            {/* 로봇 목록 (WebSocket 실시간 갱신) */}
-            <SimulationRobotList robotList={robotList} />
+                    <div
+                        className="simulation-resize-handle simulation-resize-handle-list"
+                        role="separator"
+                        aria-orientation="vertical"
+                        aria-label="작업 목록과 로봇 목록 너비 조절"
+                        onPointerDown={(event) =>
+                            startListResize("task-robot", event)
+                        }
+                    />
 
-            {/* 이벤트 목록 (WebSocket 실시간 갱신) */}
-            <SimulationEventList
-                eventList={[
-                    ...avoidanceEvents,
-                    ...eventList,
-                ]}
-            />
+                    <SimulationRobotList robotList={robotList} />
 
+                    <div
+                        className="simulation-resize-handle simulation-resize-handle-list"
+                        role="separator"
+                        aria-orientation="vertical"
+                        aria-label="로봇 목록과 이벤트 목록 너비 조절"
+                        onPointerDown={(event) =>
+                            startListResize("robot-event", event)
+                        }
+                    />
+
+                    <SimulationEventList
+                        eventList={[
+                            ...avoidanceEvents,
+                            ...eventList,
+                        ]}
+                    />
+                </div>
+            </div>
         </div>
     );
 }

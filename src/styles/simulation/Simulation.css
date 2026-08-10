@@ -3,28 +3,112 @@
 ============================================================ */
 
 .simulation-wrapper {
-    display: grid;
-    grid-template-areas:
-        "simulation-header    simulation-header    simulation-header"
-        "simulation-view      simulation-view      simulation-panel"
-        "simulation-task-list simulation-robot-list simulation-event-list";
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 400px;
-    grid-template-rows: 60px 600px minmax(230px, auto);
-
+    display: flex;
+    flex-direction: column;
     width: 100%;
     min-height: 100vh;
     margin-left: 0;
-
     box-sizing: border-box;
     background: var(--laro-background);
     color: var(--laro-text);
+}
+
+/* 지도/패널과 LIST 영역을 서로 독립적으로 리사이즈한다. */
+.simulation-workspace {
+    display: grid;
+    grid-template-rows:
+        minmax(360px, var(--simulation-main-height, 700px))
+        8px
+        minmax(230px, 1fr);
+    width: 100%;
+    height: calc(100vh - 60px);
+    min-height: 938px;
+    min-width: 0;
+}
+
+.simulation-main-layout {
+    display: grid;
+    grid-template-columns:
+        minmax(var(--simulation-view-min-width, 520px), 1fr)
+        8px
+        minmax(320px, var(--simulation-panel-width, 400px));
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.simulation-list-layout {
+    display: grid;
+    grid-template-columns:
+        minmax(260px, var(--simulation-task-list-width, 1fr))
+        8px
+        minmax(260px, var(--simulation-robot-list-width, 1fr))
+        8px
+        minmax(260px, var(--simulation-event-list-width, 1fr));
+    width: 100%;
+    min-width: 0;
+    min-height: 230px;
+    overflow: hidden;
+}
+
+/* 리사이즈 핸들은 실제 컨텐츠 사이에만 얇게 노출한다. */
+.simulation-resize-handle {
+    position: relative;
+    z-index: 20;
+    flex-shrink: 0;
+    background: transparent;
+    touch-action: none;
+    user-select: none;
+}
+
+.simulation-resize-handle::before {
+    position: absolute;
+    background: var(--laro-border-dark);
+    content: "";
+    transition: background-color 0.15s ease;
+}
+
+.simulation-resize-handle:hover::before {
+    background: var(--laro-primary);
+}
+
+.simulation-resize-handle-vertical,
+.simulation-resize-handle-list {
+    width: 8px;
+    cursor: col-resize;
+}
+
+.simulation-resize-handle-vertical::before,
+.simulation-resize-handle-list::before {
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+}
+
+.simulation-resize-handle-horizontal {
+    height: 8px;
+    cursor: row-resize;
+}
+
+.simulation-resize-handle-horizontal::before {
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: 1px;
+    transform: translateY(-50%);
+}
+
+body.simulation-is-resizing {
+    user-select: none;
 }
 
 /* ============================================================
    2. 상단 헤더
 ============================================================ */
 .simulation-header {
-    grid-area: simulation-header;
     display: block;
     width: 100%;
     min-width: 0;
@@ -286,6 +370,7 @@
 .simulation-controlbar-summary {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
     gap: 12px;
     margin-left: auto;
     color: var(--laro-subtext);
@@ -312,6 +397,7 @@
 .simulation-controlbar-actions {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
     gap: 8px;
     margin-left: 14px;
     padding-left: 14px;
@@ -320,6 +406,7 @@
 }
 
 .simulation-header-speed {
+    flex-shrink: 0;
     width: 76px;
     height: 34px;
     padding: 0 10px;
@@ -344,6 +431,7 @@
 
 .simulation-header-button {
     display: inline-flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
     height: 34px;
@@ -438,10 +526,13 @@
 ============================================================ */
 
 .simulation-view {
-    grid-area: simulation-view;
     display: flex;
     flex-direction: column;
     width: 100%;
+    height: 100%;
+    min-width: 520px;
+    min-height: 0;
+    overflow: hidden;
     box-sizing: border-box;
     border: 1px solid var(--laro-border);
     background: var(--laro-surface);
@@ -468,10 +559,12 @@
    4. 입출고 명령 및 AI 실행 계획
 ============================================================ */
 
-.simulation-panel {
-    grid-area: simulation-panel;
-    align-self: start;
+.simulation-main-layout > .simulation-panel {
+    width: 100%;
     height: 100%;
+    min-width: 320px;
+    min-height: 0;
+    align-self: stretch;
 }
 
 /* ============================================================
@@ -483,32 +576,25 @@
     flex-direction: column;
     overflow: hidden;
     width: 100%;
+    height: 100%;
+    min-width: 260px;
+    min-height: 230px;
     padding: 0;
     box-sizing: border-box;
     border: 1px solid var(--laro-border);
     background: var(--laro-surface);
 }
 
-.simulation-task-list {
-    grid-area: simulation-task-list;
-}
-
-.simulation-robot-list {
-    grid-area: simulation-robot-list;
-}
-
+.simulation-task-list,
+.simulation-robot-list,
 .simulation-event-list {
-    grid-area: simulation-event-list;
+    grid-area: auto;
 }
 
 /* ============================================================
    6. 반응형 
 ============================================================ */
 @media (max-width: 1450px) {
-    .simulation-wrapper {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 350px;
-    }
-
     .simulation-topbar {
         padding: 0 16px;
     }
@@ -546,16 +632,34 @@
 }
 
 @media (max-width: 1180px) {
-    .simulation-wrapper {
-        grid-template-areas:
-            "simulation-header"
-            "simulation-view"
-            "simulation-panel"
-            "simulation-task-list"
-            "simulation-robot-list"
-            "simulation-event-list";
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto auto auto auto auto auto;
+    .simulation-workspace {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        min-height: 0;
+    }
+
+    .simulation-main-layout {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .simulation-list-layout {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .simulation-resize-handle {
+        display: none;
+    }
+
+    .simulation-view {
+        min-width: 0;
+        min-height: 700px;
     }
 
     .simulation-header {
@@ -595,7 +699,14 @@
         border-left: 0;
     }
 
-    .simulation-panel {
+    .simulation-main-layout > .simulation-panel {
         width: 100%;
+        min-width: 0;
+        min-height: 700px;
+    }
+
+    .simulation-list {
+        min-width: 0;
+        min-height: 230px;
     }
 }
