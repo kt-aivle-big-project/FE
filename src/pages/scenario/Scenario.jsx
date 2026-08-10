@@ -118,8 +118,6 @@ function Scenario() {
             const searchableText = [
                 scenario.scenarioName,
                 scenario.id,
-                scenario.warehouseName,
-                scenario.warehouseId,
             ]
                 .filter(Boolean)
                 .join(" ")
@@ -422,7 +420,7 @@ function Scenario() {
                             <input
                                 type="search"
                                 value={searchText}
-                                placeholder="시나리오명, ID, 창고 검색"
+                                placeholder="시나리오명, ID 검색"
                                 onChange={handleSearchChange}
                                 aria-label="시나리오 검색"
                             />
