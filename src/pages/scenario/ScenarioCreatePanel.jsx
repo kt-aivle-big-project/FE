@@ -3,6 +3,10 @@ import "../../styles/scenario/ScenarioCreatePanel.css";
 
 // 생성 또는 수정 모드의 초기 입력값을 만든다.
 const createInitialFormData = (initialScenario) => ({
+    warehouseId:
+        initialScenario?.warehouseId == null
+            ? ""
+            : String(initialScenario.warehouseId),
     scenarioName: initialScenario?.scenarioName ?? "",
     description: initialScenario?.description ?? "",
     initialBattery: initialScenario?.initialBattery ?? 100,
@@ -13,10 +17,22 @@ const createInitialFormData = (initialScenario) => ({
 function ScenarioCreatePanel({
     mode = "create",
     initialScenario = null,
+    warehouses = [],
     onClose,
     onSubmit,
 }) {
     const isEditMode = mode === "edit";
+    const personalWarehouses = warehouses.filter(
+        (warehouse) => !warehouse.shared
+    );
+    const warehouseOptions = isEditMode && initialScenario
+        ? [
+            {
+                id: initialScenario.warehouseId,
+                name: initialScenario.warehouseName,
+            },
+        ]
+        : personalWarehouses;
 
     const [formData, setFormData] = useState(() =>
         createInitialFormData(initialScenario)
@@ -74,6 +90,10 @@ function ScenarioCreatePanel({
     const validateForm = () => {
         const nextErrors = {};
 
+        if (!isEditMode && !formData.warehouseId) {
+            nextErrors.warehouseId = "창고를 선택해주세요.";
+        }
+
         if (!formData.scenarioName.trim()) {
             nextErrors.scenarioName = "시나리오명을 입력해주세요.";
         }
@@ -119,12 +139,18 @@ function ScenarioCreatePanel({
         }
 
 
-        onSubmit({
+        const submittedData = {
             scenarioName: formData.scenarioName.trim(),
             description: formData.description.trim(),
             initialBattery: Number(formData.initialBattery),
             chargingThreshold: Number(formData.chargingThreshold),
-        });
+        };
+
+        if (!isEditMode) {
+            submittedData.warehouseId = Number(formData.warehouseId);
+        }
+
+        onSubmit(submittedData);
     };
 
     return (
@@ -172,6 +198,55 @@ function ScenarioCreatePanel({
                         </div>
 
                         <div className="scenario-create-info-grid">
+                            <label className="scenario-create-field">
+                                <span>
+                                    창고
+                                    <em>*</em>
+                                </span>
+
+                                <div className="scenario-create-warehouse-select">
+                                    <span aria-hidden="true">▣</span>
+
+                                    <select
+                                        name="warehouseId"
+                                        value={formData.warehouseId}
+                                        onChange={handleInputChange}
+                                        disabled={
+                                            isEditMode ||
+                                            personalWarehouses.length === 0
+                                        }
+                                        className={
+                                            errors.warehouseId ? "is-error" : ""
+                                        }
+                                    >
+                                        <option value="">
+                                            창고를 선택해주세요.
+                                        </option>
+
+                                        {warehouseOptions.map((warehouse) => (
+                                            <option
+                                                key={warehouse.id}
+                                                value={String(warehouse.id)}
+                                            >
+                                                {warehouse.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {!isEditMode && personalWarehouses.length === 0 && (
+                                    <small className="scenario-create-help">
+                                        먼저 개인 창고를 생성해주세요.
+                                    </small>
+                                )}
+
+                                {errors.warehouseId && (
+                                    <small className="scenario-create-error">
+                                        {errors.warehouseId}
+                                    </small>
+                                )}
+                            </label>
+
                             <label className="scenario-create-field">
                                 <span>
                                     시나리오명

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import ScenarioDetail from "./ScenarioDetail";
 import ScenarioCreatePanel from "./ScenarioCreatePanel";
-import { scenarioApi } from "../../api/client";
+import { scenarioApi, warehouseApi } from "../../api/client";
 import "../../styles/scenario/Scenario.css";
 
 // 정렬 옵션
@@ -44,6 +44,7 @@ const getUpdatedTime = (scenario) => {
 
 function Scenario() {
     const [scenarios, setScenarios] = useState([]);
+    const [warehouses, setWarehouses] = useState([]);
     const [isScenarioPanelOpen, setIsScenarioPanelOpen] = useState(false);
     const [editingScenarioId, setEditingScenarioId] = useState(null);
     const [openMenuScenarioId, setOpenMenuScenarioId] = useState(null);
@@ -72,6 +73,26 @@ function Scenario() {
         };
 
         loadScenarios();
+    }, []);
+
+    // 시나리오 생성 패널에서 선택할 수 있는 개인 창고를 조회한다.
+    useEffect(() => {
+        const loadWarehouses = async () => {
+            try {
+                const response = await warehouseApi.getAll();
+
+                if (!Array.isArray(response)) {
+                    throw new Error("창고 목록 응답이 배열이 아닙니다.");
+                }
+
+                setWarehouses(response);
+            } catch (error) {
+                console.error("창고 목록 조회 실패:", error);
+                setWarehouses([]);
+            }
+        };
+
+        loadWarehouses();
     }, []);
 
     // 검색 및 정렬 결과를 계산한다.
@@ -608,6 +629,7 @@ function Scenario() {
                         key={editingScenario?.id ?? "create"}
                         mode={editingScenario ? "edit" : "create"}
                         initialScenario={editingScenario}
+                        warehouses={warehouses}
                         onClose={handleCloseScenarioPanel}
                         onSubmit={handleScenarioSubmit}
                     />
