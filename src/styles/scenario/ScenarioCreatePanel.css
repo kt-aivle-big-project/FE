@@ -244,6 +244,42 @@
     padding-left: 34px;
 }
 
+.scenario-create-warehouse-select.has-login-tooltip {
+    cursor: not-allowed;
+}
+
+.scenario-create-warehouse-select.has-login-tooltip select:disabled {
+    pointer-events: none;
+}
+
+.scenario-create-warehouse-select.has-login-tooltip::after {
+    position: absolute;
+    z-index: 100;
+    top: calc(100% + 8px);
+    left: 0;
+    width: max-content;
+    max-width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--laro-border-dark);
+    background: var(--laro-navy);
+    color: var(--laro-white);
+    content: attr(data-tooltip);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-medium);
+    line-height: 1.45;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-3px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    white-space: normal;
+}
+
+.scenario-create-warehouse-select.has-login-tooltip:hover::after,
+.scenario-create-warehouse-select.has-login-tooltip:focus-visible::after {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 /* ============================================================
    5. 배터리 설정
 ============================================================ */

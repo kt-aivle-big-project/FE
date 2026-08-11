@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isGuestSession } from "../../api/auth";
 import "../../styles/scenario/ScenarioCreatePanel.css";
 
 // 생성 또는 수정 모드의 초기 입력값을 만든다.
@@ -22,9 +23,12 @@ function ScenarioCreatePanel({
     onSubmit,
 }) {
     const isEditMode = mode === "edit";
+    const guest = isGuestSession();
     const personalWarehouses = warehouses.filter(
         (warehouse) => !warehouse.shared
     );
+    const requiresLoginForWarehouse =
+        !isEditMode && guest && personalWarehouses.length === 0;
     const warehouseOptions = isEditMode && initialScenario
         ? [
             {
@@ -204,7 +208,26 @@ function ScenarioCreatePanel({
                                     <em>*</em>
                                 </span>
 
-                                <div className="scenario-create-warehouse-select">
+                                <div
+                                    className={`scenario-create-warehouse-select ${
+                                        requiresLoginForWarehouse
+                                            ? "has-login-tooltip"
+                                            : ""
+                                    }`}
+                                    data-tooltip={
+                                        requiresLoginForWarehouse
+                                            ? "로그인 후 이용할 수 있습니다."
+                                            : undefined
+                                    }
+                                    tabIndex={
+                                        requiresLoginForWarehouse ? 0 : undefined
+                                    }
+                                    aria-label={
+                                        requiresLoginForWarehouse
+                                            ? "창고 선택: 로그인 후 이용할 수 있습니다."
+                                            : undefined
+                                    }
+                                >
                                     <span aria-hidden="true">▣</span>
 
                                     <select
@@ -236,7 +259,9 @@ function ScenarioCreatePanel({
 
                                 {!isEditMode && personalWarehouses.length === 0 && (
                                     <small className="scenario-create-help">
-                                        먼저 개인 창고를 생성해주세요.
+                                        {guest
+                                            ? "로그인 후 개인 창고를 선택할 수 있습니다."
+                                            : "먼저 개인 창고를 생성해주세요."}
                                     </small>
                                 )}
 

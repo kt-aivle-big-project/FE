@@ -215,27 +215,6 @@ function Simulation() {
     const [simulationStatus, setSimulationStatus] = useState("대기");
     const [simulationTime, setSimulationTime] = useState(0);
 
-    // 게스트 시뮬레이션의 로컬 이동 실행을 구분한다.
-    // 초기화 후 이전 이동 루프가 계속 실행되지 않도록 실행 번호를 바꾼다.
-    const movementRunRef = useRef(0);
-
-    // 게스트는 백엔드 실행 시계 대신 기존 프론트 시뮬레이션 시간을 사용한다.
-    useEffect(() => {
-        if (!isGuestSession()) {
-            return undefined;
-        }
-
-        if (simulationStatus !== "실행" && simulationStatus !== "재계획") {
-            return undefined;
-        }
-
-        const timer = setInterval(() => {
-            setSimulationTime((time) => time + simulationSpeed);
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [simulationStatus, simulationSpeed]);
-
     const [commandExpressionMix, setCommandExpressionMixState] = useState(
         loadCommandExpressionMix
     );
@@ -602,7 +581,11 @@ function Simulation() {
 
                 if (cancelled) return;
 
-                const items = Array.isArray(list) ? list : [];
+                // 서버가 잘못 전체 목록을 내려주더라도 현재 창고의 시나리오만 표시한다.
+                const items = (Array.isArray(list) ? list : []).filter(
+                    (scenario) =>
+                        Number(scenario.warehouseId) === Number(selectedWarehouseId)
+                );
                 setScenarios(items);
 
                 // 저장해둔 시나리오가 이 창고에 없으면 첫 번째로 되돌린다.
@@ -701,6 +684,8 @@ function Simulation() {
         setSimulationTime(0);
         setTaskList([]);
         setEventList([]);
+        setScenarios([]);
+        setSelectedScenarioId(null);
         setSelectedWarehouseId(nextId);
         loadRestingRobots(nextId);
     };
@@ -847,10 +832,9 @@ function Simulation() {
     } = {}) => {
         return {
             warehouseId,
-            scenarioId,
             simulationSpeed: Number(simulationSpeed),
             // 고른 시나리오가 있으면 그 설정으로 실행한다.
-            scenarioId: selectedScenarioId ?? null,
+            scenarioId: scenarioId ?? null,
         };
     };
 
@@ -1081,68 +1065,6 @@ function Simulation() {
         }
     };
 
-    // 게스트 시뮬레이션에서 사용하는 기존 프론트 테스트 경로
-    const guestTestPath = [
-        "R6_0",
-        "R5_0",
-        "R4_0",
-        "R4_1",
-        "R4_2",
-        "R4_3",
-        "R4_4",
-        "R4_5",
-        "R4_6",
-        "R4_7",
-        "R4_8",
-        "R4_9",
-        "R4_10",
-        "R3_10",
-        "O_D",
-    ];
-
-    const sleep = (ms) => {
-        return new Promise((resolve) => {
-            setTimeout(resolve, ms);
-        });
-    };
-
-    // 게스트에서는 백엔드 실행 API를 호출하지 않고 기존 로컬 이동 로직을 사용한다.
-    const moveGuestRobot = async (robotId, path) => {
-        const currentRun = movementRunRef.current;
-
-        for (const nodeId of path) {
-            if (currentRun !== movementRunRef.current) {
-                return;
-            }
-
-            while (isPausedRef.current) {
-                if (currentRun !== movementRunRef.current) {
-                    return;
-                }
-
-                await sleep(100);
-            }
-
-            setRobotList((prevRobotList) =>
-                prevRobotList.map((robot) =>
-                    robot.robot_id === robotId
-                        ? {
-                            ...robot,
-                            node_id: nodeId,
-                        }
-                        : robot
-                )
-            );
-
-            const delay = 500 / Number(simulationSpeed);
-            await sleep(delay);
-        }
-
-        if (currentRun === movementRunRef.current) {
-            setSimulationStatus("완료");
-        }
-    };
-
     // 시뮬레이션 시작
     const handleStart = async () => {
         // 일시정지 상태면 재개
@@ -1154,17 +1076,6 @@ function Simulation() {
         if (!validateSettings()) {
             return;
         }
-
-        // 게스트는 기존 프론트 로컬 시뮬레이션 로직으로 실행한다.
-        if (isGuestSession()) {
-            setSimulationStatus("실행");
-            isPausedRef.current = false;
-            movementRunRef.current += 1;
-            moveGuestRobot(1, guestTestPath);
-            return;
-        }
-
-        const createPayload = buildCreatePayload();
 
         try {
             const simulationTarget = await resolveSimulationTarget();
@@ -1275,10 +1186,6 @@ function Simulation() {
     // 시뮬레이션 초기화
     const handleReset = async () => {
         isPausedRef.current = false;
-
-        if (isGuestSession()) {
-            movementRunRef.current += 1;
-        }
 
         if (simulationRunId) {
             try {
