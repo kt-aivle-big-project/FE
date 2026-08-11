@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     fulfillmentCommandApi,
     laroPlanApi,
@@ -160,6 +160,7 @@ const compactRouteNodes = (robot) => {
 
 function SimulationPanel({
     simulationRunId,
+    simulationExecutionVersion,
     onSimulatedTimeChange,
     commandExpressionMix,
     onCommandExpressionMixChange,
@@ -181,6 +182,7 @@ function SimulationPanel({
     const [selectedOperationId, setSelectedOperationId] = useState(null);
     const [cycleStatus, setCycleStatus] = useState(null);
     const [configurationError, setConfigurationError] = useState("");
+    const cyclePollingGenerationRef = useRef(0);
 
     // LLM 명령 표현 설정이 바뀌면 현재 시뮬레이션 실행에 저장한다.
     useEffect(() => {
@@ -272,15 +274,27 @@ function SimulationPanel({
             cancelled = true;
             window.clearInterval(timerId);
         };
-    }, [simulationRunId]);
+    }, [simulationRunId, simulationExecutionVersion]);
 
     // 자동 명령 생성과 AI 계획 사이클 상태를 주기적으로 동기화한다.
     useEffect(() => {
         let cancelled = false;
         let timerId;
+        let requestedSequence = 0;
+        let appliedSequence = 0;
+        const pollingGeneration = ++cyclePollingGenerationRef.current;
 
         const applyCycleStatus = (status) => {
-            if (cancelled || !status) return;
+            if (
+                cancelled
+                || pollingGeneration !== cyclePollingGenerationRef.current
+                || !status
+            ) return;
+            if (
+                typeof simulationExecutionVersion === "number"
+                && typeof status.executionVersion === "number"
+                && status.executionVersion !== simulationExecutionVersion
+            ) return;
 
             setCycleStatus(status);
             onSimulatedTimeChange?.(
@@ -302,15 +316,23 @@ function SimulationPanel({
             setWorkflow((current) => ({
                 state: CYCLE_TO_WORKFLOW_STATE[status.state] ?? "idle",
 
-                // 현재 사이클이 실패하면 마지막 정상 생성 결과를 유지한다.
+                // 새 주기를 계산하는 동안 이전 정상 결과를 유지한다.
+                // 백엔드는 주기 시작 시 generated/planResponse를 null로 바꾸므로
+                // 그대로 덮으면 "2번째 계획 중" 화면이 빈 상태로 바뀐다.
                 generated:
                     status.generated
-                    ?? (status.state === "ERROR" ? current.generated : null),
+                    ?? (["CHECKING", "GENERATING", "PLANNING", "REPLANNING", "ERROR"]
+                        .includes(status.state)
+                        ? current.generated
+                        : null),
 
-                // 계획 실패 시에도 마지막 정상 계획을 화면에 유지한다.
+                // 새 계획이 완성되기 전과 실패한 경우에도 활성 계획을 표시한다.
                 planResponse:
                     status.planResponse
-                    ?? (status.state === "ERROR" ? current.planResponse : null),
+                    ?? (["CHECKING", "GENERATING", "PLANNING", "REPLANNING", "ERROR"]
+                        .includes(status.state)
+                        ? current.planResponse
+                        : null),
 
                 error: status.error ?? "",
                 errorStage: status.state === "ERROR" ? "cycle" : null,
@@ -319,10 +341,12 @@ function SimulationPanel({
 
         const refresh = async () => {
             if (!simulationRunId) return;
+            const sequence = ++requestedSequence;
             try {
-                applyCycleStatus(
-                    await fulfillmentCommandApi.getCycleStatus(simulationRunId)
-                );
+                const status = await fulfillmentCommandApi.getCycleStatus(simulationRunId);
+                if (sequence < appliedSequence) return;
+                appliedSequence = sequence;
+                applyCycleStatus(status);
             } catch (error) {
                 if (!cancelled) {
                     setWorkflow((current) => ({
@@ -348,7 +372,11 @@ function SimulationPanel({
             cancelled = true;
             window.clearInterval(timerId);
         };
-    }, [simulationRunId, onSimulatedTimeChange]);
+    }, [
+        simulationRunId,
+        simulationExecutionVersion,
+        onSimulatedTimeChange,
+    ]);
 
     // 자동 생성 결과에서 화면에 필요한 명령 데이터를 추출한다.
     const generated = workflow.generated;

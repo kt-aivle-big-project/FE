@@ -187,12 +187,14 @@ function Simulation() {
         const saved = localStorage.getItem(RUN_ID_KEY);
         return saved ? Number(saved) : null;
     });
+    const [simulationExecutionVersion, setSimulationExecutionVersion] = useState(null);
 
     const setSimulationRunId = (runId) => {
         if (runId) {
             localStorage.setItem(RUN_ID_KEY, String(runId));
         } else {
             localStorage.removeItem(RUN_ID_KEY);
+            setSimulationExecutionVersion(null);
         }
 
         setSimulationRunIdState(runId);
@@ -453,6 +455,9 @@ function Simulation() {
     const restoreRuntime = async (runId) => {
         try {
             const snapshot = await simulationRunApi.getRobotStates(runId);
+            if (typeof snapshot?.executionVersion === "number") {
+                setSimulationExecutionVersion(snapshot.executionVersion);
+            }
 
             // BE 재시작 시 메모리 기반 AI 시간표를 복구할 수 없으므로 백엔드는
             // 남아 있던 실행을 STOPPED로 정리한다. 브라우저 localStorage에 그 ID가
@@ -659,6 +664,7 @@ function Simulation() {
             const runId = created.simulationRunId;
 
             setSimulationRunId(runId);
+            setSimulationExecutionVersion(created.executionVersion ?? null);
             await reloadTasks(runId);
 
             console.log(
@@ -690,6 +696,7 @@ function Simulation() {
 
         try {
             current = await simulationRunApi.getStatus(simulationRunId);
+            setSimulationExecutionVersion(current.executionVersion ?? null);
         } catch (error) {
             // 실행이 삭제됐거나 조회 실패 - 새로 만든다
             console.warn("기존 시뮬레이션 조회 실패 - 새로 만듭니다.", error.message);
@@ -705,7 +712,8 @@ function Simulation() {
             case "FAILED":
                 // 같은 작업을 처음부터 다시 재생할 수 있게 되돌린다
                 console.log("이전 실행이 종료돼 있어 초기화 후 재생합니다.");
-                await simulationRunApi.reset(simulationRunId);
+                const reset = await simulationRunApi.reset(simulationRunId);
+                setSimulationExecutionVersion(reset.executionVersion ?? null);
                 await reloadTasks(simulationRunId);
                 return simulationRunId;
 
@@ -773,6 +781,7 @@ function Simulation() {
                 console.log("시뮬레이션 생성 요청:", createPayload);
                 const created = await simulationRunApi.create(createPayload);
                 runId = created.simulationRunId;
+                setSimulationExecutionVersion(created.executionVersion ?? null);
             }
 
             // 시작 직후 실행되는 0분 명령부터 화면에서 고른 표현 방식을 사용한다.
@@ -783,6 +792,7 @@ function Simulation() {
             const started = await simulationRunApi.start(runId);
 
             setSimulationRunId(runId);
+            setSimulationExecutionVersion(started.executionVersion ?? null);
             setSimulationStatus(STATUS_LABEL[started.status] ?? "실행");
             isPausedRef.current = false;
 
@@ -855,7 +865,8 @@ function Simulation() {
 
         if (simulationRunId) {
             try {
-                await simulationRunApi.reset(simulationRunId);
+                const reset = await simulationRunApi.reset(simulationRunId);
+                setSimulationExecutionVersion(reset.executionVersion ?? null);
                 // 작업이 전부 대기 상태로 돌아간 목록을 다시 읽어온다
                 await reloadTasks(simulationRunId);
             } catch (error) {
@@ -1029,6 +1040,13 @@ function Simulation() {
             [TOPICS.EVENTS]: applyEvent,
             [TOPICS.SIMULATION_RUNS]: (run) => {
                 if (run.simulationRunId !== simulationRunId) {
+                    return;
+                }
+                if (
+                    typeof simulationExecutionVersion === "number"
+                    && typeof run.executionVersion === "number"
+                    && run.executionVersion !== simulationExecutionVersion
+                ) {
                     return;
                 }
 
@@ -1258,6 +1276,7 @@ function Simulation() {
             {/* 입출고 설정 / 자연어 명령 패널 */}
             <SimulationPanel
                 simulationRunId={simulationRunId}
+                simulationExecutionVersion={simulationExecutionVersion}
                 onSimulatedTimeChange={setSimulationTime}
                 commandExpressionMix={commandExpressionMix}
                 onCommandExpressionMixChange={setCommandExpressionMix}
