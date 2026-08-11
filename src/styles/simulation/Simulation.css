@@ -1,0 +1,940 @@
+/* ============================================================
+   1. 시뮬레이션 전체 레이아웃
+============================================================ */
+
+.simulation-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 100vh;
+    margin-left: 0;
+    box-sizing: border-box;
+    background: var(--laro-background);
+    color: var(--laro-text);
+}
+
+/* 지도/패널과 LIST 영역을 서로 독립적으로 리사이즈한다. */
+.simulation-workspace {
+    display: grid;
+    grid-template-rows:
+        minmax(360px, var(--simulation-main-height, 700px))
+        8px
+        minmax(230px, 1fr);
+    width: 100%;
+    height: calc(100vh - 60px);
+    min-height: 938px;
+    min-width: 0;
+}
+
+.simulation-main-layout {
+    display: grid;
+    grid-template-columns:
+        minmax(520px, 1fr)
+        8px
+        minmax(320px, var(--simulation-panel-width, 400px));
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.simulation-list-layout {
+    display: grid;
+    grid-template-columns:
+        minmax(260px, var(--simulation-task-list-width, 1fr))
+        8px
+        minmax(260px, var(--simulation-robot-list-width, 1fr))
+        8px
+        minmax(260px, var(--simulation-event-list-width, 1fr));
+    width: 100%;
+    min-width: 0;
+    min-height: 230px;
+    overflow: hidden;
+}
+
+/* 리사이즈 핸들은 실제 컨텐츠 사이에만 얇게 노출한다. */
+.simulation-resize-handle {
+    position: relative;
+    z-index: 20;
+    flex-shrink: 0;
+    background: transparent;
+    touch-action: none;
+    user-select: none;
+}
+
+.simulation-resize-handle::before {
+    position: absolute;
+    background: var(--laro-border-dark);
+    content: "";
+    transition: background-color 0.15s ease;
+}
+
+.simulation-resize-handle:hover::before {
+    background: var(--laro-primary);
+}
+
+.simulation-resize-handle-vertical,
+.simulation-resize-handle-list {
+    width: 8px;
+    cursor: col-resize;
+}
+
+.simulation-resize-handle-vertical::before,
+.simulation-resize-handle-list::before {
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+}
+
+.simulation-resize-handle-horizontal {
+    height: 8px;
+    cursor: row-resize;
+}
+
+.simulation-resize-handle-horizontal::before {
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: 1px;
+    transform: translateY(-50%);
+}
+
+body.simulation-is-resizing {
+    user-select: none;
+}
+
+/* ============================================================
+   2. 상단 헤더
+============================================================ */
+.simulation-header {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* 상단 네이비 바 */
+.simulation-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    height: 60px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    background: var(--laro-navy);
+    color: var(--laro-white);
+}
+
+.simulation-topbar-left,
+.simulation-topbar-right {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    height: 100%;
+}
+
+.simulation-topbar-left {
+    gap: 80px;
+}
+
+.simulation-topbar-right {
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+.simulation-topbar-title {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.simulation-topbar-title h2 {
+    margin: 0;
+    color: var(--laro-white);
+    font-size: 20px;
+    font-weight: var(--laro-font-weight-bold);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.simulation-topbar-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.simulation-topbar-selector select {
+    width: 150px;
+    height: 36px;
+    padding: 0 30px 0 12px;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid color-mix(in srgb, var(--laro-navy-light) 30%, transparent);
+    border-radius: var(--laro-radius-control);
+    background-color: color-mix(in srgb, var(--laro-white) 5%, transparent);
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 16px) 15px, calc(100% - 11px) 15px;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    color: var(--laro-white);
+    font-family: inherit;
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-medium);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    outline: none;
+    cursor: pointer;
+}
+
+.simulation-topbar-selector.scenario select {
+    width: 240px;
+}
+
+.simulation-topbar-selector select:hover,
+.simulation-topbar-selector select:focus,
+.simulation-topbar-selector select:focus-visible {
+    border-color: var(--laro-primary);
+    outline: none;
+    box-shadow: none;
+}
+
+.simulation-topbar-selector select option {
+    background: var(--laro-surface);
+    color: var(--laro-text);
+}
+
+.simulation-topbar-label {
+    flex-shrink: 0;
+    color: color-mix(in srgb, var(--laro-navy-light) 78%, transparent);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.simulation-topbar-metric {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 118px;
+    height: 38px;
+    padding: 0 20px;
+    border-left: 1px solid color-mix(in srgb, var(--laro-navy-light) 20%, transparent);
+}
+
+.simulation-topbar-metric>span {
+    color: color-mix(in srgb, var(--laro-navy-light) 68%, transparent);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-medium);
+    line-height: 1.2;
+}
+
+.simulation-topbar-metric strong {
+    margin-top: 3px;
+    color: var(--laro-white);
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-bold);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+/* 시스템 상태 상단 */
+.simulation-topbar-status-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.simulation-topbar-status-header > span {
+    color: color-mix(in srgb, var(--laro-navy-light) 68%, transparent);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-medium);
+    line-height: 1.2;
+}
+
+/* 실시간 연결 */
+.simulation-topbar-connection {
+    color: var(--laro-primary);
+    font-size: 8px;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* 현재 상태 */
+.simulation-topbar-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+}
+
+.simulation-topbar-status::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-success);
+    content: "";
+}
+
+.simulation-topbar-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--laro-success) !important;
+}
+
+.simulation-topbar-socket {
+    position: absolute;
+    right: 20px;
+    bottom: -1px;
+    color: color-mix(in srgb, var(--laro-navy-light) 56%, transparent);
+    font-size: 8px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.simulation-topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+}
+
+.simulation-topbar-user:hover {
+    opacity: 0.8;
+}
+
+.simulation-topbar-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-navy-light);
+    color: var(--laro-navy);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.simulation-topbar-user strong {
+    color: var(--laro-white);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.simulation-topbar-chevron {
+    color: color-mix(in srgb, var(--laro-navy-light) 70%, transparent);
+    font-size: var(--laro-font-caption);
+}
+
+/* WAREHOUSE LIVE VIEW 제어 바 */
+.simulation-controlbar {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 56px;
+    min-width: 0;
+    padding: 0 14px;
+    box-sizing: border-box;
+    background: var(--laro-surface);
+    color: var(--laro-text);
+}
+
+.simulation-controlbar-title {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.simulation-controlbar-title strong {
+    color: var(--laro-navy);
+    font-size: var(--laro-font-card-title);
+    font-weight: var(--laro-font-weight-bold);
+    letter-spacing: -0.01em;
+}
+
+.simulation-controlbar-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.simulation-plan-badge {
+    padding: 5px 9px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+}
+
+.simulation-plan-badge.active {
+    border-color: var(--laro-success);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.simulation-controlbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 14px;
+    padding-left: 14px;
+    border-left: 1px solid var(--laro-border);
+    white-space: nowrap;
+}
+
+.simulation-header-speed {
+    width: 76px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    font-family: inherit;
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-medium);
+    outline: none;
+    cursor: pointer;
+}
+
+.simulation-header-speed:hover,
+.simulation-header-speed:focus,
+.simulation-header-speed:focus-visible {
+    border-color: var(--laro-primary);
+    outline: none;
+    box-shadow: none;
+}
+
+.simulation-header-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--laro-border-dark);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-navy);
+    font-family: inherit;
+    font-size: var(--laro-font-caption);
+    font-weight: var(--laro-font-weight-semibold);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.simulation-header-button:hover {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.simulation-header-button:focus,
+.simulation-header-button:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+.simulation-header-button.start {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary);
+    color: var(--laro-white);
+}
+
+.simulation-header-button.start:hover {
+    border-color: var(--laro-primary-hover);
+    background: var(--laro-primary-hover);
+    color: var(--laro-white);
+}
+
+.simulation-header-button.start:active {
+    border-color: var(--laro-primary-active);
+    background: var(--laro-primary-active);
+}
+
+.simulation-header-button.new-run {
+    border-color: var(--laro-success);
+    background: var(--laro-surface);
+    color: var(--laro-success);
+}
+
+.simulation-header-button.new-run:hover {
+    border-color: var(--laro-success);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+
+.simulation-header-button.replan {
+    border-color: var(--laro-primary);
+    background: var(--laro-surface);
+    color: var(--laro-primary);
+}
+
+.simulation-header-button.replan:hover {
+    border-color: var(--laro-primary-hover);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.simulation-header-button.stop {
+    border-color: color-mix(in srgb, var(--laro-danger) 45%, var(--laro-border));
+    color: var(--laro-danger);
+}
+
+.simulation-header-button.stop:hover {
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
+.simulation-header-button:disabled,
+.simulation-header-button:disabled:hover {
+    border-color: var(--laro-border);
+    background: var(--laro-muted-light);
+    color: var(--laro-muted);
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+
+/* ============================================================
+   3. 창고 시뮬레이션 화면
+============================================================ */
+
+.simulation-view {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-width: 520px;
+    min-height: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    border: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    z-index: 1;
+}
+
+.simulation-view .simulation-controlbar {
+    flex-shrink: 0;
+    border: 0;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.simulation-view-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* ============================================================
+   4. 입출고 명령 및 AI 실행 계획
+============================================================ */
+
+.simulation-main-layout > .simulation-panel {
+    width: 100%;
+    height: 100%;
+    min-width: 320px;
+    min-height: 0;
+    align-self: stretch;
+}
+
+/* ============================================================
+   5. 작업 / 로봇 / 이벤트 목록
+============================================================ */
+
+.simulation-list {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    min-width: 260px;
+    min-height: 230px;
+    padding: 0;
+    box-sizing: border-box;
+    border: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.simulation-task-list,
+.simulation-robot-list,
+.simulation-event-list {
+    grid-area: auto;
+}
+
+/* ============================================================
+   6. 반응형
+   - 1920px 이상에서는 기존 레이아웃을 그대로 유지한다.
+   - 화면이 작아질수록 간격과 패널 폭을 단계적으로 줄인다.
+   - transform: scale()은 사용하지 않는다.
+============================================================ */
+
+/* 1600px 이하: 1920 레이아웃을 유지하면서 여백과 우측 패널만 소폭 축소한다. */
+@media (max-width: 1600px) {
+    .simulation-main-layout {
+        grid-template-columns:
+            minmax(500px, 1fr)
+            8px
+            minmax(300px, min(var(--simulation-panel-width, 380px), 380px));
+    }
+
+    .simulation-topbar {
+        padding: 0 14px;
+    }
+
+    .simulation-topbar-left {
+        gap: 36px;
+    }
+
+    .simulation-topbar-selector.scenario select {
+        width: 220px;
+    }
+
+    .simulation-topbar-metric {
+        min-width: 112px;
+        padding: 0 16px;
+    }
+
+    .simulation-controlbar-summary {
+        gap: 10px;
+    }
+
+    .simulation-controlbar-actions {
+        gap: 7px;
+        margin-left: 12px;
+        padding-left: 12px;
+    }
+}
+
+/* 1366px 이하: 일반 노트북 폭에 맞춰 패널과 컨트롤 영역을 한 단계 더 압축한다. */
+@media (max-width: 1366px) {
+    .simulation-main-layout {
+        grid-template-columns:
+            minmax(480px, 1fr)
+            8px
+            minmax(300px, min(var(--simulation-panel-width, 340px), 340px));
+    }
+
+    .simulation-list-layout {
+        grid-template-columns:
+            minmax(220px, var(--simulation-task-list-width, 1fr))
+            8px
+            minmax(220px, var(--simulation-robot-list-width, 1fr))
+            8px
+            minmax(220px, var(--simulation-event-list-width, 1fr));
+    }
+
+    .simulation-topbar {
+        padding: 0 12px;
+    }
+
+    .simulation-topbar-left {
+        gap: 16px;
+    }
+
+    .simulation-topbar-selector {
+        gap: 6px;
+    }
+
+    .simulation-topbar-selector select {
+        width: 126px;
+    }
+
+    .simulation-topbar-selector.scenario select {
+        width: 180px;
+    }
+
+    .simulation-topbar-metric {
+        min-width: 100px;
+        padding: 0 12px;
+    }
+
+    .simulation-controlbar {
+        height: auto;
+        min-height: 56px;
+        flex-wrap: wrap;
+        row-gap: 8px;
+        padding: 8px 12px;
+    }
+
+    .simulation-controlbar-summary {
+        gap: 7px;
+    }
+
+    .simulation-controlbar-actions {
+        gap: 5px;
+        margin-left: 8px;
+        padding-left: 8px;
+    }
+
+    .simulation-header-button {
+        padding: 0 8px;
+    }
+}
+
+/* 1180px 이하: 상단 정보는 두 줄을 허용하고 지도/AI 패널은 아직 좌우 배치를 유지한다. */
+@media (max-width: 1180px) {
+    .simulation-main-layout {
+        grid-template-columns:
+            minmax(440px, 1fr)
+            8px
+            minmax(290px, min(var(--simulation-panel-width, 320px), 320px));
+    }
+
+    .simulation-list-layout {
+        grid-template-columns:
+            minmax(200px, var(--simulation-task-list-width, 1fr))
+            8px
+            minmax(200px, var(--simulation-robot-list-width, 1fr))
+            8px
+            minmax(200px, var(--simulation-event-list-width, 1fr));
+    }
+
+    .simulation-header {
+        height: auto;
+    }
+
+    .simulation-topbar {
+        min-height: 60px;
+        height: auto;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        padding: 8px 12px;
+    }
+
+    .simulation-topbar-left {
+        flex: 1 1 620px;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        height: auto;
+    }
+
+    .simulation-topbar-right {
+        flex: 1 1 auto;
+        height: auto;
+        margin-left: 0;
+    }
+
+    .simulation-topbar-selector select {
+        width: 120px;
+    }
+
+    .simulation-topbar-selector.scenario select {
+        width: 164px;
+    }
+
+    .simulation-topbar-metric {
+        min-width: 94px;
+        padding: 0 10px;
+    }
+
+    .simulation-controlbar-title {
+        flex: 1 0 auto;
+    }
+
+    /* 좁아진 AI 패널에서는 명령 생성 옵션을 한 줄씩 보여준다. */
+    .command-expression-options {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .simulation-controlbar-summary {
+        margin-left: auto;
+    }
+
+    .simulation-controlbar-actions {
+        flex: 1 0 100%;
+        width: 100%;
+        margin-left: 0;
+        padding-top: 8px;
+        padding-left: 0;
+        border-top: 1px solid var(--laro-border);
+        border-left: 0;
+    }
+}
+
+/* 1050px 이하: 지도와 AI 패널을 세로로 전환하고 LIST는 2열로 재배치한다. */
+@media (max-width: 1050px) {
+    .simulation-workspace {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+    }
+
+    .simulation-main-layout {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .simulation-resize-handle-vertical,
+    .simulation-resize-handle-horizontal,
+    .simulation-resize-handle-list {
+        display: none;
+    }
+
+    .simulation-view {
+        min-width: 0;
+        min-height: 560px;
+    }
+
+    .simulation-main-layout > .simulation-panel {
+        width: 100%;
+        height: 620px;
+        min-width: 0;
+        min-height: 620px;
+    }
+
+    /* 패널이 전체 폭을 사용하므로 다시 2열 구성을 허용한다. */
+    .command-expression-options {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .simulation-list-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 8px;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .simulation-list {
+        min-width: 0;
+        min-height: 230px;
+    }
+
+    .simulation-event-list {
+        grid-column: 1 / -1;
+    }
+
+    .simulation-topbar-left,
+    .simulation-topbar-right {
+        width: 100%;
+    }
+
+    .simulation-topbar-right {
+        justify-content: flex-start;
+    }
+}
+
+/* 760px 이하: 각 영역을 1열로 배치해 가독성과 조작 가능성을 우선한다. */
+@media (max-width: 760px) {
+    .simulation-topbar {
+        align-items: flex-start;
+        padding: 10px;
+    }
+
+    .simulation-topbar-left,
+    .simulation-topbar-right {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .simulation-topbar-title {
+        width: 100%;
+    }
+
+    .simulation-topbar-selector {
+        flex: 1 1 220px;
+    }
+
+    .simulation-topbar-selector select,
+    .simulation-topbar-selector.scenario select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .simulation-topbar-right {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .simulation-topbar-metric {
+        width: 100%;
+        min-width: 0;
+        padding: 0 8px;
+        box-sizing: border-box;
+    }
+
+    .simulation-topbar-user {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .simulation-controlbar {
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .simulation-controlbar-title,
+    .simulation-controlbar-summary,
+    .simulation-controlbar-actions {
+        width: 100%;
+    }
+
+    .simulation-controlbar-summary {
+        justify-content: flex-start;
+        margin-left: 0;
+        flex-wrap: wrap;
+    }
+
+    .simulation-controlbar-actions {
+        flex-wrap: wrap;
+    }
+
+    .simulation-header-speed,
+    .simulation-header-button {
+        flex: 1 1 auto;
+    }
+
+    .simulation-view {
+        min-height: 480px;
+    }
+
+    .simulation-main-layout > .simulation-panel {
+        height: 600px;
+        min-height: 600px;
+    }
+
+    .command-expression-options {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .simulation-list-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .simulation-event-list {
+        grid-column: auto;
+    }
+}
