@@ -1155,8 +1155,6 @@ function Simulation() {
             return;
         }
 
-<<<<<<< HEAD
-=======
         // 게스트는 기존 프론트 로컬 시뮬레이션 로직으로 실행한다.
         if (isGuestSession()) {
             setSimulationStatus("실행");
@@ -1168,7 +1166,6 @@ function Simulation() {
 
         const createPayload = buildCreatePayload();
 
->>>>>>> dev
         try {
             const simulationTarget = await resolveSimulationTarget();
             const createPayload = buildCreatePayload(simulationTarget);
@@ -1753,17 +1750,6 @@ function Simulation() {
                     />
                 </div>
 
-<<<<<<< HEAD
-            {/* 입출고 설정 / 자연어 명령 패널 */}
-            <SimulationPanel
-                simulationRunId={simulationRunId}
-                simulationExecutionVersion={simulationExecutionVersion}
-                onSimulatedTimeChange={setSimulationTime}
-                commandExpressionMix={commandExpressionMix}
-                onCommandExpressionMixChange={setCommandExpressionMix}
-                onGeneratedCommandsChange={setGeneratedCommands}
-            />
-=======
                 <div
                     className="simulation-resize-handle simulation-resize-handle-horizontal"
                     role="separator"
@@ -1771,7 +1757,6 @@ function Simulation() {
                     aria-label="지도 영역과 목록 영역 높이 조절"
                     onPointerDown={startMainHeightResize}
                 />
->>>>>>> dev
 
                 {/* 작업 / 로봇 / 이벤트 목록 */}
                 <div
