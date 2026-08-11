@@ -23,6 +23,10 @@
     color: var(--laro-white);
 }
 
+/* 사이드바랑 메인 콘텐츠 사이의 구분선 제거*/
+.sidebar {
+    border-right: 0 !important;
+}
 
 /* ============================================================
    Logo
@@ -332,3 +336,4 @@
 
     outline-offset: -3px;
 }
+
