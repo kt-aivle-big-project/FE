@@ -3,6 +3,7 @@ import {
     fulfillmentCommandApi,
     laroPlanApi,
 } from "../../api/client";
+import { isGuestSession } from "../../api/auth";
 import "../../styles/simulation/SimulationPanel.css";
 
 // 화면 표시용 상태와 작업 유형 라벨을 관리한다.
@@ -108,6 +109,24 @@ const formatDuration = (milliseconds) => {
     return minutes > 0 ? `${minutes}분 ${seconds}초` : `${seconds}초`;
 };
 
+// 내부 계획기 경고는 사용자에게 의미가 드러나는 짧은 안내로 바꾼다.
+const formatPlanWarning = (warning) => {
+    const value = String(warning ?? "");
+
+    if (value.startsWith("Positive-remainder return goals are execution-only")) {
+        return "수량이 남은 BOX의 복귀 이동은 실행 단계에서 이어서 처리됩니다.";
+    }
+    if (value.startsWith("Large internal waypoint graph accepted")) {
+        return "창고 경로가 크지만 압축 경로 형식으로 정상 처리되었습니다.";
+    }
+    const mapfWait = value.match(/^(\S+) accumulates (\d+) ms of MAPF wait\.$/);
+    if (mapfWait) {
+        const waitSeconds = (Number(mapfWait[2]) / 1000).toFixed(2);
+        return `${mapfWait[1]}이(가) 충돌 회피를 위해 ${waitSeconds}초 대기합니다.`;
+    }
+    return value;
+};
+
 // 생성 시각을 한국어 로케일의 시:분:초 형식으로 표시한다.
 const formatGeneratedAt = (value) => {
     if (!value) {
@@ -195,6 +214,7 @@ function SimulationPanel({
     const [workflow, setWorkflow] = useState({
         state: "idle",
         generated: null,
+        planGenerated: null,
         planResponse: null,
         error: "",
         errorStage: null,
@@ -210,16 +230,26 @@ function SimulationPanel({
         state: "idle",
         message: "",
     });
+    const [manualCommand, setManualCommand] = useState("");
+    const [manualCommandSubmission, setManualCommandSubmission] = useState({
+        state: "idle",
+        message: "",
+    });
+    const [languageExpanded, setLanguageExpanded] = useState(false);
     const [expandedPlanSections, setExpandedPlanSections] = useState({
         commands: true,
         plan: true,
     });
     const cyclePollingGenerationRef = useRef(0);
+    const generatedRequestIdRef = useRef(null);
     const openedReviewInteractionRef = useRef(null);
+    const guestSession = isGuestSession();
 
     // 새 실행은 명령부터 보여주고, 계획 단계가 시작되면 완료된 명령은 자동으로 접는다.
     useEffect(() => {
         setExpandedPlanSections({ commands: true, plan: true });
+        setManualCommand("");
+        setManualCommandSubmission({ state: "idle", message: "" });
     }, [simulationRunId, simulationExecutionVersion]);
 
     useEffect(() => {
@@ -251,6 +281,10 @@ function SimulationPanel({
             policyEnabled: commandExpressionMix?.policyEnabled === true,
             naturalLanguageEnabled:
                 commandExpressionMix?.naturalLanguageEnabled === true,
+            replanIntervalMinutes:
+                commandExpressionMix?.replanIntervalMinutes ?? 5,
+            averageTasksPerRobot:
+                commandExpressionMix?.averageTasksPerRobot ?? 3.5,
         })
             .then(() => {
                 if (!cancelled) setConfigurationError("");
@@ -258,7 +292,7 @@ function SimulationPanel({
             .catch((error) => {
                 if (!cancelled) {
                     setConfigurationError(
-                        error.message ?? "명령 표현 방식을 저장하지 못했습니다."
+                        error.message ?? "자동 계획 설정을 저장하지 못했습니다."
                     );
                 }
             });
@@ -270,6 +304,8 @@ function SimulationPanel({
         simulationRunId,
         commandExpressionMix?.policyEnabled,
         commandExpressionMix?.naturalLanguageEnabled,
+        commandExpressionMix?.replanIntervalMinutes,
+        commandExpressionMix?.averageTasksPerRobot,
     ]);
 
     // AI 계획 실행 가능 여부를 주기적으로 확인한다.
@@ -281,6 +317,7 @@ function SimulationPanel({
         setWorkflow({
             state: "idle",
             generated: null,
+            planGenerated: null,
             planResponse: null,
             error: "",
             errorStage: null,
@@ -291,6 +328,8 @@ function SimulationPanel({
         setReviewResolution("");
         setReviewComment("");
         setReviewSubmission({ state: "idle", message: "" });
+        setLanguageExpanded(false);
+        generatedRequestIdRef.current = null;
         openedReviewInteractionRef.current = null;
 
         if (!simulationRunId) {
@@ -360,41 +399,54 @@ function SimulationPanel({
             );
             const generated = status.generated ?? null;
             const generatedCommands = asArray(generated?.frontView?.commands);
+            const generatedRequestId = generated?.frontView?.requestId ?? null;
 
-            // 현재 선택한 명령이 사라졌으면 첫 번째 명령을 선택한다.
-            if (generatedCommands.length > 0) {
-                setSelectedOperationId((current) =>
-                    generatedCommands.some(
-                        (command) => command.operationId === current
-                    )
-                        ? current
-                        : generatedCommands[0].operationId
-                );
+            // 새 배치가 처음 도착했을 때만 첫 명령을 선택한다.
+            if (
+                generatedCommands.length > 0
+                && generatedRequestId
+                && generatedRequestIdRef.current !== generatedRequestId
+            ) {
+                generatedRequestIdRef.current = generatedRequestId;
+                setSelectedOperationId(generatedCommands[0].operationId);
             }
-            setWorkflow((current) => ({
-                state: CYCLE_TO_WORKFLOW_STATE[status.state] ?? "idle",
+            setWorkflow((current) => {
+                const keepPrevious = [
+                    "CHECKING",
+                    "GENERATING",
+                    "PLANNING",
+                    "REPLANNING",
+                    "ERROR",
+                ].includes(status.state);
+                const nextGenerated = status.generated
+                    ?? (keepPrevious ? current.generated : null);
+                const nextPlanResponse = status.planResponse
+                    ?? (keepPrevious ? current.planResponse : null);
+                const nextPlanGenerated = status.planResponse
+                    ? (status.generated ?? current.generated)
+                    : keepPrevious
+                        ? current.planGenerated
+                        : null;
 
-                // 새 주기를 계산하는 동안 이전 정상 결과를 유지한다.
-                // 백엔드는 주기 시작 시 generated/planResponse를 null로 바꾸므로
-                // 그대로 덮으면 "2번째 계획 중" 화면이 빈 상태로 바뀐다.
-                generated:
-                    status.generated
-                    ?? (["CHECKING", "GENERATING", "PLANNING", "REPLANNING", "ERROR"]
-                        .includes(status.state)
-                        ? current.generated
-                        : null),
+                return {
+                    state: CYCLE_TO_WORKFLOW_STATE[status.state] ?? "idle",
 
-                // 새 계획이 완성되기 전과 실패한 경우에도 활성 계획을 표시한다.
-                planResponse:
-                    status.planResponse
-                    ?? (["CHECKING", "GENERATING", "PLANNING", "REPLANNING", "ERROR"]
-                        .includes(status.state)
-                        ? current.planResponse
-                        : null),
+                    // 새 주기를 계산하는 동안 이전 정상 결과를 유지한다.
+                    // 백엔드는 주기 시작 시 generated/planResponse를 null로 바꾸므로
+                    // 그대로 덮으면 "2번째 계획 중" 화면이 빈 상태로 바뀐다.
+                    generated: nextGenerated,
 
-                error: status.error ?? "",
-                errorStage: status.state === "ERROR" ? "cycle" : null,
-            }));
+                    // 이전 계획과 당시 생성 명령을 한 쌍으로 보존한다.
+                    // 재계획 중 새 명령을 이전 계획에 대조해 보류로 오인하지 않는다.
+                    planGenerated: nextPlanGenerated,
+
+                    // 새 계획이 완성되기 전과 실패한 경우에도 활성 계획을 표시한다.
+                    planResponse: nextPlanResponse,
+
+                    error: status.error ?? "",
+                    errorStage: status.state === "ERROR" ? "cycle" : null,
+                };
+            });
         };
 
         const refresh = async () => {
@@ -444,10 +496,15 @@ function SimulationPanel({
         () => asArray(frontView?.commands),
         [frontView?.commands],
     );
+    const plannedCommands = useMemo(
+        () => asArray(workflow.planGenerated?.frontView?.commands),
+        [workflow.planGenerated?.frontView?.commands],
+    );
     const warnings = asArray(frontView?.warnings);
     const naturalLanguageRequest = String(
         field(generated?.planRequest, "user_command", "userCommand") ?? ""
     ).trim();
+    const cycleUserCommand = String(cycleStatus?.userCommand ?? "").trim();
 
     // 생성된 명령 목록을 상위 시뮬레이션 화면과 동기화한다.
     useEffect(() => {
@@ -583,6 +640,41 @@ function SimulationPanel({
         }
     };
 
+    const submitUserCommand = async (event) => {
+        event.preventDefault();
+        const command = manualCommand.trim();
+        if (!simulationRunId || !command || guestSession) return;
+
+        setManualCommandSubmission({
+            state: "loading",
+            message: "사용자 명령을 재계획 사이클에 전달하고 있습니다.",
+        });
+        try {
+            const updated = await laroPlanApi.submitUserCommand(
+                simulationRunId,
+                {
+                    userCommand: command,
+                    executionVersion:
+                        simulationExecutionVersion
+                        ?? cycleStatus?.executionVersion
+                        ?? 0,
+                }
+            );
+            setCycleStatus(updated);
+            setManualCommand("");
+            setManualCommandSubmission({
+                state: "success",
+                message: "명령을 접수했습니다. 로봇을 안전 노드에서 정지한 뒤 재계획합니다.",
+            });
+            setActivePanelTab("plan");
+        } catch (error) {
+            setManualCommandSubmission({
+                state: "error",
+                message: error.message ?? "사용자 명령을 처리하지 못했습니다.",
+            });
+        }
+    };
+
     // 내부 전용 오류는 제외하고 사용자에게 필요한 사전 점검 문제만 표시한다.
     const preflightProblemText = asArray(preflight.data?.problems)
         .filter((problem) => !isHiddenPreflightProblem(problem))
@@ -595,7 +687,9 @@ function SimulationPanel({
 
     const selectedCommand = commands.find(
         (command) => command.operationId === selectedOperationId
-    ) ?? commands[0];
+    ) ?? plannedCommands.find(
+        (command) => command.operationId === selectedOperationId
+    ) ?? commands[0] ?? plannedCommands[0];
     const selectedLogicalOperation = logicalOperations.find(
         (operation) => field(operation, "operation_id", "operationId")
             === selectedCommand?.operationId
@@ -617,8 +711,31 @@ function SimulationPanel({
     const commandIsBusy = ["checking", "generating"].includes(workflow.state);
     const planIsBusy = workflow.state === "planning";
     const isBusy = commandIsBusy || planIsBusy;
+    const manualCommandBusy = manualCommandSubmission.state === "loading";
+    const manualCommandReviewBlocked = [
+        "REVIEW_REQUIRED",
+        "REVIEW_PROCESSING",
+        "HELD",
+    ].includes(cycleStatus?.state);
+    const manualCommandDisabled = guestSession
+        || !simulationRunId
+        || cycleStatus?.active !== true
+        || isBusy
+        || manualCommandBusy
+        || manualCommandReviewBlocked;
     const policyExpressionEnabled = commandExpressionMix?.policyEnabled === true;
     const naturalLanguageExpressionEnabled = commandExpressionMix?.naturalLanguageEnabled === true;
+    const languageText = cycleUserCommand
+        || naturalLanguageRequest
+        || (commandIsBusy
+            ? "명령을 생성하고 있습니다."
+            : "명령 생성 시 요청 내용이 표시됩니다.");
+    const languageCanExpand = languageText.length > 48;
+
+    useEffect(() => {
+        setLanguageExpanded(false);
+    }, [languageText]);
+
     const workflowBadge = WORKFLOW_BADGE[workflow.state] ?? WORKFLOW_BADGE.idle;
     const workflowBadgeClass = workflow.state === "complete"
         ? "ready" : isBusy
@@ -690,10 +807,99 @@ function SimulationPanel({
                             {reviewIsActionable && <b>1</b>}
                         </button>
                     )}
+                    <span
+                        className="manual-command-tab-wrap"
+                        data-tooltip={guestSession
+                            ? "로그인 후 사용자 명령을 이용할 수 있습니다."
+                            : undefined}
+                    >
+                        <button
+                            type="button"
+                            className={activePanelTab === "manual" ? "active" : ""}
+                            onClick={() => setActivePanelTab("manual")}
+                            disabled={guestSession}
+                        >
+                            사용자 명령
+                        </button>
+                    </span>
                 </nav>
 
                 <div className="simulation-panel-scroll">
-                    {activePanelTab === "review" && humanReview ? (
+                    {activePanelTab === "manual" ? (
+                        <section className="manual-command-panel">
+                            <div className="manual-command-heading">
+                                <div>
+                                    <span>USER-DRIVEN REPLAN</span>
+                                    <h3>사용자 명령</h3>
+                                </div>
+                                <small>이번 재계획에만 적용</small>
+                            </div>
+
+                            <p className="manual-command-description">
+                                운영 의도를 입력하면 기존 명령 사이클을 즉시 실행합니다.
+                                진행 중인 로봇은 다음 안전 노드에서 정지한 후 새 계획을 적용합니다.
+                            </p>
+
+                            <form onSubmit={submitUserCommand}>
+                                <label className="manual-command-input">
+                                    <span>명령 내용</span>
+                                    <textarea
+                                        value={manualCommand}
+                                        onChange={(event) => {
+                                            setManualCommand(event.target.value);
+                                            if (manualCommandSubmission.state !== "idle") {
+                                                setManualCommandSubmission({
+                                                    state: "idle",
+                                                    message: "",
+                                                });
+                                            }
+                                        }}
+                                        placeholder="예: 출고 작업을 우선 처리하고 배터리가 부족한 로봇은 충전을 먼저 진행해 주세요."
+                                        maxLength={4000}
+                                        disabled={manualCommandDisabled}
+                                    />
+                                    <small>{manualCommand.length.toLocaleString()} / 4,000</small>
+                                </label>
+
+                                {guestSession && (
+                                    <div className="manual-command-notice">
+                                        로그인 후 사용자 명령을 이용할 수 있습니다.
+                                    </div>
+                                )}
+                                {!guestSession && !simulationRunId && (
+                                    <div className="manual-command-notice">
+                                        시뮬레이션 실행을 먼저 시작해 주세요.
+                                    </div>
+                                )}
+                                {!guestSession && manualCommandReviewBlocked && (
+                                    <div className="manual-command-notice warning">
+                                        진행 중인 Human Review를 먼저 처리해 주세요.
+                                    </div>
+                                )}
+                                {manualCommandSubmission.message && (
+                                    <div className={`manual-command-feedback ${manualCommandSubmission.state}`}>
+                                        {manualCommandSubmission.message}
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    className="manual-command-submit"
+                                    disabled={manualCommandDisabled || !manualCommand.trim()}
+                                >
+                                    {manualCommandBusy ? "접수 중..." : "재계획 요청"}
+                                </button>
+                            </form>
+
+                            <div className="manual-command-flow">
+                                <span>1 명령 접수</span>
+                                <i>→</i>
+                                <span>2 안전 노드 정지</span>
+                                <i>→</i>
+                                <span>3 AI 재계획</span>
+                            </div>
+                        </section>
+                    ) : activePanelTab === "review" && humanReview ? (
                         <section className="human-review-panel" aria-live="polite">
                             <div className="human-review-heading">
                                 <div>
@@ -861,6 +1067,47 @@ function SimulationPanel({
                         <>
                     {/* 두 옵션의 독립 동작은 유지하되 큰 카드 대신 작은 선택 칩으로 제공한다. */}
                     <section className="simulation-panel-section command-mode-section">
+                        <div className="command-cycle-settings" aria-label="자동 계획 설정">
+                            <div className="command-mode-heading">
+                                <h3>자동 계획 설정</h3>
+                                <small>다음 배치부터 적용</small>
+                            </div>
+                            <label>
+                                <span>재계획 주기</span>
+                                <select
+                                    value={commandExpressionMix?.replanIntervalMinutes ?? 5}
+                                    onChange={(event) => onCommandExpressionMixChange?.({
+                                        ...commandExpressionMix,
+                                        replanIntervalMinutes: Number(event.target.value),
+                                    })}
+                                    disabled={isBusy}
+                                >
+                                    <option value={1}>1분</option>
+                                    <option value={3}>3분</option>
+                                    <option value={5}>5분</option>
+                                    <option value={10}>10분</option>
+                                </select>
+                            </label>
+                            <label title="참여 로봇 수에 이 값을 곱해 한 번에 생성할 목표 작업 수를 정합니다.">
+                                <span>로봇당 평균 작업</span>
+                                <select
+                                    value={commandExpressionMix?.averageTasksPerRobot ?? 3.5}
+                                    onChange={(event) => onCommandExpressionMixChange?.({
+                                        ...commandExpressionMix,
+                                        averageTasksPerRobot: Number(event.target.value),
+                                    })}
+                                    disabled={isBusy}
+                                >
+                                    <option value={1}>1개</option>
+                                    <option value={2}>2개</option>
+                                    <option value={3}>3개</option>
+                                    <option value={3.5}>3.5개</option>
+                                    <option value={4}>4개</option>
+                                    <option value={5}>5개</option>
+                                </select>
+                            </label>
+                        </div>
+
                         <div className="command-mode-row">
                             <div className="command-mode-heading">
                                 <h3>명령 방식</h3>
@@ -891,6 +1138,10 @@ function SimulationPanel({
                                                 onCommandExpressionMixChange?.({
                                                     policyEnabled: policyExpressionEnabled,
                                                     naturalLanguageEnabled: naturalLanguageExpressionEnabled,
+                                                    replanIntervalMinutes:
+                                                        commandExpressionMix?.replanIntervalMinutes ?? 5,
+                                                    averageTasksPerRobot:
+                                                        commandExpressionMix?.averageTasksPerRobot ?? 3.5,
                                                     [option.key]: !enabled,
                                                 })
                                             }
@@ -904,14 +1155,25 @@ function SimulationPanel({
                             </div>
                         </div>
 
-                        {naturalLanguageExpressionEnabled && (
+                        {(cycleUserCommand || naturalLanguageRequest || naturalLanguageExpressionEnabled) && (
                             <div className="command-language-inline">
-                                <span>자연어 요청</span>
-                                <p>
-                                    {naturalLanguageRequest
-                                        || (commandIsBusy
-                                            ? "명령을 생성하고 있습니다."
-                                            : "명령 생성 시 요청 내용이 표시됩니다.")}
+                                <div className="command-language-heading">
+                                    <span>{cycleUserCommand ? "사용자 명령" : "자연어 요청"}</span>
+                                    {languageCanExpand && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setLanguageExpanded((current) => !current)}
+                                            aria-expanded={languageExpanded}
+                                        >
+                                            {languageExpanded ? "접기" : "전체 보기"}
+                                        </button>
+                                    )}
+                                </div>
+                                <p
+                                    className={languageExpanded ? "expanded" : ""}
+                                    title={languageExpanded ? undefined : languageText}
+                                >
+                                    {languageText}
                                 </p>
                             </div>
                         )}
@@ -1134,7 +1396,7 @@ function SimulationPanel({
                             <div className="plan-result" aria-live="polite">
                                 <div className={`plan-result-status ${result.status}`}>
                                     <div>
-                                        <span>계획 상태</span>
+                                        <span>{planIsBusy ? "현재 실행 계획" : "계획 상태"}</span>
                                         <strong>{PLAN_STATUS_LABEL[result.status] ?? result.status}</strong>
                                     </div>
                                     <b>{field(result, "final_route", "finalRoute") ?? "-"}</b>
@@ -1146,7 +1408,7 @@ function SimulationPanel({
                                             <div className="simulation-metric-card">
                                                 <span>계획 명령</span>
                                                 <strong>{logicalOperations.length}</strong>
-                                                <small>/ {commands.length}</small>
+                                                <small>/ {plannedCommands.length}</small>
                                             </div>
                                             <div className="simulation-metric-card">
                                                 <span>배정 로봇</span>
@@ -1170,7 +1432,7 @@ function SimulationPanel({
                                             className="compact-plan-list"
                                             aria-label="명령별 AI 배정 결과"
                                         >
-                                            {commands.map((command) => {
+                                            {plannedCommands.map((command) => {
                                                 const logicalOperation = logicalOperations.find(
                                                     (operation) => field(operation, "operation_id", "operationId")
                                                         === command.operationId
@@ -1207,7 +1469,7 @@ function SimulationPanel({
 
                                 {planWarnings.length > 0 && (
                                     <div className="plan-alert warning">
-                                        {planWarnings.join(" ")}
+                                        {planWarnings.map(formatPlanWarning).join(" ")}
                                     </div>
                                 )}
 

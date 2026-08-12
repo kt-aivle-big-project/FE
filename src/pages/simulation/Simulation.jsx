@@ -39,6 +39,8 @@ const COMMAND_EXPRESSION_MIX_KEY = "simulationCommandExpressionMixV2";
 const DEFAULT_COMMAND_EXPRESSION_MIX = {
     policyEnabled: false,
     naturalLanguageEnabled: false,
+    replanIntervalMinutes: 5,
+    averageTasksPerRobot: 3.5,
 };
 
 // 패널 리사이즈 최소 크기
@@ -98,9 +100,18 @@ const getControlbarMinWidth = (layoutElement) => {
 const loadCommandExpressionMix = () => {
     try {
         const saved = JSON.parse(localStorage.getItem(COMMAND_EXPRESSION_MIX_KEY));
+        const replanIntervalMinutes = Number(saved?.replanIntervalMinutes);
+        const averageTasksPerRobot = Number(saved?.averageTasksPerRobot);
         return {
             policyEnabled: saved?.policyEnabled === true,
             naturalLanguageEnabled: saved?.naturalLanguageEnabled === true,
+            replanIntervalMinutes: [1, 3, 5, 10].includes(replanIntervalMinutes)
+                ? replanIntervalMinutes
+                : DEFAULT_COMMAND_EXPRESSION_MIX.replanIntervalMinutes,
+            averageTasksPerRobot:
+                averageTasksPerRobot >= 1 && averageTasksPerRobot <= 5
+                    ? averageTasksPerRobot
+                    : DEFAULT_COMMAND_EXPRESSION_MIX.averageTasksPerRobot,
         };
     } catch {
         return DEFAULT_COMMAND_EXPRESSION_MIX;
@@ -220,9 +231,18 @@ function Simulation() {
     );
 
     const setCommandExpressionMix = (mix) => {
+        const replanIntervalMinutes = Number(mix?.replanIntervalMinutes);
+        const averageTasksPerRobot = Number(mix?.averageTasksPerRobot);
         const normalized = {
             policyEnabled: mix?.policyEnabled === true,
             naturalLanguageEnabled: mix?.naturalLanguageEnabled === true,
+            replanIntervalMinutes: [1, 3, 5, 10].includes(replanIntervalMinutes)
+                ? replanIntervalMinutes
+                : commandExpressionMix.replanIntervalMinutes,
+            averageTasksPerRobot:
+                averageTasksPerRobot >= 1 && averageTasksPerRobot <= 5
+                    ? averageTasksPerRobot
+                    : commandExpressionMix.averageTasksPerRobot,
         };
         localStorage.setItem(COMMAND_EXPRESSION_MIX_KEY, JSON.stringify(normalized));
         setCommandExpressionMixState(normalized);

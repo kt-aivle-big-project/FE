@@ -262,6 +262,8 @@ export const laroPlanApi = {
         api.get(`/laro/simulation-runs/${runId}/plan/preflight`),
     create: (runId, payload) =>
         api.post(`/laro/simulation-runs/${runId}/plan`, payload),
+    submitUserCommand: (runId, payload) =>
+        api.post(`/laro/simulation-runs/${runId}/user-command`, payload),
     respondToHumanReview: (runId, interactionId, payload) =>
         api.post(
             `/laro/simulation-runs/${runId}/human-reviews/${interactionId}/respond`,
@@ -279,13 +281,19 @@ export const fulfillmentCommandApi = {
         api.post(`/simulation-runs/${runId}/fulfillment-commands/generate`, payload),
     getCycleStatus: (runId) =>
         api.get(`/simulation-runs/${runId}/command-cycle`),
-    configureCycle: (runId, expressionMix = {}) =>
+    configureCycle: (runId, configuration = {}) =>
         api.put(`/simulation-runs/${runId}/command-cycle/configuration`, {
             mode: "AUTO",
             commandExpressionMode: "AUTO",
             policyProfile: "AUTO",
-            mixStructuredWithPolicy: Boolean(expressionMix.policyEnabled),
-            mixNaturalLanguage: Boolean(expressionMix.naturalLanguageEnabled),
+            mixStructuredWithPolicy: Boolean(configuration.policyEnabled),
+            mixNaturalLanguage: Boolean(configuration.naturalLanguageEnabled),
+            generationIntervalSeconds: Math.round(
+                Number(configuration.replanIntervalMinutes ?? 5) * 60
+            ),
+            averageTasksPerRobot: Number(
+                configuration.averageTasksPerRobot ?? 3.5
+            ),
         }),
 };
 
