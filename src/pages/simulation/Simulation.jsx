@@ -132,6 +132,10 @@ const STATUS_LABEL = {
     FAILED: "실패",
 };
 
+// 이보다 짧은 충돌 회피 대기는 실제 시간표에는 유지하되 화면 상태는 바꾸지 않는다.
+// 100ms 상태 갱신 사이에 기본/적재/대기 이미지가 연속으로 바뀌는 깜빡임을 막는다.
+const MIN_VISIBLE_WAIT_MS = 500;
+
 // 백엔드 RobotStateResponse → 화면 로봇 객체
 //
 // BE가 보내는 현재 MOVE 구간과 절대 진행률을 화면 모델로 옮긴다.
@@ -147,6 +151,28 @@ const toRobotView = (state) => {
         : isMoving
             ? state.nextNodeCode
             : state.currentNodeCode;
+    const hasWaitWindow = state.estimatedResumeAtMillis !== null
+        && state.estimatedResumeAtMillis !== undefined
+        && state.waitStartedAtMillis !== null
+        && state.waitStartedAtMillis !== undefined;
+    const waitDurationMillis = hasWaitWindow
+        ? Number(state.estimatedResumeAtMillis)
+            - Number(state.waitStartedAtMillis)
+        : Number.NaN;
+    const isShortTrafficWait = state.activity === "WAITING"
+        && Number.isFinite(waitDurationMillis)
+        && waitDurationMillis >= 0
+        && waitDurationMillis < MIN_VISIBLE_WAIT_MS
+        && !String(state.waitingReason ?? "").includes("배터리");
+    const activity = isShortTrafficWait && state.carryingLoad
+        ? state.taskType === "INBOUND"
+            ? "PUTAWAY"
+            : state.taskType === "OUTBOUND"
+                ? "RELOCATION"
+                : state.status
+        : isShortTrafficWait
+            ? state.status
+            : state.activity ?? state.status;
 
     return {
         robot_id: state.robotId,
@@ -174,17 +200,27 @@ const toRobotView = (state) => {
 
         battery: state.batteryLevel,
         status: state.status,
-        activity: state.activity ?? state.status,
+        activity,
         current_task_id: state.currentTaskId,
         task_type: state.taskType,
         service_kind: state.serviceKind,
         service_progress: state.serviceProgress,
         carrying_load: Boolean(state.carryingLoad),
-        waiting_reason: state.waitingReason ?? null,
-        waiting_node_code: state.waitingNodeCode ?? null,
-        blocking_robot_id: state.blockingRobotId ?? null,
-        wait_started_at_ms: state.waitStartedAtMillis ?? null,
-        estimated_resume_at_ms: state.estimatedResumeAtMillis ?? null,
+        waiting_reason: isShortTrafficWait
+            ? null
+            : state.waitingReason ?? null,
+        waiting_node_code: isShortTrafficWait
+            ? null
+            : state.waitingNodeCode ?? null,
+        blocking_robot_id: isShortTrafficWait
+            ? null
+            : state.blockingRobotId ?? null,
+        wait_started_at_ms: isShortTrafficWait
+            ? null
+            : state.waitStartedAtMillis ?? null,
+        estimated_resume_at_ms: isShortTrafficWait
+            ? null
+            : state.estimatedResumeAtMillis ?? null,
     };
 };
 
@@ -775,7 +811,7 @@ function Simulation() {
 
     /**
      * 해당 실행의 작업 목록을 백엔드에서 다시 읽어온다.
-     * 시작/초기화 시점에 화면을 그 실행의 작업만으로 맞춘다.
+     * 시작/화면 복구 시점에 화면을 그 실행의 작업만으로 맞춘다.
      */
     const reloadTasks = async (runId) => {
         try {
@@ -1026,7 +1062,7 @@ function Simulation() {
      * 저장된 실행 ID 를 "시작 가능한 상태"로 정리해서 돌려준다.
      *
      * - 대기(CREATED)        그대로 사용
-     * - 완료/실패            초기화해서 같은 작업을 다시 재생
+     * - 완료/실패            이전 실행을 정리하고 새 실행 생성
      * - 중지                 버리고 새로 만들도록 null
      * - 실행 중/일시정지      화면 상태만 맞추고 "ALREADY_RUNNING"
      *
@@ -1055,12 +1091,10 @@ function Simulation() {
 
             case "COMPLETED":
             case "FAILED":
-                // 같은 작업을 처음부터 다시 재생할 수 있게 되돌린다
-                console.log("이전 실행이 종료돼 있어 초기화 후 재생합니다.");
-                const reset = await simulationRunApi.reset(simulationRunId);
-                setSimulationExecutionVersion(reset.executionVersion ?? null);
-                await reloadTasks(simulationRunId);
-                return simulationRunId;
+                console.log("이전 실행이 종료돼 있어 정리 후 새 실행을 만듭니다.");
+                await simulationRunApi.reset(simulationRunId);
+                setSimulationRunId(null);
+                return null;
 
             case "RUNNING":
                 setSimulationStatus("실행");
@@ -1106,8 +1140,7 @@ function Simulation() {
                 await loadRestingRobots(simulationTarget.warehouseId);
             }
 
-            // 이미 만들어둔 실행이 있으면 재사용한다.
-            // (초기화 후 다시 시작할 때 새 실행이 생겨 기존 작업이 누락되는 것을 막는다)
+            // 시작 가능한 실행이 있으면 재사용하고, 초기화·종료된 실행이면 새로 만든다.
             //
             // 다만 저장된 실행이 이미 끝났거나 중지된 상태일 수 있으므로
             // (예: 어제 실행을 localStorage 가 기억하고 있는 경우)
@@ -1210,21 +1243,23 @@ function Simulation() {
 
         if (simulationRunId) {
             try {
-                const reset = await simulationRunApi.reset(simulationRunId);
-                setSimulationExecutionVersion(reset.executionVersion ?? null);
-                // 작업이 전부 대기 상태로 돌아간 목록을 다시 읽어온다
-                await reloadTasks(simulationRunId);
+                await simulationRunApi.reset(simulationRunId);
+                setSimulationRunId(null);
             } catch (error) {
                 console.error("시뮬레이션 초기화 실패:", error);
             }
         }
 
+        // 재고는 현재 수량을 유지하고 이전 실행의 입·출고 작업 및 화면 표시만 정리한다.
+        // 다음 시작에서는 현재 재고를 기준으로 새 명령 배치를 만든다.
+        setTaskList([]);
+        setGeneratedCommands([]);
+        setEventList([]);
+
         // 로봇을 DB 에 저장된 시작 위치로 되돌린다
         await loadRestingRobots(selectedWarehouseId);
 
-        // simulationRunId 는 유지한다.
-        // 초기화 후 다시 시작할 때 같은 실행을 재사용해야
-        // 그 실행에 등록한 작업들이 계획에 포함된다.
+        // 다음 시작은 새 실행 ID로 현재 재고 기준 명령을 생성한다.
         setSimulationStatus("대기");
         setSimulationTime(0);
     };
@@ -1361,11 +1396,23 @@ function Simulation() {
                 return [...prevRobotList, incoming];
             }
 
-            return prevRobotList.map((robot) =>
-                robot.robot_id === incoming.robot_id
-                    ? { ...robot, ...incoming }
-                    : robot
-            );
+            return prevRobotList.map((robot) => {
+                if (robot.robot_id !== incoming.robot_id) {
+                    return robot;
+                }
+
+                const previousTime = Number(robot.simulation_time_ms);
+                const incomingTime = Number(incoming.simulation_time_ms);
+                if (
+                    Number.isFinite(previousTime)
+                    && Number.isFinite(incomingTime)
+                    && incomingTime < previousTime
+                ) {
+                    return robot;
+                }
+
+                return { ...robot, ...incoming };
+            });
         });
     };
 
