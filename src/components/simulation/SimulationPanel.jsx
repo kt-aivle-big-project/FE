@@ -71,6 +71,9 @@ const REVIEW_REASON_LABEL = {
     COMMAND_GENERATION_FAILED: "입출고 명령 생성 실패",
     PLAN_REQUEST_FAILED: "AI 실행 계획 생성 실패",
     COMMAND_CYCLE_FAILED: "자동 계획 주기 실행 실패",
+    OPERATOR_INTENT_CLARIFICATION: "사용자 명령 의도 확인",
+    OPERATOR_APPROVAL_REQUIRED: "사용자 승인 필요",
+    OPERATOR_REVIEW_REQUIRED: "사용자 검토 필요",
 };
 
 const REVIEW_OUTCOME_LABEL = {
@@ -105,6 +108,27 @@ const CYCLE_POLL_INTERVAL_MS = 1000;
 
 const isHiddenPreflightProblem = (value) =>
     String(value ?? "").trim().startsWith(HIDDEN_PREFLIGHT_PROBLEM);
+
+const formatWorkflowError = (error) => {
+    const code = String(error?.code ?? "").toLowerCase();
+    const message = String(error?.message ?? error ?? "").trim();
+    const normalized = `${code} ${message}`.toLowerCase();
+
+    if (normalized.includes("gateway timeout")
+        || normalized.includes("upstream request timeout")
+        || normalized.includes("504")) {
+        return "AI 계획 서버의 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.";
+    }
+    if (normalized.includes("connection") || normalized.includes("connect")) {
+        return "AI 계획 서버에 연결하지 못했습니다. 연결 상태를 확인한 뒤 다시 시도해 주세요.";
+    }
+    if (normalized.includes("structured llm")
+        || normalized.includes("validation error")
+        || normalized.includes("request_routing_failed")) {
+        return "AI가 반환한 계획 판단 형식이 올바르지 않아 실행 계획을 만들지 못했습니다. 다시 시도하거나 검토 후 이번 계획을 종료해 주세요.";
+    }
+    return message || "AI 실행 계획을 생성하지 못했습니다. 다시 시도해 주세요.";
+};
 
 // 밀리초 단위 시간을 화면용 분/초 문자열로 변환한다.
 const formatDuration = (milliseconds) => {
@@ -538,6 +562,14 @@ function SimulationPanel({
     );
     const humanReviewResponse = cycleStatus?.humanReviewResponse;
     const humanReviewOptions = asArray(humanReview?.options);
+    const humanReviewPrompt = humanReview
+        ? formatWorkflowError(humanReview.prompt)
+        : "";
+    const humanReviewTechnicalDetail = field(
+        humanReview,
+        "technical_detail",
+        "technicalDetail"
+    );
     const humanReviewInteractionId = field(
         humanReview,
         "interaction_id",
@@ -940,8 +972,15 @@ function SimulationPanel({
                                         humanReview.reason_code ?? humanReview.reasonCode
                                     ] ?? humanReview.reason_code ?? humanReview.reasonCode}
                                 </strong>
-                                <p>{humanReview.prompt}</p>
+                                <p>{humanReviewPrompt}</p>
                             </div>
+
+                            {humanReviewTechnicalDetail && (
+                                <details className="human-review-evidence">
+                                    <summary>기술 상세 보기</summary>
+                                    <p>{humanReviewTechnicalDetail}</p>
+                                </details>
+                            )}
 
                             {(humanReview.context_summary ?? humanReview.contextSummary) && (
                                 <div className="human-review-context">
@@ -1510,7 +1549,7 @@ function SimulationPanel({
 
                                 {planErrors.length > 0 && (
                                     <div className="plan-alert error">
-                                        {planErrors.map((error) => error.message).join(", ")}
+                                        {planErrors.map(formatWorkflowError).join(" ")}
                                     </div>
                                 )}
                             </div>

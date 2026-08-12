@@ -16,6 +16,7 @@ const avoidanceSignature = (list) => list
         item.id,
         item.blockingRobotId,
         item.source,
+        item.eventType,
         item.targetNodeCode,
         Math.floor(item.waitingSeconds),
     ].join("|"))
@@ -145,8 +146,12 @@ const findBlockingRobot = (
 
 const createAvoidanceId = (robot) => (
     [
-        "AVOIDANCE_WAIT",
+        String(robot.waiting_reason ?? "").includes("배터리")
+            ? "LOW_BATTERY"
+            : "AVOIDANCE_WAIT",
         robot.robot_id,
+        robot.wait_started_at_ms
+            ?? "inferred",
         robot.movement_step_id
             ?? robot.to_node_code
             ?? robot.node_id
@@ -160,7 +165,7 @@ const createAvoidanceEvent = (
 ) => ({
     id: `${avoidance.id}-${occurredAt}`,
     avoidanceId: avoidance.id,
-    eventType: "COLLISION_AVOIDANCE_WAIT",
+    eventType: avoidance.eventType,
     occurredAt,
     description: avoidance.message,
     robotId: avoidance.robotId,
@@ -172,7 +177,9 @@ const createAvoidanceEvent = (
         : [avoidance.robotId],
     taskId: avoidance.taskId,
     nodeId: avoidance.targetNodeCode,
-    severity: "INFO",
+    severity: avoidance.eventType === "LOW_BATTERY"
+        ? "WARNING"
+        : "INFO",
     source: avoidance.source,
     waitingStartedAt: occurredAt,
     waitingSeconds: 0,
@@ -274,8 +281,11 @@ export default function useRobotAvoidanceTracker(
 
             const nextStates = currentRobots.flatMap(
                 (robot) => {
+                    const backendWaiting =
+                        getKnownWaitingStatus(robot);
+
                     if (
-                        !isMovingRobot(robot)
+                        (!backendWaiting && !isMovingRobot(robot))
                         || isServiceActivity(robot)
                     ) {
                         return [];
@@ -289,9 +299,6 @@ export default function useRobotAvoidanceTracker(
                     if (!snapshot) {
                         return [];
                     }
-
-                    const backendWaiting =
-                        getKnownWaitingStatus(robot);
 
                     const stalledMillis =
                         now - snapshot.lastMovedAt;
@@ -323,11 +330,19 @@ export default function useRobotAvoidanceTracker(
                         ?? robot.to_node_code
                         ?? null;
 
-                    const waitingSeconds =
-                        Math.max(
-                            0,
-                            stalledMillis / 1000,
-                        );
+                    const authoritativeWaitingMillis =
+                        isFiniteNumber(robot.simulation_time_ms)
+                        && isFiniteNumber(robot.wait_started_at_ms)
+                            ? Number(robot.simulation_time_ms)
+                                - Number(robot.wait_started_at_ms)
+                            : null;
+
+                    const waitingSeconds = Math.max(
+                        0,
+                        Number.isFinite(authoritativeWaitingMillis)
+                            ? authoritativeWaitingMillis / 1000
+                            : stalledMillis / 1000,
+                    );
 
                     const reason =
                         robot.waiting_reason
@@ -342,14 +357,22 @@ export default function useRobotAvoidanceTracker(
                         ?? blockingRobot?.robot_id
                         ?? null;
 
+                    const lowBatteryWaiting = String(reason)
+                        .includes("배터리");
+                    const eventType = lowBatteryWaiting
+                        ? "LOW_BATTERY"
+                        : "COLLISION_AVOIDANCE_WAIT";
+
                     const message =
-                        blockingRobotId
+                        lowBatteryWaiting
+                            ? `R${robot.robot_id} ${reason}`
+                            : blockingRobotId
                             ? `R${robot.robot_id}이 `
                                 + `R${blockingRobotId}의 통과를 기다리며 `
                                 + `${targetNodeCode ?? "-"} 노드 진입 전 대기 중입니다.`
                             : `R${robot.robot_id}이 `
                                 + `${targetNodeCode ?? "-"} 노드 진입 전 `
-                                + "통행 순서를 기다리는 중입니다.";
+                                + `${reason}입니다.`;
 
                     return [{
                         id: createAvoidanceId(robot),
@@ -368,7 +391,10 @@ export default function useRobotAvoidanceTracker(
                         blockingRobotId,
                         waitingSeconds,
                         reason,
-                        source,
+                        source: lowBatteryWaiting
+                            ? "BACKEND_LOW_BATTERY"
+                            : source,
+                        eventType,
                         message,
                     }];
                 },
