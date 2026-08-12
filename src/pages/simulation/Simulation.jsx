@@ -224,6 +224,51 @@ const toRobotView = (state) => {
     };
 };
 
+const mergeRobotStateBatch = (previousRobots, incomingByRobotId) => {
+    if (incomingByRobotId.size === 0) {
+        return previousRobots;
+    }
+
+    const knownRobotIds = new Set(
+        previousRobots.map((robot) => robot.robot_id)
+    );
+    let changed = false;
+
+    const merged = previousRobots.map((robot) => {
+        const incoming = incomingByRobotId.get(robot.robot_id);
+
+        if (!incoming) {
+            return robot;
+        }
+
+        const previousTime = Number(robot.simulation_time_ms);
+        const incomingTime = Number(incoming.simulation_time_ms);
+        if (
+            Number.isFinite(previousTime)
+            && Number.isFinite(incomingTime)
+            && incomingTime < previousTime
+        ) {
+            return robot;
+        }
+
+        changed = true;
+        return { ...robot, ...incoming };
+    });
+
+    const added = [];
+    incomingByRobotId.forEach((incoming, robotId) => {
+        if (!knownRobotIds.has(robotId)) {
+            added.push(incoming);
+        }
+    });
+
+    if (!changed && added.length === 0) {
+        return previousRobots;
+    }
+
+    return added.length === 0 ? merged : [...merged, ...added];
+};
+
 function Simulation() {
     const navigate = useNavigate();
 
@@ -1342,6 +1387,27 @@ function Simulation() {
     ========================================================= */
 
     const [robotList, setRobotList] = useState([]);
+    const pendingRobotStatesRef = useRef(new Map());
+    const robotUpdateFrameRef = useRef(null);
+    const activeRobotRunIdRef = useRef(simulationRunId);
+    activeRobotRunIdRef.current = simulationRunId;
+
+    useEffect(() => {
+        const pendingStates = pendingRobotStatesRef.current;
+        pendingStates.clear();
+        if (robotUpdateFrameRef.current !== null) {
+            window.cancelAnimationFrame(robotUpdateFrameRef.current);
+            robotUpdateFrameRef.current = null;
+        }
+
+        return () => {
+            pendingStates.clear();
+            if (robotUpdateFrameRef.current !== null) {
+                window.cancelAnimationFrame(robotUpdateFrameRef.current);
+                robotUpdateFrameRef.current = null;
+            }
+        };
+    }, [simulationRunId]);
 
     // 제어바의 카운트/상태 문구가 바뀌어 필요한 폭이 달라지면 즉시 최소 폭을 다시 맞춘다.
     useEffect(() => {
@@ -1383,36 +1449,44 @@ function Simulation() {
         robotList,
         isSimulationRunning,
     );
-    // 로봇 상태 1건 수신 → 해당 로봇만 갱신
+    // 같은 tick에 연속으로 도착하는 로봇 상태를 한 프레임에 모아 반영한다.
+    // 로봇별 메시지마다 창고 SVG 전체를 다시 렌더링하지 않도록 하기 위함이다.
     const applyRobotState = (state) => {
         const incoming = toRobotView(state);
+        const pendingStates = pendingRobotStatesRef.current;
+        const pendingPrevious = pendingStates.get(incoming.robot_id);
+        const previousTime = Number(pendingPrevious?.simulation_time_ms);
+        const incomingTime = Number(incoming.simulation_time_ms);
 
-        setRobotList((prevRobotList) => {
-            const exists = prevRobotList.some(
-                (robot) => robot.robot_id === incoming.robot_id
-            );
+        if (
+            pendingPrevious
+            && Number.isFinite(previousTime)
+            && Number.isFinite(incomingTime)
+            && incomingTime < previousTime
+        ) {
+            return;
+        }
 
-            if (!exists) {
-                return [...prevRobotList, incoming];
+        pendingStates.set(incoming.robot_id, incoming);
+
+        if (robotUpdateFrameRef.current !== null) {
+            return;
+        }
+
+        const batchRunId = simulationRunId;
+        robotUpdateFrameRef.current = window.requestAnimationFrame(() => {
+            robotUpdateFrameRef.current = null;
+
+            if (activeRobotRunIdRef.current !== batchRunId) {
+                pendingRobotStatesRef.current.clear();
+                return;
             }
 
-            return prevRobotList.map((robot) => {
-                if (robot.robot_id !== incoming.robot_id) {
-                    return robot;
-                }
-
-                const previousTime = Number(robot.simulation_time_ms);
-                const incomingTime = Number(incoming.simulation_time_ms);
-                if (
-                    Number.isFinite(previousTime)
-                    && Number.isFinite(incomingTime)
-                    && incomingTime < previousTime
-                ) {
-                    return robot;
-                }
-
-                return { ...robot, ...incoming };
-            });
+            const batch = new Map(pendingRobotStatesRef.current);
+            pendingRobotStatesRef.current.clear();
+            setRobotList((previousRobots) =>
+                mergeRobotStateBatch(previousRobots, batch)
+            );
         });
     };
 
