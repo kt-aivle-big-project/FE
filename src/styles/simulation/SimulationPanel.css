@@ -1617,3 +1617,391 @@
         animation: none;
     }
 }
+
+/* ============================================================
+   11. Interface refinement
+   Keep the control panel compact, restrained, and consistent.
+============================================================ */
+
+.simulation-panel-header {
+    min-height: 60px;
+    padding: 11px 15px;
+}
+
+.simulation-panel-header h2 {
+    font-size: 16px;
+}
+
+.simulation-panel-header p {
+    margin-top: 4px;
+    font-size: 9px;
+}
+
+.simulation-panel-section {
+    padding: 13px 15px;
+}
+
+.simulation-panel-section-heading h3 {
+    font-size: 12px;
+}
+
+.simulation-status-chip {
+    min-height: 21px;
+    padding: 0 7px;
+    background: var(--laro-surface);
+    font-size: 9px;
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.command-mode-section {
+    padding-top: 11px;
+    padding-bottom: 11px;
+}
+
+.command-cycle-settings {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    align-items: center;
+    gap: 8px 12px;
+    margin-bottom: 11px;
+    padding-bottom: 11px;
+}
+
+.command-cycle-settings > .command-mode-heading {
+    display: flex;
+    grid-column: 1 / -1;
+    align-items: baseline;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.command-cycle-settings label {
+    gap: 5px;
+}
+
+.command-cycle-settings label > span {
+    font-size: 9px;
+}
+
+.command-cycle-settings label > span output {
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.command-cycle-settings select {
+    min-height: 31px;
+    padding: 0 24px 0 8px;
+    font-size: 10px;
+}
+
+.command-workload-control input[type="range"] {
+    height: 18px;
+}
+
+.command-workload-control input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--laro-border-dark);
+}
+
+.command-workload-control input[type="range"]::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+    margin-top: -5px;
+    border: 2px solid var(--laro-surface);
+    border-radius: 50%;
+    background: var(--laro-primary);
+    box-shadow: 0 0 0 1px var(--laro-primary);
+    appearance: none;
+}
+
+.command-mode-row {
+    grid-template-columns: 1fr;
+    gap: 7px;
+}
+
+.command-mode-heading {
+    min-width: 0;
+}
+
+.command-mode-heading small {
+    font-size: 8px;
+}
+
+.command-mode-row > .command-mode-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.command-mode-row > .command-mode-heading small {
+    margin-top: 0;
+}
+
+.command-expression-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.command-expression-chip {
+    z-index: auto;
+    min-height: 31px;
+    gap: 7px;
+    padding: 0 9px;
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+}
+
+.command-expression-chip strong {
+    font-size: 10px;
+}
+
+.command-expression-chip:hover:not(:disabled) {
+    border-color: var(--laro-border-dark);
+    background: var(--laro-surface-hover);
+    color: var(--laro-navy);
+}
+
+.command-expression-chip.selected {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary-active);
+}
+
+.command-expression-indicator {
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
+}
+
+.command-expression-chip.selected .command-expression-indicator {
+    box-shadow: none;
+}
+
+.command-expression-chip::after {
+    content: none;
+}
+
+.command-language-inline {
+    margin-top: 9px;
+    padding: 8px 9px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+}
+
+.command-language-heading > span {
+    color: var(--laro-navy);
+    font-size: 9px;
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.command-language-heading > button {
+    font-size: 9px;
+}
+
+.command-language-inline > p {
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.workflow-step-section.complete {
+    box-shadow: none;
+}
+
+.workflow-step-header {
+    min-height: 52px;
+}
+
+.workflow-step-header:hover {
+    background: var(--laro-surface-hover);
+}
+
+.workflow-step-title strong {
+    font-size: 12px;
+}
+
+.workflow-step-title small {
+    font-size: 9px;
+}
+
+.workflow-step-status {
+    min-height: 21px;
+    background: var(--laro-surface);
+}
+
+.workflow-step-status.complete {
+    background: var(--laro-surface);
+}
+
+.workflow-step-chevron {
+    width: 16px;
+    height: 16px;
+    border-radius: 0;
+}
+
+.workflow-step-header:hover .workflow-step-chevron {
+    background: transparent;
+    color: var(--laro-primary);
+}
+
+.workflow-step-body {
+    padding: 11px 15px 14px;
+}
+
+.simulation-metric-card {
+    padding: 9px;
+    background: var(--laro-surface);
+}
+
+.simulation-metric-card > span {
+    font-size: 9px;
+}
+
+.plan-result-status {
+    background: var(--laro-surface);
+}
+
+.plan-result-status.plan_validated {
+    border-left: 3px solid var(--laro-success);
+    background: var(--laro-surface);
+}
+
+.plan-result-status > div span {
+    font-size: 8px;
+    font-weight: var(--laro-font-weight-semibold);
+    letter-spacing: 0.04em;
+}
+
+.plan-identity span {
+    font-size: 8px;
+}
+
+.plan-alert {
+    padding: 9px 10px;
+    border-left-width: 3px;
+    border-radius: var(--laro-radius-control);
+}
+
+.plan-loading {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    justify-items: initial;
+    gap: 12px;
+    min-height: 84px;
+    padding: 14px 10px;
+    text-align: left;
+}
+
+.plan-loading-dots span {
+    width: 5px;
+    height: 5px;
+}
+
+.plan-loading-copy strong {
+    color: var(--laro-navy);
+    font-size: 11px;
+}
+
+@keyframes plan-loading-pulse {
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: none;
+    }
+
+    50% {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.simulation-panel-tabs {
+    min-height: 40px;
+    padding: 0 10px;
+}
+
+.simulation-panel-tabs button {
+    gap: 5px;
+    padding: 0 9px;
+}
+
+.simulation-panel-tabs button.active {
+    color: var(--laro-navy);
+}
+
+.manual-command-tab-wrap > button.guest-locked {
+    color: var(--laro-subtext);
+}
+
+.manual-command-lock {
+    color: var(--laro-warning);
+    font-size: 11px;
+}
+
+.manual-command-login-required {
+    padding: 2px 4px;
+    border: 0;
+    background: var(--laro-warning-light);
+    color: var(--laro-warning);
+}
+
+.manual-command-panel,
+.human-review-panel {
+    gap: 11px;
+    padding: 15px;
+}
+
+.manual-command-heading span {
+    color: var(--laro-subtext);
+    letter-spacing: 0.04em;
+}
+
+.manual-command-heading h3,
+.human-review-heading h3 {
+    font-size: 13px;
+}
+
+.manual-command-description {
+    font-size: 10px;
+}
+
+.manual-command-input textarea {
+    min-height: 118px;
+    padding: 11px;
+}
+
+.manual-command-notice,
+.manual-command-feedback {
+    border-left-width: 3px;
+    border-radius: var(--laro-radius-control);
+}
+
+.manual-command-submit {
+    font-size: 11px;
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.manual-command-submit:hover:not(:disabled),
+.human-review-actions button.primary:not(.hold):not(.terminate):hover:not(:disabled),
+.human-review-retry:hover:not(:disabled) {
+    background: var(--laro-primary-hover);
+}
+
+.manual-command-flow {
+    justify-content: flex-start;
+    padding: 9px 0 0;
+}
+
+.human-review-state {
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.human-review-option {
+    padding: 9px 10px;
+}
+
+.human-review-option.selected {
+    border-color: var(--laro-primary);
+    background: var(--laro-surface);
+    box-shadow: inset 3px 0 0 var(--laro-primary);
+}

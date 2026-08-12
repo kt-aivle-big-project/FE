@@ -1140,7 +1140,7 @@ function SimulationPanel({
                                             type="button"
                                             role="switch"
                                             aria-checked={enabled}
-                                            data-tooltip={tooltip}
+                                            title={tooltip}
                                             className={`command-expression-chip ${option.tone} ${enabled ? "selected" : ""}`}
                                             key={option.key}
                                             onClick={() =>
