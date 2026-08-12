@@ -262,6 +262,16 @@ export const laroPlanApi = {
         api.get(`/laro/simulation-runs/${runId}/plan/preflight`),
     create: (runId, payload) =>
         api.post(`/laro/simulation-runs/${runId}/plan`, payload),
+    respondToHumanReview: (runId, interactionId, payload) =>
+        api.post(
+            `/laro/simulation-runs/${runId}/human-reviews/${interactionId}/respond`,
+            payload
+        ),
+    retryHumanReview: (runId, interactionId, executionVersion) =>
+        api.post(
+            `/laro/simulation-runs/${runId}/human-reviews/${interactionId}/retry`,
+            { executionVersion }
+        ),
 };
 
 export const fulfillmentCommandApi = {

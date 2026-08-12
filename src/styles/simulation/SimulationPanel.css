@@ -78,15 +78,13 @@
 
 .simulation-panel-scroll::-webkit-scrollbar,
 .compact-operation-list::-webkit-scrollbar,
-.compact-plan-list::-webkit-scrollbar,
-.command-language-request::-webkit-scrollbar {
+.compact-plan-list::-webkit-scrollbar {
     width: 7px;
 }
 
 .simulation-panel-scroll::-webkit-scrollbar-thumb,
 .compact-operation-list::-webkit-scrollbar-thumb,
-.compact-plan-list::-webkit-scrollbar-thumb,
-.command-language-request::-webkit-scrollbar-thumb {
+.compact-plan-list::-webkit-scrollbar-thumb {
     background: var(--laro-border-dark);
 }
 
@@ -167,110 +165,121 @@
     color: var(--laro-danger);
 }
 
+.simulation-status-chip.review,
+.simulation-status-chip.reviewing,
+.simulation-status-chip.held {
+    border-color: var(--laro-warning);
+    background: var(--laro-warning-light);
+    color: var(--laro-warning);
+}
+
+.simulation-status-chip.cancelled {
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
 /* ============================================================
    3. 명령 생성 방식
 ============================================================ */
 
-.command-expression-options {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 7px;
+.command-mode-section {
+    padding-top: 9px;
+    padding-bottom: 9px;
 }
 
-.command-expression-option {
+.command-mode-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
-    gap: 8px;
-    min-width: 0;
-    padding: 9px;
-    border: 1px solid var(--laro-border);
-    border-radius: var(--laro-radius-control);
-    background: var(--laro-background);
+    gap: 10px;
 }
 
-.command-expression-option.selected {
-    border-color: var(--laro-primary);
-    background: var(--laro-primary-light);
+.command-mode-heading {
+    min-width: 68px;
 }
 
-.command-expression-copy {
-    min-width: 0;
-}
-
-.command-expression-copy strong,
-.command-expression-copy span,
-.command-expression-copy small {
-    display: block;
-}
-
-.command-expression-copy strong {
-    color: var(--laro-text);
-    font-size: var(--laro-font-caption);
+.command-mode-heading h3 {
+    margin: 0;
+    color: var(--laro-navy);
+    font-size: 11px;
     font-weight: var(--laro-font-weight-semibold);
 }
 
-.command-expression-copy span {
-    margin-top: 3px;
-    overflow: hidden;
+.command-mode-heading small {
+    display: block;
+    margin-top: 2px;
+    color: var(--laro-placeholder);
+    font-size: 7px;
+    white-space: nowrap;
+}
+
+.command-expression-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-width: 0;
+    gap: 5px;
+}
+
+.command-expression-chip {
+    position: relative;
+    z-index: 30;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 28px;
+    gap: 5px;
+    padding: 0 8px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-background);
     color: var(--laro-subtext);
-    font-size: 10px;
-    line-height: 1.35;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.command-expression-chip strong {
+    overflow: hidden;
+    font-size: 9px;
+    font-weight: var(--laro-font-weight-semibold);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.command-expression-copy small {
-    margin-top: 4px;
-    color: var(--laro-placeholder);
-    font-size: 7px;
+.command-expression-chip:hover:not(:disabled) {
+    border-color: var(--laro-primary);
+    color: var(--laro-primary);
 }
 
-.command-expression-switch {
-    position: relative;
-    z-index: 30;
-    width: 34px;
-    height: 18px;
-    padding: 0;
-    border: 1px solid var(--laro-border-dark);
-    border-radius: var(--laro-radius-pill);
-    background: var(--laro-muted-light);
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
+.command-expression-chip.selected {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
 }
 
-.command-expression-switch:disabled {
+.command-expression-chip:disabled {
     cursor: not-allowed;
     opacity: 0.55;
 }
 
-.command-expression-switch > span {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 12px;
-    height: 12px;
+.command-expression-indicator {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 auto;
+    border: 1px solid var(--laro-border-dark);
     border-radius: 50%;
-    background: var(--laro-white);
-    box-shadow: 0 1px 2px var(--laro-shadow);
-    transition: transform 0.15s ease;
+    background: var(--laro-surface);
 }
 
-.command-expression-switch.selected > span {
-    transform: translateX(16px);
-}
-
-.command-expression-switch.policy.selected {
+.command-expression-chip.selected .command-expression-indicator {
     border-color: var(--laro-primary);
     background: var(--laro-primary);
+    box-shadow: 0 0 0 2px var(--laro-sky-light);
 }
 
-.command-expression-switch.natural.selected {
-    border-color: var(--laro-primary);
-    background: var(--laro-primary);
-}
-
-.command-expression-switch::after {
+.command-expression-chip::after {
     position: absolute;
     z-index: 100;
     top: calc(100% + 8px);
@@ -292,10 +301,38 @@
     white-space: pre-line;
 }
 
-.command-expression-switch:hover::after,
-.command-expression-switch:focus-visible::after {
+.command-expression-chip:hover::after,
+.command-expression-chip:focus-visible::after {
     opacity: 1;
     transform: translateY(0);
+}
+
+.command-language-inline {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 6px 8px;
+    border-left: 2px solid var(--laro-primary);
+    background: var(--laro-background);
+}
+
+.command-language-inline > span {
+    color: var(--laro-primary);
+    font-size: 8px;
+    font-weight: var(--laro-font-weight-bold);
+    white-space: nowrap;
+}
+
+.command-language-inline > p {
+    margin: 0;
+    overflow: hidden;
+    color: var(--laro-text);
+    font-size: 9px;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .command-expression-error {
@@ -309,27 +346,140 @@
 }
 
 /* ============================================================
-   4. AI INPUT
+   4. 진행 단계 접기
 ============================================================ */
 
-.command-language-request {
-    max-height: 96px;
-    overflow-y: auto;
-    padding: 9px 10px;
-    border: 1px solid var(--laro-border);
-    border-left: 2px solid var(--laro-primary);
-    border-radius: var(--laro-radius-control);
-    background: var(--laro-surface);
+.workflow-step-section {
+    padding: 0;
 }
 
+.workflow-step-section.active {
+    box-shadow: inset 2px 0 0 var(--laro-primary);
+}
 
-.command-language-request p {
-    margin: 0;
+.workflow-step-section.complete {
+    box-shadow: inset 2px 0 0 var(--laro-success);
+}
+
+.workflow-step-header {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) auto 12px;
+    align-items: center;
+    width: 100%;
+    min-height: 50px;
+    gap: 8px;
+    padding: 8px 14px;
+    border: 0;
+    background: var(--laro-surface);
     color: var(--laro-text);
-    font-size: 10px;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
+    cursor: pointer;
+    text-align: left;
+}
+
+.workflow-step-header:hover {
+    background: var(--laro-background);
+}
+
+.workflow-step-index {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--laro-border-dark);
+    border-radius: 50%;
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-size: 8px;
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.workflow-step-section.active .workflow-step-index {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+}
+
+.workflow-step-section.complete .workflow-step-index {
+    border-color: var(--laro-success);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.workflow-step-title {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+.workflow-step-title strong {
+    color: var(--laro-navy);
+    font-size: 11px;
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.workflow-step-title small {
+    overflow: hidden;
+    color: var(--laro-subtext);
+    font-size: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.workflow-step-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 20px;
+    padding: 0 6px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-size: 8px;
+    font-weight: var(--laro-font-weight-bold);
+    white-space: nowrap;
+}
+
+.workflow-step-status.active,
+.workflow-step-status.loading,
+.workflow-step-status.ready {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+}
+
+.workflow-step-status.complete {
+    border-color: var(--laro-success);
+    background: var(--laro-success-light);
+    color: var(--laro-success);
+}
+
+.workflow-step-status.blocked {
+    border-color: var(--laro-warning);
+    background: var(--laro-warning-light);
+    color: var(--laro-warning);
+}
+
+.workflow-step-status.error {
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
+.workflow-step-chevron {
+    color: var(--laro-subtext);
+    font-size: 14px;
+    line-height: 1;
+    transition: transform 0.15s ease;
+}
+
+.workflow-step-chevron.open {
+    transform: rotate(180deg);
+}
+
+.workflow-step-body {
+    padding: 10px 14px 12px;
+    border-top: 1px solid var(--laro-border);
+    background: var(--laro-surface);
 }
 
 
@@ -450,7 +600,8 @@
 
 .compact-operation-row:focus-visible,
 .compact-plan-row:focus-visible,
-.command-expression-switch:focus-visible {
+.command-expression-chip:focus-visible,
+.workflow-step-header:focus-visible {
     outline: 2px solid var(--laro-primary);
     outline-offset: -2px;
 }
@@ -826,9 +977,329 @@
    8. 반응형
 ============================================================ */
 
+.simulation-panel-tabs {
+    display: flex;
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--laro-border);
+    background: var(--laro-surface);
+}
+
+.simulation-panel-tabs button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--laro-subtext);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-semibold);
+    cursor: pointer;
+}
+
+.simulation-panel-tabs button.active {
+    border-bottom-color: var(--laro-primary);
+    color: var(--laro-primary);
+}
+
+.simulation-panel-tabs button b {
+    display: inline-grid;
+    place-items: center;
+    min-width: 17px;
+    height: 17px;
+    border-radius: 9px;
+    background: var(--laro-danger);
+    color: var(--laro-white);
+    font-size: 9px;
+}
+
+.human-review-panel {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+}
+
+.human-review-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.human-review-heading h3 {
+    margin: 7px 0 0;
+    color: var(--laro-navy);
+    font-size: 14px;
+    line-height: 1.35;
+}
+
+.human-review-heading > small {
+    color: var(--laro-subtext);
+    font-size: 9px;
+    text-align: right;
+}
+
+.human-review-state {
+    display: inline-flex;
+    padding: 3px 7px;
+    border: 1px solid var(--laro-warning);
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-warning-light);
+    color: var(--laro-warning);
+    font-size: 9px;
+    font-weight: var(--laro-font-weight-bold);
+}
+
+.human-review-reason,
+.human-review-context {
+    display: grid;
+    gap: 5px;
+    padding: 10px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-background);
+}
+
+.human-review-reason > span,
+.human-review-context > span,
+.human-review-input > span {
+    color: var(--laro-subtext);
+    font-size: 9px;
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.human-review-reason strong {
+    color: var(--laro-warning);
+    font-size: 10px;
+    overflow-wrap: anywhere;
+}
+
+.human-review-reason p,
+.human-review-context p,
+.human-review-result p {
+    margin: 0;
+    color: var(--laro-text);
+    font-size: 10px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.human-review-evidence {
+    color: var(--laro-subtext);
+    font-size: 9px;
+}
+
+.human-review-evidence summary {
+    cursor: pointer;
+}
+
+.human-review-evidence ul {
+    margin: 7px 0 0;
+    padding-left: 18px;
+}
+
+.human-review-options {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.human-review-options legend {
+    margin-bottom: 8px;
+    color: var(--laro-navy);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.human-review-option {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    cursor: pointer;
+}
+
+.human-review-option.selected {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+}
+
+.human-review-option input {
+    margin: 2px 0 0;
+    accent-color: var(--laro-primary);
+}
+
+.human-review-option-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.human-review-option-copy strong {
+    color: var(--laro-navy);
+    font-size: 10px;
+}
+
+.human-review-option-copy strong em {
+    margin-left: 6px;
+    padding: 2px 5px;
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-primary);
+    color: var(--laro-white);
+    font-size: 8px;
+    font-style: normal;
+}
+
+.human-review-option-copy p,
+.human-review-option-copy small {
+    margin: 0;
+    color: var(--laro-subtext);
+    font-size: 9px;
+    line-height: 1.4;
+}
+
+.review-outcome {
+    justify-self: start;
+    color: var(--laro-success);
+    font-size: 8px;
+}
+
+.review-outcome.hold {
+    color: var(--laro-warning);
+}
+
+.review-outcome.terminate,
+.review-unavailable {
+    color: var(--laro-danger) !important;
+}
+
+.human-review-input {
+    display: grid;
+    gap: 6px;
+}
+
+.human-review-input textarea {
+    width: 100%;
+    min-height: 64px;
+    padding: 8px;
+    resize: vertical;
+    border: 1px solid var(--laro-border-dark);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    box-sizing: border-box;
+    font: inherit;
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.human-review-input textarea:focus {
+    border-color: var(--laro-primary);
+    outline: 2px solid var(--laro-primary-light);
+}
+
+.human-review-result,
+.human-review-feedback {
+    padding: 10px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-control);
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+.human-review-result.held {
+    border-color: var(--laro-warning);
+    background: var(--laro-warning-light);
+}
+
+.human-review-feedback.error {
+    border-color: var(--laro-danger);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+}
+
+.human-review-feedback.loading,
+.human-review-feedback.success {
+    border-color: var(--laro-primary);
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
+}
+
+.human-review-actions {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 8px;
+    padding-top: 4px;
+}
+
+.human-review-actions button {
+    min-height: 36px;
+    border-radius: var(--laro-radius-control);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-bold);
+    cursor: pointer;
+}
+
+.human-review-actions button.secondary {
+    border: 1px solid var(--laro-border-dark);
+    background: var(--laro-surface);
+    color: var(--laro-subtext);
+}
+
+.human-review-actions button.primary {
+    border: 1px solid var(--laro-primary);
+    background: var(--laro-primary);
+    color: var(--laro-white);
+}
+
+.human-review-actions button.primary.hold {
+    border-color: var(--laro-warning);
+    background: var(--laro-warning);
+}
+
+.human-review-actions button.primary.terminate {
+    border-color: var(--laro-danger);
+    background: var(--laro-danger);
+}
+
+.human-review-actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.human-review-retry {
+    min-height: 38px;
+    border: 1px solid var(--laro-primary);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-primary);
+    color: var(--laro-white);
+    font-size: 10px;
+    font-weight: var(--laro-font-weight-bold);
+    cursor: pointer;
+}
+
+.human-review-retry:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
 @media (max-width: 1360px) {
-    .command-expression-options {
+    .command-mode-row {
         grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .command-expression-options {
+        justify-content: flex-start;
     }
 
     .simulation-panel-header p {

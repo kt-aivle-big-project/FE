@@ -34,6 +34,10 @@ const CYCLE_TO_WORKFLOW_STATE = {
     GENERATING: "generating",
     PLANNING: "planning",
     REPLANNING: "planning",
+    REVIEW_REQUIRED: "review",
+    REVIEW_PROCESSING: "reviewing",
+    HELD: "held",
+    CANCELLED: "cancelled",
     COMPLETE: "complete",
     ERROR: "error",
     STOPPED: "idle",
@@ -44,8 +48,24 @@ const WORKFLOW_BADGE = {
     checking: "01 상태 확인",
     generating: "02 명령 생성",
     planning: "03 AI 계획",
+    review: "검토 필요",
+    reviewing: "검토 처리 중",
+    held: "보류",
+    cancelled: "종료",
     complete: "04 검증 완료",
     error: "오류",
+};
+
+const REVIEW_STAGE_LABEL = {
+    PRE_ROUTE: "계획 경로 결정 전",
+    IN_ROUTE: "계획 처리 중",
+    PRE_OPTIMIZATION: "최적화 실행 전",
+};
+
+const REVIEW_OUTCOME_LABEL = {
+    RESUME: "선택 후 자동 계획 재개",
+    HOLD: "외부 조치가 필요하여 자동 재개하지 않음",
+    TERMINATE: "이번 계획 사이클 종료",
 };
 
 const COMMAND_EXPRESSION_TOGGLES = [
@@ -182,7 +202,39 @@ function SimulationPanel({
     const [selectedOperationId, setSelectedOperationId] = useState(null);
     const [cycleStatus, setCycleStatus] = useState(null);
     const [configurationError, setConfigurationError] = useState("");
+    const [activePanelTab, setActivePanelTab] = useState("plan");
+    const [selectedReviewOptionId, setSelectedReviewOptionId] = useState("");
+    const [reviewResolution, setReviewResolution] = useState("");
+    const [reviewComment, setReviewComment] = useState("");
+    const [reviewSubmission, setReviewSubmission] = useState({
+        state: "idle",
+        message: "",
+    });
+    const [expandedPlanSections, setExpandedPlanSections] = useState({
+        commands: true,
+        plan: true,
+    });
     const cyclePollingGenerationRef = useRef(0);
+    const openedReviewInteractionRef = useRef(null);
+
+    // 새 실행은 명령부터 보여주고, 계획 단계가 시작되면 완료된 명령은 자동으로 접는다.
+    useEffect(() => {
+        setExpandedPlanSections({ commands: true, plan: true });
+    }, [simulationRunId, simulationExecutionVersion]);
+
+    useEffect(() => {
+        if (["checking", "generating"].includes(workflow.state)) {
+            setExpandedPlanSections((current) => ({
+                ...current,
+                commands: true,
+            }));
+            return;
+        }
+
+        if (["planning", "complete", "review", "reviewing", "held"].includes(workflow.state)) {
+            setExpandedPlanSections({ commands: false, plan: true });
+        }
+    }, [workflow.state]);
 
     // LLM 명령 표현 설정이 바뀌면 현재 시뮬레이션 실행에 저장한다.
     useEffect(() => {
@@ -234,6 +286,12 @@ function SimulationPanel({
             errorStage: null,
         });
         setSelectedOperationId(null);
+        setActivePanelTab("plan");
+        setSelectedReviewOptionId("");
+        setReviewResolution("");
+        setReviewComment("");
+        setReviewSubmission({ state: "idle", message: "" });
+        openedReviewInteractionRef.current = null;
 
         if (!simulationRunId) {
             setPreflight({ state: "idle", data: null, error: "" });
@@ -406,6 +464,124 @@ function SimulationPanel({
     const planErrors = asArray(result?.errors);
     const frontendSummary = field(result, "frontend_summary", "frontendSummary");
     const planWarnings = asArray(frontendSummary?.warnings);
+    const humanReview = field(
+        result,
+        "pending_human_interaction",
+        "pendingHumanInteraction"
+    );
+    const humanReviewResponse = cycleStatus?.humanReviewResponse;
+    const humanReviewOptions = asArray(humanReview?.options);
+    const humanReviewInteractionId = field(
+        humanReview,
+        "interaction_id",
+        "interactionId"
+    );
+    const recommendedReviewOptionId = field(
+        humanReview,
+        "recommended_option_id",
+        "recommendedOptionId"
+    );
+    const selectedReviewOption = humanReviewOptions.find(
+        (option) => field(option, "option_id", "optionId") === selectedReviewOptionId
+    );
+    const selectedReviewOutcome = selectedReviewOption?.outcome ?? "RESUME";
+    const reviewIsProcessing = cycleStatus?.state === "REVIEW_PROCESSING";
+    const reviewIsActionable = cycleStatus?.state === "REVIEW_REQUIRED";
+    const reviewIsResolved = ["HELD", "CANCELLED"].includes(cycleStatus?.state);
+
+    useEffect(() => {
+        if (!humanReviewInteractionId) {
+            if (activePanelTab === "review") {
+                setActivePanelTab("plan");
+            }
+            return;
+        }
+        if (openedReviewInteractionRef.current === humanReviewInteractionId) {
+            return;
+        }
+        openedReviewInteractionRef.current = humanReviewInteractionId;
+        setSelectedReviewOptionId(
+            recommendedReviewOptionId
+            ?? field(humanReviewOptions[0], "option_id", "optionId")
+            ?? ""
+        );
+        setReviewResolution("");
+        setReviewComment("");
+        setReviewSubmission({ state: "idle", message: "" });
+        setActivePanelTab("review");
+    }, [
+        activePanelTab,
+        humanReviewInteractionId,
+        humanReviewOptions,
+        recommendedReviewOptionId,
+    ]);
+
+    const submitHumanReview = async (action) => {
+        if (!simulationRunId || !humanReviewInteractionId) return;
+        if (action === "SELECT" && humanReviewOptions.length > 0
+            && !selectedReviewOptionId) {
+            setReviewSubmission({ state: "error", message: "처리할 선택지를 골라 주세요." });
+            return;
+        }
+        if (action === "SELECT" && humanReviewOptions.length === 0
+            && !reviewResolution.trim()) {
+            setReviewSubmission({ state: "error", message: "검토 답변을 입력해 주세요." });
+            return;
+        }
+
+        setReviewSubmission({ state: "loading", message: "검토 결과를 처리하고 있습니다." });
+        try {
+            const updated = await laroPlanApi.respondToHumanReview(
+                simulationRunId,
+                humanReviewInteractionId,
+                {
+                    action,
+                    selectedOptionId: selectedReviewOptionId || null,
+                    selectedEntityIds: [],
+                    resolutionValue: reviewResolution.trim() || null,
+                    comment: reviewComment.trim() || null,
+                    executionVersion:
+                        simulationExecutionVersion
+                        ?? cycleStatus?.executionVersion
+                        ?? 0,
+                }
+            );
+            setCycleStatus(updated);
+            setReviewSubmission({
+                state: "success",
+                message: updated?.humanReviewResponse?.message
+                    ?? "검토 결과가 반영되었습니다.",
+            });
+        } catch (error) {
+            setReviewSubmission({
+                state: "error",
+                message: error.message ?? "검토 결과를 처리하지 못했습니다.",
+            });
+        }
+    };
+
+    const retryAfterHumanAction = async () => {
+        if (!simulationRunId || !humanReviewInteractionId) return;
+        setReviewSubmission({ state: "loading", message: "최신 상태로 새 계획을 요청하고 있습니다." });
+        try {
+            const updated = await laroPlanApi.retryHumanReview(
+                simulationRunId,
+                humanReviewInteractionId,
+                simulationExecutionVersion ?? cycleStatus?.executionVersion ?? 0
+            );
+            setCycleStatus(updated);
+            setReviewSubmission({
+                state: "success",
+                message: "새 명령 생성과 AI 계획을 시작했습니다.",
+            });
+            setActivePanelTab("plan");
+        } catch (error) {
+            setReviewSubmission({
+                state: "error",
+                message: error.message ?? "새 계획을 요청하지 못했습니다.",
+            });
+        }
+    };
 
     // 내부 전용 오류는 제외하고 사용자에게 필요한 사전 점검 문제만 표시한다.
     const preflightProblemText = asArray(preflight.data?.problems)
@@ -458,6 +634,21 @@ function SimulationPanel({
         planIsBusy,
         cycleStatus?.updatedAt
     );
+    const reviewKind = humanReview?.kind ?? "APPROVAL";
+    const primaryReviewAction = humanReviewOptions.length > 0
+        || reviewKind === "CLARIFICATION"
+        ? "SELECT"
+        : "APPROVE";
+    const primaryReviewLabel = selectedReviewOutcome === "HOLD"
+        ? "보류 처리"
+        : selectedReviewOutcome === "TERMINATE"
+            ? "이번 계획 종료"
+            : reviewKind === "CLARIFICATION"
+                ? "답변하고 재개"
+                : "승인하고 재개";
+    const secondaryReviewAction = reviewKind === "APPROVAL" ? "REJECT" : "CANCEL";
+    const secondaryReviewLabel = reviewKind === "APPROVAL" ? "거절" : "취소";
+    const reviewSubmitBusy = reviewSubmission.state === "loading" || reviewIsProcessing;
 
     return (
         <aside
@@ -481,63 +672,249 @@ function SimulationPanel({
                     </div>
                 </header>
 
-                <div className="simulation-panel-scroll">
-                    {/* 기존 LLM 명령 표현 설정을 동일한 동작으로 제공한다. */}
-                    <section className="simulation-panel-section">
-                        <div className="simulation-panel-section-heading">
-                            <h3>명령 생성 방식</h3>
-                        </div>
-
-                        <div
-                            className="command-expression-options"
-                            aria-label="LLM 명령 표현 설정"
+                <nav className="simulation-panel-tabs" aria-label="AI 패널 탭">
+                    <button
+                        type="button"
+                        className={activePanelTab === "plan" ? "active" : ""}
+                        onClick={() => setActivePanelTab("plan")}
+                    >
+                        AI 계획
+                    </button>
+                    {humanReview && (
+                        <button
+                            type="button"
+                            className={`human-review-tab ${activePanelTab === "review" ? "active" : ""}`}
+                            onClick={() => setActivePanelTab("review")}
                         >
-                            {COMMAND_EXPRESSION_TOGGLES.map((option) => {
-                                const enabled = commandExpressionMix?.[option.key] === true;
-                                const tooltip = [
-                                    `${option.label} · 현재 ${enabled ? "사용 중" : "사용 안 함"}`,
-                                    option.description,
-                                    `켜면 자동 생성 작업 중 약 ${option.ratio}%에 적용됩니다.`,
-                                    `클릭하면 ${enabled ? "사용하지 않도록" : "사용하도록"} 바뀝니다.`,
-                                ].join("\n");
+                            Human Review
+                            {reviewIsActionable && <b>1</b>}
+                        </button>
+                    )}
+                </nav>
 
-                                return (
-                                    <div
-                                        className={`command-expression-option ${enabled ? "selected" : ""
-                                            }`}
-                                        key={option.key}
+                <div className="simulation-panel-scroll">
+                    {activePanelTab === "review" && humanReview ? (
+                        <section className="human-review-panel" aria-live="polite">
+                            <div className="human-review-heading">
+                                <div>
+                                    <span className={`human-review-state ${cycleStatus?.state?.toLowerCase() ?? "pending"}`}>
+                                        {reviewIsProcessing
+                                            ? "처리 중"
+                                            : reviewIsResolved
+                                                ? (cycleStatus?.state === "HELD" ? "보류됨" : "종료됨")
+                                                : "검토 필요"}
+                                    </span>
+                                    <h3>{humanReview.headline}</h3>
+                                </div>
+                                <small>
+                                    {REVIEW_STAGE_LABEL[humanReview.stage] ?? humanReview.stage}
+                                </small>
+                            </div>
+
+                            <div className="human-review-reason">
+                                <span>검토 사유</span>
+                                <strong>{humanReview.reason_code ?? humanReview.reasonCode}</strong>
+                                <p>{humanReview.prompt}</p>
+                            </div>
+
+                            {(humanReview.context_summary ?? humanReview.contextSummary) && (
+                                <div className="human-review-context">
+                                    <span>상황 요약</span>
+                                    <p>{humanReview.context_summary ?? humanReview.contextSummary}</p>
+                                </div>
+                            )}
+
+                            {asArray(humanReview.evidence_ids ?? humanReview.evidenceIds).length > 0 && (
+                                <details className="human-review-evidence">
+                                    <summary>판단 근거 보기</summary>
+                                    <ul>
+                                        {asArray(humanReview.evidence_ids ?? humanReview.evidenceIds)
+                                            .map((evidenceId) => (
+                                                <li key={evidenceId}>{evidenceId}</li>
+                                            ))}
+                                    </ul>
+                                </details>
+                            )}
+
+                            {humanReviewOptions.length > 0 ? (
+                                <fieldset
+                                    className="human-review-options"
+                                    disabled={!reviewIsActionable || reviewSubmitBusy}
+                                >
+                                    <legend>처리 방법을 선택해 주세요.</legend>
+                                    {humanReviewOptions.map((option) => {
+                                        const optionId = field(option, "option_id", "optionId");
+                                        const optionOutcome = option.outcome ?? "RESUME";
+                                        const recommended = optionId === recommendedReviewOptionId;
+                                        return (
+                                            <label
+                                                className={`human-review-option ${selectedReviewOptionId === optionId ? "selected" : ""}`}
+                                                key={optionId}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name={`human-review-${humanReviewInteractionId}`}
+                                                    value={optionId}
+                                                    checked={selectedReviewOptionId === optionId}
+                                                    onChange={() => setSelectedReviewOptionId(optionId)}
+                                                />
+                                                <span className="human-review-option-copy">
+                                                    <strong>
+                                                        {option.label}
+                                                        {recommended && <em>추천</em>}
+                                                    </strong>
+                                                    {option.description && <p>{option.description}</p>}
+                                                    {(option.impact_summary ?? option.impactSummary) && (
+                                                        <small>{option.impact_summary ?? option.impactSummary}</small>
+                                                    )}
+                                                    <b className={`review-outcome ${optionOutcome.toLowerCase()}`}>
+                                                        {REVIEW_OUTCOME_LABEL[optionOutcome] ?? optionOutcome}
+                                                    </b>
+                                                    {(option.unavailable_reason ?? option.unavailableReason) && (
+                                                        <small className="review-unavailable">
+                                                            {option.unavailable_reason ?? option.unavailableReason}
+                                                        </small>
+                                                    )}
+                                                </span>
+                                            </label>
+                                        );
+                                    })}
+                                </fieldset>
+                            ) : (
+                                <label className="human-review-input">
+                                    <span>검토 답변</span>
+                                    <textarea
+                                        value={reviewResolution}
+                                        onChange={(event) => setReviewResolution(event.target.value)}
+                                        disabled={!reviewIsActionable || reviewSubmitBusy}
+                                        placeholder="AI가 계획을 계속할 수 있도록 필요한 정보를 입력해 주세요."
+                                        maxLength={2000}
+                                    />
+                                </label>
+                            )}
+
+                            <label className="human-review-input">
+                                <span>검토 의견 <small>선택</small></span>
+                                <textarea
+                                    value={reviewComment}
+                                    onChange={(event) => setReviewComment(event.target.value)}
+                                    disabled={!reviewIsActionable || reviewSubmitBusy}
+                                    placeholder="결정 사유나 전달할 내용을 남길 수 있습니다."
+                                    maxLength={2000}
+                                />
+                            </label>
+
+                            {humanReviewResponse && reviewIsResolved && (
+                                <div className={`human-review-result ${String(humanReviewResponse.resumeOutcome ?? "").toLowerCase()}`}>
+                                    <strong>
+                                        {humanReviewResponse.resumeOutcome === "HELD"
+                                            ? "자동 계획이 보류되었습니다."
+                                            : "이번 계획 사이클이 종료되었습니다."}
+                                    </strong>
+                                    <p>{humanReviewResponse.message}</p>
+                                </div>
+                            )}
+
+                            {cycleStatus?.state === "HELD" && (
+                                <button
+                                    type="button"
+                                    className="human-review-retry"
+                                    onClick={retryAfterHumanAction}
+                                    disabled={reviewSubmitBusy}
+                                >
+                                    조치 완료 후 새 계획 요청
+                                </button>
+                            )}
+
+                            {reviewSubmission.message && (
+                                <div className={`human-review-feedback ${reviewSubmission.state}`}>
+                                    {reviewSubmission.message}
+                                </div>
+                            )}
+
+                            {(reviewIsActionable || reviewIsProcessing) && (
+                                <div className="human-review-actions">
+                                    <button
+                                        type="button"
+                                        className="secondary"
+                                        onClick={() => submitHumanReview(secondaryReviewAction)}
+                                        disabled={reviewSubmitBusy}
                                     >
-                                        <div className="command-expression-copy">
-                                            <strong>{option.label}</strong>
-                                            <span>{option.description}</span>
-                                            <small>약 {option.ratio}% 적용</small>
-                                        </div>
+                                        {secondaryReviewLabel}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`primary ${selectedReviewOutcome.toLowerCase()}`}
+                                        onClick={() => submitHumanReview(primaryReviewAction)}
+                                        disabled={reviewSubmitBusy
+                                            || (humanReviewOptions.length > 0 && !selectedReviewOptionId)
+                                            || (humanReviewOptions.length === 0
+                                                && primaryReviewAction === "SELECT"
+                                                && !reviewResolution.trim())}
+                                    >
+                                        {reviewSubmitBusy ? "처리 중..." : primaryReviewLabel}
+                                    </button>
+                                </div>
+                            )}
+                        </section>
+                    ) : (
+                        <>
+                    {/* 두 옵션의 독립 동작은 유지하되 큰 카드 대신 작은 선택 칩으로 제공한다. */}
+                    <section className="simulation-panel-section command-mode-section">
+                        <div className="command-mode-row">
+                            <div className="command-mode-heading">
+                                <h3>명령 방식</h3>
+                                <small>필요한 방식만 선택</small>
+                            </div>
 
+                            <div
+                                className="command-expression-options"
+                                aria-label="LLM 명령 표현 설정"
+                            >
+                                {COMMAND_EXPRESSION_TOGGLES.map((option) => {
+                                    const enabled = commandExpressionMix?.[option.key] === true;
+                                    const tooltip = [
+                                        `${option.label} · 현재 ${enabled ? "사용 중" : "사용 안 함"}`,
+                                        option.description,
+                                        `켜면 자동 생성 작업 중 약 ${option.ratio}%에 적용됩니다.`,
+                                    ].join("\n");
+
+                                    return (
                                         <button
                                             type="button"
                                             role="switch"
                                             aria-checked={enabled}
-                                            aria-label={option.label}
                                             data-tooltip={tooltip}
-                                            className={`command-expression-switch ${option.tone} ${enabled ? "selected" : ""
-                                                }`}
+                                            className={`command-expression-chip ${option.tone} ${enabled ? "selected" : ""}`}
+                                            key={option.key}
                                             onClick={() =>
                                                 onCommandExpressionMixChange?.({
-                                                    policyEnabled:
-                                                        policyExpressionEnabled,
-                                                    naturalLanguageEnabled:
-                                                        naturalLanguageExpressionEnabled,
+                                                    policyEnabled: policyExpressionEnabled,
+                                                    naturalLanguageEnabled: naturalLanguageExpressionEnabled,
                                                     [option.key]: !enabled,
                                                 })
                                             }
                                             disabled={isBusy}
                                         >
-                                            <span />
+                                            <span className="command-expression-indicator" aria-hidden="true" />
+                                            <strong>{option.label}</strong>
                                         </button>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
+                            </div>
                         </div>
+
+                        {naturalLanguageExpressionEnabled && (
+                            <div className="command-language-inline">
+                                <span>자연어 요청</span>
+                                <p>
+                                    {naturalLanguageRequest
+                                        || (commandIsBusy
+                                            ? "명령을 생성하고 있습니다."
+                                            : "명령 생성 시 요청 내용이 표시됩니다.")}
+                                </p>
+                            </div>
+                        )}
 
                         {configurationError && (
                             <div className="command-expression-error">
@@ -546,46 +923,45 @@ function SimulationPanel({
                         )}
                     </section>
 
-                    {/* 기존 자연어 요청 값을 별도 자연어 명령 영역에 배치한다. */}
-                    <section className="simulation-panel-section">
-                        <div className="simulation-panel-section-heading compact">
-                            <div>
-                                <h3>자연어 명령·요청</h3>
-                            </div>
-                        </div>
+                    {/* 완료 단계는 접고 현재 처리 중인 단계를 우선 노출한다. */}
+                    <section className={`simulation-panel-section workflow-step-section ${commandIsBusy ? "active" : generated ? "complete" : ""}`}>
+                        <button
+                            type="button"
+                            className="workflow-step-header"
+                            aria-expanded={expandedPlanSections.commands}
+                            onClick={() => setExpandedPlanSections((current) => ({
+                                ...current,
+                                commands: !current.commands,
+                            }))}
+                        >
+                            <span className="workflow-step-index">
+                                {generated && !commandIsBusy ? "✓" : "01"}
+                            </span>
+                            <span className="workflow-step-title">
+                                <strong>입출고 명령</strong>
+                                <small>
+                                    {commandIsBusy
+                                        ? commandBusyLabel
+                                        : generated
+                                            ? `${commands.length}개 명령 생성 완료`
+                                            : "시뮬레이션 시작 후 자동 생성"}
+                                </small>
+                            </span>
+                            <span className={`workflow-step-status ${commandIsBusy ? "active" : generated ? "complete" : "idle"}`}>
+                                {commandIsBusy ? "생성 중" : generated ? `완료 · ${commands.length}건` : "대기"}
+                            </span>
+                            <span className={`workflow-step-chevron ${expandedPlanSections.commands ? "open" : ""}`} aria-hidden="true">⌄</span>
+                        </button>
 
-                        {naturalLanguageRequest ? (
-                            <div className="command-language-request">
-                                <p>{naturalLanguageRequest}</p>
-                            </div>
-                        ) : (
-                            <div className="simulation-panel-empty-state">
-                                <strong>생성된 자연어 명령이 없습니다.</strong>
-                                <span>
-                                    자연어 명령을 사용하면 생성된 요청이 여기에 표시됩니다.
-                                </span>
-                            </div>
-                        )}
-                    </section>
-
-                    {/* 생성된 입출고 명령 데이터와 선택 기능을 그대로 유지한다. */}
-                    <section className="simulation-panel-section">
-                        <div className="simulation-panel-section-heading">
-                            <div>
-                                <h3>생성된 입출고 명령</h3>
-                            </div>
-
-                            {generated && (
-                                <div className="command-batch-meta">
-                                    <span>{frontView?.mode ?? "AUTO"}</span>
-                                    <span>
-                                        {formatGeneratedAt(frontView?.generatedAt)}
-                                    </span>
-                                    <strong>{commands.length}건</strong>
-                                </div>
-                            )}
-                        </div>
-
+                        {expandedPlanSections.commands && (
+                            <div className="workflow-step-body">
+                                {generated && (
+                                    <div className="command-batch-meta">
+                                        <span>{frontView?.mode ?? "AUTO"}</span>
+                                        <span>{formatGeneratedAt(frontView?.generatedAt)}</span>
+                                        <strong>{commands.length}건</strong>
+                                    </div>
+                                )}
                         {commandIsBusy ? (
                             <div className="plan-loading command-loading" aria-live="polite">
                                 <div className="plan-loading-dots" aria-hidden="true">
@@ -667,21 +1043,48 @@ function SimulationPanel({
                                 {warnings.join(" ")}
                             </div>
                         )}
+                            </div>
+                        )}
                     </section>
 
-                    {/* 사전 점검 상태와 AI 실행 계획 결과를 표시한다. */}
-                    <section className="simulation-panel-section">
-                        <div className="simulation-panel-section-heading">
-                            <h3>AI 실행 계획</h3>
-                            <span className={`simulation-status-chip ${preflight.state}`}>
-                                {preflight.state === "ready" && "READY"}
-                                {preflight.state === "loading" && "확인 중"}
-                                {preflight.state === "blocked" && "NOT READY"}
-                                {preflight.state === "error" && "연결 오류"}
-                                {preflight.state === "idle" && "실행 대기"}
+                    {/* 현재 진행 중인 AI 계획은 자동으로 펼쳐 바로 확인할 수 있게 한다. */}
+                    <section className={`simulation-panel-section workflow-step-section ${planIsBusy ? "active" : result ? "complete" : ""}`}>
+                        <button
+                            type="button"
+                            className="workflow-step-header"
+                            aria-expanded={expandedPlanSections.plan}
+                            onClick={() => setExpandedPlanSections((current) => ({
+                                ...current,
+                                plan: !current.plan,
+                            }))}
+                        >
+                            <span className="workflow-step-index">
+                                {result && !planIsBusy ? "✓" : "02"}
                             </span>
-                        </div>
+                            <span className="workflow-step-title">
+                                <strong>AI 실행 계획</strong>
+                                <small>
+                                    {planIsBusy
+                                        ? "창고 상태를 반영해 계획을 계산하고 있습니다."
+                                        : result
+                                            ? "검증된 실행 계획을 확인할 수 있습니다."
+                                            : "입출고 명령 생성 후 자동 계산"}
+                                </small>
+                            </span>
+                            <span className={`workflow-step-status ${planIsBusy ? "active" : result ? "complete" : preflight.state}`}>
+                                {planIsBusy && `${planElapsedSeconds}초`}
+                                {!planIsBusy && result && "완료"}
+                                {!planIsBusy && !result && preflight.state === "ready" && "준비"}
+                                {!planIsBusy && !result && preflight.state === "loading" && "확인 중"}
+                                {!planIsBusy && !result && preflight.state === "blocked" && "확인 필요"}
+                                {!planIsBusy && !result && preflight.state === "error" && "연결 오류"}
+                                {!planIsBusy && !result && preflight.state === "idle" && "대기"}
+                            </span>
+                            <span className={`workflow-step-chevron ${expandedPlanSections.plan ? "open" : ""}`} aria-hidden="true">⌄</span>
+                        </button>
 
+                        {expandedPlanSections.plan && (
+                            <div className="workflow-step-body">
                         {preflight.state === "blocked" && preflightProblemText && (
                             <div className="plan-alert warning">
                                 {preflightProblemText}
@@ -815,7 +1218,11 @@ function SimulationPanel({
                                 )}
                             </div>
                         )}
+                            </div>
+                        )}
                     </section>
+                        </>
+                    )}
                 </div>
             </section>
         </aside>
