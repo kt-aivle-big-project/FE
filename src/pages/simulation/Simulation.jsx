@@ -35,7 +35,8 @@ const RUN_ID_KEY = "simulationRunId";
 const SCENARIO_ID_KEY = "selectedScenarioId";
 
 // 구조화 입력을 기본으로 두고 선택적으로 섞을 LLM 표현 비율 설정
-const COMMAND_EXPRESSION_MIX_KEY = "simulationCommandExpressionMixV2";
+// V3부터 명령 방식의 초기값을 두 옵션 모두 꺼짐으로 다시 시작한다.
+const COMMAND_EXPRESSION_MIX_KEY = "simulationCommandExpressionMixV3";
 const DEFAULT_COMMAND_EXPRESSION_MIX = {
     policyEnabled: false,
     naturalLanguageEnabled: false,
@@ -105,7 +106,7 @@ const loadCommandExpressionMix = () => {
         return {
             policyEnabled: saved?.policyEnabled === true,
             naturalLanguageEnabled: saved?.naturalLanguageEnabled === true,
-            replanIntervalMinutes: [1, 3, 5, 10].includes(replanIntervalMinutes)
+            replanIntervalMinutes: [3, 5, 10].includes(replanIntervalMinutes)
                 ? replanIntervalMinutes
                 : DEFAULT_COMMAND_EXPRESSION_MIX.replanIntervalMinutes,
             averageTasksPerRobot:
@@ -236,7 +237,7 @@ function Simulation() {
         const normalized = {
             policyEnabled: mix?.policyEnabled === true,
             naturalLanguageEnabled: mix?.naturalLanguageEnabled === true,
-            replanIntervalMinutes: [1, 3, 5, 10].includes(replanIntervalMinutes)
+            replanIntervalMinutes: [3, 5, 10].includes(replanIntervalMinutes)
                 ? replanIntervalMinutes
                 : commandExpressionMix.replanIntervalMinutes,
             averageTasksPerRobot:

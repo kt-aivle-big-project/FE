@@ -809,17 +809,23 @@ function SimulationPanel({
                     )}
                     <span
                         className="manual-command-tab-wrap"
-                        data-tooltip={guestSession
+                        title={guestSession
                             ? "로그인 후 사용자 명령을 이용할 수 있습니다."
                             : undefined}
                     >
                         <button
                             type="button"
-                            className={activePanelTab === "manual" ? "active" : ""}
+                            className={`${activePanelTab === "manual" ? "active" : ""} ${guestSession ? "guest-locked" : ""}`}
                             onClick={() => setActivePanelTab("manual")}
-                            disabled={guestSession}
+                            aria-disabled={guestSession}
                         >
+                            {guestSession && <span className="manual-command-lock" aria-hidden="true">⊘</span>}
                             사용자 명령
+                            {guestSession && (
+                                <small className="manual-command-login-required">
+                                    로그인 필요
+                                </small>
+                            )}
                         </button>
                     </span>
                 </nav>
@@ -1082,29 +1088,32 @@ function SimulationPanel({
                                     })}
                                     disabled={isBusy}
                                 >
-                                    <option value={1}>1분</option>
                                     <option value={3}>3분</option>
                                     <option value={5}>5분</option>
                                     <option value={10}>10분</option>
                                 </select>
                             </label>
-                            <label title="참여 로봇 수에 이 값을 곱해 한 번에 생성할 목표 작업 수를 정합니다.">
-                                <span>로봇당 평균 작업</span>
-                                <select
+                            <label
+                                className="command-workload-control"
+                                title="참여 로봇 수에 이 값을 곱해 한 번에 생성할 목표 작업 수를 정합니다."
+                            >
+                                <span>
+                                    로봇당 평균 작업
+                                    <output>{commandExpressionMix?.averageTasksPerRobot ?? 3.5}개</output>
+                                </span>
+                                <input
+                                    type="range"
+                                    min={1}
+                                    max={5}
+                                    step={0.5}
                                     value={commandExpressionMix?.averageTasksPerRobot ?? 3.5}
                                     onChange={(event) => onCommandExpressionMixChange?.({
                                         ...commandExpressionMix,
                                         averageTasksPerRobot: Number(event.target.value),
                                     })}
                                     disabled={isBusy}
-                                >
-                                    <option value={1}>1개</option>
-                                    <option value={2}>2개</option>
-                                    <option value={3}>3개</option>
-                                    <option value={3.5}>3.5개</option>
-                                    <option value={4}>4개</option>
-                                    <option value={5}>5개</option>
-                                </select>
+                                    aria-label="로봇당 평균 작업 수"
+                                />
                             </label>
                         </div>
 
@@ -1147,7 +1156,9 @@ function SimulationPanel({
                                             }
                                             disabled={isBusy}
                                         >
-                                            <span className="command-expression-indicator" aria-hidden="true" />
+                                            <span className="command-expression-indicator" aria-hidden="true">
+                                                {enabled ? "✓" : ""}
+                                            </span>
                                             <strong>{option.label}</strong>
                                         </button>
                                     );
@@ -1212,7 +1223,7 @@ function SimulationPanel({
                             <span className={`workflow-step-status ${commandIsBusy ? "active" : generated ? "complete" : "idle"}`}>
                                 {commandIsBusy ? "생성 중" : generated ? `완료 · ${commands.length}건` : "대기"}
                             </span>
-                            <span className={`workflow-step-chevron ${expandedPlanSections.commands ? "open" : ""}`} aria-hidden="true">⌄</span>
+                            <span className={`workflow-step-chevron ${expandedPlanSections.commands ? "open" : ""}`} aria-hidden="true" />
                         </button>
 
                         {expandedPlanSections.commands && (
@@ -1342,7 +1353,7 @@ function SimulationPanel({
                                 {!planIsBusy && !result && preflight.state === "error" && "연결 오류"}
                                 {!planIsBusy && !result && preflight.state === "idle" && "대기"}
                             </span>
-                            <span className={`workflow-step-chevron ${expandedPlanSections.plan ? "open" : ""}`} aria-hidden="true">⌄</span>
+                            <span className={`workflow-step-chevron ${expandedPlanSections.plan ? "open" : ""}`} aria-hidden="true" />
                         </button>
 
                         {expandedPlanSections.plan && (

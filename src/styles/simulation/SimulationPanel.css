@@ -190,7 +190,7 @@
 
 .command-cycle-settings {
     display: grid;
-    grid-template-columns: minmax(82px, 1fr) repeat(2, minmax(92px, auto));
+    grid-template-columns: minmax(74px, 0.8fr) minmax(64px, 0.65fr) minmax(120px, 1.4fr);
     align-items: end;
     gap: 8px;
     margin-bottom: 9px;
@@ -205,12 +205,23 @@
 }
 
 .command-cycle-settings label > span {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
     overflow: hidden;
     color: var(--laro-subtext);
     font-size: 8px;
     font-weight: var(--laro-font-weight-semibold);
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.command-cycle-settings label > span output {
+    flex: 0 0 auto;
+    color: var(--laro-primary);
+    font-size: 9px;
+    font-weight: var(--laro-font-weight-bold);
 }
 
 .command-cycle-settings select {
@@ -230,6 +241,24 @@
 }
 
 .command-cycle-settings select:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.command-workload-control input[type="range"] {
+    width: 100%;
+    height: 27px;
+    margin: 0;
+    accent-color: var(--laro-primary);
+    cursor: pointer;
+}
+
+.command-workload-control input[type="range"]:focus-visible {
+    border-radius: var(--laro-radius-pill);
+    outline: 2px solid var(--laro-primary-light);
+}
+
+.command-workload-control input[type="range"]:disabled {
     cursor: not-allowed;
     opacity: 0.55;
 }
@@ -311,12 +340,18 @@
 }
 
 .command-expression-indicator {
-    width: 6px;
-    height: 6px;
+    display: inline-grid;
+    place-items: center;
+    width: 14px;
+    height: 14px;
     flex: 0 0 auto;
     border: 1px solid var(--laro-border-dark);
     border-radius: 50%;
     background: var(--laro-surface);
+    color: var(--laro-white);
+    font-size: 9px;
+    font-weight: var(--laro-font-weight-bold);
+    line-height: 1;
 }
 
 .command-expression-chip.selected .command-expression-indicator {
@@ -537,14 +572,34 @@
 }
 
 .workflow-step-chevron {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    border-radius: 50%;
     color: var(--laro-subtext);
-    font-size: 14px;
-    line-height: 1;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.workflow-step-chevron::before {
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    content: "";
+    transform: rotate(45deg);
     transition: transform 0.15s ease;
 }
 
-.workflow-step-chevron.open {
-    transform: rotate(180deg);
+.workflow-step-chevron.open::before {
+    transform: rotate(225deg);
+}
+
+.workflow-step-header:hover .workflow-step-chevron {
+    background: var(--laro-primary-light);
+    color: var(--laro-primary);
 }
 
 .workflow-step-body {
@@ -1097,28 +1152,27 @@
     opacity: 0.45;
 }
 
-.manual-command-tab-wrap[data-tooltip]::after {
-    position: absolute;
-    z-index: 120;
-    top: calc(100% + 6px);
-    right: 0;
-    width: 190px;
-    padding: 7px 8px;
-    border: 1px solid var(--laro-border-dark);
-    background: var(--laro-navy);
-    color: var(--laro-white);
-    content: attr(data-tooltip);
-    font-size: 9px;
-    line-height: 1.4;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(-3px);
-    transition: opacity 0.12s ease, transform 0.12s ease;
+.manual-command-tab-wrap > button.guest-locked {
+    color: var(--laro-placeholder);
 }
 
-.manual-command-tab-wrap[data-tooltip]:hover::after {
-    opacity: 1;
-    transform: translateY(0);
+.manual-command-lock {
+    color: var(--laro-danger);
+    font-size: 12px;
+    font-weight: var(--laro-font-weight-bold);
+    line-height: 1;
+}
+
+.manual-command-login-required {
+    padding: 2px 5px;
+    border: 1px solid var(--laro-border);
+    border-radius: var(--laro-radius-pill);
+    background: var(--laro-background);
+    color: var(--laro-subtext);
+    font-size: 7px;
+    font-weight: var(--laro-font-weight-semibold);
+    line-height: 1;
+    white-space: nowrap;
 }
 
 .manual-command-panel {
