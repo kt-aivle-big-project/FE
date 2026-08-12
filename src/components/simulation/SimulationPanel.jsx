@@ -63,6 +63,16 @@ const REVIEW_STAGE_LABEL = {
     PRE_OPTIMIZATION: "최적화 실행 전",
 };
 
+const REVIEW_REASON_LABEL = {
+    AI_GATEWAY_TIMEOUT: "AI 서버 응답 시간 초과",
+    AI_REQUEST_TIMEOUT: "AI 계획 요청 시간 초과",
+    AI_CONNECTION_ERROR: "AI 서버 연결 오류",
+    PREFLIGHT_FAILED: "실행 조건 확인 실패",
+    COMMAND_GENERATION_FAILED: "입출고 명령 생성 실패",
+    PLAN_REQUEST_FAILED: "AI 실행 계획 생성 실패",
+    COMMAND_CYCLE_FAILED: "자동 계획 주기 실행 실패",
+};
+
 const REVIEW_OUTCOME_LABEL = {
     RESUME: "선택 후 자동 계획 재개",
     HOLD: "외부 조치가 필요하여 자동 재개하지 않음",
@@ -521,7 +531,7 @@ function SimulationPanel({
     const planErrors = asArray(result?.errors);
     const frontendSummary = field(result, "frontend_summary", "frontendSummary");
     const planWarnings = asArray(frontendSummary?.warnings);
-    const humanReview = field(
+    const humanReview = cycleStatus?.pendingHumanInteraction ?? field(
         result,
         "pending_human_interaction",
         "pendingHumanInteraction"
@@ -548,9 +558,6 @@ function SimulationPanel({
 
     useEffect(() => {
         if (!humanReviewInteractionId) {
-            if (activePanelTab === "review") {
-                setActivePanelTab("plan");
-            }
             return;
         }
         if (openedReviewInteractionRef.current === humanReviewInteractionId) {
@@ -567,7 +574,6 @@ function SimulationPanel({
         setReviewSubmission({ state: "idle", message: "" });
         setActivePanelTab("review");
     }, [
-        activePanelTab,
         humanReviewInteractionId,
         humanReviewOptions,
         recommendedReviewOptionId,
@@ -609,6 +615,9 @@ function SimulationPanel({
                 message: updated?.humanReviewResponse?.message
                     ?? "검토 결과가 반영되었습니다.",
             });
+            if (["CHECKING", "GENERATING", "PLANNING", "REPLANNING"].includes(updated?.state)) {
+                setActivePanelTab("plan");
+            }
         } catch (error) {
             setReviewSubmission({
                 state: "error",
@@ -797,16 +806,21 @@ function SimulationPanel({
                     >
                         AI 계획
                     </button>
-                    {humanReview && (
-                        <button
-                            type="button"
-                            className={`human-review-tab ${activePanelTab === "review" ? "active" : ""}`}
-                            onClick={() => setActivePanelTab("review")}
-                        >
-                            Human Review
-                            {reviewIsActionable && <b>1</b>}
-                        </button>
-                    )}
+                    <button
+                        type="button"
+                        className={`human-review-tab ${!humanReview ? "idle" : reviewIsActionable ? "actionable" : "resolved"} ${activePanelTab === "review" ? "active" : ""}`}
+                        onClick={() => setActivePanelTab((current) =>
+                            current === "review" ? "plan" : "review")}
+                        aria-expanded={activePanelTab === "review"}
+                        title={activePanelTab === "review"
+                            ? "AI 계획으로 돌아가기"
+                            : "Human Review 열기"}
+                    >
+                        {!humanReview
+                            ? "Human Review"
+                            : reviewIsActionable ? "검토 요청" : "검토 결과"}
+                        {reviewIsActionable && <b>1</b>}
+                    </button>
                     <span
                         className="manual-command-tab-wrap"
                         title={guestSession
@@ -834,11 +848,7 @@ function SimulationPanel({
                     {activePanelTab === "manual" ? (
                         <section className="manual-command-panel">
                             <div className="manual-command-heading">
-                                <div>
-                                    <span>USER-DRIVEN REPLAN</span>
-                                    <h3>사용자 명령</h3>
-                                </div>
-                                <small>이번 재계획에만 적용</small>
+                                <h3>사용자 명령</h3>
                             </div>
 
                             <p className="manual-command-description">
@@ -925,7 +935,11 @@ function SimulationPanel({
 
                             <div className="human-review-reason">
                                 <span>검토 사유</span>
-                                <strong>{humanReview.reason_code ?? humanReview.reasonCode}</strong>
+                                <strong>
+                                    {REVIEW_REASON_LABEL[
+                                        humanReview.reason_code ?? humanReview.reasonCode
+                                    ] ?? humanReview.reason_code ?? humanReview.reasonCode}
+                                </strong>
                                 <p>{humanReview.prompt}</p>
                             </div>
 
@@ -1069,6 +1083,16 @@ function SimulationPanel({
                                 </div>
                             )}
                         </section>
+                    ) : activePanelTab === "review" ? (
+                        <section className="human-review-panel human-review-empty" aria-live="polite">
+                            <div className="human-review-empty-state">
+                                <strong>현재 검토 요청이 없습니다.</strong>
+                                <p>
+                                    판단이 필요한 계획이 발생하면 이 탭이 강조되고
+                                    검토 화면이 자동으로 열립니다.
+                                </p>
+                            </div>
+                        </section>
                     ) : (
                         <>
                     {/* 두 옵션의 독립 동작은 유지하되 큰 카드 대신 작은 선택 칩으로 제공한다. */}
@@ -1120,7 +1144,7 @@ function SimulationPanel({
                         <div className="command-mode-row">
                             <div className="command-mode-heading">
                                 <h3>명령 방식</h3>
-                                <small>필요한 방식만 선택</small>
+                                <small>기본: 표준 명령</small>
                             </div>
 
                             <div
@@ -1386,7 +1410,7 @@ function SimulationPanel({
                                 <div className="plan-loading-copy">
                                     <strong>{planElapsedSeconds}초 경과</strong>
                                     <p>생성된 명령과 창고 실시간 상태로 AI 계획을 계산하고 있습니다.</p>
-                                    <small>작업량과 로봇 상태에 따라 약 30초~1분 소요될 수 있습니다.</small>
+                                    <small>작업량과 로봇 상태에 따라 약 30초~2분 소요될 수 있습니다.</small>
                                 </div>
                             </div>
                         )}

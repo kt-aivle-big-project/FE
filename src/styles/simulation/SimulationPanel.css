@@ -1142,6 +1142,58 @@
     font-size: 9px;
 }
 
+.simulation-panel-tabs .human-review-tab {
+    order: 3;
+    align-self: center;
+    min-height: 27px;
+    margin-left: auto;
+    padding: 0 8px;
+    border: 1px solid var(--laro-danger);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-danger-light);
+    color: var(--laro-danger);
+    font-size: 9px;
+}
+
+.simulation-panel-tabs .human-review-tab:hover,
+.simulation-panel-tabs .human-review-tab.active {
+    border-bottom-color: var(--laro-danger);
+    background: var(--laro-danger);
+    color: var(--laro-white);
+}
+
+.simulation-panel-tabs .human-review-tab.actionable:not(.active) {
+    background: var(--laro-danger);
+    color: var(--laro-white);
+    box-shadow: 0 0 0 2px var(--laro-danger-light);
+}
+
+.simulation-panel-tabs .human-review-tab.resolved:not(.active) {
+    border-color: var(--laro-border-dark);
+    background: var(--laro-surface);
+    color: var(--laro-subtext);
+}
+
+.simulation-panel-tabs .human-review-tab.idle:not(.active) {
+    border-color: var(--laro-border);
+    background: var(--laro-surface);
+    color: var(--laro-danger);
+}
+
+.simulation-panel-tabs .human-review-tab b {
+    min-width: 15px;
+    height: 15px;
+    background: var(--laro-danger);
+    font-size: 8px;
+}
+
+.simulation-panel-tabs .human-review-tab:hover b,
+.simulation-panel-tabs .human-review-tab.active b,
+.simulation-panel-tabs .human-review-tab.actionable b {
+    background: var(--laro-white);
+    color: var(--laro-danger);
+}
+
 .manual-command-tab-wrap {
     position: relative;
     display: flex;
@@ -1317,6 +1369,35 @@
     display: grid;
     gap: 12px;
     padding: 14px;
+}
+
+.human-review-panel.human-review-empty {
+    align-content: center;
+    min-height: 240px;
+}
+
+.human-review-empty-state {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 24px 16px;
+    border-top: 1px solid var(--laro-border);
+    border-bottom: 1px solid var(--laro-border);
+    text-align: center;
+}
+
+.human-review-empty-state strong {
+    color: var(--laro-navy);
+    font-size: 11px;
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+.human-review-empty-state p {
+    max-width: 270px;
+    margin: 0;
+    color: var(--laro-subtext);
+    font-size: 9px;
+    line-height: 1.5;
 }
 
 .human-review-heading {
@@ -1959,6 +2040,10 @@
 .manual-command-heading h3,
 .human-review-heading h3 {
     font-size: 13px;
+}
+
+.manual-command-heading h3 {
+    margin: 0;
 }
 
 .manual-command-description {
