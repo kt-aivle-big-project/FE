@@ -170,6 +170,7 @@ function WarehouseSVG({
     tasks = [],
     generatedCommands = [],
     avoidanceStates = [],
+    eventNodes = [],
     isRunning = false,
 }) {
     const [showNodeLabels, setShowNodeLabels] = useState(false);
@@ -889,6 +890,7 @@ function WarehouseSVG({
             productColor={productColor}
             fixedOutboundRobots={fixedOutboundRobots}
             mobileRobotMarkers={mobileRobotMarkers}
+            eventNodes={eventNodes}
             isRunning={isRunning}
         />
     );

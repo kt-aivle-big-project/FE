@@ -10,6 +10,7 @@ function WarehouseGraphLayer({
     showNodeLabels,
     inboundLogicalEdges,
     outboundLogicalGroups,
+    eventNodes = [],
 }) {
     return (
         <>
@@ -39,6 +40,35 @@ function WarehouseGraphLayer({
                             y2={convertY(target.y)}
                             className={`warehouse-edge edge-${edge.type}`}
                         />
+                    );
+                })}
+            </g>
+
+            <g className="warehouse-event-nodes">
+                {eventNodes.map((event, index) => {
+                    const node = graphData.nodes.find(
+                        (candidate) => Number(candidate.databaseId) === Number(event.nodeId)
+                    );
+                    if (!node) return null;
+                    return (
+                        <g key={`${event.eventType}-${event.nodeId}-${index}`}>
+                            <circle
+                                cx={convertX(node.x)}
+                                cy={convertY(node.y)}
+                                r="11"
+                                className="warehouse-event-node-pulse"
+                            >
+                                <title>{event.description || `${event.eventType} 발생`}</title>
+                            </circle>
+                            <text
+                                x={convertX(node.x)}
+                                y={convertY(node.y) - 15}
+                                textAnchor="middle"
+                                className="warehouse-event-node-label"
+                            >
+                                ⚠ {node.id}
+                            </text>
+                        </g>
                     );
                 })}
             </g>

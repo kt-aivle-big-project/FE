@@ -257,6 +257,11 @@ export const optimizationApi = {
         ),
 };
 
+export const eventApi = {
+    create: (payload) => api.post("/events", payload),
+    resolve: (eventId) => api.patch(`/events/${eventId}/resolve`),
+};
+
 export const laroPlanApi = {
     preflight: (runId) =>
         api.get(`/laro/simulation-runs/${runId}/plan/preflight`),

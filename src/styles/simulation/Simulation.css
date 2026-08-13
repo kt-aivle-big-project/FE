@@ -485,16 +485,107 @@ body.simulation-is-resizing {
 }
 
 
-.simulation-header-button.replan {
-    border-color: var(--laro-primary);
+.simulation-header-button.event {
+    border-color: var(--laro-warning, #d97706);
     background: var(--laro-surface);
-    color: var(--laro-primary);
+    color: var(--laro-warning, #b45309);
 }
 
-.simulation-header-button.replan:hover {
-    border-color: var(--laro-primary-hover);
-    background: var(--laro-primary-light);
-    color: var(--laro-primary-active);
+.simulation-header-button.event:hover {
+    border-color: var(--laro-warning, #d97706);
+    background: #fff7ed;
+    color: #9a3412;
+}
+
+.simulation-event-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(15, 23, 42, 0.52);
+}
+
+.simulation-event-modal {
+    width: min(520px, 100%);
+    border: 1px solid var(--laro-border);
+    border-radius: 14px;
+    background: var(--laro-surface);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+}
+
+.simulation-event-modal-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--laro-border);
+}
+
+.simulation-event-modal-header h2,
+.simulation-event-modal-header p { margin: 0; }
+.simulation-event-modal-header h2 { font-size: 20px; color: var(--laro-navy); }
+.simulation-event-modal-header p { margin-top: 6px; color: var(--laro-muted); font-size: 13px; }
+
+.simulation-event-modal-close {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    color: var(--laro-muted);
+    font-size: 26px;
+    cursor: pointer;
+}
+
+.simulation-event-modal-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 22px 24px;
+}
+
+.simulation-event-modal-fields label { display: flex; flex-direction: column; gap: 7px; }
+.simulation-event-modal-fields label > span { color: var(--laro-text); font-size: 13px; font-weight: 600; }
+.simulation-event-modal-fields select,
+.simulation-event-modal-fields input,
+.simulation-event-modal-fields textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--laro-border-dark);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    font: inherit;
+    padding: 10px 11px;
+}
+.simulation-event-modal-fields textarea { resize: vertical; }
+.simulation-event-modal-description { grid-column: 1 / -1; }
+
+.simulation-event-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 0 24px 22px;
+}
+.simulation-event-modal-actions button {
+    min-width: 88px;
+    height: 38px;
+    border: 1px solid var(--laro-border-dark);
+    border-radius: var(--laro-radius-control);
+    background: var(--laro-surface);
+    color: var(--laro-text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+.simulation-event-modal-actions button.primary { border-color: var(--laro-danger); background: var(--laro-danger); color: white; }
+.simulation-event-modal-actions button:disabled { cursor: not-allowed; opacity: 0.6; }
+
+@media (max-width: 560px) {
+    .simulation-event-modal-fields { grid-template-columns: 1fr; }
+    .simulation-event-modal-description { grid-column: auto; }
 }
 
 .simulation-header-button.stop {
@@ -937,4 +1028,34 @@ body.simulation-is-resizing {
     .simulation-event-list {
         grid-column: auto;
     }
+}
+.simulation-event-active-blocks {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fff7f7;
+}
+
+.simulation-event-active-block {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.simulation-event-active-block span {
+    color: #991b1b;
+    font-size: 13px;
+}
+
+.simulation-event-active-block button {
+    flex: 0 0 auto;
+    border: 1px solid #dc2626;
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: #b91c1c;
+    background: #fff;
+    cursor: pointer;
 }

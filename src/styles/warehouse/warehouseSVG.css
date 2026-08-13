@@ -462,3 +462,26 @@
         opacity: 1;
     }
 }
+
+.warehouse-event-node-pulse {
+    fill: rgba(239, 68, 68, 0.2);
+    stroke: #dc2626;
+    stroke-width: 3;
+    pointer-events: none;
+    animation: warehouse-event-pulse 1.2s ease-in-out infinite;
+}
+
+.warehouse-event-node-label {
+    fill: #b91c1c;
+    font-size: 11px;
+    font-weight: 800;
+    paint-order: stroke;
+    stroke: #fff;
+    stroke-width: 3px;
+    pointer-events: none;
+}
+
+@keyframes warehouse-event-pulse {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 1; }
+}

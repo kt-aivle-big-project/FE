@@ -24,6 +24,7 @@ function WarehouseCanvas({
     productColor,
     fixedOutboundRobots,
     mobileRobotMarkers,
+    eventNodes,
     isRunning,
 }) {
     return (
@@ -81,6 +82,7 @@ function WarehouseCanvas({
                     showNodeLabels={showNodeLabels}
                     inboundLogicalEdges={inboundLogicalEdges}
                     outboundLogicalGroups={outboundLogicalGroups}
+                    eventNodes={eventNodes}
                 />
 
                 <WarehouseBoxLayer

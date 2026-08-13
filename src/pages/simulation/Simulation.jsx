@@ -13,7 +13,7 @@ import useStompSubscriptions from "../../hooks/useStompSubscriptions";
 import { TOPICS } from "../../api/config";
 import {
     simulationRunApi,
-    optimizationApi,
+    eventApi,
     warehouseApi,
     robotApi,
     fulfillmentCommandApi,
@@ -52,6 +52,17 @@ const MIN_PANEL_WIDTH = 320;
 const MIN_MAIN_HEIGHT = 360;
 const MIN_LIST_HEIGHT = 230;
 const MIN_LIST_WIDTH = 260;
+
+const EVENT_TYPE_OPTIONS = [
+    { value: "PATH_BLOCKED", label: "경로 차단", needsNode: true },
+    { value: "COLLISION_RISK", label: "충돌 위험", needsNode: true },
+    { value: "LOW_BATTERY", label: "배터리 부족", needsNode: false },
+    { value: "TASK_FAILED", label: "작업 실패", needsNode: false },
+];
+
+const EMPTY_EVENT_FORM = {
+    eventType: "PATH_BLOCKED",
+};
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -279,6 +290,9 @@ function Simulation() {
     const [taskList, setTaskList] = useState([]);
     const [eventList, setEventList] = useState([]);
     const [generatedCommands, setGeneratedCommands] = useState([]);
+    const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+    const [eventForm, setEventForm] = useState(EMPTY_EVENT_FORM);
+    const [isEventSubmitting, setIsEventSubmitting] = useState(false);
 
     /* =========================================================
        화면 패널 리사이즈
@@ -1273,32 +1287,64 @@ function Simulation() {
         console.log("시뮬레이션 중지 완료 - 새 작업을 생성해주세요.");
     };
 
-    // 시뮬레이션 재계획
-    const handleReplan = async () => {
-        if (simulationStatus !== "실행") {
+    const openEventModal = () => {
+        if (!simulationRunId) {
+            alert("이벤트를 발생시킬 실행 중인 시뮬레이션이 없습니다.");
             return;
         }
 
-        if (!simulationRunId) {
-            alert("실행 중인 시뮬레이션이 없습니다.");
-            return;
+        setEventForm(EMPTY_EVENT_FORM);
+        setIsEventModalOpen(true);
+    };
+
+    const closeEventModal = () => {
+        if (!isEventSubmitting) {
+            setIsEventModalOpen(false);
         }
+    };
+
+    const handleEventFormChange = (event) => {
+        const { name, value } = event.target;
+        setEventForm((current) => ({
+            ...current,
+            [name]: value,
+        }));
+    };
+
+    const handleCreateEvent = async (event) => {
+        event.preventDefault();
 
         try {
-            setSimulationStatus("재계획");
-
-            await optimizationApi.reoptimize(simulationRunId, {
-                reason: "MANUAL_REQUEST",
-                triggerRobotId: null,
-                blockedEdgeIds: [],
-                description: "사용자 수동 재계획 요청",
+            setIsEventSubmitting(true);
+            const createdEvent = await eventApi.create({
+                simulationRunId: Number(simulationRunId),
+                eventType: eventForm.eventType,
             });
 
-            setSimulationStatus("실행");
+            if (createdEvent?.id) {
+                applyEvent(createdEvent);
+            }
+            setIsEventModalOpen(false);
         } catch (error) {
-            console.error("시뮬레이션 재계획 실패:", error);
-            alert(error.message ?? "재계획에 실패했습니다.");
-            setSimulationStatus("실행");
+            console.error("이벤트 발생 실패:", error);
+            alert(error.message ?? "이벤트 발생에 실패했습니다.");
+        } finally {
+            setIsEventSubmitting(false);
+        }
+    };
+
+    const handleResolvePathBlock = async (eventId) => {
+        try {
+            setIsEventSubmitting(true);
+            const resolvedEvent = await eventApi.resolve(eventId);
+            if (resolvedEvent?.id) {
+                applyEvent(resolvedEvent);
+            }
+        } catch (error) {
+            console.error("경로 차단 해제 실패:", error);
+            alert(error.message ?? "경로 차단을 해제하지 못했습니다.");
+        } finally {
+            setIsEventSubmitting(false);
         }
     };
 
@@ -1623,11 +1669,12 @@ function Simulation() {
                                 </button>
                                 <button
                                     type="button"
-                                    className="simulation-header-button replan"
-                                    onClick={handleReplan}
-                                    title="실행 중인 작업에서 로봇 상태를 재계획합니다"
+                                    className="simulation-header-button event"
+                                    onClick={openEventModal}
+                                    disabled={!simulationRunId}
+                                    title="시뮬레이션에 장애 이벤트를 발생시킵니다"
                                 >
-                                    재계획
+                                    이벤트 발생
                                 </button>
                                 <button
                                     type="button"
@@ -1656,6 +1703,15 @@ function Simulation() {
                                 tasks={taskList}
                                 generatedCommands={generatedCommands}
                                 avoidanceStates={avoidanceStates}
+                                eventNodes={eventList
+                                    .filter((event) =>
+                                        !(event.resolvedAt ?? event.resolved_at)
+                                        && (event.nodeId ?? event.node_id) != null)
+                                    .map((event) => ({
+                                        nodeId: event.nodeId ?? event.node_id,
+                                        eventType: event.eventType ?? event.event_type,
+                                        description: event.description,
+                                    }))}
                                 isRunning={isSimulationRunning}
                             />
                         </div>
@@ -1733,6 +1789,90 @@ function Simulation() {
                         ]}
                     />
                 </div>
+
+                {isEventModalOpen && (
+                    <div
+                        className="simulation-event-modal-backdrop"
+                        role="presentation"
+                        onMouseDown={(event) => {
+                            if (event.target === event.currentTarget) {
+                                closeEventModal();
+                            }
+                        }}
+                    >
+                        <section
+                            className="simulation-event-modal"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="simulation-event-modal-title"
+                        >
+                            <div className="simulation-event-modal-header">
+                                <div>
+                                    <h2 id="simulation-event-modal-title">이벤트 발생</h2>
+                                    <p>종류를 선택하면 현재 실행 상태에서 대상을 자동으로 선정합니다.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="simulation-event-modal-close"
+                                    onClick={closeEventModal}
+                                    aria-label="이벤트 발생 창 닫기"
+                                >
+                                    ×
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleCreateEvent}>
+                                <div className="simulation-event-modal-fields">
+                                    <label>
+                                        <span>이벤트 종류</span>
+                                        <select name="eventType" value={eventForm.eventType} onChange={handleEventFormChange}>
+                                            {EVENT_TYPE_OPTIONS.map((option) => (
+                                                <option key={option.value} value={option.value}>{option.label}</option>
+                                            ))}
+                                        </select>
+                                    </label>
+
+                                    {eventList.some((event) =>
+                                        (event.eventType ?? event.event_type) === "PATH_BLOCKED"
+                                        && !(event.resolvedAt ?? event.resolved_at)
+                                    ) && (
+                                        <div className="simulation-event-active-blocks">
+                                            <strong>현재 경로 차단</strong>
+                                            {eventList
+                                                .filter((event) =>
+                                                    (event.eventType ?? event.event_type) === "PATH_BLOCKED"
+                                                    && !(event.resolvedAt ?? event.resolved_at)
+                                                )
+                                                .map((event) => (
+                                                    <div key={event.id} className="simulation-event-active-block">
+                                                        <span>
+                                                            {event.description
+                                                                || `노드 #${event.nodeId ?? event.node_id} 경로 차단`}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleResolvePathBlock(event.id)}
+                                                            disabled={isEventSubmitting}
+                                                        >
+                                                            차단 해제
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    )}
+
+                                </div>
+
+                                <div className="simulation-event-modal-actions">
+                                    <button type="button" onClick={closeEventModal} disabled={isEventSubmitting}>취소</button>
+                                    <button type="submit" className="primary" disabled={isEventSubmitting}>
+                                        {isEventSubmitting ? "발생 중..." : "이벤트 발생"}
+                                    </button>
+                                </div>
+                            </form>
+                        </section>
+                    </div>
+                )}
             </div>
         </div>
     );
