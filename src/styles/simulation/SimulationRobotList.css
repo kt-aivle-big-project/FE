@@ -57,6 +57,13 @@
 .simulation-robot-list-table-wrapper {
     flex: 1;
     min-width: 0;
+    /*
+     * flex 자식은 기본값이 min-height: auto 라서 내용보다 작아지지 않는다.
+     * 그러면 overflow: auto 가 스크롤을 만들기 전에 부모(.simulation-list)의
+     * overflow: hidden 이 표를 잘라내 마지막 행들이 사라진다.
+     * 0 으로 낮춰 이 영역이 스스로 스크롤을 갖게 한다.
+     */
+    min-height: 0;
     overflow: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--laro-border-dark) transparent;
