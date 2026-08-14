@@ -793,41 +793,75 @@ function Simulation() {
     };
 
     /**
-     * 시작 전 화면에 보여줄 로봇 배치를 불러온다.
+     * 창고에 등록된 로봇을 지도 좌표로 변환해 돌려준다.
      *
-     * 예전에는 충전소 6칸에 가짜 로봇을 그렸는데,
      * 창고마다 로봇 수와 위치가 다르므로 실제 등록된 로봇을 쓴다.
      * 로봇의 node_id 는 숫자이고 지도는 노드 코드로 그리므로 레이아웃으로 변환한다.
+     * 시작 전 배치와, 실행 중 목록 보정에 함께 쓴다.
      */
+    const fetchRegisteredRobots = async (warehouseId) => {
+        const [registeredRobotList, layout] = await Promise.all([
+            robotApi.getAll(warehouseId),
+            warehouseApi.getLayout(warehouseId),
+        ]);
+
+        const nodeCodeById = new Map(
+            (layout.nodes ?? []).map((node) => [node.id, node.nodeCode])
+        );
+
+        return (registeredRobotList ?? [])
+            .map((robot) => ({
+                robot_id: robot.id,
+                robot_code: `R${robot.id}`,
+                node_id: nodeCodeById.get(robot.nodeId),
+                battery: robot.battery,
+                status: "IDLE",
+            }))
+            .filter((robot) => robot.node_id);
+    };
+
+    // 시작 전 화면에 보여줄 로봇 배치를 불러온다.
     const loadRestingRobots = async (warehouseId) => {
         if (!warehouseId) {
             return;
         }
 
         try {
-            const [registeredRobotList, layout] = await Promise.all([
-                robotApi.getAll(warehouseId),
-                warehouseApi.getLayout(warehouseId),
-            ]);
-
-            const nodeCodeById = new Map(
-                (layout.nodes ?? []).map((node) => [node.id, node.nodeCode])
-            );
-
-            const placed = (registeredRobotList ?? [])
-                .map((robot) => ({
-                    robot_id: robot.id,
-                    robot_code: `R${robot.id}`,
-                    node_id: nodeCodeById.get(robot.nodeId),
-                    battery: robot.battery,
-                    status: "IDLE",
-                }))
-                .filter((robot) => robot.node_id);
-
-            setRobotList(placed);
+            setRobotList(await fetchRegisteredRobots(warehouseId));
         } catch (error) {
             console.warn("로봇 초기 배치 조회 실패", error.message);
             setRobotList([]);
+        }
+    };
+
+    /**
+     * 실행 스냅샷에 없는 로봇을 목록에 채워 넣는다.
+     *
+     * 실행이 만들어진 뒤에 창고에 로봇을 추가하면 그 실행의 Redis 스냅샷에는
+     * 새 로봇이 없어 목록에서 빠진다. 등록된 로봇을 함께 읽어
+     * 스냅샷에 없는 로봇만 대기 상태로 덧붙인다.
+     */
+    const mergeRegisteredRobots = async (warehouseId, snapshotRobots) => {
+        if (!warehouseId) {
+            return;
+        }
+
+        try {
+            const registered = await fetchRegisteredRobots(warehouseId);
+            const knownIds = new Set(
+                (snapshotRobots ?? []).map((robot) => robot.robotId)
+            );
+            const missing = registered.filter(
+                (robot) => !knownIds.has(robot.robot_id)
+            );
+
+            if (missing.length === 0) {
+                return;
+            }
+
+            setRobotList((previous) => [...previous, ...missing]);
+        } catch (error) {
+            console.warn("등록 로봇 병합 실패", error.message);
         }
     };
 
@@ -898,6 +932,12 @@ function Simulation() {
 
             if (snapshot?.robots?.length) {
                 setRobotList(snapshot.robots.map(toRobotView));
+                await mergeRegisteredRobots(
+                    selectedWarehouseId,
+                    snapshot.robots
+                );
+            } else {
+                await loadRestingRobots(selectedWarehouseId);
             }
 
             if (snapshot?.status) {
@@ -1229,6 +1269,10 @@ function Simulation() {
 
             if (snapshot?.robots?.length) {
                 setRobotList(snapshot.robots.map(toRobotView));
+                await mergeRegisteredRobots(
+                    simulationTarget.warehouseId,
+                    snapshot.robots
+                );
             }
 
             // 이 실행의 작업 목록으로 교체한다.
@@ -1741,14 +1785,6 @@ function Simulation() {
                                     title="현재 작업을 처음부터 다시 실행합니다"
                                 >
                                     ↻ 초기화
-                                </button>
-                                <button
-                                    type="button"
-                                    className="simulation-header-button replan"
-                                    onClick={handleReplan}
-                                    title="실행 중인 작업에서 로봇 상태를 재계획합니다"
-                                >
-                                    재계획
                                 </button>
                                 <button
                                     type="button"
