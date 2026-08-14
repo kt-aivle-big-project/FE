@@ -382,14 +382,12 @@ function SimulationRobotList({ robotList = [] }) {
         (robot) => !isRobotInUse(robot) && isIdleRobot(robot)
     );
 
-    // 사용 중인 로봇이 있으면 우선 표시하고, 5대 미만일 때만 대기 로봇으로 채운다.
-    // 사용 중인 로봇이 없으면 대기 로봇을 최대 5대까지 표시한다.
-    const visibleRobots = activeRobots.length === 0
-        ? idleRobots.slice(0, 5)
-        : [
-            ...activeRobots,
-            ...idleRobots.slice(0, Math.max(0, 5 - activeRobots.length)),
-        ];
+    // 사용 중인 로봇을 위로 올리고 대기 로봇을 뒤에 붙인다.
+    // 두 분류에 모두 속하지 않는 로봇도 빠지지 않도록 마지막에 이어 붙인다.
+    const otherRobots = robotList.filter(
+        (robot) => !isRobotInUse(robot) && !isIdleRobot(robot)
+    );
+    const visibleRobots = [...activeRobots, ...idleRobots, ...otherRobots];
 
     return (
         <section className="simulation-list simulation-robot-list">
