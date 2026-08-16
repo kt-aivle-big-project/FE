@@ -136,6 +136,19 @@ const STATUS_LABEL = {
 // 100ms 상태 갱신 사이에 기본/적재/대기 이미지가 연속으로 바뀌는 깜빡임을 막는다.
 const MIN_VISIBLE_WAIT_MS = 500;
 
+const LOW_BATTERY_EVENT_ACTIVE_ROBOT_STATUSES = new Set([
+    "ASSIGNED",
+    "MOVING",
+    "WORKING",
+    "BUSY",
+    "IN_PROGRESS",
+    "SERVICING",
+    "PICKING",
+    "DROPPING",
+    "LOADING",
+    "UNLOADING",
+]);
+
 // 백엔드 RobotStateResponse → 화면 로봇 객체
 //
 // BE가 보내는 현재 MOVE 구간과 절대 진행률을 화면 모델로 옮긴다.
@@ -308,6 +321,7 @@ function Simulation() {
     const [simulationStatus, setSimulationStatus] = useState("대기");
     const [simulationTime, setSimulationTime] = useState(0);
     const [isInjectingLowBattery, setIsInjectingLowBattery] = useState(false);
+    const [hasActiveAiPlan, setHasActiveAiPlan] = useState(false);
 
     const [commandExpressionMix, setCommandExpressionMixState] = useState(
         loadCommandExpressionMix
@@ -340,6 +354,8 @@ function Simulation() {
     const [simulationExecutionVersion, setSimulationExecutionVersion] = useState(null);
 
     const setSimulationRunId = (runId) => {
+        setHasActiveAiPlan(false);
+
         if (runId) {
             localStorage.setItem(RUN_ID_KEY, String(runId));
         } else {
@@ -1354,7 +1370,7 @@ function Simulation() {
         setSimulationTime(0);
     };
 
-    // 작업 중 AI 로봇 한 대의 playback 배터리를 20%로 낮춘다.
+    // 작업 중 AI 로봇 한 대의 playback 배터리를 시나리오 충전 기준까지 낮춘다.
     // 백엔드가 현재 단계를 끝낸 안전 노드에서 LOW_BATTERY 재계획을 시작한다.
     const handleLowBatteryEvent = async () => {
         if (!simulationRunId || simulationStatus !== "실행") {
@@ -1470,6 +1486,34 @@ function Simulation() {
     ========================================================= */
 
     const [robotList, setRobotList] = useState([]);
+    const hasWorkingRobot = robotList.some((robot) => {
+        const taskId = robot.current_task_id
+            ?? robot.currentTaskId
+            ?? robot.task_id
+            ?? robot.taskId;
+        const status = String(robot.activity ?? robot.status ?? "").toUpperCase();
+
+        return taskId !== null
+            && taskId !== undefined
+            && taskId !== ""
+            && LOW_BATTERY_EVENT_ACTIVE_ROBOT_STATUSES.has(status);
+    });
+    const canInjectLowBattery = Boolean(
+        simulationRunId
+        && simulationStatus === "실행"
+        && hasActiveAiPlan
+        && hasWorkingRobot
+        && !isInjectingLowBattery
+    );
+    const lowBatteryEventTitle = isInjectingLowBattery
+        ? "배터리 부족 이벤트를 처리하고 있습니다."
+        : !simulationRunId || simulationStatus !== "실행"
+            ? "시뮬레이션 실행 중에 사용할 수 있습니다."
+            : !hasActiveAiPlan
+                ? "AI 실행 계획이 활성화되면 사용할 수 있습니다."
+                : !hasWorkingRobot
+                    ? "작업 중인 로봇이 있을 때 사용할 수 있습니다."
+                    : "작업 중 로봇 한 대를 충전 기준까지 낮추고 안전 노드에서 재계획합니다.";
     const pendingRobotStatesRef = useRef(new Map());
     const robotUpdateFrameRef = useRef(null);
     const activeRobotRunIdRef = useRef(simulationRunId);
@@ -1829,16 +1873,12 @@ function Simulation() {
                                     type="button"
                                     className="simulation-header-button low-battery"
                                     onClick={handleLowBatteryEvent}
-                                    disabled={
-                                        !simulationRunId
-                                        || simulationStatus !== "실행"
-                                        || isInjectingLowBattery
-                                    }
-                                    title="작업 중 로봇 한 대를 배터리 20%로 만들고 안전 노드에서 재계획합니다"
+                                    disabled={!canInjectLowBattery}
+                                    title={lowBatteryEventTitle}
                                 >
                                     {isInjectingLowBattery
                                         ? "처리 중…"
-                                        : "⚡ 배터리 20%"}
+                                        : "⚡ 배터리 부족 발생"}
                                 </button>
                                 <button
                                     type="button"
@@ -1886,6 +1926,7 @@ function Simulation() {
                         commandExpressionMix={commandExpressionMix}
                         onCommandExpressionMixChange={setCommandExpressionMix}
                         onGeneratedCommandsChange={setGeneratedCommands}
+                        onPlanActiveChange={setHasActiveAiPlan}
                     />
                 </div>
 

@@ -238,6 +238,7 @@ function SimulationPanel({
     commandExpressionMix,
     onCommandExpressionMixChange,
     onGeneratedCommandsChange,
+    onPlanActiveChange,
 }) {
     // 사전 점검, 자동 명령 생성, AI 계획 상태를 관리한다.
     const [preflight, setPreflight] = useState({
@@ -552,6 +553,12 @@ function SimulationPanel({
         field(plan, "logical_operations", "logicalOperations")
     );
     const robotPlans = asArray(plan?.robots);
+    const hasActivePlan = Boolean(plan && robotPlans.length > 0);
+
+    useEffect(() => {
+        onPlanActiveChange?.(hasActivePlan);
+    }, [hasActivePlan, onPlanActiveChange]);
+
     const planErrors = asArray(result?.errors);
     const frontendSummary = field(result, "frontend_summary", "frontendSummary");
     const planWarnings = asArray(frontendSummary?.warnings);
