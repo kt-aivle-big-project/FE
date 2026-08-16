@@ -497,6 +497,18 @@ body.simulation-is-resizing {
     color: var(--laro-primary-active);
 }
 
+.simulation-header-button.low-battery {
+    border-color: color-mix(in srgb, var(--laro-warning) 55%, var(--laro-border));
+    background: var(--laro-surface);
+    color: var(--laro-warning);
+}
+
+.simulation-header-button.low-battery:hover {
+    border-color: var(--laro-warning);
+    background: var(--laro-warning-light);
+    color: var(--laro-warning);
+}
+
 .simulation-header-button.stop {
     border-color: color-mix(in srgb, var(--laro-danger) 45%, var(--laro-border));
     color: var(--laro-danger);

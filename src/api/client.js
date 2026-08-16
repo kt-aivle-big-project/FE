@@ -194,6 +194,8 @@ export const simulationRunApi = {
     pause: (runId) => api.post(`/simulation-runs/${runId}/pause`),
     resume: (runId) => api.post(`/simulation-runs/${runId}/resume`),
     reset: (runId) => api.post(`/simulation-runs/${runId}/reset`),
+    injectLowBattery: (runId) =>
+        api.post(`/simulation-runs/${runId}/events/low-battery`),
     changeSpeed: (runId, simulationSpeed) =>
         api.patch(`/simulation-runs/${runId}/speed`, {
             simulationSpeed: simulationSpeed,

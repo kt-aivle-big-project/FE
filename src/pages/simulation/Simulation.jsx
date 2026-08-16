@@ -307,6 +307,7 @@ function Simulation() {
     const [simulationSpeed, setSimulationSpeed] = useState(1);
     const [simulationStatus, setSimulationStatus] = useState("대기");
     const [simulationTime, setSimulationTime] = useState(0);
+    const [isInjectingLowBattery, setIsInjectingLowBattery] = useState(false);
 
     const [commandExpressionMix, setCommandExpressionMixState] = useState(
         loadCommandExpressionMix
@@ -1353,6 +1354,44 @@ function Simulation() {
         setSimulationTime(0);
     };
 
+    // 작업 중 AI 로봇 한 대의 playback 배터리를 20%로 낮춘다.
+    // 백엔드가 현재 단계를 끝낸 안전 노드에서 LOW_BATTERY 재계획을 시작한다.
+    const handleLowBatteryEvent = async () => {
+        if (!simulationRunId || simulationStatus !== "실행") {
+            alert("실행 중인 AI 시뮬레이션에서만 배터리 부족 이벤트를 발생시킬 수 있습니다.");
+            return;
+        }
+
+        try {
+            setIsInjectingLowBattery(true);
+            const injected = await simulationRunApi.injectLowBattery(
+                simulationRunId
+            );
+
+            setEventList((previousEvents) => [
+                {
+                    id: `low-battery-${simulationRunId}-${injected.robotId}-${Date.now()}`,
+                    eventType: "LOW_BATTERY",
+                    level: "WARNING",
+                    description:
+                        `R${injected.robotId} 배터리 ${injected.previousBatteryLevel}% → `
+                        + `${injected.batteryLevel}%. 현재 단계를 마친 안전 노드에서 재계획합니다.`,
+                    robotId: injected.robotId,
+                    taskId: injected.currentTaskId,
+                    simulationTimeMillis: injected.simulationClockMillis,
+                    occurredAt: new Date().toISOString(),
+                    status: "PENDING",
+                },
+                ...previousEvents,
+            ]);
+        } catch (error) {
+            console.error("배터리 부족 이벤트 발생 실패:", error);
+            alert(error.message ?? "배터리 부족 이벤트를 발생시키지 못했습니다.");
+        } finally {
+            setIsInjectingLowBattery(false);
+        }
+    };
+
     /**
      * 시뮬레이션 중지.
      *
@@ -1785,6 +1824,21 @@ function Simulation() {
                                     title="현재 작업을 처음부터 다시 실행합니다"
                                 >
                                     ↻ 초기화
+                                </button>
+                                <button
+                                    type="button"
+                                    className="simulation-header-button low-battery"
+                                    onClick={handleLowBatteryEvent}
+                                    disabled={
+                                        !simulationRunId
+                                        || simulationStatus !== "실행"
+                                        || isInjectingLowBattery
+                                    }
+                                    title="작업 중 로봇 한 대를 배터리 20%로 만들고 안전 노드에서 재계획합니다"
+                                >
+                                    {isInjectingLowBattery
+                                        ? "처리 중…"
+                                        : "⚡ 배터리 20%"}
                                 </button>
                                 <button
                                     type="button"
