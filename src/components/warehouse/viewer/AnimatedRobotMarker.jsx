@@ -28,6 +28,7 @@ function AnimatedRobotMarker({
     isRunning,
     isAvoidanceWaiting = false,
     avoidanceLabel = null,
+    waitingStatusLabel = "대기",
     loadColor,
     loadTitle,
     hideLoad,
@@ -165,7 +166,7 @@ function AnimatedRobotMarker({
                         className="warehouse-robot-avoidance-label"
                         pointerEvents="none"
                     >
-                        대기
+                        {waitingStatusLabel}
                     </text>
                 </>
             )}

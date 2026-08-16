@@ -74,6 +74,7 @@ function WarehouseRobotLayer({
                             isRunning={isRunning}
                             isAvoidanceWaiting={marker.isAvoidanceWaiting}
                             avoidanceLabel={marker.avoidanceLabel}
+                            waitingStatusLabel={marker.waitingStatusLabel}
                             loadColor={marker.loadColor}
                             loadTitle={marker.loadTitle}
                             hideLoad={marker.hideLoad}

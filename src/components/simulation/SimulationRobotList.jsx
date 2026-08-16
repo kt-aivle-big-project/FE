@@ -15,6 +15,7 @@ const ROBOT_STATUS_LABEL = {
     LOADING: "적재 중",
     UNLOADING: "하역 중",
     CHARGING: "충전 중",
+    LOW_BATTERY: "배터리 부족",
     STOPPED: "정지",
     ERROR: "오류",
     FAULT: "고장",
@@ -68,8 +69,23 @@ const IDLE_ROBOT_STATUSES = new Set([
 const normalizeValue = (value) =>
     typeof value === "string" ? value.toUpperCase() : value;
 
+const isLowBatteryWaiting = (robot) => {
+    const waitingReason = String(
+        robot.waiting_reason
+        ?? robot.waitingReason
+        ?? ""
+    ).toUpperCase();
+
+    return waitingReason.includes("배터리")
+        || waitingReason.includes("LOW_BATTERY");
+};
+
 // 세부 동작 상태가 있으면 로봇의 기본 상태보다 우선 표시한다.
 const getRobotDisplayStatus = (robot) => {
+    if (isLowBatteryWaiting(robot)) {
+        return "LOW_BATTERY";
+    }
+
     const activity = normalizeValue(robot.activity);
 
     if (activity && ROBOT_STATUS_LABEL[activity]) {
@@ -109,6 +125,9 @@ const getRobotStatusClass = (robot) => {
 
         case "CHARGING":
             return "status-charging";
+
+        case "LOW_BATTERY":
+            return "status-low-battery";
 
         case "ERROR":
         case "FAULT":
@@ -332,6 +351,7 @@ const getRobotSummary = (robotList) =>
                 case "IDLE":
                 case "WAITING":
                 case "AVAILABLE":
+                case "LOW_BATTERY":
                     summary.waiting += 1;
                     break;
 

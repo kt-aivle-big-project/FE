@@ -862,6 +862,11 @@ function WarehouseSVG({
                         + `${avoidance.waitingSeconds.toFixed(1)}초`
                         : null,
 
+                waitingStatusLabel:
+                    String(robot.waiting_reason ?? "").includes("배터리")
+                        ? "배터리 부족"
+                        : "대기",
+
                 loadColor: productColor(activeTask?.itemId),
                 loadTitle: activeProduct
                     ? `${activeProduct.productName} (${activeProduct.productCode}) BOX 운반 중`
