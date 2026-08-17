@@ -149,6 +149,33 @@ const LOW_BATTERY_EVENT_ACTIVE_ROBOT_STATUSES = new Set([
     "UNLOADING",
 ]);
 
+const MANUAL_LOW_BATTERY_EVENT_SOURCE = "MANUAL_LOW_BATTERY_INJECTION";
+
+const isManualLowBatteryRecovered = (event, robot) => {
+    if (!robot || event.source !== MANUAL_LOW_BATTERY_EVENT_SOURCE) {
+        return false;
+    }
+
+    const status = String(robot.status ?? "").toUpperCase();
+    const activity = String(robot.activity ?? "").toUpperCase();
+    const serviceKind = String(robot.service_kind ?? "").toUpperCase();
+    const battery = Number(robot.battery);
+    const chargingThreshold = Number(event.chargingThreshold);
+
+    if (
+        status === "CHARGING"
+        || activity === "CHARGING"
+        || serviceKind === "CHARGE"
+    ) {
+        return true;
+    }
+
+    return status === "IDLE"
+        && Number.isFinite(battery)
+        && Number.isFinite(chargingThreshold)
+        && battery > chargingThreshold;
+};
+
 // 백엔드 RobotStateResponse → 화면 로봇 객체
 //
 // BE가 보내는 현재 MOVE 구간과 절대 진행률을 화면 모델로 옮긴다.
@@ -1397,6 +1424,8 @@ function Simulation() {
                     simulationTimeMillis: injected.simulationClockMillis,
                     occurredAt: new Date().toISOString(),
                     status: "PENDING",
+                    source: MANUAL_LOW_BATTERY_EVENT_SOURCE,
+                    chargingThreshold: injected.batteryLevel,
                 },
                 ...previousEvents,
             ]);
@@ -1576,6 +1605,47 @@ function Simulation() {
         robotList,
         isSimulationRunning,
     );
+
+    // 버튼으로 만든 로컬 이벤트는 DB Event ID가 없으므로 서버의 resolve API
+    // 대상이 아니다. 해당 로봇이 실제 CHARGE 단계에 진입하거나 충전을 마치면
+    // 화면 이벤트도 같은 시점에 해결 상태로 전환한다.
+    useEffect(() => {
+        if (robotList.length === 0) {
+            return;
+        }
+
+        const robotById = new Map(
+            robotList.map((robot) => [Number(robot.robot_id), robot])
+        );
+
+        setEventList((previousEvents) => {
+            let changed = false;
+            const resolvedAt = new Date().toISOString();
+            const nextEvents = previousEvents.map((event) => {
+                if (
+                    event.status !== "PENDING"
+                    || event.source !== MANUAL_LOW_BATTERY_EVENT_SOURCE
+                ) {
+                    return event;
+                }
+
+                const robot = robotById.get(Number(event.robotId));
+                if (!isManualLowBatteryRecovered(event, robot)) {
+                    return event;
+                }
+
+                changed = true;
+                return {
+                    ...event,
+                    status: "RESOLVED",
+                    resolvedAt,
+                };
+            });
+
+            return changed ? nextEvents : previousEvents;
+        });
+    }, [robotList]);
+
     // 같은 tick에 연속으로 도착하는 로봇 상태를 한 프레임에 모아 반영한다.
     // 로봇별 메시지마다 창고 SVG 전체를 다시 렌더링하지 않도록 하기 위함이다.
     const applyRobotState = (state) => {
