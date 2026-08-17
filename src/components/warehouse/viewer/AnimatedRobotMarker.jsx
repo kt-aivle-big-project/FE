@@ -11,6 +11,22 @@ const SMOOTHING_TIME_MS = 80;
 // (다른 노드로 재배치되거나 시뮬레이션을 초기화한 경우)
 const SNAP_DISTANCE = 120;
 
+const isLowBatteryRobot = (robot) => {
+    const activity = String(robot.activity ?? robot.status ?? "").toUpperCase();
+    const waitingReason = String(
+        robot.waiting_reason ?? robot.waitingReason ?? "",
+    ).toUpperCase();
+
+    if (activity === "CHARGING") {
+        return false;
+    }
+
+    return activity === "LOW_BATTERY"
+        || activity === "RETURNING_TO_CHARGE"
+        || waitingReason.includes("배터리")
+        || waitingReason.includes("LOW_BATTERY");
+};
+
 /**
  * 로봇 한 대를 SVG 그룹으로 렌더링하고 위치를 애니메이션한다.
  *
@@ -130,6 +146,7 @@ function AnimatedRobotMarker({
         performance.now(),
         isRunning,
     );
+    const lowBatteryRobot = isLowBatteryRobot(robot);
 
     return (
         <g
@@ -144,6 +161,22 @@ function AnimatedRobotMarker({
                     <rect x="-23" y="-23" width="50" height="50" rx="50" ry="50" />
                 </clipPath>
             </defs>
+
+            {lowBatteryRobot && (
+                <circle
+                    cx="1"
+                    cy="1"
+                    r="27"
+                    className="warehouse-robot-low-battery-highlight"
+                    pointerEvents="none"
+                >
+                    <title>
+                        {String(robot.activity ?? "").toUpperCase() === "RETURNING_TO_CHARGE"
+                            ? "배터리 부족으로 전용 충전소 복귀 중"
+                            : "배터리 부족"}
+                    </title>
+                </circle>
+            )}
 
             {isAvoidanceWaiting && (
                 <>
