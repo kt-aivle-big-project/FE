@@ -684,33 +684,24 @@ function Simulation() {
         loadWarehouses();
     }, []);
 
-    // 선택한 창고의 시나리오 목록을 불러온다.
-    // 창고가 바뀌면 이전 창고의 시나리오는 쓸 수 없으므로 선택을 비운다.
+    // 시나리오는 창고와 독립적으로 전체 목록을 한 번 불러온다.
+    // 어떤 창고에서 실행할지는 시뮬레이션 실행 시점에 별도로 선택한다.
     useEffect(() => {
         let cancelled = false;
 
         const loadScenarios = async () => {
-            if (!selectedWarehouseId) {
-                setScenarios([]);
-                return;
-            }
-
             try {
-                const list = await scenarioApi.getAll(selectedWarehouseId);
+                const list = await scenarioApi.getAll();
 
                 if (cancelled) return;
 
-                // 서버가 잘못 전체 목록을 내려주더라도 현재 창고의 시나리오만 표시한다.
-                const items = (Array.isArray(list) ? list : []).filter(
-                    (scenario) =>
-                        Number(scenario.warehouseId) === Number(selectedWarehouseId)
-                );
+                const items = Array.isArray(list) ? list : [];
                 setScenarios(items);
 
-                // 저장해둔 시나리오가 이 창고에 없으면 첫 번째로 되돌린다.
+                // 저장해둔 시나리오가 없거나 삭제됐다면 첫 번째 시나리오를 선택한다.
                 setSelectedScenarioIdState((current) => {
                     const exists = items.some(
-                        (scenario) => scenario.id === current
+                        (scenario) => Number(scenario.id) === Number(current)
                     );
 
                     if (exists) return current;
@@ -737,7 +728,7 @@ function Simulation() {
         return () => {
             cancelled = true;
         };
-    }, [selectedWarehouseId]);
+    }, []);
 
     // 시나리오를 고르면 그 배속을 화면 설정에도 반영한다.
     const handleScenarioChange = (event) => {
@@ -803,8 +794,7 @@ function Simulation() {
         setSimulationTime(0);
         setTaskList([]);
         setEventList([]);
-        setScenarios([]);
-        setSelectedScenarioId(null);
+        // 시나리오는 창고와 독립적이므로 창고를 바꿔도 선택을 유지한다.
         setSelectedWarehouseId(nextId);
         loadRestingRobots(nextId);
     };
@@ -1015,9 +1005,9 @@ function Simulation() {
     };
 
     /**
-     * 공유 템플릿은 직접 실행할 수 없으므로 로그인 유형에 맞는 개인 복사본으로
-     * 전환한다. 템플릿에서 선택한 시나리오는 복사본의 scenarioCode/name과
-     * 다시 매칭해 동일한 실행 설정을 유지한다.
+     * 실행할 창고를 확정한다.
+     * 공유 템플릿 창고는 기존 방식대로 개인 복사본으로 전환하되,
+     * 시나리오는 창고와 독립적이므로 선택한 scenarioId를 그대로 유지한다.
      */
     const resolveSimulationTarget = async () => {
         let warehouse = warehouses.find(
@@ -1029,10 +1019,12 @@ function Simulation() {
         }
 
         let warehouseId = Number(warehouse.id ?? selectedWarehouseId);
+        const scenarioId = Number(selectedScenarioId);
         let copied = false;
-        const selectedScenario = scenarios.find(
-            (scenario) => Number(scenario.id) === Number(selectedScenarioId)
-        );
+
+        if (!Number.isFinite(scenarioId)) {
+            throw new Error("실행할 시나리오를 선택해주세요.");
+        }
 
         if (warehouse.shared === true) {
             copied = true;
@@ -1059,38 +1051,6 @@ function Simulation() {
             setSimulationRunId(null);
         }
 
-        const copiedScenariosResponse = await scenarioApi.getAll(warehouseId);
-        const copiedScenarios = Array.isArray(copiedScenariosResponse)
-            ? copiedScenariosResponse
-            : [];
-
-        if (copiedScenarios.length === 0) {
-            throw new Error("선택한 창고에 실행 가능한 시나리오가 없습니다.");
-        }
-
-        const matchedScenario = copiedScenarios.find(
-            (scenario) =>
-                selectedScenario?.scenarioCode
-                && scenario.scenarioCode === selectedScenario.scenarioCode
-        ) ?? copiedScenarios.find(
-            (scenario) =>
-                selectedScenario?.scenarioName
-                && scenario.scenarioName === selectedScenario.scenarioName
-        ) ?? copiedScenarios.find(
-            (scenario) => Number(scenario.id) === Number(selectedScenarioId)
-        ) ?? copiedScenarios[0];
-
-        const scenarioId = Number(matchedScenario.id ?? matchedScenario.scenarioId);
-
-        if (!Number.isFinite(scenarioId)) {
-            throw new Error(
-                "개인 창고의 시나리오 응답에서 scenarioId를 확인할 수 없습니다."
-            );
-        }
-
-        setScenarios(copiedScenarios);
-        setSelectedScenarioId(scenarioId);
-
         return { warehouseId, scenarioId, copied };
     };
 
@@ -1098,7 +1058,17 @@ function Simulation() {
      * 설정값이 유효한지 검사한다.
      */
     const validateSettings = () => {
-        return Boolean(selectedWarehouseId);
+        if (!selectedScenarioId) {
+            alert("시나리오를 선택해주세요.");
+            return false;
+        }
+
+        if (!selectedWarehouseId) {
+            alert("창고를 선택해주세요.");
+            return false;
+        }
+
+        return true;
     };
 
     /**
