@@ -4,10 +4,6 @@ import "../../styles/scenario/ScenarioCreatePanel.css";
 
 // 생성 또는 수정 모드의 초기 입력값을 만든다.
 const createInitialFormData = (initialScenario) => ({
-    warehouseId:
-        initialScenario?.warehouseId == null
-            ? ""
-            : String(initialScenario.warehouseId),
     scenarioName: initialScenario?.scenarioName ?? "",
     description: initialScenario?.description ?? "",
     initialBattery: initialScenario?.initialBattery ?? 100,
@@ -32,7 +28,6 @@ function ScenarioCreatePanel({
     const warehouseOptions = isEditMode && initialScenario
         ? [
             {
-                id: initialScenario.warehouseId,
                 name: initialScenario.warehouseName,
             },
         ]
@@ -94,14 +89,9 @@ function ScenarioCreatePanel({
     const validateForm = () => {
         const nextErrors = {};
 
-        if (!isEditMode && !formData.warehouseId) {
-            nextErrors.warehouseId = "창고를 선택해주세요.";
-        }
-
         if (!formData.scenarioName.trim()) {
             nextErrors.scenarioName = "시나리오명을 입력해주세요.";
         }
-
 
         if (
             formData.initialBattery === "" ||
@@ -149,10 +139,6 @@ function ScenarioCreatePanel({
             initialBattery: Number(formData.initialBattery),
             chargingThreshold: Number(formData.chargingThreshold),
         };
-
-        if (!isEditMode) {
-            submittedData.warehouseId = Number(formData.warehouseId);
-        }
 
         onSubmit(submittedData);
     };
@@ -204,76 +190,6 @@ function ScenarioCreatePanel({
                         <div className="scenario-create-info-grid">
                             <label className="scenario-create-field">
                                 <span>
-                                    창고
-                                    <em>*</em>
-                                </span>
-
-                                <div
-                                    className={`scenario-create-warehouse-select ${
-                                        requiresLoginForWarehouse
-                                            ? "has-login-tooltip"
-                                            : ""
-                                    }`}
-                                    data-tooltip={
-                                        requiresLoginForWarehouse
-                                            ? "로그인 후 이용할 수 있습니다."
-                                            : undefined
-                                    }
-                                    tabIndex={
-                                        requiresLoginForWarehouse ? 0 : undefined
-                                    }
-                                    aria-label={
-                                        requiresLoginForWarehouse
-                                            ? "창고 선택: 로그인 후 이용할 수 있습니다."
-                                            : undefined
-                                    }
-                                >
-                                    <span aria-hidden="true">▣</span>
-
-                                    <select
-                                        name="warehouseId"
-                                        value={formData.warehouseId}
-                                        onChange={handleInputChange}
-                                        disabled={
-                                            isEditMode ||
-                                            personalWarehouses.length === 0
-                                        }
-                                        className={
-                                            errors.warehouseId ? "is-error" : ""
-                                        }
-                                    >
-                                        <option value="">
-                                            창고를 선택해주세요.
-                                        </option>
-
-                                        {warehouseOptions.map((warehouse) => (
-                                            <option
-                                                key={warehouse.id}
-                                                value={String(warehouse.id)}
-                                            >
-                                                {warehouse.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {!isEditMode && personalWarehouses.length === 0 && (
-                                    <small className="scenario-create-help">
-                                        {guest
-                                            ? "로그인 후 개인 창고를 선택할 수 있습니다."
-                                            : "먼저 개인 창고를 생성해주세요."}
-                                    </small>
-                                )}
-
-                                {errors.warehouseId && (
-                                    <small className="scenario-create-error">
-                                        {errors.warehouseId}
-                                    </small>
-                                )}
-                            </label>
-
-                            <label className="scenario-create-field">
-                                <span>
                                     시나리오명
                                     <em>*</em>
                                 </span>
@@ -285,9 +201,7 @@ function ScenarioCreatePanel({
                                     placeholder="시나리오명을 입력해주세요."
                                     onChange={handleInputChange}
                                     autoFocus
-                                    className={
-                                        errors.scenarioName ? "is-error" : ""
-                                    }
+                                    className={errors.scenarioName ? "is-error" : ""}
                                 />
 
                                 {errors.scenarioName && (
