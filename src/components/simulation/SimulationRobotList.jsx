@@ -6,6 +6,7 @@ const ROBOT_STATUS_LABEL = {
     AVAILABLE: "대기",
     ASSIGNED: "배정",
     MOVING: "이동 중",
+    RETURNING_TO_CHARGE: "배터리 부족으로 충전소 복귀 중",
     WORKING: "작업 중",
     BUSY: "작업 중",
     IN_PROGRESS: "작업 중",
@@ -50,6 +51,7 @@ const SERVICE_KIND_LABEL = {
 const ACTIVE_ROBOT_STATUSES = new Set([
     "ASSIGNED",
     "MOVING",
+    "RETURNING_TO_CHARGE",
     "WORKING",
     "BUSY",
     "IN_PROGRESS",
@@ -127,6 +129,7 @@ const getRobotStatusClass = (robot) => {
             return "status-charging";
 
         case "LOW_BATTERY":
+        case "RETURNING_TO_CHARGE":
             return "status-low-battery";
 
         case "ERROR":
@@ -357,6 +360,7 @@ const getRobotSummary = (robotList) =>
 
                 case "ASSIGNED":
                 case "MOVING":
+                case "RETURNING_TO_CHARGE":
                 case "WORKING":
                 case "BUSY":
                 case "IN_PROGRESS":
