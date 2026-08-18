@@ -84,17 +84,29 @@ const isLowBatteryWaiting = (robot) => {
 
 // 세부 동작 상태가 있으면 로봇의 기본 상태보다 우선 표시한다.
 const getRobotDisplayStatus = (robot) => {
+    const status = normalizeValue(robot.status);
+    const activity = normalizeValue(robot.activity);
+    const serviceKind = normalizeValue(
+        robot.service_kind ?? robot.serviceKind,
+    );
+
+    if (
+        status === "CHARGING"
+        || activity === "CHARGING"
+        || serviceKind === "CHARGE"
+    ) {
+        return "CHARGING";
+    }
+
     if (isLowBatteryWaiting(robot)) {
         return "LOW_BATTERY";
     }
-
-    const activity = normalizeValue(robot.activity);
 
     if (activity && ROBOT_STATUS_LABEL[activity]) {
         return activity;
     }
 
-    return normalizeValue(robot.status);
+    return status;
 };
 
 const getRobotStatusLabel = (robot) => {

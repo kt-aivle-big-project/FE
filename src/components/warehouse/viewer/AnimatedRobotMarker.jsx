@@ -12,12 +12,20 @@ const SMOOTHING_TIME_MS = 80;
 const SNAP_DISTANCE = 120;
 
 const isLowBatteryRobot = (robot) => {
-    const activity = String(robot.activity ?? robot.status ?? "").toUpperCase();
+    const activity = String(robot.activity ?? "").toUpperCase();
+    const status = String(robot.status ?? "").toUpperCase();
+    const serviceKind = String(
+        robot.service_kind ?? robot.serviceKind ?? "",
+    ).toUpperCase();
     const waitingReason = String(
         robot.waiting_reason ?? robot.waitingReason ?? "",
     ).toUpperCase();
 
-    if (activity === "CHARGING") {
+    if (
+        activity === "CHARGING"
+        || status === "CHARGING"
+        || serviceKind === "CHARGE"
+    ) {
         return false;
     }
 
