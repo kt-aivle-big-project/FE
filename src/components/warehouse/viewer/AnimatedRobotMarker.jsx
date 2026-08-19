@@ -35,6 +35,18 @@ const isLowBatteryRobot = (robot) => {
         || waitingReason.includes("LOW_BATTERY");
 };
 
+const lowBatteryTitle = (robot) => {
+    const activity = String(robot.activity ?? "").toUpperCase();
+    if (activity === "RETURNING_TO_CHARGE") {
+        return "배터리 부족으로 전용 충전소 복귀 중";
+    }
+    const currentTaskId = robot.current_task_id ?? robot.currentTaskId;
+    if (activity === "LOW_BATTERY" && currentTaskId !== null && currentTaskId !== undefined) {
+        return "배터리 부족 · 현재 임무 마무리 중";
+    }
+    return "배터리 부족";
+};
+
 /**
  * 로봇 한 대를 SVG 그룹으로 렌더링하고 위치를 애니메이션한다.
  *
@@ -178,11 +190,7 @@ function AnimatedRobotMarker({
                     className="warehouse-robot-low-battery-highlight"
                     pointerEvents="none"
                 >
-                    <title>
-                        {String(robot.activity ?? "").toUpperCase() === "RETURNING_TO_CHARGE"
-                            ? "배터리 부족으로 전용 충전소 복귀 중"
-                            : "배터리 부족"}
-                    </title>
+                    <title>{lowBatteryTitle(robot)}</title>
                 </circle>
             )}
 

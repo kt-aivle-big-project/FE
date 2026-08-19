@@ -82,6 +82,18 @@ const isLowBatteryWaiting = (robot) => {
         || waitingReason.includes("LOW_BATTERY");
 };
 
+const hasActiveTask = (robot) => (
+    robot.current_task_id
+    ?? robot.currentTaskId
+    ?? robot.active_task_id
+    ?? robot.activeTaskId
+) !== null && (
+    robot.current_task_id
+    ?? robot.currentTaskId
+    ?? robot.active_task_id
+    ?? robot.activeTaskId
+) !== undefined;
+
 // 세부 동작 상태가 있으면 로봇의 기본 상태보다 우선 표시한다.
 const getRobotDisplayStatus = (robot) => {
     const status = normalizeValue(robot.status);
@@ -351,6 +363,13 @@ const getRobotStatusDetail = (robot) => {
         return waitingReason;
     }
 
+    if (
+        String(robot.activity ?? "").toUpperCase() === "LOW_BATTERY"
+        && hasActiveTask(robot)
+    ) {
+        return "현재 임무를 마친 뒤 충전소로 복귀합니다.";
+    }
+
     if (robot.carrying_load === true || robot.carryingLoad === true) {
         return "적재 중";
     }
@@ -366,8 +385,17 @@ const getRobotSummary = (robotList) =>
                 case "IDLE":
                 case "WAITING":
                 case "AVAILABLE":
-                case "LOW_BATTERY":
                     summary.waiting += 1;
+                    break;
+
+                case "LOW_BATTERY":
+                    if (hasActiveTask(robot) && !(
+                        robot.waiting_reason ?? robot.waitingReason
+                    )) {
+                        summary.working += 1;
+                    } else {
+                        summary.waiting += 1;
+                    }
                     break;
 
                 case "ASSIGNED":
