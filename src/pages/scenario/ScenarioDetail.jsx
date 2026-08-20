@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { optimizationApi, fulfillmentCommandApi, } from "../../api/client";
+import { optimizationApi } from "../../api/client";
 import "../../styles/scenario/ScenarioDetail.css";
 
 // AI 실행 이력 임시 데이터
@@ -631,35 +631,6 @@ const formatRobotId = (robotId) => {
     return /^R/i.test(value) ? value : `R${value}`;
 };
 
-// 시나리오 응답에 실행 ID가 있으면 우선 사용하고,
-// 없으면 마지막으로 실행한 시나리오와 localStorage의 실행 ID를 연결한다.
-const resolveSimulationRunId = (scenario) => {
-    if (!scenario) {
-        return null;
-    }
-
-    const directRunId =
-        scenario.latestSimulationRunId ??
-        scenario.simulationRunId ??
-        null;
-
-    if (directRunId !== null && directRunId !== undefined) {
-        return directRunId;
-    }
-
-    const savedScenarioId = localStorage.getItem(SCENARIO_ID_KEY);
-    const savedRunId = localStorage.getItem(RUN_ID_KEY);
-
-    if (
-        savedRunId
-        && String(savedScenarioId) === String(scenario.id)
-    ) {
-        return savedRunId;
-    }
-
-    return null;
-};
-
 const getHistoryItems = (response) => {
     if (Array.isArray(response)) {
         return response;
@@ -697,8 +668,6 @@ function ScenarioDetail({
     const storedScenarioId = localStorage.getItem("selectedScenarioId");
     const storedSimulationRunId = localStorage.getItem("simulationRunId");
 
-    // Scenario 응답에 실행 ID가 있으면 우선 사용하고,
-    // 없으면 마지막으로 실행한 동일 시나리오의 실행 ID를 사용한다.
     const simulationRunId =
         scenario?.latestSimulationRunId ??
         scenario?.simulationRunId ??
@@ -708,25 +677,13 @@ function ScenarioDetail({
                 : null
         );
 
-    // 시뮬레이션 실행에서 생성된 AI 실행 계획을 조회한다.
     useEffect(() => {
         let cancelled = false;
 
         const loadExecutionPlan = async () => {
-            //if (!simulationRunId) {
-            //    setCycleStatus(null);
-            //    setPlanError("");
-            //    return;
-            //}
-
             try {
                 setPlanLoading(true);
                 setPlanError("");
-
-                //const response =
-                //    await fulfillmentCommandApi.getCycleStatus(
-                //        simulationRunId
-                //    );
 
                 // 임시 데이터 지우면 같이 지우기
                 const response = MOCK_AI_CYCLE_STATUS;
@@ -858,7 +815,6 @@ function ScenarioDetail({
             ) == null
     ).length;
 
-    // 로봇별 배정 작업 수, 이동 거리, 완료 예정 시간을 계산한다.
     const robotPlanSummary = useMemo(
         () =>
             robotPlans.map((robot) => {
@@ -919,7 +875,6 @@ function ScenarioDetail({
         (robot) => asArray(robot?.steps).length > 0
     );
 
-    // AI가 생성한 작업과 로봇 배정 결과를 한 행으로 묶는다.
     const operationPlanRows = useMemo(
         () =>
             generatedCommands.map((command) => {
@@ -1014,7 +969,6 @@ function ScenarioDetail({
     const operationPreviewRows =
         operationPlanRows.slice(0, 4);
 
-    // 전체 로봇의 step을 합쳐 MOVE / WAIT / SERVICE 실행 시간을 계산한다.
     const routeAnalysis = useMemo(() => {
         const initial = {
             MOVE: { count: 0, durationMs: 0 },
@@ -1068,7 +1022,6 @@ function ScenarioDetail({
             plan?.status ??
             "계획 생성";
 
-    // 경로 대기·충전 step과 최근 재계획을 이벤트 요약으로 조합한다.
     const reportEvents = useMemo(() => {
         const events = [];
 
@@ -1170,7 +1123,6 @@ function ScenarioDetail({
             .slice(0, 4);
     }, [robotPlans, replanResult]);
 
-    // 현재 시나리오의 마지막 실행 ID를 기준으로 재계획 이력을 조회한다.
     useEffect(() => {
         let cancelled = false;
 
@@ -1260,7 +1212,6 @@ function ScenarioDetail({
         ? replanResult.taskAssignments.length
         : 0;
 
-    // 선택한 시나리오를 Simulation에서 자동 선택한 뒤 실행 화면으로 이동한다.
     const handleRun = () => {
         if (!scenario.id) {
             return;
@@ -1271,7 +1222,6 @@ function ScenarioDetail({
             String(scenario.id)
         );
 
-        // 이전 실행을 그대로 복원하지 않고 선택한 시나리오로 새 실행을 준비한다.
         localStorage.removeItem(RUN_ID_KEY);
 
         navigate("/simulation");

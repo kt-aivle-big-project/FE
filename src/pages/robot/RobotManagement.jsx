@@ -62,7 +62,6 @@ const SUMMARY_GROUPS = [
 // 두 화면이 같은 키를 쓰면 창고를 한 번만 고르면 된다.
 const WAREHOUSE_ID_KEY = "selectedWarehouseId";
 
-// 창고 필터는 "ALL"(전체) 또는 창고 ID 문자열을 값으로 쓴다.
 const readSelectedWarehouseId = () => {
     const saved = Number(localStorage.getItem(WAREHOUSE_ID_KEY));
     return Number.isFinite(saved) && saved > 0 ? String(saved) : "ALL";
@@ -162,7 +161,6 @@ function RobotManagement() {
     const [searchText, setSearchText] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
 
-    // 창고 필터. "ALL" 이면 전체 창고
     const [warehouseFilter, setWarehouseFilter] = useState(
         readSelectedWarehouseId
     );
@@ -190,7 +188,6 @@ function RobotManagement() {
         [warehouses]
     );
 
-    // 이미 로봇이 서 있는 노드. 등록 화면에서 겹치는 자리를 알려준다.
     const occupiedNodeIds = useMemo(
         () => new Set(
             robots
@@ -341,7 +338,6 @@ function RobotManagement() {
         );
     };
 
-    // 창고를 고르면 그 창고에 배치된 로봇만 받아온다. null 이면 전체.
     const fetchRobots = async (warehouseId = null) =>
         robotApi.getAll(warehouseId ?? undefined);
 
@@ -387,7 +383,6 @@ function RobotManagement() {
         }
     };
 
-    // 페이지 전체 데이터 조회
     const fetchPageData = async (
         preferredRobotId = null,
         selectedWarehouseId = warehouseFilter
@@ -482,9 +477,7 @@ function RobotManagement() {
     };
 
     useEffect(() => {
-        // 저장된 창고 선택을 그대로 이어서 조회한다.
         fetchPageData(null, warehouseFilter);
-        // 최초 마운트에서만 전체 데이터를 조회한다.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -557,7 +550,6 @@ function RobotManagement() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [robotViews, searchText, statusFilter, robotSpecsById]);
 
-    // 창고 선택 시 백엔드가 해당 창고의 로봇만 반환한다.
     const warehouseFilteredRobotViews = robotViews;
 
     const statusSummary = useMemo(() => {
@@ -661,13 +653,6 @@ function RobotManagement() {
         await fetchPageData(null, "ALL");
     };
 
-    /**
-     * 창고를 바꾸면 그 창고의 로봇만 다시 불러온다.
-     *
-     * 목록이 바뀌면 선택 중이던 로봇이 사라질 수 있어
-     * 상세 선택은 fetchPageData 가 첫 번째 로봇으로 다시 잡는다.
-     * 고른 창고는 시뮬레이션 화면과 같은 키로 저장해 두 화면이 같은 창고를 본다.
-     */
     const handleWarehouseFilterChange = async (value) => {
         setWarehouseFilter(value);
 
@@ -682,7 +667,6 @@ function RobotManagement() {
         await fetchPageData(null, value);
     };
 
-    // 로봇 등록 폼 입력값 변경 공통 함수
     const handleNewRobotChange = (field, value) => {
         setNewRobot((prev) => ({
             ...prev,
@@ -729,13 +713,6 @@ function RobotManagement() {
         }
     };
 
-    /**
-     * 로봇 등록 모달을 연다.
-     *
-     * 목록에서 고른 창고가 있으면 그 창고로 미리 채우는데,
-     * 값만 넣으면 초기 노드 목록이 비어 있게 된다.
-     * 노드를 불러오는 건 handleWarehouseChange 이므로 그걸 그대로 태운다.
-     */
     const handleOpenAddModal = () => {
         setIsAddModalOpen(true);
 

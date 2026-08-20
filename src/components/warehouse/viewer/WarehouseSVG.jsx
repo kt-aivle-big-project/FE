@@ -28,10 +28,7 @@ const OUTBOUND_HANDOFF_RATIO = 0.25;
 const RACK_LEVELS = [1, 2, 3];
 const TERMINAL_TASK_STATUSES = new Set(["DONE", "FAILED", "CANCELLED"]);
 
-/**
- * 백엔드 그래프에 rack_storage가 없으면 같은 rack_id의 rack_access 중심 좌표에
- * 화면 표시용 선반 노드를 만든다. 파생 노드는 visualOnly로 표시해 경로 탐색 데이터와 구분한다.
- */
+// rack_storage가 없는 구형 그래프에는 화면 전용 선반 노드를 만든다.
 const withRackStorageNodes = (graph) => {
     const nodes = Array.isArray(graph?.nodes) ? graph.nodes : [];
     const existingRackIds = new Set(
@@ -39,7 +36,6 @@ const withRackStorageNodes = (graph) => {
             .filter((node) => node.type === "rack_storage")
             .map((node) => node.id),
     );
-    // rack_id가 없을 수 있어 resourceCode와 노드 ID 규칙을 순서대로 대체한다.
     const accessNodesByRack = new Map();
 
     nodes
@@ -75,16 +71,13 @@ const withRackStorageNodes = (graph) => {
     };
 };
 
-// 백엔드 레이아웃 응답을 화면에서 사용하는 그래프 구조로 변환한다.
 const convertWarehouseLayout = (data) => {
-    // 엣지의 DB 노드 ID를 화면용 nodeCode로 치환하기 위한 맵이다.
     const nodeCodeMap = new Map(
         data.nodes
             .filter((node) => node.nodeCode)
             .map((node) => [node.id, node.nodeCode]),
     );
 
-    // 백엔드 확장 속성을 보존하되 화면에서 공통으로 사용하는 필드는 명시적으로 정규화한다.
     const convertedNodes = data.nodes
         .filter((node) => node.nodeCode && node.nodeType)
         .map((node) => {
@@ -220,7 +213,6 @@ function WarehouseSVG({
             } catch (error) {
                 if (cancelled) return;
 
-                // 조회 실패 시 이전 창고 지도가 남지 않도록 그래프 상태를 비운다.
                 console.error("창고 레이아웃 조회 오류:", error);
                 setGraphData(null);
                 setLayoutError(error.message ?? "창고 지도를 불러오지 못했습니다.");
@@ -239,7 +231,6 @@ function WarehouseSVG({
         };
     }, [warehouseId, layoutReloadKey]);
 
-    // 상품 조회에 실패해도 빈 배열을 유지해 지도와 재고 렌더링은 계속한다.
     useEffect(() => {
         let cancelled = false;
         productApi.getAll()
@@ -310,14 +301,12 @@ function WarehouseSVG({
     // ============================================================
     // 4. 그래프 인덱스와 시설 관계 계산
     // ============================================================
-    // 창고별 좌표 범위를 고정 SVG 영역에 맞게 정규화한다.
     const xValues = graphData.nodes.map((node) => node.x);
     const yValues = graphData.nodes.map((node) => node.y);
 
     const convertX = createCoordinateConverter(xValues, SVG_WIDTH, PADDING_X);
     const convertY = createCoordinateConverter(yValues, SVG_HEIGHT, PADDING_Y);
 
-    // 시설 관계와 로봇 위치 보정에서 반복 조회할 인덱스다.
     const nodeMap = new Map(
         graphData.nodes.map((node) => [node.id, node])
     );
@@ -340,7 +329,6 @@ function WarehouseSVG({
         (node) => node.type === "inbound_handoff_access",
     );
 
-    // 후보가 여러 개면 robotKey로 고정해 같은 로봇이 렌더링마다 다른 접근 노드를 선택하지 않게 한다.
     const inboundAccessForMobileNode = (nodeCode, robotKey = 0) => {
         const candidates = inboundAccessNodes.filter((accessNode) => (
             accessNode.id === nodeCode
@@ -353,7 +341,6 @@ function WarehouseSVG({
         return selectByStableKey(candidates, robotKey);
     };
 
-    // station_id가 없으면 resourceCode와 노드 ID를 차례로 대체해 출고 설비를 그룹화한다.
     const outboundStationGroups = new Map();
     graphData.nodes
         .filter((node) => node.type === "outbound_station_access")
@@ -383,7 +370,6 @@ function WarehouseSVG({
         return [...routeNodeIds].map((id) => nodeMap.get(id)).filter(Boolean);
     };
 
-    // 접근 노드의 평균 좌표를 논리 출고 연결선의 스테이션 중심점으로 사용한다.
     const outboundLogicalGroups = [...outboundStationGroups.values()].map((group) => {
         const hubs = [...new Map(
             group.accessNodes
@@ -405,7 +391,6 @@ function WarehouseSVG({
         };
     });
 
-    // 두 개 이상의 출고 접근 노드와 서비스 엣지로 연결된 route를 고정 출고 로봇 허브로 판단한다.
     const fixedOutboundHubs = [...new Map(
         outboundLogicalGroups
             .flatMap((group) => group.hubs)
@@ -428,7 +413,6 @@ function WarehouseSVG({
         .map((edge) => nodeMap.get(peerNodeId(edge, hub.id)))
         .filter((node) => node?.type === "route" && !fixedHubIds.has(node.id));
 
-    // 출고 그룹 판별 시 그룹 ID, 슈트, 접근 노드, 고정 허브와 AMR 경계 노드까지 확인한다.
     const stationGroupForMobileNode = (nodeCode) =>
         outboundLogicalGroups.find((group) =>
             group.id === nodeCode
@@ -443,7 +427,6 @@ function WarehouseSVG({
             )
         );
 
-    // 직접 연결된 접근 노드를 우선하고, 없으면 robotKey를 기준으로 그룹 내 후보를 고정한다.
     const stationAccessForMobileNode = (nodeCode, robotKey = 0) => {
         const group = stationGroupForMobileNode(nodeCode);
         if (!group || group.accessNodes.length === 0) return null;
@@ -457,7 +440,6 @@ function WarehouseSVG({
         return selectByStableKey(candidates, robotKey);
     };
 
-    // 모바일 노드와 경계를 공유하는 허브를 우선하고, 없으면 y축 거리가 가까운 허브를 사용한다.
     const fixedHubForStationAccess = (accessNode, mobileNode) => {
         const candidates = fixedHubNodesForAccess(accessNode)
             .filter((node) => fixedHubIds.has(node.id));
@@ -471,17 +453,7 @@ function WarehouseSVG({
     // ============================================================
     // 5. 로봇 표시 노드 보정
     // ============================================================
-    /*
-     * 로봇은 실제로 OUTBOUND_STATION_ACCESS까지만 주행한다.
-     * 외부 상태가 논리 출고지나 슈트 코드를 가리키더라도 화면에서 사라지지 않도록
-     * 실제 접근 가능한 노드 좌표로 보정한다.
-     *
-     * 보정 순서:
-     * 1) 출고 접근 노드 → 인접 AMR 경계 노드
-     * 2) 고정 허브 → 허브 주변 AMR 경계 노드
-     * 3) 일반 route → 원래 노드
-     * 4) 논리 출고지·슈트 → 소속 출고 그룹의 실제 접근 노드
-     */
+    // 논리 출고 노드는 실제 주행 가능한 접근 노드로 보정한다.
     const resolveRobotDisplayNode = (robot, requestedNodeCode = robot.node_id) => {
         const nodeCode = requestedNodeCode;
         const exactNode = nodeMap.get(nodeCode);
@@ -526,7 +498,6 @@ function WarehouseSVG({
     // ============================================================
     // 6. 상품·작업·재고 파생 데이터
     // ============================================================
-    // externalOperationId 맵은 저장된 작업과 생성 명령의 중복 표시를 막는다.
     const productById = new Map(
         products.map((product) => [Number(product.id), product]),
     );
@@ -575,7 +546,6 @@ function WarehouseSVG({
     // ============================================================
     // 7. 시설 인계와 입고 대기 BOX 계산
     // ============================================================
-    // service_progress를 기준으로 시설과 로봇 사이에서 이동 중인 BOX를 계산한다.
     const transferBoxes = robots.flatMap((robot) => {
         const serviceNode = resolveRobotDisplayNode(robot);
         const serviceKind = robot.service_kind?.toUpperCase();
@@ -585,12 +555,10 @@ function WarehouseSVG({
             return [];
         }
 
-        // transferStartNode는 출고 고정 허브를 찾을 때 기준이 되는 실제 접근 노드다.
         let facilityNodeIds = [];
         let direction = null;
         let transferStartNode = serviceNode;
 
-        // 입고 PICKUP은 외부 포트에서 AMR 접근 노드 방향으로 BOX가 이동한다.
         if (
             taskType === "INBOUND"
             && serviceKind === "PICKUP"
@@ -606,7 +574,6 @@ function WarehouseSVG({
             transferStartNode = inboundAccess;
             direction = "inbound";
 
-            // 출고 DROP/STATION은 AMR 접근 노드에서 고정 로봇을 거쳐 슈트로 BOX가 이동한다.
         } else if (
             taskType === "OUTBOUND"
             && ["DROP", "STATION"].includes(serviceKind)
@@ -634,7 +601,6 @@ function WarehouseSVG({
             return [];
         }
 
-        // 같은 작업이 렌더링마다 다른 포트나 슈트를 선택하지 않도록 task/robot ID로 후보를 고정한다.
         const facilityNode = selectByStableKey(
             facilityNodes,
             robot.current_task_id ?? robot.robot_id,
@@ -656,7 +622,6 @@ function WarehouseSVG({
         let y;
         let stage = "facility-to-mobile";
 
-        // 입고는 단일 구간, 출고는 고정 허브가 있으면 두 구간으로 나누어 보간한다.
         if (direction === "inbound") {
             x = interpolate(facilityX, serviceX, progress);
             y = interpolate(facilityY, serviceY, progress);
@@ -710,7 +675,6 @@ function WarehouseSVG({
             .map((command) => [command.operationId, command]),
     );
 
-    // 저장된 입고 작업에는 같은 operationId의 생성 명령을 연결한다.
     const inboundTaskEntries = tasks
         .filter((task) => task.taskType === "INBOUND")
         .map((task) => ({
@@ -720,7 +684,6 @@ function WarehouseSVG({
             itemId: task.itemId,
         }));
 
-    // 아직 저장되지 않은 입고 명령만 대기열에 추가해 작업과의 중복 표시를 막는다.
     const inboundCommandEntries = generatedCommands
         .filter((command) => command.operationType === "INBOUND")
         .filter((command) => !taskByOperationId.has(command.operationId))
@@ -731,11 +694,9 @@ function WarehouseSVG({
             itemId: command.productId,
         }));
 
-    // AMR이 아직 수령하지 않은 BOX를 입고 포트별로 그룹화한다.
     const waitingInboundGroups = new Map();
     [...inboundTaskEntries, ...inboundCommandEntries].forEach((entry, index) => {
         const task = entry.task;
-        // 종료된 작업이거나 재고 반영까지 끝난 작업은 입고 대기 상태가 아니므로 제외한다.
         if (
             task
             && (
@@ -744,7 +705,6 @@ function WarehouseSVG({
             )
         ) return;
 
-        // 이미 로봇이 PICKUP 서비스를 수행 중이거나 BOX를 운반 중이면 포트 대기 표시를 제거한다.
         const robot = task ? robotByTaskId.get(Number(task.id)) : null;
         const pickupInProgress = robot
             && robot.task_type?.toUpperCase() === "INBOUND"
@@ -752,8 +712,6 @@ function WarehouseSVG({
             && robot.service_progress != null;
         if (pickupInProgress || robot?.carrying_load) return;
 
-        // 작업/명령이 지정한 시작 노드를 DB ID 또는 노드 코드로 찾는다.
-        // 직접 접근 노드가 아니면 주변 입고 접근 노드를 찾고, 그래도 없으면 순서 기반 기본 노드를 사용한다.
         const requestedNodeId = task?.startNodeId ?? entry.command?.source?.nodeId;
         const requestedNodeCode = entry.command?.source?.nodeCode
             ?? entry.command?.source?.facilityCode;
@@ -792,7 +750,6 @@ function WarehouseSVG({
     // 8. 로봇 렌더링 데이터와 화면 조합
     // ============================================================
 
-    // BOX가 허브를 지나면 working, 슈트로 방출 중이면 releasing 상태를 적용한다.
     const fixedOutboundRobots = fixedOutboundHubs.map((hub) => {
         const activeTransfers = transferBoxes.filter((box) => box.fixedHubId === hub.id);
         const index = fixedOutboundHubs.indexOf(hub);
@@ -817,7 +774,6 @@ function WarehouseSVG({
         ),
     );
 
-    // 자식 레이어가 시설 관계를 다시 계산하지 않도록 로봇 표시 데이터를 부모에서 준비한다.
     const mobileRobotMarkers = robots
         .map((robot) => {
             const fromNode = resolveRobotDisplayNode(

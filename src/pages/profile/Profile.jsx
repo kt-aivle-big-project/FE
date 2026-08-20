@@ -43,12 +43,10 @@ function Profile() {
         fetchProfile();
     }, []);
 
-    // 사용자 이름 입력값 변경
     const handleNameChange = (event) => {
         setName(event.target.value);
     };
 
-    // 사용자 정보 수정
     const handleProfileSubmit = async (event) => {
         event.preventDefault();
 
@@ -71,7 +69,6 @@ function Profile() {
         }
     };
 
-    // 비밀번호 입력값 변경
     const handlePasswordChange = (event) => {
         const { name: fieldName, value } = event.target;
 
@@ -81,7 +78,6 @@ function Profile() {
         }));
     };
 
-    // 비밀번호 변경 요청 처리
     const handlePasswordSubmit = async (event) => {
         event.preventDefault();
 

@@ -9,7 +9,6 @@ const BOARD_TABS = [
     { id: "archive", label: "자유 게시판" },
 ];
 
-const STORAGE_KEY = "laro-board-posts";
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 const normalizeKeyword = (value) => value.trim().toLowerCase();

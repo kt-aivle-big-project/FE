@@ -6,7 +6,6 @@ import {
 import { isGuestSession } from "../../api/auth";
 import "../../styles/simulation/SimulationPanel.css";
 
-// 화면 표시용 상태와 작업 유형 라벨을 관리한다.
 const PLAN_STATUS_LABEL = {
     plan_validated: "계획 검증 완료",
     input_rejected: "명령 확인 필요",
@@ -22,11 +21,9 @@ const OPERATION_LABEL = {
     RECOVERY: "복구",
 };
 
-// snake_case와 camelCase 응답을 모두 지원한다.
 const field = (source, snakeCase, camelCase) =>
     source?.[snakeCase] ?? source?.[camelCase];
 
-// 배열이 아닌 값은 빈 배열로 정규화한다.
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
 const CYCLE_TO_WORKFLOW_STATE = {
@@ -99,10 +96,8 @@ const COMMAND_EXPRESSION_TOGGLES = [
     },
 ];
 
-// 사용자 화면에 노출하지 않을 내부 사전 점검 오류를 정의한다.
 const HIDDEN_PREFLIGHT_PROBLEM = "REDIS_RUNTIME_NOT_INITIALIZED";
 
-// 서버 상태 조회 주기를 한 곳에서 관리한다.
 const PREFLIGHT_POLL_INTERVAL_MS = 3000;
 const CYCLE_POLL_INTERVAL_MS = 1000;
 
@@ -130,7 +125,6 @@ const formatWorkflowError = (error) => {
     return message || "AI 실행 계획을 생성하지 못했습니다. 다시 시도해 주세요.";
 };
 
-// 밀리초 단위 시간을 화면용 분/초 문자열로 변환한다.
 const formatDuration = (milliseconds) => {
     if (!Number.isFinite(Number(milliseconds))) {
         return "-";
@@ -143,7 +137,6 @@ const formatDuration = (milliseconds) => {
     return minutes > 0 ? `${minutes}분 ${seconds}초` : `${seconds}초`;
 };
 
-// 내부 계획기 경고는 사용자에게 의미가 드러나는 짧은 안내로 바꾼다.
 const formatPlanWarning = (warning) => {
     const value = String(warning ?? "");
 
@@ -161,7 +154,6 @@ const formatPlanWarning = (warning) => {
     return value;
 };
 
-// 생성 시각을 한국어 로케일의 시:분:초 형식으로 표시한다.
 const formatGeneratedAt = (value) => {
     if (!value) {
         return "-";
@@ -179,7 +171,6 @@ const formatGeneratedAt = (value) => {
     });
 };
 
-// 서버의 마지막 갱신 시각을 기준으로 현재 단계의 경과 시간을 계산한다.
 const useElapsedSeconds = (active, serverUpdatedAt) => {
     const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
@@ -209,28 +200,6 @@ const useElapsedSeconds = (active, serverUpdatedAt) => {
     return elapsedSeconds;
 };
 
-// 로봇 이동 경로가 길면 앞뒤 노드만 남겨 간단하게 표시한다.
-const compactRouteNodes = (robot) => {
-    const steps = asArray(robot?.steps);
-    const nodes = [field(robot, "initial_node", "initialNode")];
-
-    steps.forEach((step) => {
-        const node = field(step, "to_node", "toNode")
-            ?? field(step, "node_id", "nodeId");
-
-        if (node && nodes[nodes.length - 1] !== node) {
-            nodes.push(node);
-        }
-    });
-
-    const filtered = nodes.filter(Boolean);
-    if (filtered.length <= 5) {
-        return filtered;
-    }
-
-    return [...filtered.slice(0, 2), "…", ...filtered.slice(-2)];
-};
-
 function SimulationPanel({
     simulationRunId,
     simulationExecutionVersion,
@@ -240,7 +209,6 @@ function SimulationPanel({
     onGeneratedCommandsChange,
     onPlanActiveChange,
 }) {
-    // 사전 점검, 자동 명령 생성, AI 계획 상태를 관리한다.
     const [preflight, setPreflight] = useState({
         state: "idle",
         data: null,
@@ -280,7 +248,6 @@ function SimulationPanel({
     const openedReviewInteractionRef = useRef(null);
     const guestSession = isGuestSession();
 
-    // 새 실행은 명령부터 보여주고, 계획 단계가 시작되면 완료된 명령은 자동으로 접는다.
     useEffect(() => {
         setExpandedPlanSections({ commands: true, plan: true });
         setManualCommand("");
@@ -301,7 +268,6 @@ function SimulationPanel({
         }
     }, [workflow.state]);
 
-    // LLM 명령 표현 설정이 바뀌면 현재 시뮬레이션 실행에 저장한다.
     useEffect(() => {
         let cancelled = false;
 
@@ -343,12 +309,10 @@ function SimulationPanel({
         commandExpressionMix?.averageTasksPerRobot,
     ]);
 
-    // AI 계획 실행 가능 여부를 주기적으로 확인한다.
     useEffect(() => {
         let cancelled = false;
         let timerId;
 
-        // 실행 대상이 바뀌면 이전 워크플로와 선택 상태를 초기화한다.
         setWorkflow({
             state: "idle",
             generated: null,
@@ -408,7 +372,6 @@ function SimulationPanel({
         };
     }, [simulationRunId, simulationExecutionVersion]);
 
-    // 자동 명령 생성과 AI 계획 사이클 상태를 주기적으로 동기화한다.
     useEffect(() => {
         let cancelled = false;
         let timerId;
@@ -436,7 +399,6 @@ function SimulationPanel({
             const generatedCommands = asArray(generated?.frontView?.commands);
             const generatedRequestId = generated?.frontView?.requestId ?? null;
 
-            // 새 배치가 처음 도착했을 때만 첫 명령을 선택한다.
             if (
                 generatedCommands.length > 0
                 && generatedRequestId
@@ -523,7 +485,6 @@ function SimulationPanel({
         onSimulatedTimeChange,
     ]);
 
-    // 자동 생성 결과에서 화면에 필요한 명령 데이터를 추출한다.
     const generated = workflow.generated;
     const frontView = generated?.frontView;
     const summary = frontView?.summary;
@@ -541,12 +502,10 @@ function SimulationPanel({
     ).trim();
     const cycleUserCommand = String(cycleStatus?.userCommand ?? "").trim();
 
-    // 생성된 명령 목록을 상위 시뮬레이션 화면과 동기화한다.
     useEffect(() => {
         onGeneratedCommandsChange?.(commands);
     }, [commands, onGeneratedCommandsChange]);
 
-    // AI 계획 결과와 선택 명령에 연결된 로봇 정보를 계산한다.
     const result = workflow.planResponse?.result;
     const plan = result?.plan;
     const logicalOperations = asArray(
@@ -723,7 +682,6 @@ function SimulationPanel({
         }
     };
 
-    // 내부 전용 오류는 제외하고 사용자에게 필요한 사전 점검 문제만 표시한다.
     const preflightProblemText = asArray(preflight.data?.problems)
         .filter((problem) => !isHiddenPreflightProblem(problem))
         .join(", ");
@@ -738,24 +696,6 @@ function SimulationPanel({
     ) ?? plannedCommands.find(
         (command) => command.operationId === selectedOperationId
     ) ?? commands[0] ?? plannedCommands[0];
-    const selectedLogicalOperation = logicalOperations.find(
-        (operation) => field(operation, "operation_id", "operationId")
-            === selectedCommand?.operationId
-    );
-    const selectedRobotId = field(
-        selectedLogicalOperation,
-        "assigned_robot_id",
-        "assignedRobotId"
-    );
-    const selectedRobot = robotPlans.find(
-        (robot) => field(robot, "robot_id", "robotId") === selectedRobotId
-    );
-    const selectedRouteNodes = useMemo(
-        () => compactRouteNodes(selectedRobot),
-        [selectedRobot]
-    );
-
-    // 현재 워크플로 상태에 따라 로딩 문구와 배지 스타일을 결정한다.
     const commandIsBusy = ["checking", "generating"].includes(workflow.state);
     const planIsBusy = workflow.state === "planning";
     const isBusy = commandIsBusy || planIsBusy;
@@ -1141,7 +1081,6 @@ function SimulationPanel({
                         </section>
                     ) : (
                         <>
-                    {/* 두 옵션의 독립 동작은 유지하되 큰 카드 대신 작은 선택 칩으로 제공한다. */}
                     <section className="simulation-panel-section command-mode-section">
                         <div className="command-cycle-settings" aria-label="자동 계획 설정">
                             <div className="command-mode-heading">
@@ -1266,7 +1205,6 @@ function SimulationPanel({
                         )}
                     </section>
 
-                    {/* 완료 단계는 접고 현재 처리 중인 단계를 우선 노출한다. */}
                     <section className={`simulation-panel-section workflow-step-section ${commandIsBusy ? "active" : generated ? "complete" : ""}`}>
                         <button
                             type="button"
@@ -1390,7 +1328,6 @@ function SimulationPanel({
                         )}
                     </section>
 
-                    {/* 현재 진행 중인 AI 계획은 자동으로 펼쳐 바로 확인할 수 있게 한다. */}
                     <section className={`simulation-panel-section workflow-step-section ${planIsBusy ? "active" : result ? "complete" : ""}`}>
                         <button
                             type="button"

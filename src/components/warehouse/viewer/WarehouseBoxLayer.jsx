@@ -1,7 +1,3 @@
-/**
- * 입고 대기 BOX와 시설 인계 중인 BOX를 렌더링한다.
- * 위치와 상품 정보는 부모에서 계산된 화면용 데이터를 그대로 사용한다.
- */
 function WarehouseBoxLayer({
     waitingInboundGroups,
     transferBoxes,
@@ -10,7 +6,6 @@ function WarehouseBoxLayer({
 }) {
     return (
         <>
-            {/* AMR이 아직 수령하지 않은 입고 BOX를 포트별로 최대 3개까지 표시한다. */}
             <g className="warehouse-inbound-waiting-boxes">
                 {[...waitingInboundGroups.values()].map(({ portNode, entries }) => {
                     const visibleEntries = entries.slice(0, 3);
@@ -52,7 +47,6 @@ function WarehouseBoxLayer({
                 })}
             </g>
 
-            {/* 시설과 로봇 사이에서 이동 중인 BOX를 계산된 좌표에 표시한다. */}
             <g className="warehouse-box-transfers">
                 {transferBoxes.map((box) => (
                     <g

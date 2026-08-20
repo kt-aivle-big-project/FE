@@ -63,7 +63,6 @@ const readDraft = () => {
     }
 };
 
-// sessionStorage 저장과 JSON 직렬화를 한곳에서 처리한다.
 const saveDraft = (draft) => {
     try {
         sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
@@ -76,7 +75,6 @@ const clearDraft = () => {
     sessionStorage.removeItem(DRAFT_STORAGE_KEY);
 };
 
-// 백엔드 창고 응답을 폼 input에서 사용하는 문자열 값으로 변환한다.
 const createFormFromWarehouse = (warehouse) => ({
     name: warehouse.name ?? "",
     location: warehouse.location ?? "",
@@ -86,7 +84,6 @@ const createFormFromWarehouse = (warehouse) => ({
     status: warehouse.status ?? "ACTIVE",
 });
 
-// 저장 API가 요구하는 형식을 한곳에서 구성해 생성·수정 요청이 같은 계약을 사용하게 한다.
 const createWarehousePayload = (form, selectedMap) => ({
     name: form.name.trim(),
     width: Number(form.width),
@@ -100,7 +97,6 @@ const createWarehousePayload = (form, selectedMap) => ({
     },
 });
 
-// JSON 업로드 데이터가 지도 렌더링과 저장에 필요한 최소 구조를 갖췄는지 확인한다.
 const validateUploadedMap = (mapData) => {
     if (!Array.isArray(mapData?.nodes) || !Array.isArray(mapData?.edges)) {
         throw new Error("nodes와 edges 배열이 필요합니다.");
@@ -110,8 +106,6 @@ const validateUploadedMap = (mapData) => {
 // ============================================================
 // 3. 창고 생성·수정 페이지
 // ============================================================
-// 창고 신규 생성과 기존 창고 지도 수정을 함께 처리한다.
-// 직접 설계 또는 JSON 업로드 지도를 저장하며, 신규 생성 모드에서는 sessionStorage의 편집 초안을 복원한다.
 function WarehouseCreate() {
     const navigate = useNavigate();
     const { warehouseId } = useParams();
@@ -268,7 +262,6 @@ function WarehouseCreate() {
     // 3-4. 편집 상태 변경 이벤트
     // ============================================================
 
-    // 입력값이 변경되면 이전 저장 오류를 지우고 미저장 상태로 표시한다.
     const markAsChanged = useCallback(() => {
         setSaveError("");
         setIsDirty(true);

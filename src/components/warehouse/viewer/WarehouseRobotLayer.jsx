@@ -19,10 +19,6 @@ const ROBOT_IMAGES = {
     REPLENISH: robotReplenish,
 };
 
-/**
- * 고정 출고 로봇과 이동형 AMR을 마지막 레이어에 렌더링한다.
- * 로봇 이미지 선택 외의 위치·상품 계산은 부모에서 끝낸 값을 사용한다.
- */
 function WarehouseRobotLayer({
     fixedOutboundRobots,
     mobileRobotMarkers,
@@ -30,7 +26,6 @@ function WarehouseRobotLayer({
 }) {
     return (
         <>
-            {/* 출고 허브에 배치되는 고정 로봇이다. */}
             <g className="warehouse-fixed-station-robots">
                 {fixedOutboundRobots.map((stationRobot) => (
                     <g
@@ -54,7 +49,6 @@ function WarehouseRobotLayer({
                 ))}
             </g>
 
-            {/* 이동형 AMR은 개별 AnimatedRobotMarker가 위치 애니메이션을 담당한다. */}
             <g className="warehouse-robots">
                 {mobileRobotMarkers.map((marker) => {
                     const robotImage =
