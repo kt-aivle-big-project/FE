@@ -4,7 +4,6 @@ import ScenarioCreatePanel from "./ScenarioCreatePanel";
 import { scenarioApi, warehouseApi } from "../../api/client";
 import "../../styles/scenario/Scenario.css";
 
-// 정렬 옵션
 const SORT_OPTIONS = [
     { value: "UPDATED_DESC", label: "최근 수정 순" },
     { value: "UPDATED_ASC", label: "오래된 수정 순" },
@@ -12,7 +11,6 @@ const SORT_OPTIONS = [
 
 const PAGE_SIZE = 10;
 
-// 날짜 표시 형식
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
     year: "numeric",
     month: "2-digit",
@@ -23,7 +21,6 @@ const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
 });
 
 
-// ISO 날짜를 화면 표시용 형식으로 변환
 const formatDateTime = (dateTime) => {
     if (!dateTime) return "-";
 
@@ -36,7 +33,6 @@ const formatDateTime = (dateTime) => {
         .replace(".", "");
 };
 
-// 정렬에 사용할 수정 시간 반환
 const getUpdatedTime = (scenario) => {
     const time = Date.parse(scenario.updatedAt);
     return Number.isNaN(time) ? 0 : time;
@@ -53,7 +49,6 @@ function Scenario() {
     const [sortOption, setSortOption] = useState("UPDATED_DESC");
     const [currentPage, setCurrentPage] = useState(1);
 
-    // 백엔드에서 전체 시나리오 목록 조회
     useEffect(() => {
         const loadScenarios = async () => {
             try {
@@ -75,7 +70,6 @@ function Scenario() {
         loadScenarios();
     }, []);
 
-    // 시나리오 생성 패널에서 선택할 수 있는 개인 창고를 조회한다.
     useEffect(() => {
         const loadWarehouses = async () => {
             try {
@@ -95,7 +89,6 @@ function Scenario() {
         loadWarehouses();
     }, []);
 
-    // 검색 및 정렬 결과를 계산한다.
     const filteredScenarios = useMemo(() => {
         const normalizedSearchText = searchText.trim().toLowerCase();
 
@@ -117,7 +110,6 @@ function Scenario() {
             return matchesSearch;
         });
 
-        // 수정일 기준 오름차순 또는 내림차순 정렬
         const sortDirection =
             sortOption === "UPDATED_ASC" ? 1 : -1;
 
@@ -129,54 +121,45 @@ function Scenario() {
         );
     }, [scenarios, searchText, sortOption]);
 
-    // 전체 페이지 수 계산
     const totalPages = Math.max(
         1,
         Math.ceil(filteredScenarios.length / PAGE_SIZE)
     );
 
-    // 현재 페이지가 범위를 벗어나면 마지막 페이지 사용
     const safeCurrentPage = Math.min(currentPage, totalPages);
 
-    // 현재 페이지에 표시할 시나리오 목록
     const currentScenarios = filteredScenarios.slice(
         (safeCurrentPage - 1) * PAGE_SIZE,
         safeCurrentPage * PAGE_SIZE
     );
 
-    // 선택한 시나리오 조회
     const selectedScenario =
         scenarios.find(
             (scenario) => scenario.id === selectedScenarioId
         ) ?? null;
 
-    // 수정할 시나리오 조회
     const editingScenario =
         scenarios.find(
             (scenario) => scenario.id === editingScenarioId
         ) ?? null;
 
-    // 검색어 변경
     const handleSearchChange = (event) => {
         setSearchText(event.target.value);
         setCurrentPage(1);
     };
 
 
-    // 정렬 조건 변경
     const handleSortChange = (event) => {
         setSortOption(event.target.value);
         setCurrentPage(1);
     };
 
-    // 검색 및 정렬 조건 초기화
     const handleResetFilter = () => {
         setSearchText("");
         setSortOption("UPDATED_DESC");
         setCurrentPage(1);
     };
 
-    // 시나리오 생성 패널 열기
     const handleCreateScenario = () => {
         setOpenMenuScenarioId(null);
         setEditingScenarioId(null);
@@ -184,20 +167,17 @@ function Scenario() {
         setIsScenarioPanelOpen(true);
     };
 
-    // 시나리오 수정 패널 열기
     const handleEditScenario = (scenario) => {
         setOpenMenuScenarioId(null);
         setEditingScenarioId(scenario.id);
         setIsScenarioPanelOpen(true);
     };
 
-    // 시나리오 생성/수정 패널 닫기
     const handleCloseScenarioPanel = () => {
         setIsScenarioPanelOpen(false);
         setEditingScenarioId(null);
     };
 
-    // 시나리오 생성/수정
     const handleScenarioSubmit = async (submittedData) => {
         const isEditMode = editingScenarioId !== null;
 
@@ -213,7 +193,6 @@ function Scenario() {
                 const createdScenario =
                     await scenarioApi.create(submittedData);
 
-                // 백엔드에서 생성된 id가 있어야 생성 성공으로 처리한다.
                 if (!createdScenario || createdScenario.id == null) {
                     throw new Error(
                         "시나리오 생성 API 응답이 올바르지 않습니다."
@@ -223,7 +202,6 @@ function Scenario() {
                 console.log("시나리오 생성 성공:", createdScenario);
             }
 
-            // 저장 성공 후 백엔드의 최신 목록을 다시 조회한다.
             const response = await scenarioApi.getAll();
 
             if (!Array.isArray(response)) {
@@ -257,7 +235,6 @@ function Scenario() {
         }
     };
 
-    // 시나리오 삭제
     const handleDeleteScenario = async (scenario) => {
         setOpenMenuScenarioId(null);
 
@@ -272,7 +249,6 @@ function Scenario() {
         try {
             await scenarioApi.delete(scenario.id);
 
-            // 삭제 성공 후 백엔드의 최신 목록을 다시 조회한다.
             const response = await scenarioApi.getAll();
 
             if (!Array.isArray(response)) {
@@ -298,7 +274,6 @@ function Scenario() {
         }
     };
 
-    // 시나리오 상태 변경
     const handleScenarioStatusChange = (
         scenario,
         nextStatus
@@ -321,7 +296,6 @@ function Scenario() {
         setCurrentPage(1);
     };
 
-    // 더보기 메뉴 열기 또는 닫기
     const handleToggleScenarioMenu = (scenarioId) => {
         setOpenMenuScenarioId((previousScenarioId) =>
             previousScenarioId === scenarioId
@@ -330,7 +304,6 @@ function Scenario() {
         );
     };
 
-    // 선택한 시나리오 상세 표시
     const handleScenarioClick = (scenarioId) => {
         setOpenMenuScenarioId(null);
         setIsScenarioPanelOpen(false);
@@ -338,7 +311,6 @@ function Scenario() {
         setSelectedScenarioId(scenarioId);
     };
 
-    // 상세 화면 닫기
     const handleCloseDetail = () => {
         setSelectedScenarioId(null);
     };

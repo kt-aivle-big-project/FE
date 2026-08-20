@@ -20,7 +20,6 @@ function useStompSubscriptions(subscriptions, enabled = true) {
     const handlersRef = useRef(subscriptions);
     handlersRef.current = subscriptions;
 
-    // 구독 대상 토픽 목록이 바뀔 때만 재구독
     const topics = Object.keys(subscriptions ?? {});
     const topicKey = topics.join("|");
 
@@ -68,7 +67,6 @@ function useStompSubscriptions(subscriptions, enabled = true) {
                 try {
                     subscription.unsubscribe();
                 } catch {
-                    // 이미 해제된 경우 무시
                 }
             });
             client.deactivate();

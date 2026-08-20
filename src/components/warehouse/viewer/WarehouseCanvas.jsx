@@ -3,10 +3,7 @@ import WarehouseFacilityLayer from "./WarehouseFacilityLayer";
 import WarehouseGraphLayer from "./WarehouseGraphLayer";
 import WarehouseRobotLayer from "./WarehouseRobotLayer";
 
-/**
- * 창고 SVG의 루트와 레이어 순서를 관리한다.
- * 기존 화면 겹침을 그대로 유지하기 위해 그래프 → BOX → 시설 → 로봇 순서로 렌더링한다.
- */
+// 레이어 순서: 그래프 → BOX → 시설 → 로봇
 function WarehouseCanvas({
     svgWidth,
     svgHeight,
@@ -57,7 +54,6 @@ function WarehouseCanvas({
                     </pattern>
                 </defs>
 
-                {/* 창고 바닥과 격자를 가장 먼저 그린다. */}
                 <rect
                     x="0"
                     y="0"

@@ -75,7 +75,6 @@ const normalizeHistoryList = (response) => {
                 ? response.items
                 : [];
 
-    // 재계획 API의 중첩 목록이 null이어도 화면에서 안전하게 사용할 수 있도록 정리한다.
     return histories.map((history) => ({
         ...history,
         routes: Array.isArray(history?.routes)
@@ -98,8 +97,6 @@ function ScenarioReplanHistory() {
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
-    // 상세 화면에서 넘긴 실행 ID를 우선 사용한다.
-    // 실행 ID가 없으면 마지막으로 선택한 시나리오의 실행 ID를 보조적으로 사용한다.
     const simulationRunId = useMemo(() => {
         if (queryRunId) {
             return queryRunId;

@@ -1,4 +1,3 @@
-// 로그인 시 저장한 인증 정보를 다루는 유틸
 
 const TOKEN_KEY = "accessToken";
 
@@ -37,7 +36,6 @@ export const isGuestSession = () => {
     return localStorage.getItem("loginType") === "guest";
 };
 
-// 인증 헤더 (토큰이 없으면 빈 객체)
 export const authHeaders = () => {
     const token = getAccessToken();
 

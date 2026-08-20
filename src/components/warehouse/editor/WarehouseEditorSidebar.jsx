@@ -28,7 +28,6 @@ function WarehouseEditorSidebar({
 }) {
     return (
         <aside className="layout-editor-palette">
-            {/* PALETTE_GROUPS와 TOOL_META를 이용해 도구 버튼을 데이터 기반으로 생성한다. */}
             {PALETTE_GROUPS.map((group) => (
                 <section key={group.title}>
                     <h4>{group.title}</h4>
@@ -50,7 +49,6 @@ function WarehouseEditorSidebar({
                 </section>
             ))}
 
-            {/* 반복 설비 그룹별 개수, 간격, 가로·세로 방향을 한 번에 조정한다. */}
             <section className="layout-editor-facility-settings">
                 <h4>설비 설정</h4>
                 {configurableFacilityGroups.length === 0 ? (
@@ -123,7 +121,6 @@ function WarehouseEditorSidebar({
                 })}
             </section>
 
-            {/* 선택한 객체의 위치·종류 또는 선택한 엣지의 통행 방향을 확인하고 수정하는 인스펙터이다. */}
             {(selectedObject || selectedAisle) && (
                 <section className="layout-editor-inspector">
                     <h4>선택 항목</h4>

@@ -56,10 +56,6 @@ function WarehouseEditorCanvas({
                 <div
                     className={`layout-editor-canvas ${activeTool === "AISLE" ? "drawing-aisle" : ""} ${activeTool === "DELETE" ? "deleting" : ""} ${panning ? "panning" : ""}`}
                 >
-                    {/*
-                      SVG의 viewBox가 현재 viewport 역할을 한다.
-                      포인터 이벤트는 이 요소에서 받아 객체 이동, 캔버스 이동, 배치, 연결을 처리한다.
-                    */}
                     <svg
                         ref={svgRef}
                         viewBox={`${activeViewport.x} ${activeViewport.y} ${activeViewport.width} ${activeViewport.height}`}
@@ -72,7 +68,6 @@ function WarehouseEditorCanvas({
                         role="application"
                         aria-label="창고 지도 설계 캔버스"
                     >
-                        {/* 객체를 정확한 간격으로 배치할 수 있도록 작은 격자와 큰 격자 패턴을 정의한다. */}
                         <defs>
                             <pattern
                                 id="warehouse-editor-minor-grid"
@@ -102,7 +97,6 @@ function WarehouseEditorCanvas({
                             </pattern>
                         </defs>
 
-                        {/* 창고 전체 경계와 기본 작은 격자를 그리는 배경 사각형이다. */}
                         <rect
                             x="0"
                             y="0"
@@ -123,7 +117,6 @@ function WarehouseEditorCanvas({
                             />
                         )}
 
-                        {/* 같은 그룹으로 묶인 반복 설비의 전체 범위와 개수를 배경 테두리로 표시한다. */}
                         <g className="layout-editor-facility-groups" aria-label="반복 설비 그룹">
                             {facilityGroups.map((group) => {
                                 const padding = existingMapMode ? 0.12 : 0.4;
@@ -148,10 +141,6 @@ function WarehouseEditorCanvas({
                             })}
                         </g>
 
-                        {/*
-                          사용자가 직접 만든 엣지를 그린다.
-                          첫 번째 투명한 굵은 선은 클릭 영역을 넓히고, 두 번째 선은 실제 시각 스타일을 담당한다.
-                        */}
                         <g className={`layout-editor-raw-aisles ${existingMapMode ? "compact" : ""}`}>
                             {aisles.map((aisle) => {
                                 const startObject = objectById.get(aisle.startNodeId);
@@ -213,7 +202,6 @@ function WarehouseEditorCanvas({
                             })}
                         </g>
 
-                        {/* 신규 지도 모드에서는 컴파일 과정에서 생성된 보조 경로망도 필요할 때 함께 표시한다. */}
                         {!existingMapMode && showGraph && (
                             <g className="layout-editor-generated-graph">
                                 {visibleEdges.map((edge) => {
@@ -245,10 +233,6 @@ function WarehouseEditorCanvas({
                             </g>
                         )}
 
-                        {/*
-                          렌더링 대상 객체를 종류별 SVG 도형으로 표현한다.
-                          경로 노드는 원, 충전소는 삼각형, 나머지 시설은 사각형을 기본으로 사용한다.
-                        */}
                         <g className="layout-editor-objects">
                             {orderedRenderObjects.map((object) => {
                                 if (object.kind === "route") {
@@ -387,7 +371,6 @@ function WarehouseEditorCanvas({
                             })}
                         </g>
 
-                        {/* 엣지의 시작 노드를 선택한 동안 두 번째 노드 선택을 유도하는 강조 표시이다. */}
                         {aisleStartPoint && (
                             <g className={`layout-editor-aisle-start ${existingMapMode ? "compact" : ""}`}>
                                 <circle
@@ -404,7 +387,6 @@ function WarehouseEditorCanvas({
                 </div>
             )}
 
-            {/* 지도 크기, 이동 단위, 생성 통계, 조작법, 현재 도구 안내를 실시간으로 보여 준다. */}
             <div className="layout-editor-statusbar">
                 <span>{numericWidth || 0}m × {numericHeight || 0}m</span>
                 <span>이동 단위 {editorGridSize}m</span>

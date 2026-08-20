@@ -7,7 +7,6 @@ import "../../styles/common/Sidebar.css";
 
 const RUN_ID_KEY = "simulationRunId";
 
-// 실제 시뮬레이션이 동작 중이라고 판단할 백엔드 상태
 const RUNNING_SIMULATION_STATUSES = [
     "RUNNING",
     "QUIESCING",
@@ -17,7 +16,6 @@ const RUNNING_SIMULATION_STATUSES = [
 
 function Sidebar() {
     const navigate = useNavigate();
-    // 저장된 실행 ID를 기준으로 현재 시뮬레이션을 추적한다.
     const [simulationRunId, setSimulationRunId] = useState(() => {
         const savedRunId = localStorage.getItem(RUN_ID_KEY);
 
@@ -26,7 +24,6 @@ function Sidebar() {
 
     const [simulationStatus, setSimulationStatus] = useState("IDLE");
 
-    // Simulation.jsx에서 실행 ID가 변경되면 Sidebar에도 즉시 반영한다.
     useEffect(() => {
         const handleSimulationRunChange = (event) => {
             const runId = event.detail?.runId ?? null;
@@ -51,7 +48,6 @@ function Sidebar() {
         };
     }, []);
 
-    // 페이지 진입 또는 새로고침 시 현재 실행 상태를 복구한다.
     useEffect(() => {
         if (!simulationRunId) {
             setSimulationStatus("IDLE");
@@ -78,7 +74,6 @@ function Sidebar() {
         loadSimulationStatus();
     }, [simulationRunId]);
 
-    // 실행 중인 시뮬레이션의 상태 변경을 실시간으로 받는다.
     const simulationSubscriptions = simulationRunId
         ? {
             [TOPICS.SIMULATION_RUNS]: (run) => {
@@ -106,7 +101,6 @@ function Sidebar() {
             return;
         }
 
-        // 로그인 관련 저장 정보를 삭제한다.
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");

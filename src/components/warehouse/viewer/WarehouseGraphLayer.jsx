@@ -1,7 +1,3 @@
-/**
- * 창고의 이동 경로와 노드를 렌더링하는 SVG 레이어이다.
- * 실제 이동 엣지, 통로 라벨, route 노드, 시설 관계를 설명하는 논리 엣지를 담당한다.
- */
 function WarehouseGraphLayer({
     graphData,
     nodeMap,
@@ -13,7 +9,6 @@ function WarehouseGraphLayer({
 }) {
     return (
         <>
-            {/* 이동 가능한 활성 엣지만 표시한다. */}
             <g className="warehouse-edges">
                 {graphData.edges.map((edge) => {
                     if (
@@ -43,7 +38,6 @@ function WarehouseGraphLayer({
                 })}
             </g>
 
-            {/* 각 통로의 첫 번째 열 노드에 A01 형식의 통로 라벨을 표시한다. */}
             <g className="warehouse-aisle-labels">
                 {graphData.nodes
                     .filter((node) => node.type === "route" && node.col === 0)
@@ -60,7 +54,6 @@ function WarehouseGraphLayer({
                     ))}
             </g>
 
-            {/* AMR이 실제로 지나는 route 노드를 표시한다. */}
             <g className="warehouse-route-nodes">
                 {graphData.nodes
                     .filter((node) => node.type === "route")
@@ -89,7 +82,6 @@ function WarehouseGraphLayer({
                     ))}
             </g>
 
-            {/* 시설 관계를 설명하기 위한 논리 엣지이며 실제 로봇 경로와는 구분된다. */}
             <g className="warehouse-logical-edges">
                 {inboundLogicalEdges.map((edge) => (
                     <line

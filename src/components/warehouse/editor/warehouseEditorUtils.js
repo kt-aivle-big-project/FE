@@ -8,10 +8,6 @@ import {
 // 1. 상태 복사와 객체·엣지 표시 계산
 // ============================================================
 
-/**
- * 현재 객체와 엣지를 실행 취소용 스냅샷으로 복사한다.
- * 과거 기록이 이후 수정의 영향을 받지 않도록 rawNode, start, end, rawEdges도 새 객체로 복사한다.
- */
 export const snapshotOf = (objects, aisles) => ({
     objects: objects.map((object) => ({
         ...object,
@@ -25,7 +21,6 @@ export const snapshotOf = (objects, aisles) => ({
     })),
 });
 
-// 90도 단위 회전을 반영한 객체의 실제 가로·세로 크기를 반환한다.
 export const objectDimensions = (object) => {
     const rotated = Math.abs(Number(object.rotation) % 180) === 90;
 
@@ -35,7 +30,6 @@ export const objectDimensions = (object) => {
     };
 };
 
-// A001 형식에서 가장 앞의 사용 가능한 엣지 ID를 생성한다.
 export const nextAisleId = (aisles) => {
     const used = new Set(aisles.map((aisle) => aisle.id));
     let sequence = 1;
@@ -47,7 +41,6 @@ export const nextAisleId = (aisles) => {
     return `A${String(sequence).padStart(3, "0")}`;
 };
 
-// 엣지 종류에 따라 화면에서 사용할 선 스타일 클래스를 반환한다.
 export const aisleVisualClass = (aisle) => {
     const type = String(aisle.rawEdges?.[0]?.type ?? "lane").toLowerCase();
 
@@ -70,7 +63,6 @@ export const aisleVisualClass = (aisle) => {
     return "route-edge";
 };
 
-// 기존 지도에서 객체가 겹칠 때 적용할 렌더링 순서를 반환한다.
 export const objectRenderPriority = (object) => {
     const type = object.rawNode?.type;
 
@@ -96,7 +88,6 @@ export const isRackAccessObject = (object) =>
 // 2. 반복 설비 그룹 계산
 // ============================================================
 
-// facilityIndex를 우선하고, 값이 없으면 현재 배치 방향의 좌표 순서로 정렬한다.
 export const orderedFacilityMembers = (members, orientation) =>
     [...members].sort((left, right) => {
         const indexDifference =
@@ -112,7 +103,6 @@ export const orderedFacilityMembers = (members, orientation) =>
             : left.y - right.y || left.x - right.x;
     });
 
-// 회전된 객체 크기까지 반영해 반복 설비 그룹의 최소 경계를 계산한다.
 export const facilityGroupBounds = (members) => {
     if (members.length === 0) {
         return null;
@@ -143,7 +133,6 @@ export const facilityGroupLabel = (kind) => ({
     charging: "충전 설비",
 }[kind] ?? "설비");
 
-// 객체가 겹치지 않도록 배치 방향의 점유 크기와 최소 여백을 합산한다.
 export const minimumFacilityStep = (members, orientation, compact) => {
     const occupiedSize = Math.max(
         ...members.map((member) => {
@@ -161,7 +150,6 @@ export const minimumFacilityStep = (members, orientation, compact) => {
     return Math.ceil((occupiedSize + minimumGap) * 100) / 100;
 };
 
-// 0 기반 번호를 a~z, aa 형식의 설비 라벨로 변환한다.
 export const alphaLabel = (index, upperCase = false) => {
     let value = index + 1;
     let label = "";
@@ -231,7 +219,6 @@ export const nextRawFacilityIdentity = (
 // 3. 초안 초기화와 공통 UI 유틸
 // ============================================================
 
-// 초안에서 편집 가능한 객체만 복사하고 buffer 객체는 제외한다.
 export const initialObjectsFromDraft = (initialDraft) => (
     Array.isArray(initialDraft?.objects)
         ? initialDraft.objects
@@ -240,7 +227,6 @@ export const initialObjectsFromDraft = (initialDraft) => (
         : []
 );
 
-// 초안에서 양 끝 노드가 있는 엣지만 복사하고 좌표 참조를 분리한다.
 export const initialAislesFromDraft = (initialDraft) => (
     Array.isArray(initialDraft?.aisles)
         ? initialDraft.aisles
@@ -259,7 +245,6 @@ export const clamp = (value, minimum, maximum) =>
 export const toolGuideMessage = (tool) =>
     TOOL_GUIDE_MESSAGES[tool] ?? "";
 
-// 입력 요소에서는 편집기 단축키가 기본 입력 동작을 방해하지 않도록 제외한다.
 export const isEditableKeyboardTarget = (target) => {
     const tagName = target?.tagName?.toLowerCase();
 
@@ -281,7 +266,6 @@ export const isPointInsideRect = (
     && clientY <= rect.bottom
 );
 
-// 저장된 간격이 없으면 기존 지도는 0.5, 신규 지도는 객체 크기와 여백을 기준으로 계산한다.
 export const defaultFacilityStep = (member, existingMapMode) => (
     Number(member?.facilityStep)
     || (
@@ -291,7 +275,6 @@ export const defaultFacilityStep = (member, existingMapMode) => (
     )
 );
 
-// 기존 지도 객체가 차지하는 실제 좌표 범위를 기본 viewport로 계산한다.
 export const calculateContentViewport = (
     objects,
     existingMapMode,
@@ -333,7 +316,6 @@ export const calculateContentViewport = (
 // 4. 그래프 표시와 검증 데이터
 // ============================================================
 
-// 양방향 컴파일 엣지를 노드 쌍 기준으로 묶어 화면에는 한 번만 표시한다.
 export const uniqueVisibleEdges = (edges) => {
     const visibleEdges = [];
     const visibleEdgeKeys = new Set();
@@ -352,7 +334,6 @@ export const uniqueVisibleEdges = (edges) => {
     return visibleEdges;
 };
 
-// facilityGroupId가 같은 객체를 구성원과 그룹 경계 정보로 묶는다.
 export const createFacilityGroups = (objects) => [
     ...new Set(
         objects
@@ -372,11 +353,6 @@ export const createFacilityGroups = (objects) => [
     };
 }).filter((group) => group.bounds);
 
-/**
- * 기존 지도에서 식별이 필요한 노드와 엣지 ID를 계산한다.
- * 각 행의 가장 왼쪽 route 노드, 각 열의 가장 위쪽 route 노드,
- * 설비 연결 지점, 현재 선택 항목과 엣지 연결 시작점을 중요 대상으로 포함한다.
- */
 export const createImportantGraphIds = ({
     aisles,
     aisleStart,
@@ -468,10 +444,6 @@ export const createImportantGraphIds = ({
     };
 };
 
-/**
- * 컴파일 검증 결과를 필수 시설, 경로 연결, 배치 검증의 세 단계로 분류한다.
- * 각 단계의 완료 여부와 사용자에게 보여 줄 다음 안내 단계를 반환한다.
- */
 export const createValidationState = ({
     aisles,
     compiled,

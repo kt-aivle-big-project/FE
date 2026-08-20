@@ -1,6 +1,5 @@
 import { LAYOUT_OBJECT_DEFINITIONS } from "../../../utils/warehouseLayoutBuilder";
 
-// 편집기 동작 설정
 export const GRID_SIZE = 1;
 export const EXISTING_MAP_GRID_SIZE = 0.05;
 export const EXISTING_MAP_MAJOR_GRID_SIZE = 0.25;
@@ -15,7 +14,6 @@ export const MAX_FACILITY_COUNT = 30;
 export const MAX_FACILITY_STEP = 10;
 export const DEFAULT_LAYOUT_TITLE = "사용자 설계 창고";
 
-// 안내 문구와 설비 설정
 export const DELETE_GUIDE_MESSAGE = "삭제할 노드나 엣지를 3초 동안 누르세요.";
 export const SAFE_DELETE_GUIDE_MESSAGE = "안전을 위해 삭제할 노드나 엣지를 3초 동안 누르세요.";
 
@@ -34,7 +32,6 @@ export const TOOL_GUIDE_MESSAGES = {
     DELETE: DELETE_GUIDE_MESSAGE,
 };
 
-// 기존 지도 모드에서 사용하는 축소 객체 크기이다.
 export const COMPACT_OBJECT_SIZES = {
     rack: { width: 0.48, height: 0.38 },
     inbound: { width: 0.32, height: 0.28 },
@@ -43,7 +40,6 @@ export const COMPACT_OBJECT_SIZES = {
     route: { width: 0, height: 0 },
 };
 
-// 팔레트 화면 메타데이터
 export const PALETTE_GROUPS = [
     {
         title: "시설물",
@@ -55,8 +51,6 @@ export const PALETTE_GROUPS = [
     },
 ];
 
-// 실제 생성 규칙은 warehouseLayoutBuilder가 담당하고,
-// 이 객체는 버튼에 표시할 이름·기호·설명만 관리한다.
 export const TOOL_META = {
     SELECT: {
         label: "선택·이동",

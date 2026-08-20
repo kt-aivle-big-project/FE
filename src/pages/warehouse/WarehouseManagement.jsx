@@ -7,7 +7,6 @@ import { layoutResponseToMapData } from "../../utils/warehouseLayoutAdapter";
 
 import warehouseGraph1 from "../../assets/warehouse-maps/warehouse_graph_1.json";
 
-// 백엔드 상태값 <-> 화면 표기
 const STATUS_TO_LABEL = {
     ACTIVE: "운영 중",
     MAINTENANCE: "점검 중",
@@ -20,7 +19,6 @@ const LABEL_TO_STATUS = {
     비활성: "INACTIVE",
 };
 
-// 백엔드 응답 -> 화면에서 쓰던 형태
 const toWarehouseView = (warehouse) => ({
     warehouse_id: warehouse.id,
     shared: Boolean(warehouse.shared),
@@ -431,11 +429,6 @@ function WarehouseManagement() {
     const [warehouseForm, setWarehouseForm] =
         useState(initialForm);
 
-    /**
-     * 창고 목록을 다시 불러온다.
-     *
-     * @param keepId 새로고침 후에도 선택을 유지할 창고 ID
-     */
     const reloadWarehouses = async (keepId = null) => {
         try {
             const list = await warehouseApi.getAll();
@@ -494,11 +487,7 @@ function WarehouseManagement() {
 
     const canSave = isBasicFormValid;
 
-    /**
-     * 창고 저장.
-     *
-     * 이름·소재지·상태 등만 바꾸며 지도는 건드리지 않는다.
-     */
+    // 지도는 수정하지 않는다.
     const handleSaveWarehouse = async () => {
         if (!canSave) {
             return;

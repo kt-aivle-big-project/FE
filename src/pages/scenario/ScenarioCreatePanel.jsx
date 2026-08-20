@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { isGuestSession } from "../../api/auth";
 import "../../styles/scenario/ScenarioCreatePanel.css";
 
-// 생성 또는 수정 모드의 초기 입력값을 만든다.
 const createInitialFormData = (initialScenario) => ({
     warehouseId:
         initialScenario?.warehouseId == null
@@ -44,7 +43,6 @@ function ScenarioCreatePanel({
     const [errors, setErrors] = useState({});
 
 
-    // ESC 키로 열려 있는 생성/수정 패널을 닫는다.
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (event.key === "Escape") {
@@ -60,7 +58,6 @@ function ScenarioCreatePanel({
     }, [onClose]);
 
 
-    // 일반 입력값을 변경한다.
     const handleInputChange = (event) => {
         const { name, value } = event.target;
 
@@ -75,7 +72,6 @@ function ScenarioCreatePanel({
         }));
     };
 
-    // 숫자 입력값을 변경한다.
     const handleNumberChange = (event) => {
         const { name, value } = event.target;
 
@@ -90,7 +86,6 @@ function ScenarioCreatePanel({
         }));
     };
 
-    // 필수 입력값과 배터리 범위를 검증한다.
     const validateForm = () => {
         const nextErrors = {};
 
@@ -134,7 +129,6 @@ function ScenarioCreatePanel({
         return Object.keys(nextErrors).length === 0;
     };
 
-    // 검증된 시나리오 정보를 부모 컴포넌트로 전달한다.
     const handleSubmit = (event) => {
         event.preventDefault();
 

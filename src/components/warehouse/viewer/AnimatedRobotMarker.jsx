@@ -3,12 +3,8 @@ import { robotPositionAt } from "./warehouseSvgUtils";
 
 const ROBOT_MARKER_SIZE = 46;
 
-// 목표 위치를 따라붙는 속도. 작을수록 즉각적이고, 클수록 부드럽다.
-// 80ms 정도면 백엔드 갱신 주기(100ms)와 자연스럽게 맞물린다.
 const SMOOTHING_TIME_MS = 80;
 
-// 이보다 멀리 떨어지면 보간하지 않고 바로 옮긴다.
-// (다른 노드로 재배치되거나 시뮬레이션을 초기화한 경우)
 const SNAP_DISTANCE = 120;
 
 const isLowBatteryRobot = (robot) => {
@@ -47,13 +43,6 @@ const lowBatteryTitle = (robot) => {
     return "배터리 부족";
 };
 
-/**
- * 로봇 한 대를 SVG 그룹으로 렌더링하고 위치를 애니메이션한다.
- *
- * 백엔드 스냅샷은 100ms마다 띄엄띄엄 오고 값도 조금씩 튄다.
- * 그래서 스냅샷 위치를 그대로 그리지 않고 "목표"로만 두고,
- * 화면 위치가 매 프레임 그 목표를 향해 조금씩 따라가게 한다.
- */
 function AnimatedRobotMarker({
     robot,
     fromX,
@@ -69,10 +58,8 @@ function AnimatedRobotMarker({
     loadTitle,
     hideLoad,
 }) {
-    // 매 프레임 React를 다시 렌더링하지 않고 SVG 그룹의 transform만 변경한다.
     const elementRef = useRef(null);
 
-    // 루프 안에서 항상 최신 값을 읽되, 값이 바뀌어도 루프를 다시 만들지 않는다.
     const targetRef = useRef(null);
 
     targetRef.current = {
@@ -84,7 +71,6 @@ function AnimatedRobotMarker({
         isRunning,
     };
 
-    // 화면에 실제로 그려지고 있는 위치
     const drawnRef = useRef(null);
 
     useEffect(() => {
@@ -153,10 +139,8 @@ function AnimatedRobotMarker({
                 window.cancelAnimationFrame(frameId);
             }
         };
-        // 마운트되어 있는 동안 한 번만 돈다.
     }, []);
 
-    // 첫 렌더에서도 로봇이 출발점으로 튀지 않도록 현재 시각 기준 위치를 적용한다.
     const initialPosition = drawnRef.current ?? robotPositionAt(
         robot,
         fromX,
