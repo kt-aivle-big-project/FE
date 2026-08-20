@@ -283,6 +283,10 @@ export const fulfillmentCommandApi = {
         api.post(`/simulation-runs/${runId}/fulfillment-commands/generate`, payload),
     getCycleStatus: (runId) =>
         api.get(`/simulation-runs/${runId}/command-cycle`),
+    getPlanSnapshots: (runId) =>
+        api.get(`/simulation-runs/${runId}/plan-snapshots`),
+    getLatestPlanSnapshot: (runId) =>
+        api.get(`/simulation-runs/${runId}/plan-snapshots/latest`),
     configureCycle: (runId, configuration = {}) =>
         api.put(`/simulation-runs/${runId}/command-cycle/configuration`, {
             mode: "AUTO",
