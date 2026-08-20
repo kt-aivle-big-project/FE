@@ -17,6 +17,7 @@ import {
     robotApi,
     fulfillmentCommandApi,
     scenarioApi,
+    userAccountApi,
 } from "../../api/client";
 import { isGuestSession } from "../../api/auth";
 
@@ -252,6 +253,17 @@ const toRobotView = (state) => {
     };
 };
 
+// 상단 사용자 이름은 개인정보 노출을 줄이기 위해 가운데 문자를 마스킹한다.
+const maskName = (value) => {
+    const characters = Array.from(String(value ?? "").trim());
+
+    if (characters.length === 0) return "사용자";
+    if (characters.length === 1) return "*";
+    if (characters.length === 2) return `${characters[0]}*`;
+
+    return `${characters[0]}${"*".repeat(characters.length - 2)}${characters.at(-1)}`;
+};
+
 const mergeRobotStateBatch = (previousRobots, incomingByRobotId) => {
     if (incomingByRobotId.size === 0) {
         return previousRobots;
@@ -299,6 +311,42 @@ const mergeRobotStateBatch = (previousRobots, incomingByRobotId) => {
 
 function Simulation() {
     const navigate = useNavigate();
+
+    const [currentUserName, setCurrentUserName] = useState("");
+    const guestSession = isGuestSession();
+    const maskedUserName = guestSession ? "게스트" : maskName(currentUserName);
+    const userInitial = guestSession
+        ? "G"
+        : currentUserName?.trim().charAt(0).toUpperCase() || "U";
+
+    useEffect(() => {
+        if (guestSession) {
+            return undefined;
+        }
+
+        let cancelled = false;
+
+        const loadCurrentUser = async () => {
+            try {
+                const data = await userAccountApi.getProfile();
+
+                if (!cancelled) {
+                    setCurrentUserName(data?.name ?? "");
+                }
+            } catch {
+                // 오류 객체에는 요청 정보가 포함될 수 있으므로 화면/콘솔에 그대로 노출하지 않는다.
+                if (!cancelled) {
+                    setCurrentUserName("");
+                }
+            }
+        };
+
+        loadCurrentUser();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [guestSession]);
 
     /* =========================================================
        상단 헤더 - 시뮬레이션 실행
@@ -1745,8 +1793,8 @@ function Simulation() {
                                 onClick={() => navigate("/profile")}
                                 aria-label="내 프로필로 이동"
                             >
-                                <span className="simulation-topbar-avatar">A</span>
-                                <strong>admin</strong>
+                                <span className="simulation-topbar-avatar">{userInitial}</span>
+                                <strong>{maskedUserName}</strong>
                             </button>
                         </div>
                     </div>

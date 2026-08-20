@@ -4,11 +4,42 @@ import { userAccountApi } from "../../api/client";
 import { clearAuth } from "../../api/auth";
 import "../../styles/profile/Profile.css";
 
-// 백엔드 연동 전 임시 사용자 정보
 const INITIAL_PROFILE = {
     name: "",
     email: "",
     createdAt: "-",
+};
+
+const maskName = (value) => {
+    const characters = Array.from(String(value ?? "").trim());
+
+    if (characters.length === 0) return "사용자";
+    if (characters.length === 1) return "*";
+    if (characters.length === 2) return `${characters[0]}*`;
+
+    return `${characters[0]}${"*".repeat(characters.length - 2)}${characters.at(-1)}`;
+};
+
+const maskEmail = (email) => {
+    const value = String(email ?? "").trim();
+    const atIndex = value.lastIndexOf("@");
+
+    if (atIndex <= 0 || atIndex === value.length - 1) {
+        return value;
+    }
+
+    const local = value.slice(0, atIndex);
+    const domain = value.slice(atIndex + 1);
+
+    if (local.length === 1) {
+        return `${local[0]}***@${domain}`;
+    }
+
+    const visibleLength = Math.min(2, local.length);
+    const visible = local.slice(0, visibleLength);
+    const maskedLength = Math.max(local.length - visibleLength, 3);
+
+    return `${visible}${"*".repeat(maskedLength)}@${domain}`;
 };
 
 function Profile() {
@@ -35,9 +66,9 @@ function Profile() {
                 const data = await userAccountApi.getProfile();
                 setProfile((prev) => ({ ...prev, ...data }));
                 setName(data.name ?? "");
-            } catch (error) {
-                console.error("사용자 정보 조회 실패:", error);
-                alert(error.message || "사용자 정보를 불러오지 못했습니다.");
+            } catch {
+                console.error("사용자 정보 조회 실패");
+                alert("사용자 정보를 불러오지 못했습니다.");
             }
         };
         fetchProfile();
@@ -60,11 +91,9 @@ function Profile() {
         try {
             const updatedProfile = await userAccountApi.updateProfile(trimmedName);
             setProfile((prev) => ({ ...prev, ...updatedProfile }));
-            localStorage.setItem("name", updatedProfile.name);
-
             alert("사용자 정보가 수정되었습니다.");
-        } catch (error) {
-            console.error("사용자 정보 수정 실패:", error);
+        } catch {
+            console.error("사용자 정보 수정 실패");
             alert("사용자 정보 수정에 실패했습니다.");
         }
     };
@@ -105,15 +134,15 @@ function Profile() {
         try {
             await userAccountApi.changePassword(currentPassword, newPassword);
             alert("비밀번호가 변경되었습니다.");
-
+        } catch {
+            console.error("비밀번호 변경 실패");
+            alert("비밀번호 변경에 실패했습니다.");
+        } finally {
             setPasswordForm({
                 currentPassword: "",
                 newPassword: "",
                 confirmPassword: "",
             });
-        } catch (error) {
-            console.error("비밀번호 변경 실패:", error);
-            alert("비밀번호 변경에 실패했습니다.");
         }
     };
 
@@ -138,9 +167,11 @@ function Profile() {
             clearAuth();
             alert("회원 탈퇴가 완료되었습니다.");
             navigate("/login", { replace: true });
-        } catch (error) {
-            console.error("회원 탈퇴 실패:", error);
+        } catch {
+            console.error("회원 탈퇴 실패");
             alert("회원 탈퇴에 실패했습니다.");
+        } finally {
+            setDeletePassword("");
         }
     };
 
@@ -171,8 +202,8 @@ function Profile() {
                         </div>
 
                         <div className="profile-summary-info">
-                            <strong>{profile.name}</strong>
-                            <span>{profile.email}</span>
+                            <strong>{maskName(profile.name)}</strong>
+                            <span>{maskEmail(profile.email)}</span>
                         </div>
                     </div>
 
@@ -198,8 +229,8 @@ function Profile() {
                             <div className="profile-field-content">
                                 <input
                                     id="profile-email"
-                                    type="email"
-                                    value={profile.email}
+                                    type="text"
+                                    value={maskEmail(profile.email)}
                                     disabled
                                 />
 
