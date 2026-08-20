@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ScenarioDetail from "./ScenarioDetail";
 import ScenarioCreatePanel from "./ScenarioCreatePanel";
 import { scenarioApi, warehouseApi } from "../../api/client";
@@ -49,9 +49,11 @@ function Scenario() {
     const [editingScenarioId, setEditingScenarioId] = useState(null);
     const [openMenuScenarioId, setOpenMenuScenarioId] = useState(null);
     const [selectedScenarioId, setSelectedScenarioId] = useState(null);
+    const [selectedScenarioIds, setSelectedScenarioIds] = useState(() => new Set());
     const [searchText, setSearchText] = useState("");
     const [sortOption, setSortOption] = useState("UPDATED_DESC");
     const [currentPage, setCurrentPage] = useState(1);
+    const selectAllCheckboxRef = useRef(null);
 
     // 백엔드에서 전체 시나리오 목록 조회
     useEffect(() => {
@@ -143,6 +145,44 @@ function Scenario() {
         (safeCurrentPage - 1) * PAGE_SIZE,
         safeCurrentPage * PAGE_SIZE
     );
+
+    // 현재 페이지의 다중 선택 상태 계산
+    const currentScenarioIds = currentScenarios.map((scenario) => scenario.id);
+    const selectedCurrentPageCount = currentScenarioIds.filter((scenarioId) =>
+        selectedScenarioIds.has(scenarioId)
+    ).length;
+    const isCurrentPageAllSelected =
+        currentScenarioIds.length > 0 &&
+        selectedCurrentPageCount === currentScenarioIds.length;
+    const isCurrentPagePartiallySelected =
+        selectedCurrentPageCount > 0 && !isCurrentPageAllSelected;
+
+    // 일부만 선택된 경우 헤더 체크박스를 중간 상태로 표시
+    useEffect(() => {
+        if (selectAllCheckboxRef.current) {
+            selectAllCheckboxRef.current.indeterminate =
+                isCurrentPagePartiallySelected;
+        }
+    }, [isCurrentPagePartiallySelected]);
+
+    // 목록이 갱신되면 실제로 존재하지 않는 선택 항목은 제거
+    useEffect(() => {
+        const validScenarioIds = new Set(scenarios.map((scenario) => scenario.id));
+
+        setSelectedScenarioIds((previousSelectedIds) => {
+            const nextSelectedIds = new Set(
+                [...previousSelectedIds].filter((scenarioId) =>
+                    validScenarioIds.has(scenarioId)
+                )
+            );
+
+            if (nextSelectedIds.size === previousSelectedIds.size) {
+                return previousSelectedIds;
+            }
+
+            return nextSelectedIds;
+        });
+    }, [scenarios]);
 
     // 선택한 시나리오 조회
     const selectedScenario =
@@ -257,6 +297,121 @@ function Scenario() {
         }
     };
 
+    // 개별 시나리오 선택/해제
+    const handleScenarioSelectionChange = (event, scenarioId) => {
+        event.stopPropagation();
+
+        const shouldSelect = event.target.checked;
+
+        setSelectedScenarioIds((previousSelectedIds) => {
+            const nextSelectedIds = new Set(previousSelectedIds);
+
+            if (shouldSelect) {
+                nextSelectedIds.add(scenarioId);
+            } else {
+                nextSelectedIds.delete(scenarioId);
+            }
+
+            return nextSelectedIds;
+        });
+    };
+
+    // 현재 페이지 전체 선택/해제
+    const handleCurrentPageSelectionChange = (event) => {
+        const shouldSelect = event.target.checked;
+
+        setSelectedScenarioIds((previousSelectedIds) => {
+            const nextSelectedIds = new Set(previousSelectedIds);
+
+            currentScenarioIds.forEach((scenarioId) => {
+                if (shouldSelect) {
+                    nextSelectedIds.add(scenarioId);
+                } else {
+                    nextSelectedIds.delete(scenarioId);
+                }
+            });
+
+            return nextSelectedIds;
+        });
+    };
+
+    // 선택된 시나리오 일괄 삭제
+    const handleDeleteSelectedScenarios = async () => {
+        const scenarioIdsToDelete = [...selectedScenarioIds];
+
+        if (scenarioIdsToDelete.length === 0) {
+            return;
+        }
+
+        setOpenMenuScenarioId(null);
+
+        const shouldDelete = window.confirm(
+            `선택한 ${scenarioIdsToDelete.length}개의 시나리오를 삭제할까요?`
+        );
+
+        if (!shouldDelete) {
+            return;
+        }
+
+        try {
+            const deleteResults = await Promise.allSettled(
+                scenarioIdsToDelete.map((scenarioId) =>
+                    scenarioApi.delete(scenarioId)
+                )
+            );
+
+            const deletedScenarioIds = scenarioIdsToDelete.filter(
+                (_, index) => deleteResults[index].status === "fulfilled"
+            );
+            const failedDeleteCount =
+                scenarioIdsToDelete.length - deletedScenarioIds.length;
+            const deletedScenarioIdSet = new Set(deletedScenarioIds);
+
+            // 삭제 처리 후 백엔드의 최신 목록을 다시 조회한다.
+            const response = await scenarioApi.getAll();
+
+            if (!Array.isArray(response)) {
+                throw new Error("시나리오 목록 응답이 배열이 아닙니다.");
+            }
+
+            setScenarios(response);
+            setSelectedScenarioIds((previousSelectedIds) => {
+                const nextSelectedIds = new Set(previousSelectedIds);
+                deletedScenarioIds.forEach((scenarioId) =>
+                    nextSelectedIds.delete(scenarioId)
+                );
+                return nextSelectedIds;
+            });
+
+            if (deletedScenarioIdSet.has(selectedScenarioId)) {
+                setSelectedScenarioId(null);
+            }
+
+            if (deletedScenarioIdSet.has(editingScenarioId)) {
+                setEditingScenarioId(null);
+                setIsScenarioPanelOpen(false);
+            }
+
+            if (failedDeleteCount > 0) {
+                alert(
+                    `${deletedScenarioIds.length}개는 삭제되었지만 ${failedDeleteCount}개는 삭제하지 못했습니다.`
+                );
+            }
+
+            console.log("선택 시나리오 삭제 완료:", {
+                deletedScenarioIds,
+                failedDeleteCount,
+            });
+        } catch (error) {
+            console.error("선택 시나리오 삭제 실패:", error);
+
+            alert(
+                error.message ??
+                    "선택한 시나리오 삭제에 실패했습니다."
+            );
+        }
+    };
+
     // 시나리오 삭제
     const handleDeleteScenario = async (scenario) => {
         setOpenMenuScenarioId(null);
@@ -280,6 +435,11 @@ function Scenario() {
             }
 
             setScenarios(response);
+            setSelectedScenarioIds((previousSelectedIds) => {
+                const nextSelectedIds = new Set(previousSelectedIds);
+                nextSelectedIds.delete(scenario.id);
+                return nextSelectedIds;
+            });
 
             if (selectedScenarioId === scenario.id) {
                 setSelectedScenarioId(null);
@@ -429,10 +589,25 @@ function Scenario() {
                         </button>
                     </div>
 
-                    {/* 목록 개수 */}
+                    {/* 목록 개수 및 다중 선택 작업 */}
                     <div className="scenario-list-count">
-                        총 <strong>{filteredScenarios.length}</strong>개의
-                        시나리오
+                        <span>
+                            총 <strong>{filteredScenarios.length}</strong>개의
+                            시나리오
+                            {selectedScenarioIds.size > 0 && (
+                                <> · <strong>{selectedScenarioIds.size}</strong>개 선택</>
+                            )}
+                        </span>
+
+                        {selectedScenarioIds.size > 0 && (
+                            <button
+                                type="button"
+                                className="scenario-button scenario-button-danger"
+                                onClick={handleDeleteSelectedScenarios}
+                            >
+                                선택 삭제 ({selectedScenarioIds.size})
+                            </button>
+                        )}
                     </div>
 
                     {/* 시나리오 테이블 */}
@@ -440,6 +615,16 @@ function Scenario() {
                         <table className="scenario-table">
                             <thead>
                                 <tr>
+                                    <th className="scenario-select-column">
+                                        <input
+                                            ref={selectAllCheckboxRef}
+                                            type="checkbox"
+                                            checked={isCurrentPageAllSelected}
+                                            disabled={currentScenarioIds.length === 0}
+                                            onChange={handleCurrentPageSelectionChange}
+                                            aria-label="현재 페이지 시나리오 전체 선택"
+                                        />
+                                    </th>
                                     <th>시나리오</th>
                                     <th>최근 수정</th>
                                     <th aria-label="작업" />
@@ -457,6 +642,23 @@ function Scenario() {
                                                 className={isSelected ? "is-selected" : ""}
                                                 onClick={() => handleScenarioClick(scenario.id)}
                                             >
+                                                <td
+                                                    className="scenario-select-column"
+                                                    onClick={(event) => event.stopPropagation()}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedScenarioIds.has(scenario.id)}
+                                                        onChange={(event) =>
+                                                            handleScenarioSelectionChange(
+                                                                event,
+                                                                scenario.id
+                                                            )
+                                                        }
+                                                        aria-label={`${scenario.scenarioName} 선택`}
+                                                    />
+                                                </td>
+
                                                 <td>
                                                     <button
                                                         type="button"
@@ -540,7 +742,7 @@ function Scenario() {
                                 ) : (
                                     <tr>
                                         <td
-                                            colSpan={3}
+                                            colSpan={4}
                                             className="scenario-empty"
                                         >
                                             <div className="scenario-empty-icon">

@@ -265,7 +265,7 @@
 .scenario-table-wrapper {
     width: 100%;
     min-width: 0;
-    min-height: 480px;
+    min-height: 500px;
     overflow: auto;
 }
 
@@ -277,19 +277,19 @@
 }
 
 .scenario-table th:nth-child(1) {
-    width: 46%;
+    width: 3%;
 }
 
 .scenario-table th:nth-child(2) {
-    width: 18%;
+    width: 20%;
 }
 
 .scenario-table th:nth-child(3) {
-    width: 26%;
+    width: 15%;
 }
 
 .scenario-table th:nth-child(4) {
-    width: 10%;
+    width: 5%;
 }
 
 .scenario-table th,
@@ -528,6 +528,73 @@
     color: var(--laro-danger);
 }
 
+/* 목록 개수 + 선택 삭제 영역 */
+.scenario-list-count {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 56px;
+    padding: var(--laro-padding-small) var(--laro-padding-large);
+    box-sizing: border-box;
+
+    color: var(--laro-subtext);
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-regular);
+}
+
+.scenario-list-count strong {
+    color: var(--laro-primary);
+    font-weight: var(--laro-font-weight-semibold);
+}
+
+
+/* 선택 삭제 버튼 */
+.scenario-button-danger {
+    margin-left: auto;
+    padding: var(--laro-padding-small) 16px;
+
+    border: 1px solid var(--laro-danger);
+    border-radius: var(--laro-radius-control);
+
+    background: var(--laro-surface);
+    color: var(--laro-danger);
+
+    font-size: var(--laro-font-body);
+    font-weight: var(--laro-font-weight-semibold);
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.scenario-button-danger:hover {
+    background: var(--laro-danger-light);
+}
+
+.scenario-button-danger:active {
+    background: var(--laro-danger);
+    color: var(--laro-white);
+}
+
+
+/* 체크박스 열 */
+.scenario-select-column {
+    width: 58px;
+    min-width: 58px;
+    text-align: center;
+}
+
+.scenario-select-column input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+
+    accent-color: var(--laro-primary);
+    cursor: pointer;
+}
 /* ============================================================
    8. 빈 상태 및 페이지네이션
 ============================================================ */
