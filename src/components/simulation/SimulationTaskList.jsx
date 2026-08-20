@@ -22,19 +22,16 @@ const TASK_STATUS_LABEL = {
 const normalizeValue = (value) =>
     typeof value === "string" ? value.toUpperCase() : value;
 
-// 작업 유형을 화면 표시용 문구로 변환한다.
 const getTaskTypeLabel = (taskType) => {
     const normalizedType = normalizeValue(taskType);
     return TASK_TYPE_LABEL[normalizedType] ?? taskType ?? "-";
 };
 
-// 작업 상태를 화면 표시용 문구로 변환한다.
 const getTaskStatusLabel = (status) => {
     const normalizedStatus = normalizeValue(status);
     return TASK_STATUS_LABEL[normalizedStatus] ?? status ?? "-";
 };
 
-// 작업 상태에 맞는 배지 클래스를 반환한다.
 const getTaskStatusClass = (status) => {
     switch (normalizeValue(status)) {
         case "PENDING":
@@ -56,7 +53,6 @@ const getTaskStatusClass = (status) => {
     }
 };
 
-// 백엔드 시간값을 시:분 형식으로 표시한다.
 const formatTaskTime = (dateTime) => {
     if (!dateTime) {
         return "-";
@@ -98,7 +94,6 @@ const getRobotIdLabel = (robotId) => {
         : `R${robotIdText}`;
 };
 
-// 작업의 출발지와 도착지를 하나의 경로 문구로 표시한다.
 const getTaskRoute = (task) => {
     const startNode =
         task.startNodeCode
@@ -139,7 +134,6 @@ const getTaskRoute = (task) => {
     return `${startNode} → ${endNode}`;
 };
 
-// 상품 정보가 없으면 기존 작업 설명을 사용하고, 둘 다 없으면 빈 값으로 둔다.
 const getTaskContent = (task) =>
     task.productName
     ?? task.product_name
@@ -161,7 +155,6 @@ const getAssignedAt = (task) =>
     ?? task.assigned_at;
 
 function SimulationTaskList({ taskList = [] }) {
-    // 목록 상단에는 현재 작업 상태를 간단히 요약한다.
     const pendingCount = taskList.filter(
         (task) => normalizeValue(task.status) === "PENDING"
     ).length;

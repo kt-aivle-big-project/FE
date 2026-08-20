@@ -1,528 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { optimizationApi, fulfillmentCommandApi, } from "../../api/client";
+import { fulfillmentCommandApi, optimizationApi } from "../../api/client";
 import "../../styles/scenario/ScenarioDetail.css";
-
-// AI 실행 이력 임시 데이터
-const MOCK_AI_CYCLE_STATUS = {
-    state: "COMPLETE",
-    planningMode: "AUTO",
-    simulatedTimeMs: 163000,
-    updatedAt: "2026-08-08T17:30:00",
-
-    generated: {
-        planRequest: {
-            userCommand:
-                "출고 작업을 우선 처리하고, 로봇별 작업량과 이동 거리를 고려해 효율적으로 배정해줘.",
-        },
-
-        frontView: {
-            mode: "AUTO",
-            generatedAt: "2026-08-08T17:27:15",
-
-            summary: {
-                generatedInboundCommands: 2,
-                generatedOutboundCommands: 4,
-
-                totalStorageLocations: 20,
-                totalStorageSlots: 60,
-                occupiedStorageSlots: 37,
-                emptyStorageSlots: 23,
-
-                availableOutboundBoxes: 18,
-                excludedReservedBoxes: 2,
-
-                totalInventoryUnits: 2481,
-
-                generatedInboundUnits: 72,
-                generatedOutboundUnits: 168,
-            },
-
-            commands: [
-                {
-                    sequence: 1,
-                    operationId: "OP-001",
-                    operationType: "OUTBOUND",
-
-                    productId: 101,
-                    productCode: "PD-001",
-                    productName: "콜라 355ml",
-                    category: "음료",
-
-                    quantity: 24,
-                    quantityUnit: "EA",
-                    unitsPerBox: 24,
-                    boxCount: 1,
-
-                    priority: 1,
-
-                    source: {
-                        label: "RACK-A04",
-                        nodeCode: "N-A04",
-                    },
-
-                    destination: {
-                        label: "OUT-01",
-                        nodeCode: "N-OUT01",
-                    },
-
-                    warehouseProductUnitsBefore: 144,
-                    warehouseProductUnitsAfter: 120,
-                },
-
-                {
-                    sequence: 2,
-                    operationId: "OP-002",
-                    operationType: "INBOUND",
-
-                    productId: 102,
-                    productCode: "PD-002",
-                    productName: "생수 500ml",
-                    category: "음료",
-
-                    quantity: 48,
-                    quantityUnit: "EA",
-                    unitsPerBox: 24,
-                    boxCount: 2,
-
-                    priority: 2,
-
-                    source: {
-                        label: "IN-01",
-                        nodeCode: "N-IN01",
-                    },
-
-                    destination: {
-                        label: "RACK-B08",
-                        nodeCode: "N-B08",
-                    },
-
-                    warehouseProductUnitsBefore: 96,
-                    warehouseProductUnitsAfter: 144,
-                },
-
-                {
-                    sequence: 3,
-                    operationId: "OP-003",
-                    operationType: "OUTBOUND",
-
-                    productId: 103,
-                    productCode: "PD-003",
-                    productName: "지퍼백 중형",
-                    category: "생활용품",
-
-                    quantity: 100,
-                    quantityUnit: "EA",
-                    unitsPerBox: 100,
-                    boxCount: 1,
-
-                    priority: 1,
-
-                    source: {
-                        label: "RACK-C12",
-                        nodeCode: "N-C12",
-                    },
-
-                    destination: {
-                        label: "OUT-01",
-                        nodeCode: "N-OUT01",
-                    },
-
-                    warehouseProductUnitsBefore: 320,
-                    warehouseProductUnitsAfter: 220,
-                },
-
-                {
-                    sequence: 4,
-                    operationId: "OP-004",
-                    operationType: "OUTBOUND",
-
-                    productId: 104,
-                    productCode: "PD-004",
-                    productName: "후르츠잼 그레이 L",
-                    category: "식품",
-
-                    quantity: 24,
-                    quantityUnit: "EA",
-                    unitsPerBox: 24,
-                    boxCount: 1,
-
-                    priority: 2,
-
-                    source: {
-                        label: "RACK-D03",
-                        nodeCode: "N-D03",
-                    },
-
-                    destination: {
-                        label: "OUT-02",
-                        nodeCode: "N-OUT02",
-                    },
-
-                    warehouseProductUnitsBefore: 96,
-                    warehouseProductUnitsAfter: 72,
-                },
-
-                {
-                    sequence: 5,
-                    operationId: "OP-005",
-                    operationType: "INBOUND",
-
-                    productId: 105,
-                    productCode: "PD-005",
-                    productName: "박스 테이프",
-                    category: "포장재",
-
-                    quantity: 24,
-                    quantityUnit: "EA",
-                    unitsPerBox: 24,
-                    boxCount: 1,
-
-                    priority: 3,
-
-                    source: {
-                        label: "IN-02",
-                        nodeCode: "N-IN02",
-                    },
-
-                    destination: {
-                        label: "RACK-E06",
-                        nodeCode: "N-E06",
-                    },
-
-                    warehouseProductUnitsBefore: 48,
-                    warehouseProductUnitsAfter: 72,
-                },
-
-                {
-                    sequence: 6,
-                    operationId: "OP-006",
-                    operationType: "OUTBOUND",
-
-                    productId: 106,
-                    productCode: "PD-006",
-                    productName: "스낵 박스",
-                    category: "식품",
-
-                    quantity: 20,
-                    quantityUnit: "EA",
-                    unitsPerBox: 20,
-                    boxCount: 1,
-
-                    priority: 2,
-
-                    source: {
-                        label: "RACK-F09",
-                        nodeCode: "N-F09",
-                    },
-
-                    destination: {
-                        label: "OUT-02",
-                        nodeCode: "N-OUT02",
-                    },
-
-                    warehouseProductUnitsBefore: 80,
-                    warehouseProductUnitsAfter: 60,
-                },
-            ],
-        },
-    },
-
-    planResponse: {
-        result: {
-            status: "plan_validated",
-            finalRoute: "OPTIMIZED",
-
-            frontendSummary: {
-                warnings: [],
-            },
-
-            errors: [],
-
-            plan: {
-                planId: "PLAN-DEMO-001",
-                planVersion: 1,
-                planKind: "INITIAL",
-
-                makespanMs: 163000,
-
-                logicalOperations: [
-                    {
-                        operationId: "OP-001",
-                        operationType: "OUTBOUND",
-                        assignedRobotId: 10001,
-                    },
-                    {
-                        operationId: "OP-002",
-                        operationType: "INBOUND",
-                        assignedRobotId: 10002,
-                    },
-                    {
-                        operationId: "OP-003",
-                        operationType: "OUTBOUND",
-                        assignedRobotId: 10003,
-                    },
-                    {
-                        operationId: "OP-004",
-                        operationType: "OUTBOUND",
-                        assignedRobotId: 10001,
-                    },
-                    {
-                        operationId: "OP-005",
-                        operationType: "INBOUND",
-                        assignedRobotId: 10002,
-                    },
-                    {
-                        operationId: "OP-006",
-                        operationType: "OUTBOUND",
-                        assignedRobotId: 10003,
-                    },
-                ],
-
-                robots: [
-                    {
-                        robotId: 10001,
-                        initialNode: "N-01",
-                        finishAtMs: 138000,
-
-                        steps: [
-                            {
-                                stepId: "STEP-001",
-                                sequence: 1,
-                                stepType: "MOVE",
-
-                                startAtMs: 0,
-                                endAtMs: 28000,
-
-                                fromNode: "N-01",
-                                toNode: "N-A04",
-
-                                distanceM: 92.4,
-                            },
-                            {
-                                stepId: "STEP-002",
-                                sequence: 2,
-                                stepType: "SERVICE",
-
-                                startAtMs: 28000,
-                                endAtMs: 48000,
-
-                                nodeId: "N-A04",
-                                serviceKind: "PICKUP",
-                                distanceM: 0,
-                            },
-                            {
-                                stepId: "STEP-003",
-                                sequence: 3,
-                                stepType: "MOVE",
-
-                                startAtMs: 48000,
-                                endAtMs: 82000,
-
-                                fromNode: "N-A04",
-                                toNode: "N-OUT01",
-
-                                distanceM: 110.8,
-                            },
-                            {
-                                stepId: "STEP-004",
-                                sequence: 4,
-                                stepType: "WAIT",
-
-                                startAtMs: 82000,
-                                endAtMs: 90000,
-
-                                nodeId: "N-OUT01",
-                                distanceM: 0,
-                            },
-                            {
-                                stepId: "STEP-005",
-                                sequence: 5,
-                                stepType: "SERVICE",
-
-                                startAtMs: 90000,
-                                endAtMs: 108000,
-
-                                nodeId: "N-OUT01",
-                                serviceKind: "DROP",
-                                distanceM: 0,
-                            },
-                            {
-                                stepId: "STEP-006",
-                                sequence: 6,
-                                stepType: "MOVE",
-
-                                startAtMs: 108000,
-                                endAtMs: 138000,
-
-                                fromNode: "N-OUT01",
-                                toNode: "N-D03",
-
-                                distanceM: 74.2,
-                            },
-                        ],
-                    },
-
-                    {
-                        robotId: 10002,
-                        initialNode: "N-02",
-                        finishAtMs: 149000,
-
-                        steps: [
-                            {
-                                stepId: "STEP-101",
-                                sequence: 1,
-                                stepType: "MOVE",
-
-                                startAtMs: 0,
-                                endAtMs: 31000,
-
-                                fromNode: "N-02",
-                                toNode: "N-IN01",
-
-                                distanceM: 84.6,
-                            },
-                            {
-                                stepId: "STEP-102",
-                                sequence: 2,
-                                stepType: "SERVICE",
-
-                                startAtMs: 31000,
-                                endAtMs: 51000,
-
-                                nodeId: "N-IN01",
-                                serviceKind: "PICKUP",
-                                distanceM: 0,
-                            },
-                            {
-                                stepId: "STEP-103",
-                                sequence: 3,
-                                stepType: "MOVE",
-
-                                startAtMs: 51000,
-                                endAtMs: 94000,
-
-                                fromNode: "N-IN01",
-                                toNode: "N-B08",
-
-                                distanceM: 125.7,
-                            },
-                            {
-                                stepId: "STEP-104",
-                                sequence: 4,
-                                stepType: "SERVICE",
-
-                                startAtMs: 94000,
-                                endAtMs: 112000,
-
-                                nodeId: "N-B08",
-                                serviceKind: "DROP",
-                                distanceM: 0,
-                            },
-                            {
-                                stepId: "STEP-105",
-                                sequence: 5,
-                                stepType: "MOVE",
-
-                                startAtMs: 112000,
-                                endAtMs: 149000,
-
-                                fromNode: "N-B08",
-                                toNode: "N-E06",
-
-                                distanceM: 93.1,
-                            },
-                        ],
-                    },
-
-                    {
-                        robotId: 10003,
-                        initialNode: "N-03",
-                        finishAtMs: 163000,
-
-                        steps: [
-                            {
-                                stepId: "STEP-201",
-                                sequence: 1,
-                                stepType: "MOVE",
-
-                                startAtMs: 0,
-                                endAtMs: 35000,
-
-                                fromNode: "N-03",
-                                toNode: "N-C12",
-
-                                distanceM: 101.5,
-                            },
-                            {
-                                stepId: "STEP-202",
-                                sequence: 2,
-                                stepType: "SERVICE",
-
-                                startAtMs: 35000,
-                                endAtMs: 56000,
-
-                                nodeId: "N-C12",
-                                serviceKind: "PICKUP",
-                                distanceM: 0,
-                            },
-                            {
-                                stepId: "STEP-203",
-                                sequence: 3,
-                                stepType: "MOVE",
-
-                                startAtMs: 56000,
-                                endAtMs: 105000,
-
-                                fromNode: "N-C12",
-                                toNode: "N-OUT01",
-
-                                distanceM: 138.3,
-                            },
-                            {
-                                stepId: "STEP-204",
-                                sequence: 4,
-                                stepType: "WAIT",
-
-                                startAtMs: 105000,
-                                endAtMs: 114000,
-
-                                nodeId: "N-OUT01",
-                                distanceM: 0,
-                            },
-                            {
-                                stepId: "STEP-205",
-                                sequence: 5,
-                                stepType: "SERVICE",
-
-                                startAtMs: 114000,
-                                endAtMs: 133000,
-
-                                nodeId: "N-OUT01",
-                                serviceKind: "DROP",
-                                distanceM: 0,
-                            },
-                            {
-                                stepId: "STEP-206",
-                                sequence: 6,
-                                stepType: "MOVE",
-
-                                startAtMs: 133000,
-                                endAtMs: 163000,
-
-                                fromNode: "N-OUT01",
-                                toNode: "N-F09",
-
-                                distanceM: 88.7,
-                            },
-                        ],
-                    },
-                ],
-            },
-        },
-    },
-};
 
 const SCENARIO_ID_KEY = "selectedScenarioId";
 const RUN_ID_KEY = "simulationRunId";
@@ -631,33 +111,50 @@ const formatRobotId = (robotId) => {
     return /^R/i.test(value) ? value : `R${value}`;
 };
 
-// 시나리오 응답에 실행 ID가 있으면 우선 사용하고,
-// 없으면 마지막으로 실행한 시나리오와 localStorage의 실행 ID를 연결한다.
-const resolveSimulationRunId = (scenario) => {
-    if (!scenario) {
-        return null;
+/**
+ * DB에 저장된 계획 스냅샷을 화면이 쓰는 주기 상태 형태로 바꾼다.
+ *
+ * 스냅샷에는 AI 요청과 응답만 있고 화면 표시용 명령 목록(frontView)은 없다.
+ * 요청에 담긴 구조화 작업으로 명령 목록을 되살려 같은 표를 그릴 수 있게 한다.
+ */
+const toCycleStatusFromSnapshot = (snapshot, live) => {
+    if (!snapshot) {
+        return live ?? null;
     }
 
-    const directRunId =
-        scenario.latestSimulationRunId ??
-        scenario.simulationRunId ??
-        null;
+    const structuredInput =
+        snapshot.planRequest?.structuredInput
+        ?? snapshot.planRequest?.structured_input
+        ?? null;
 
-    if (directRunId !== null && directRunId !== undefined) {
-        return directRunId;
-    }
+    const commands = asArray(structuredInput?.operations).map((operation) => ({
+        operationId:
+            operation.operation_id
+            ?? operation.operationId,
+        operationType:
+            operation.operation_type
+            ?? operation.operationType,
+        productCode:
+            operation.product_code
+            ?? operation.productCode,
+        productName:
+            operation.product_name
+            ?? operation.productName,
+        quantity: operation.quantity,
+        source: operation.source ?? {},
+        destination: operation.destination ?? {},
+    }));
 
-    const savedScenarioId = localStorage.getItem(SCENARIO_ID_KEY);
-    const savedRunId = localStorage.getItem(RUN_ID_KEY);
-
-    if (
-        savedRunId
-        && String(savedScenarioId) === String(scenario.id)
-    ) {
-        return savedRunId;
-    }
-
-    return null;
+    return {
+        ...(live ?? {}),
+        simulationRunId: snapshot.simulationRunId,
+        cycleMinute: snapshot.cycleMinute,
+        planResponse: snapshot.planResponse ?? null,
+        generated: commands.length > 0
+            ? { frontView: { commands, summary: null } }
+            : (live?.generated ?? null),
+        updatedAt: snapshot.createdAt ?? live?.updatedAt ?? null,
+    };
 };
 
 const getHistoryItems = (response) => {
@@ -697,8 +194,6 @@ function ScenarioDetail({
     const storedScenarioId = localStorage.getItem("selectedScenarioId");
     const storedSimulationRunId = localStorage.getItem("simulationRunId");
 
-    // Scenario 응답에 실행 ID가 있으면 우선 사용하고,
-    // 없으면 마지막으로 실행한 동일 시나리오의 실행 ID를 사용한다.
     const simulationRunId =
         scenario?.latestSimulationRunId ??
         scenario?.simulationRunId ??
@@ -708,35 +203,48 @@ function ScenarioDetail({
                 : null
         );
 
-    // 시뮬레이션 실행에서 생성된 AI 실행 계획을 조회한다.
     useEffect(() => {
         let cancelled = false;
 
         const loadExecutionPlan = async () => {
-            //if (!simulationRunId) {
-            //    setCycleStatus(null);
-            //    setPlanError("");
-            //    return;
-            //}
+            if (!simulationRunId) {
+                setCycleStatus(null);
+                setPlanError("");
+                return;
+            }
 
             try {
                 setPlanLoading(true);
                 setPlanError("");
 
-                //const response =
-                //    await fulfillmentCommandApi.getCycleStatus(
-                //        simulationRunId
-                //    );
-
-                // 임시 데이터 지우면 같이 지우기
-                const response = MOCK_AI_CYCLE_STATUS;
-                setCycleStatus(response);
+                // 실행 중이면 메모리에 있는 주기 상태가 가장 최신이다.
+                const live = await fulfillmentCommandApi
+                    .getCycleStatus(simulationRunId)
+                    .catch(() => null);
 
                 if (cancelled) {
                     return;
                 }
 
-                setCycleStatus(response ?? null);
+                if (live?.planResponse) {
+                    setCycleStatus(live);
+                    return;
+                }
+
+                // 실행이 끝나면 주기 상태가 사라지므로 DB 스냅샷을 사용한다.
+                const snapshot = await fulfillmentCommandApi
+                    .getLatestPlanSnapshot(simulationRunId)
+                    .catch(() => null);
+
+                if (cancelled) {
+                    return;
+                }
+
+                setCycleStatus(
+                    snapshot
+                        ? toCycleStatusFromSnapshot(snapshot, live)
+                        : (live ?? null)
+                );
             } catch (error) {
                 if (cancelled) {
                     return;
@@ -858,7 +366,6 @@ function ScenarioDetail({
             ) == null
     ).length;
 
-    // 로봇별 배정 작업 수, 이동 거리, 완료 예정 시간을 계산한다.
     const robotPlanSummary = useMemo(
         () =>
             robotPlans.map((robot) => {
@@ -919,7 +426,6 @@ function ScenarioDetail({
         (robot) => asArray(robot?.steps).length > 0
     );
 
-    // AI가 생성한 작업과 로봇 배정 결과를 한 행으로 묶는다.
     const operationPlanRows = useMemo(
         () =>
             generatedCommands.map((command) => {
@@ -1014,7 +520,6 @@ function ScenarioDetail({
     const operationPreviewRows =
         operationPlanRows.slice(0, 4);
 
-    // 전체 로봇의 step을 합쳐 MOVE / WAIT / SERVICE 실행 시간을 계산한다.
     const routeAnalysis = useMemo(() => {
         const initial = {
             MOVE: { count: 0, durationMs: 0 },
@@ -1068,7 +573,6 @@ function ScenarioDetail({
             plan?.status ??
             "계획 생성";
 
-    // 경로 대기·충전 step과 최근 재계획을 이벤트 요약으로 조합한다.
     const reportEvents = useMemo(() => {
         const events = [];
 
@@ -1170,7 +674,6 @@ function ScenarioDetail({
             .slice(0, 4);
     }, [robotPlans, replanResult]);
 
-    // 현재 시나리오의 마지막 실행 ID를 기준으로 재계획 이력을 조회한다.
     useEffect(() => {
         let cancelled = false;
 
@@ -1260,7 +763,6 @@ function ScenarioDetail({
         ? replanResult.taskAssignments.length
         : 0;
 
-    // 선택한 시나리오를 Simulation에서 자동 선택한 뒤 실행 화면으로 이동한다.
     const handleRun = () => {
         if (!scenario.id) {
             return;
@@ -1271,7 +773,6 @@ function ScenarioDetail({
             String(scenario.id)
         );
 
-        // 이전 실행을 그대로 복원하지 않고 선택한 시나리오로 새 실행을 준비한다.
         localStorage.removeItem(RUN_ID_KEY);
 
         navigate("/simulation");

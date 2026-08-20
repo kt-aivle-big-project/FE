@@ -366,6 +366,14 @@
     pointer-events: none;
 }
 
+/* 저배터리 감지부터 전용 충전소 도착 전까지 로봇을 노란색으로 식별한다. */
+.warehouse-robot-low-battery-highlight {
+    fill: rgb(250 204 21 / 24%);
+    stroke: #eab308;
+    stroke-width: 3;
+    filter: drop-shadow(0 0 4px rgb(234 179 8 / 42%));
+}
+
 .warehouse-robot-id {
     font-size: 12px;
 

@@ -6,6 +6,7 @@ const ROBOT_STATUS_LABEL = {
     AVAILABLE: "대기",
     ASSIGNED: "배정",
     MOVING: "이동 중",
+    RETURNING_TO_CHARGE: "배터리 부족으로 충전소 복귀 중",
     WORKING: "작업 중",
     BUSY: "작업 중",
     IN_PROGRESS: "작업 중",
@@ -50,6 +51,7 @@ const SERVICE_KIND_LABEL = {
 const ACTIVE_ROBOT_STATUSES = new Set([
     "ASSIGNED",
     "MOVING",
+    "RETURNING_TO_CHARGE",
     "WORKING",
     "BUSY",
     "IN_PROGRESS",
@@ -80,19 +82,42 @@ const isLowBatteryWaiting = (robot) => {
         || waitingReason.includes("LOW_BATTERY");
 };
 
-// 세부 동작 상태가 있으면 로봇의 기본 상태보다 우선 표시한다.
+const hasActiveTask = (robot) => (
+    robot.current_task_id
+    ?? robot.currentTaskId
+    ?? robot.active_task_id
+    ?? robot.activeTaskId
+) !== null && (
+    robot.current_task_id
+    ?? robot.currentTaskId
+    ?? robot.active_task_id
+    ?? robot.activeTaskId
+) !== undefined;
+
 const getRobotDisplayStatus = (robot) => {
+    const status = normalizeValue(robot.status);
+    const activity = normalizeValue(robot.activity);
+    const serviceKind = normalizeValue(
+        robot.service_kind ?? robot.serviceKind,
+    );
+
+    if (
+        status === "CHARGING"
+        || activity === "CHARGING"
+        || serviceKind === "CHARGE"
+    ) {
+        return "CHARGING";
+    }
+
     if (isLowBatteryWaiting(robot)) {
         return "LOW_BATTERY";
     }
-
-    const activity = normalizeValue(robot.activity);
 
     if (activity && ROBOT_STATUS_LABEL[activity]) {
         return activity;
     }
 
-    return normalizeValue(robot.status);
+    return status;
 };
 
 const getRobotStatusLabel = (robot) => {
@@ -101,7 +126,6 @@ const getRobotStatusLabel = (robot) => {
     return ROBOT_STATUS_LABEL[status] ?? status ?? "-";
 };
 
-// 상태에 따라 배지 스타일을 구분한다.
 const getRobotStatusClass = (robot) => {
     switch (getRobotDisplayStatus(robot)) {
         case "IDLE":
@@ -127,6 +151,7 @@ const getRobotStatusClass = (robot) => {
             return "status-charging";
 
         case "LOW_BATTERY":
+        case "RETURNING_TO_CHARGE":
             return "status-low-battery";
 
         case "ERROR":
@@ -162,7 +187,6 @@ const getRobotIdLabel = (robot) => {
         : `R${robotIdText}`;
 };
 
-// 이동 중에는 실제 출발 노드를 현재 위치로 사용한다.
 const getRobotCurrentNodeLabel = (robot) =>
     robot.from_node_code
     ?? robot.fromNodeCode
@@ -173,7 +197,6 @@ const getRobotCurrentNodeLabel = (robot) =>
     ?? robot.nodeId
     ?? "-";
 
-// 다음 이동 노드가 현재 위치와 같으면 목적지가 없는 것으로 표시한다.
 const getRobotNextNodeLabel = (robot) => {
     const currentNode = getRobotCurrentNodeLabel(robot);
 
@@ -201,7 +224,6 @@ const getRobotTaskId = (robot) =>
     ?? robot.taskId
     ?? robot.task_id;
 
-// 작업 ID가 있거나 실행 상태이면 현재 AI 실행 계획에서 사용 중인 로봇으로 판단한다.
 const isRobotInUse = (robot) => {
     const taskId = getRobotTaskId(robot);
     const status = getRobotDisplayStatus(robot);
@@ -214,7 +236,6 @@ const isRobotInUse = (robot) => {
     return hasTask || ACTIVE_ROBOT_STATUSES.has(status);
 };
 
-// 대기 상태의 로봇인지 확인한다.
 const isIdleRobot = (robot) =>
     IDLE_ROBOT_STATUSES.has(getRobotDisplayStatus(robot));
 
@@ -262,7 +283,6 @@ const normalizePercent = (value) => {
 
 const normalizeBattery = (battery) => normalizePercent(battery);
 
-// 이동 중에는 이동 진행률, 작업 중에는 서비스 진행률을 사용한다.
 const getRobotProgress = (robot) => {
     const movementProgress =
         robot.movement_progress
@@ -295,7 +315,6 @@ const getBatteryClass = (battery) => {
     return "is-normal";
 };
 
-// 도착 예상 시간을 읽기 쉬운 초/분 단위로 변환한다.
 const formatArrivalTime = (robot) => {
     const arrivalSeconds = Number(
         robot.arrival_in_seconds
@@ -318,7 +337,6 @@ const formatArrivalTime = (robot) => {
     return `${minutes}분 ${seconds}초`;
 };
 
-// 대기 원인이나 적재 상태가 있으면 상태 아래에 보조 정보로 표시한다.
 const getRobotStatusDetail = (robot) => {
     const waitingReason =
         robot.waiting_reason
@@ -336,6 +354,13 @@ const getRobotStatusDetail = (robot) => {
         return waitingReason;
     }
 
+    if (
+        String(robot.activity ?? "").toUpperCase() === "LOW_BATTERY"
+        && hasActiveTask(robot)
+    ) {
+        return "현재 임무를 마친 뒤 충전소로 복귀합니다.";
+    }
+
     if (robot.carrying_load === true || robot.carryingLoad === true) {
         return "적재 중";
     }
@@ -343,7 +368,6 @@ const getRobotStatusDetail = (robot) => {
     return null;
 };
 
-// 상태별 로봇 개수를 한 번의 순회로 계산한다.
 const getRobotSummary = (robotList) =>
     robotList.reduce(
         (summary, robot) => {
@@ -351,12 +375,22 @@ const getRobotSummary = (robotList) =>
                 case "IDLE":
                 case "WAITING":
                 case "AVAILABLE":
-                case "LOW_BATTERY":
                     summary.waiting += 1;
+                    break;
+
+                case "LOW_BATTERY":
+                    if (hasActiveTask(robot) && !(
+                        robot.waiting_reason ?? robot.waitingReason
+                    )) {
+                        summary.working += 1;
+                    } else {
+                        summary.waiting += 1;
+                    }
                     break;
 
                 case "ASSIGNED":
                 case "MOVING":
+                case "RETURNING_TO_CHARGE":
                 case "WORKING":
                 case "BUSY":
                 case "IN_PROGRESS":
@@ -396,14 +430,11 @@ const getRobotSummary = (robotList) =>
 function SimulationRobotList({ robotList = [] }) {
     const robotSummary = getRobotSummary(robotList);
 
-    // robotList는 이 컴포넌트의 props이므로 목록 필터링도 컴포넌트 내부에서 처리한다.
     const activeRobots = robotList.filter(isRobotInUse);
     const idleRobots = robotList.filter(
         (robot) => !isRobotInUse(robot) && isIdleRobot(robot)
     );
 
-    // 사용 중인 로봇을 위로 올리고 대기 로봇을 뒤에 붙인다.
-    // 두 분류에 모두 속하지 않는 로봇도 빠지지 않도록 마지막에 이어 붙인다.
     const otherRobots = robotList.filter(
         (robot) => !isRobotInUse(robot) && !isIdleRobot(robot)
     );

@@ -18,14 +18,12 @@ const SPECIAL_CHARACTERS = "~!@#$%^&*()_+-=[]{};':\"\\|,.<>/?";
 const CODE_EXPIRATION_SECONDS = 5 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;
 
-// 초 단위를 04:59 형식으로 변환
 const formatTime = (seconds) => {
     const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
     const remainingSeconds = String(seconds % 60).padStart(2, "0");
     return `${minutes}:${remainingSeconds}`;
 };
 
-// JSON 응답과 문자열 응답을 모두 처리
 const readResponse = async (response) => {
     const contentType = response.headers.get("content-type") || "";
 
@@ -40,11 +38,9 @@ const readResponse = async (response) => {
 function ForgotPassword() {
     const navigate = useNavigate();
 
-    // 회원 정보
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
 
-    // 이메일 인증
     const [verificationCode, setVerificationCode] = useState("");
     const [resetToken, setResetToken] = useState("");
     const [isCodeSent, setIsCodeSent] = useState(false);
@@ -53,18 +49,15 @@ function ForgotPassword() {
     const [codeTimeLeft, setCodeTimeLeft] = useState(0);
     const [resendTimeLeft, setResendTimeLeft] = useState(0);
 
-    // 새 비밀번호
     const [newPassword, setNewPassword] = useState("");
     const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showNewPasswordConfirm, setShowNewPasswordConfirm] = useState(false);
 
-    // 요청 상태
     const [isResetting, setIsResetting] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
     const [errors, setErrors] = useState({});
 
-    // 입력값 검사 결과
     const isEmailVerified = Boolean(resetToken);
     const isPasswordLengthValid = newPassword.length >= 8 && newPassword.length <= 24;
     const hasSpecialCharacters = [...newPassword].filter((character) =>
@@ -72,7 +65,6 @@ function ForgotPassword() {
     ).length >= 2;
     const isPasswordMatch = newPassword === newPasswordConfirm;
 
-    // 인증번호와 재전송 시간을 1초마다 감소
     useEffect(() => {
         const timer = setInterval(() => {
             setCodeTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
@@ -82,7 +74,6 @@ function ForgotPassword() {
         return () => clearInterval(timer);
     }, []);
 
-    // 인증번호가 만료되면 오류 표시
     useEffect(() => {
         if (!isCodeSent || isEmailVerified || codeTimeLeft !== 0) return;
 
@@ -92,12 +83,10 @@ function ForgotPassword() {
         }));
     }, [codeTimeLeft, isCodeSent, isEmailVerified]);
 
-    // 특정 입력 항목의 오류 제거
     const clearError = (field) => {
         setErrors((prev) => ({ ...prev, [field]: "" }));
     };
 
-    // 회원 정보가 바뀌면 기존 인증 결과 초기화
     const resetVerification = () => {
         setVerificationCode("");
         setResetToken("");
@@ -123,12 +112,10 @@ function ForgotPassword() {
         resetVerification();
     };
 
-    // 인증 완료 후 이름과 이메일을 다시 수정
     const handleChangeAccountInfo = () => {
         resetVerification();
     };
 
-    // 비밀번호 재설정 인증번호 발송
     const handleSendCode = async () => {
         const normalizedName = name.trim();
         const normalizedEmail = email.trim().toLowerCase();
@@ -177,7 +164,6 @@ function ForgotPassword() {
                 throw new Error(data.message || "인증번호 발송에 실패했습니다.");
             }
 
-            // 발송 성공 후 인증번호 입력창과 타이머 표시
             setIsCodeSent(true);
             setVerificationCode("");
             setResetToken("");
@@ -195,14 +181,12 @@ function ForgotPassword() {
         }
     };
 
-    // 인증번호는 숫자 6자리만 입력
     const handleVerificationCodeChange = (e) => {
         const code = e.target.value.replace(/\D/g, "").slice(0, 6);
         setVerificationCode(code);
         clearError("verificationCode");
     };
 
-    // 인증번호 확인
     const handleVerifyCode = async () => {
         if (codeTimeLeft <= 0) {
             setErrors((prev) => ({
@@ -244,7 +228,6 @@ function ForgotPassword() {
                 throw new Error("비밀번호 재설정 토큰이 응답에 없습니다.");
             }
 
-            // 토큰이 저장되면 새 비밀번호 입력 영역 표시
             setResetToken(data.resetToken);
             setCodeTimeLeft(0);
             setResendTimeLeft(0);
@@ -262,7 +245,6 @@ function ForgotPassword() {
         }
     };
 
-    // 새 비밀번호 입력값 검사
     const validateNewPassword = () => {
         const nextErrors = {};
 
@@ -288,7 +270,6 @@ function ForgotPassword() {
         return Object.keys(nextErrors).length === 0;
     };
 
-    // 새 비밀번호로 변경
     const handleResetPassword = async (e) => {
         e.preventDefault();
 

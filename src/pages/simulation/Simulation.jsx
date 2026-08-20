@@ -13,29 +13,23 @@ import useStompSubscriptions from "../../hooks/useStompSubscriptions";
 import { TOPICS } from "../../api/config";
 import {
     simulationRunApi,
-    optimizationApi,
     warehouseApi,
     robotApi,
     fulfillmentCommandApi,
     scenarioApi,
+    userAccountApi,
 } from "../../api/client";
 import { isGuestSession } from "../../api/auth";
 
 
-// 창고 목록을 못 불러왔을 때 쓸 기본 창고
 const DEFAULT_WAREHOUSE_ID = 1;
 
-// 선택한 창고를 새로고침 후에도 유지하기 위한 저장 키
 const WAREHOUSE_ID_KEY = "selectedWarehouseId";
 
-// 새로고침 후에도 실행 중인 시뮬레이션을 이어서 쓰기 위한 저장 키
 const RUN_ID_KEY = "simulationRunId";
 
-// 선택한 시나리오를 새로고침 후에도 유지하기 위한 저장 키
 const SCENARIO_ID_KEY = "selectedScenarioId";
 
-// 구조화 입력을 기본으로 두고 선택적으로 섞을 LLM 표현 비율 설정
-// V3부터 명령 방식의 초기값을 두 옵션 모두 꺼짐으로 다시 시작한다.
 const COMMAND_EXPRESSION_MIX_KEY = "simulationCommandExpressionMixV3";
 const DEFAULT_COMMAND_EXPRESSION_MIX = {
     policyEnabled: false,
@@ -119,7 +113,6 @@ const loadCommandExpressionMix = () => {
     }
 };
 
-// 백엔드 SimulationRunStatus → 화면 표시 문구
 const STATUS_LABEL = {
     CREATED: "대기",
     RUNNING: "실행",
@@ -149,10 +142,33 @@ const LOW_BATTERY_EVENT_ACTIVE_ROBOT_STATUSES = new Set([
     "UNLOADING",
 ]);
 
-// 백엔드 RobotStateResponse → 화면 로봇 객체
-//
-// BE가 보내는 현재 MOVE 구간과 절대 진행률을 화면 모델로 옮긴다.
-// FE는 시간을 누적하지 않고 매 상태 메시지에서 이 값을 다시 기준점으로 삼는다.
+const MANUAL_LOW_BATTERY_EVENT_SOURCE = "MANUAL_LOW_BATTERY_INJECTION";
+
+const isManualLowBatteryRecovered = (event, robot) => {
+    if (!robot || event.source !== MANUAL_LOW_BATTERY_EVENT_SOURCE) {
+        return false;
+    }
+
+    const status = String(robot.status ?? "").toUpperCase();
+    const activity = String(robot.activity ?? "").toUpperCase();
+    const serviceKind = String(robot.service_kind ?? "").toUpperCase();
+    const battery = Number(robot.battery);
+    const chargingThreshold = Number(event.chargingThreshold);
+
+    if (
+        status === "CHARGING"
+        || activity === "CHARGING"
+        || serviceKind === "CHARGE"
+    ) {
+        return true;
+    }
+
+    return status === "IDLE"
+        && Number.isFinite(battery)
+        && Number.isFinite(chargingThreshold)
+        && battery > chargingThreshold;
+};
+
 const toRobotView = (state) => {
     const isMoving = Boolean(state.nextNodeCode);
     const hasAuthoritativeMovement = Boolean(state.movementStepId)
@@ -237,6 +253,17 @@ const toRobotView = (state) => {
     };
 };
 
+// 상단 사용자 이름은 개인정보 노출을 줄이기 위해 가운데 문자를 마스킹한다.
+const maskName = (value) => {
+    const characters = Array.from(String(value ?? "").trim());
+
+    if (characters.length === 0) return "사용자";
+    if (characters.length === 1) return "*";
+    if (characters.length === 2) return `${characters[0]}*`;
+
+    return `${characters[0]}${"*".repeat(characters.length - 2)}${characters.at(-1)}`;
+};
+
 const mergeRobotStateBatch = (previousRobots, incomingByRobotId) => {
     if (incomingByRobotId.size === 0) {
         return previousRobots;
@@ -285,11 +312,46 @@ const mergeRobotStateBatch = (previousRobots, incomingByRobotId) => {
 function Simulation() {
     const navigate = useNavigate();
 
+    const [currentUserName, setCurrentUserName] = useState("");
+    const guestSession = isGuestSession();
+    const maskedUserName = guestSession ? "게스트" : maskName(currentUserName);
+    const userInitial = guestSession
+        ? "G"
+        : currentUserName?.trim().charAt(0).toUpperCase() || "U";
+
+    useEffect(() => {
+        if (guestSession) {
+            return undefined;
+        }
+
+        let cancelled = false;
+
+        const loadCurrentUser = async () => {
+            try {
+                const data = await userAccountApi.getProfile();
+
+                if (!cancelled) {
+                    setCurrentUserName(data?.name ?? "");
+                }
+            } catch {
+                // 오류 객체에는 요청 정보가 포함될 수 있으므로 화면/콘솔에 그대로 노출하지 않는다.
+                if (!cancelled) {
+                    setCurrentUserName("");
+                }
+            }
+        };
+
+        loadCurrentUser();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [guestSession]);
+
     /* =========================================================
        상단 헤더 - 시뮬레이션 실행
     ========================================================= */
 
-    // 창고마다 지도·로봇·재고가 다르므로, 바꾸면 화면과 시뮬레이션 대상이 함께 바뀐다.
     const [warehouses, setWarehouses] = useState([]);
     const [selectedWarehouseId, setSelectedWarehouseIdState] = useState(() => {
         const saved = localStorage.getItem(WAREHOUSE_ID_KEY);
@@ -301,7 +363,6 @@ function Simulation() {
         setSelectedWarehouseIdState(warehouseId);
     };
 
-    // 시나리오를 고르면 그 설정을 실행에 그대로 쓴다.
     const [scenarios, setScenarios] = useState([]);
     const [selectedScenarioId, setSelectedScenarioIdState] = useState(() => {
         const saved = localStorage.getItem(SCENARIO_ID_KEY);
@@ -373,7 +434,6 @@ function Simulation() {
         );
     };
 
-    // 시작하면 그 실행의 작업으로 채워지고, 이후 WebSocket 으로 갱신된다.
     const [taskList, setTaskList] = useState([]);
     const [eventList, setEventList] = useState([]);
     const [generatedCommands, setGeneratedCommands] = useState([]);
@@ -529,7 +589,6 @@ function Simulation() {
         window.addEventListener("pointercancel", handlePointerUp);
         window.addEventListener("resize", handleWindowResize);
 
-        // 첫 렌더에서도 제어바 최소 너비를 반영해 패널 폭을 한 번 보정한다.
         const resizeFrame = window.requestAnimationFrame(handleWindowResize);
 
         return () => {
@@ -656,7 +715,6 @@ function Simulation() {
        백엔드 초기 데이터 로딩
     ========================================================= */
 
-    // 창고 목록은 한 번만 불러온다
     useEffect(() => {
         const loadWarehouses = async () => {
             try {
@@ -668,7 +726,6 @@ function Simulation() {
 
                 setWarehouses(list);
 
-                // 저장해둔 창고가 목록에 없으면 첫 번째로 되돌린다
                 const exists = list.some(
                     (warehouse) => warehouse.id === selectedWarehouseId
                 );
@@ -684,8 +741,6 @@ function Simulation() {
         loadWarehouses();
     }, []);
 
-    // 선택한 창고의 시나리오 목록을 불러온다.
-    // 창고가 바뀌면 이전 창고의 시나리오는 쓸 수 없으므로 선택을 비운다.
     useEffect(() => {
         let cancelled = false;
 
@@ -700,14 +755,12 @@ function Simulation() {
 
                 if (cancelled) return;
 
-                // 서버가 잘못 전체 목록을 내려주더라도 현재 창고의 시나리오만 표시한다.
                 const items = (Array.isArray(list) ? list : []).filter(
                     (scenario) =>
                         Number(scenario.warehouseId) === Number(selectedWarehouseId)
                 );
                 setScenarios(items);
 
-                // 저장해둔 시나리오가 이 창고에 없으면 첫 번째로 되돌린다.
                 setSelectedScenarioIdState((current) => {
                     const exists = items.some(
                         (scenario) => scenario.id === current
@@ -739,7 +792,6 @@ function Simulation() {
         };
     }, [selectedWarehouseId]);
 
-    // 시나리오를 고르면 그 배속을 화면 설정에도 반영한다.
     const handleScenarioChange = (event) => {
         const value = event.target.value;
         const scenarioId = value ? Number(value) : null;
@@ -753,15 +805,12 @@ function Simulation() {
         }
     };
 
-    // 시작 전에도 창고에 등록된 로봇을 지도에 보여준다.
-    // 실행 중이면 실시간 상태가 우선이므로 건드리지 않는다.
     useEffect(() => {
         if (simulationRunId) {
             return;
         }
 
         loadRestingRobots(selectedWarehouseId);
-        // 창고가 바뀔 때만 다시 배치한다.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedWarehouseId]);
 
@@ -775,12 +824,6 @@ function Simulation() {
             .join(":");
     };
 
-    /**
-     * 창고 변경.
-     *
-     * 창고마다 지도도 로봇도 다르므로 진행 중인 시뮬레이션을 이어갈 수 없다.
-     * 실행 중이면 먼저 확인을 받고, 화면을 처음 상태로 되돌린다.
-     */
     const handleWarehouseChange = (warehouseId) => {
         const nextId = Number(warehouseId);
 
@@ -809,13 +852,6 @@ function Simulation() {
         loadRestingRobots(nextId);
     };
 
-    /**
-     * 창고에 등록된 로봇을 지도 좌표로 변환해 돌려준다.
-     *
-     * 창고마다 로봇 수와 위치가 다르므로 실제 등록된 로봇을 쓴다.
-     * 로봇의 node_id 는 숫자이고 지도는 노드 코드로 그리므로 레이아웃으로 변환한다.
-     * 시작 전 배치와, 실행 중 목록 보정에 함께 쓴다.
-     */
     const fetchRegisteredRobots = async (warehouseId) => {
         const [registeredRobotList, layout] = await Promise.all([
             robotApi.getAll(warehouseId),
@@ -837,7 +873,6 @@ function Simulation() {
             .filter((robot) => robot.node_id);
     };
 
-    // 시작 전 화면에 보여줄 로봇 배치를 불러온다.
     const loadRestingRobots = async (warehouseId) => {
         if (!warehouseId) {
             return;
@@ -882,10 +917,6 @@ function Simulation() {
         }
     };
 
-    /**
-     * 실행 배속 변경.
-     * 진행 중인 시뮬레이션이 있으면 백엔드 시계 속도도 함께 바꾼다.
-     */
     const handleSpeedChange = async (speed) => {
         setSimulationSpeed(speed);
 
@@ -905,10 +936,6 @@ function Simulation() {
        시뮬레이션 제어
     ========================================================= */
 
-    /**
-     * 해당 실행의 작업 목록을 백엔드에서 다시 읽어온다.
-     * 시작/화면 복구 시점에 화면을 그 실행의 작업만으로 맞춘다.
-     */
     const reloadTasks = async (runId) => {
         try {
             const runTasks = await simulationRunApi.getTasks(runId);
@@ -919,15 +946,7 @@ function Simulation() {
         }
     };
 
-    /**
-     * 진행 중인 시뮬레이션의 현재 모습을 그대로 복구한다.
-     *
-     * 다른 페이지에 갔다 오면 화면은 초기 상태로 돌아가지만
-     * 백엔드 재생은 계속 진행된다. 그래서 돌아온 직후 첫 WebSocket 메시지가 오면
-     * 로봇이 충전소에서 현재 위치까지 화면을 가로질러 날아가는 것처럼 보인다.
-     *
-     * 돌아오자마자 현재 위치를 받아 "애니메이션 없이" 배치하면 이 점프가 사라진다.
-     */
+    // 재진입 시 현재 위치를 즉시 배치해 충전소에서 튀는 애니메이션을 막는다.
     const restoreRuntime = async (runId) => {
         try {
             const snapshot = await simulationRunApi.getRobotStates(runId);
@@ -972,7 +991,6 @@ function Simulation() {
         }
     };
 
-    // 페이지에 들어오거나 새로고침했을 때 진행 중이던 실행을 이어서 보여준다
     useEffect(() => {
         if (simulationRunId) {
             reloadTasks(simulationRunId);
@@ -992,7 +1010,6 @@ function Simulation() {
         return {
             warehouseId,
             simulationSpeed: Number(simulationSpeed),
-            // 고른 시나리오가 있으면 그 설정으로 실행한다.
             scenarioId: scenarioId ?? null,
         };
     };
@@ -1094,19 +1111,10 @@ function Simulation() {
         return { warehouseId, scenarioId, copied };
     };
 
-    /**
-     * 설정값이 유효한지 검사한다.
-     */
     const validateSettings = () => {
         return Boolean(selectedWarehouseId);
     };
 
-    /**
-     * 새 시뮬레이션 생성.
-     *
-     * 진행 중인 실행을 중지하고, 지금 화면의 설정값으로 새 실행을 만든다.
-     * 이전 작업은 버리고 백엔드가 작업을 새로 생성한다.
-     */
     const handleNewRun = async () => {
         if (!validateSettings()) {
             return;
@@ -1222,9 +1230,7 @@ function Simulation() {
         }
     };
 
-    // 시뮬레이션 시작
     const handleStart = async () => {
-        // 일시정지 상태면 재개
         if (simulationStatus === "일시정지") {
             await handleResume();
             return;
@@ -1281,7 +1287,6 @@ function Simulation() {
                 "font-size:14px;font-weight:bold;color:#2563eb"
             );
 
-            // 시작 직후 현재 로봇 상태 스냅샷 조회
             const snapshot = await simulationRunApi.getRobotStates(runId);
 
             if (snapshot?.robots?.length) {
@@ -1301,7 +1306,6 @@ function Simulation() {
         }
     };
 
-    // 시뮬레이션 일시정지
     const handlePause = async () => {
         if (simulationStatus !== "실행") {
             return;
@@ -1324,7 +1328,6 @@ function Simulation() {
         }
     };
 
-    // 시뮬레이션 재개
     const handleResume = async () => {
         if (!simulationRunId) {
             isPausedRef.current = false;
@@ -1343,7 +1346,6 @@ function Simulation() {
         }
     };
 
-    // 시뮬레이션 초기화
     const handleReset = async () => {
         isPausedRef.current = false;
 
@@ -1362,7 +1364,6 @@ function Simulation() {
         setGeneratedCommands([]);
         setEventList([]);
 
-        // 로봇을 DB 에 저장된 시작 위치로 되돌린다
         await loadRestingRobots(selectedWarehouseId);
 
         // 다음 시작은 새 실행 ID로 현재 재고 기준 명령을 생성한다.
@@ -1397,6 +1398,8 @@ function Simulation() {
                     simulationTimeMillis: injected.simulationClockMillis,
                     occurredAt: new Date().toISOString(),
                     status: "PENDING",
+                    source: MANUAL_LOW_BATTERY_EVENT_SOURCE,
+                    chargingThreshold: injected.batteryLevel,
                 },
                 ...previousEvents,
             ]);
@@ -1408,13 +1411,6 @@ function Simulation() {
         }
     };
 
-    /**
-     * 시뮬레이션 중지.
-     *
-     * 초기화와 달리 이 실행은 완전히 끝낸다.
-     * 실행 ID 를 버리므로 다시 시작할 수 없고, 새 작업을 만들어야 한다.
-     * (백엔드에서도 STOPPED 로 바뀌어 재생 엔진과 로봇 상태가 정리된다)
-     */
     const handleStop = async () => {
         if (!simulationRunId) {
             return;
@@ -1450,35 +1446,6 @@ function Simulation() {
         loadRestingRobots(selectedWarehouseId);
 
         console.log("시뮬레이션 중지 완료 - 새 작업을 생성해주세요.");
-    };
-
-    // 시뮬레이션 재계획
-    const handleReplan = async () => {
-        if (simulationStatus !== "실행") {
-            return;
-        }
-
-        if (!simulationRunId) {
-            alert("실행 중인 시뮬레이션이 없습니다.");
-            return;
-        }
-
-        try {
-            setSimulationStatus("재계획");
-
-            await optimizationApi.reoptimize(simulationRunId, {
-                reason: "MANUAL_REQUEST",
-                triggerRobotId: null,
-                blockedEdgeIds: [],
-                description: "사용자 수동 재계획 요청",
-            });
-
-            setSimulationStatus("실행");
-        } catch (error) {
-            console.error("시뮬레이션 재계획 실패:", error);
-            alert(error.message ?? "재계획에 실패했습니다.");
-            setSimulationStatus("실행");
-        }
     };
 
     /* =========================================================
@@ -1576,6 +1543,47 @@ function Simulation() {
         robotList,
         isSimulationRunning,
     );
+
+    // 버튼으로 만든 로컬 이벤트는 DB Event ID가 없으므로 서버의 resolve API
+    // 대상이 아니다. 해당 로봇이 실제 CHARGE 단계에 진입하거나 충전을 마치면
+    // 화면 이벤트도 같은 시점에 해결 상태로 전환한다.
+    useEffect(() => {
+        if (robotList.length === 0) {
+            return;
+        }
+
+        const robotById = new Map(
+            robotList.map((robot) => [Number(robot.robot_id), robot])
+        );
+
+        setEventList((previousEvents) => {
+            let changed = false;
+            const resolvedAt = new Date().toISOString();
+            const nextEvents = previousEvents.map((event) => {
+                if (
+                    event.status !== "PENDING"
+                    || event.source !== MANUAL_LOW_BATTERY_EVENT_SOURCE
+                ) {
+                    return event;
+                }
+
+                const robot = robotById.get(Number(event.robotId));
+                if (!isManualLowBatteryRecovered(event, robot)) {
+                    return event;
+                }
+
+                changed = true;
+                return {
+                    ...event,
+                    status: "RESOLVED",
+                    resolvedAt,
+                };
+            });
+
+            return changed ? nextEvents : previousEvents;
+        });
+    }, [robotList]);
+
     // 같은 tick에 연속으로 도착하는 로봇 상태를 한 프레임에 모아 반영한다.
     // 로봇별 메시지마다 창고 SVG 전체를 다시 렌더링하지 않도록 하기 위함이다.
     const applyRobotState = (state) => {
@@ -1617,7 +1625,6 @@ function Simulation() {
         });
     };
 
-    // 작업 변경 수신 → 목록 갱신
     // 백엔드 TaskResponse 형태를 그대로 보관한다. (SimulationTaskList 가 같은 형태를 읽는다)
     const applyTask = (task) => {
         // /topic/tasks 는 모든 실행의 작업을 뿌리므로
@@ -1639,7 +1646,6 @@ function Simulation() {
         });
     };
 
-    // 이벤트 발생/해결 수신 → 목록 갱신
     const applyEvent = (event) => {
         setEventList((prevEvents) => {
             const exists = prevEvents.some((item) => item.id === event.id);
@@ -1654,7 +1660,6 @@ function Simulation() {
         });
     };
 
-    // 실행 중인 시뮬레이션이 있을 때만 구독
     const subscriptions = simulationRunId
         ? {
             [TOPICS.runRobots(simulationRunId)]: applyRobotState,
@@ -1788,8 +1793,8 @@ function Simulation() {
                                 onClick={() => navigate("/profile")}
                                 aria-label="내 프로필로 이동"
                             >
-                                <span className="simulation-topbar-avatar">A</span>
-                                <strong>admin</strong>
+                                <span className="simulation-topbar-avatar">{userInitial}</span>
+                                <strong>{maskedUserName}</strong>
                             </button>
                         </div>
                     </div>

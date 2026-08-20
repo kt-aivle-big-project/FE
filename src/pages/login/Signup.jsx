@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AuthCircuitBackground from "./AuthCircuitBackground";
 import "../../styles/login/AuthCommon.css";
 import "../../styles/login/Signup.css";
 import { UserIcon, EmailIcon, LockIcon, PasswordToggleIcon } from "../../components/common/icon";
@@ -12,7 +11,6 @@ const SPECIAL_CHARACTERS = "~!@#$%^&*()_+-=[]{};':\"\\|,.<>/?";
 const CODE_EXPIRATION_SECONDS = 5 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;
 
-// 초 단위를 04:59 형식으로 변환
 const formatTime = (seconds) => {
     const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
     const remainingSeconds = String(seconds % 60).padStart(2, "0");
@@ -20,7 +18,6 @@ const formatTime = (seconds) => {
     return `${minutes}:${remainingSeconds}`;
 };
 
-// JSON 응답과 문자열 응답을 모두 처리
 const readResponse = async (response) => {
     const contentType = response.headers.get("content-type") || "";
 
@@ -35,13 +32,11 @@ const readResponse = async (response) => {
 function Signup() {
     const navigate = useNavigate();
 
-    // 회원 기본 정보
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [passwordConfirm, setPasswordConfirm] = useState("");
 
-    // 이메일 인증
     const [verificationCode, setVerificationCode] = useState("");
     const [verificationToken, setVerificationToken] = useState("");
     const [isCodeSent, setIsCodeSent] = useState(false);
@@ -50,22 +45,17 @@ function Signup() {
     const [codeTimeLeft, setCodeTimeLeft] = useState(0);
     const [resendTimeLeft, setResendTimeLeft] = useState(0);
 
-    // 비밀번호 표시 여부
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
-    // 약관 동의
     const [privacyAgree, setPrivacyAgree] = useState(false);
     const [serviceAgree, setServiceAgree] = useState(false);
 
-    // 모달 및 요청 상태
     const [termsModal, setTermsModal] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // 각 입력 항목 아래에 표시할 오류
     const [errors, setErrors] = useState({});
 
-    // 입력값 검사 결과
     const isAllAgreed = privacyAgree && serviceAgree;
     const isEmailVerified = Boolean(verificationToken);
     const isPasswordLengthValid = password.length >= 8 && password.length <= 24;
@@ -74,7 +64,6 @@ function Signup() {
     ).length >= 2;
     const isPasswordMatch = password === passwordConfirm;
 
-    // 인증번호와 재전송 시간을 1초마다 감소
     useEffect(() => {
         const timer = setInterval(() => {
             setCodeTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
@@ -84,7 +73,6 @@ function Signup() {
         return () => clearInterval(timer);
     }, []);
 
-    // 인증번호 유효시간이 끝나면 오류 표시
     useEffect(() => {
         if (!isCodeSent || isEmailVerified || codeTimeLeft !== 0) return;
 
@@ -94,12 +82,10 @@ function Signup() {
         }));
     }, [codeTimeLeft, isCodeSent, isEmailVerified]);
 
-    // 특정 입력 항목의 오류 제거
     const clearError = (field) => {
         setErrors((prev) => ({ ...prev, [field]: "" }));
     };
 
-    // 이메일 관련 인증 상태 초기화
     const resetEmailVerification = () => {
         setVerificationCode("");
         setVerificationToken("");
@@ -114,18 +100,15 @@ function Signup() {
         }));
     };
 
-    // 이메일을 수정하면 기존 인증 결과 초기화
     const handleEmailChange = (e) => {
         setEmail(e.target.value);
         resetEmailVerification();
     };
 
-    // 인증 완료 후 이메일을 다시 수정할 때 사용
     const handleChangeVerifiedEmail = () => {
         resetEmailVerification();
     };
 
-    // 이메일 인증번호 발송
     const handleSendVerificationCode = async () => {
         const normalizedEmail = email.trim().toLowerCase();
 
@@ -167,7 +150,6 @@ function Signup() {
                 throw new Error(data.message || "인증번호 발송에 실패했습니다.");
             }
 
-            // 발송 성공 후 인증번호 입력창과 타이머 표시
             setIsCodeSent(true);
             setVerificationCode("");
             setVerificationToken("");
@@ -185,7 +167,6 @@ function Signup() {
         }
     };
 
-    // 사용자가 입력한 인증번호 변경
     const handleVerificationCodeChange = (e) => {
         const code = e.target.value.replace(/\D/g, "").slice(0, 6);
 
@@ -193,7 +174,6 @@ function Signup() {
         clearError("verificationCode");
     };
 
-    // 인증번호 확인
     const handleVerifyCode = async () => {
         const normalizedEmail = email.trim().toLowerCase();
 
@@ -238,7 +218,6 @@ function Signup() {
                 throw new Error("이메일 인증 완료 토큰이 응답에 없습니다.");
             }
 
-            // 토큰이 저장되면 이메일 인증 완료로 처리
             setVerificationToken(data.verificationToken);
             setCodeTimeLeft(0);
             setResendTimeLeft(0);
@@ -256,7 +235,6 @@ function Signup() {
         }
     };
 
-    // 모두 동의 체크박스로 필수 약관 전체 변경
     const handleAllAgree = (e) => {
         const checked = e.target.checked;
 
@@ -265,7 +243,6 @@ function Signup() {
         clearError("agreement");
     };
 
-    // 회원가입 요청 전 전체 입력값 검사
     const validateSignupForm = () => {
         const nextErrors = {};
 
@@ -303,7 +280,6 @@ function Signup() {
         return Object.keys(nextErrors).length === 0;
     };
 
-    // 회원가입 요청
     const handleSignup = async (e) => {
         e.preventDefault();
 
@@ -370,7 +346,6 @@ function Signup() {
         }
     };
 
-    // 약관 모달 내용
     const getTermsContent = () => {
         if (termsModal === "privacy") {
             return {

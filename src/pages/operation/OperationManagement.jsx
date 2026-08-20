@@ -11,7 +11,6 @@ import useStompSubscriptions from "../../hooks/useStompSubscriptions";
 // 하나 올 때마다 조회하면 요청이 너무 잦아진다.
 const LIVE_REFRESH_DELAY_MS = 1500;
 
-// 창고 목록을 못 불러왔을 때 쓸 기본값
 const ALL_WAREHOUSES = {
     id: "ALL",
     name: "전체 창고",
@@ -65,7 +64,6 @@ const ROBOT_STATUS_META = [
     },
 ];
 
-// 숫자는 넣지 않고 그래프 틀만 유지하기 위한 초기 데이터입니다.
 const EMPTY_DASHBOARD = {
     summary: {
         todayTaskCount: null,
@@ -219,7 +217,6 @@ const buildDonutGradient = (items) => {
         0
     );
 
-    // 데이터가 없어도 도넛 그래프의 기본 틀은 남깁니다.
     if (total === 0) {
         return "conic-gradient(var(--laro-muted-light) 0deg 360deg)";
     }
@@ -295,12 +292,6 @@ const buildEventChart = (items) => {
     };
 };
 
-/**
- * 작업 목록 표.
- *
- * 「작업 요약」 패널과 「전체 보기」 팝업이 같은 열 구성을 쓰기 때문에
- * 한 곳에서만 그린다.
- */
 function TaskTable({ tasks, emptyMessage }) {
     return (
         <table className="operation-table">
@@ -361,13 +352,11 @@ function OperationManagement() {
     const [warehouses, setWarehouses] = useState([ALL_WAREHOUSES]);
     const [taskMetric, setTaskMetric] = useState("COUNT");
 
-    // 창고별 처리량 막대에 무엇을 그릴지
     const [warehouseMetric, setWarehouseMetric] = useState("TOTAL");
     const [dashboardData, setDashboardData] = useState(EMPTY_DASHBOARD);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [loadError, setLoadError] = useState("");
 
-    // 「전체 보기」 팝업
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [allTasks, setAllTasks] = useState([]);
     const [isTaskModalLoading, setIsTaskModalLoading] = useState(false);
@@ -426,7 +415,6 @@ function OperationManagement() {
         [dashboardData]
     );
 
-    /** 시간대별 막대에 그릴 값. "완료 작업"을 고르면 완료 건수만 본다. */
     const hourlyTaskValue = useCallback(
         (item) => taskMetric === "COMPLETED"
             ? Number(item.completedCount ?? 0)
@@ -442,7 +430,6 @@ function OperationManagement() {
         [dashboardData.hourlyTaskVolume, hourlyTaskValue]
     );
 
-    /** 고른 기준에 해당하는 값을 꺼낸다. */
     const warehouseMetricValue = useCallback(
         (item) => {
             if (warehouseMetric === "DONE") {
@@ -525,7 +512,6 @@ function OperationManagement() {
         }
     }, [warehouseId, startDate, endDate]);
 
-    // 창고 목록을 받아 드롭다운을 채운다.
     useEffect(() => {
         const loadWarehouses = async () => {
             try {
@@ -546,8 +532,6 @@ function OperationManagement() {
         loadWarehouses();
     }, []);
 
-    // 창고나 기간을 바꾸면 바로 다시 조회한다.
-    // 화면에 처음 들어올 때도 오늘 기준으로 한 번 돈다.
     useEffect(() => {
         handleRefresh();
     }, [handleRefresh]);
@@ -662,7 +646,6 @@ function OperationManagement() {
         }
     }, []);
 
-    // 팝업은 Esc 로도 닫는다.
     useEffect(() => {
         if (!isTaskModalOpen) {
             return;
@@ -679,12 +662,6 @@ function OperationManagement() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [isTaskModalOpen, closeTaskModal]);
 
-    /**
-     * 시작일을 바꾼다.
-     *
-     * 달력에서는 max 로 막아두지만 직접 입력하면 뚫릴 수 있어
-     * 종료일보다 뒤면 종료일도 같이 당긴다.
-     */
     const handleStartDateChange = (value) => {
         if (!value) {
             return;
@@ -697,7 +674,6 @@ function OperationManagement() {
         }
     };
 
-    /** 종료일이 시작일보다 앞이면 시작일도 같이 당긴다. */
     const handleEndDateChange = (value) => {
         if (!value) {
             return;
@@ -744,7 +720,6 @@ function OperationManagement() {
                     <input
                         type="date"
                         value={startDate}
-                        // 달력에서 종료일 이후는 아예 고를 수 없게 한다
                         max={endDate}
                         onChange={(event) =>
                             handleStartDateChange(event.target.value)
@@ -759,7 +734,6 @@ function OperationManagement() {
                     <input
                         type="date"
                         value={endDate}
-                        // 시작일 이전은 고를 수 없다
                         min={startDate}
                         onChange={(event) =>
                             handleEndDateChange(event.target.value)
@@ -1188,7 +1162,6 @@ function OperationManagement() {
                     className="operation-modal-backdrop"
                     onClick={closeTaskModal}
                 >
-                    {/* 안쪽을 눌렀을 때는 닫히지 않게 막는다. */}
                     <div
                         className="operation-modal"
                         role="dialog"

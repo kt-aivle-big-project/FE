@@ -1,7 +1,3 @@
-/**
- * 창고의 고정 시설과 시설 접근 노드를 렌더링한다.
- * 입·출고 접근점, 충전 분기, 선반, 입고지, 출고지, 충전 슬롯을 한 레이어에서 관리한다.
- */
 function WarehouseFacilityLayer({
     graphData,
     rackInventoryMap,
@@ -14,7 +10,6 @@ function WarehouseFacilityLayer({
 }) {
     return (
         <>
-            {/* 입고 포트와 AMR 경로 사이의 인계 접근점을 표시한다. */}
             <g className="warehouse-inbound-access">
                 {graphData.nodes
                     .filter((node) => node.type === "inbound_handoff_access")
@@ -43,7 +38,6 @@ function WarehouseFacilityLayer({
                     ))}
             </g>
 
-            {/* 출고 스테이션과 AMR 경로 사이의 접근점을 표시한다. */}
             <g className="warehouse-outbound-access">
                 {graphData.nodes
                     .filter((node) => node.type === "outbound_station_access")
@@ -72,7 +66,6 @@ function WarehouseFacilityLayer({
                     ))}
             </g>
 
-            {/* route와 charging_slot 사이의 충전 진입 분기 노드이다. */}
             <g className="warehouse-charge-junctions">
                 {graphData.nodes
                     .filter((node) => node.type === "route_charge_junction")
@@ -89,7 +82,6 @@ function WarehouseFacilityLayer({
                     ))}
             </g>
 
-            {/* 선반 외곽과 3개 층의 점유 상태를 표시한다. */}
             <g className="warehouse-racks">
                 {graphData.nodes
                     .filter((node) => node.type === "rack_storage")
@@ -149,7 +141,6 @@ function WarehouseFacilityLayer({
                     })}
             </g>
 
-            {/* 논리 입고 시설을 사각형과 라벨로 표시한다. */}
             <g className="warehouse-inbound">
                 {graphData.nodes
                     .filter((node) => node.type === "inbound")
@@ -186,7 +177,6 @@ function WarehouseFacilityLayer({
                     ))}
             </g>
 
-            {/* 논리 출고 시설을 사각형과 라벨로 표시한다. */}
             <g className="warehouse-outbound">
                 {graphData.nodes
                     .filter((node) => node.type === "outbound")
@@ -223,7 +213,6 @@ function WarehouseFacilityLayer({
                     ))}
             </g>
 
-            {/* 충전 슬롯 번호와 전체 노드 ID를 표시한다. */}
             <g className="warehouse-charging">
                 {graphData.nodes
                     .filter((node) => node.type === "charging_slot")
@@ -262,7 +251,6 @@ function WarehouseFacilityLayer({
                     ))}
             </g>
 
-            {/* 창고의 주요 시설 영역명을 고정 위치에 표시한다. */}
             <text
                 x="40"
                 y="100"

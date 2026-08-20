@@ -3,21 +3,46 @@ import { robotPositionAt } from "./warehouseSvgUtils";
 
 const ROBOT_MARKER_SIZE = 46;
 
-// 목표 위치를 따라붙는 속도. 작을수록 즉각적이고, 클수록 부드럽다.
-// 80ms 정도면 백엔드 갱신 주기(100ms)와 자연스럽게 맞물린다.
 const SMOOTHING_TIME_MS = 80;
 
-// 이보다 멀리 떨어지면 보간하지 않고 바로 옮긴다.
-// (다른 노드로 재배치되거나 시뮬레이션을 초기화한 경우)
 const SNAP_DISTANCE = 120;
 
-/**
- * 로봇 한 대를 SVG 그룹으로 렌더링하고 위치를 애니메이션한다.
- *
- * 백엔드 스냅샷은 100ms마다 띄엄띄엄 오고 값도 조금씩 튄다.
- * 그래서 스냅샷 위치를 그대로 그리지 않고 "목표"로만 두고,
- * 화면 위치가 매 프레임 그 목표를 향해 조금씩 따라가게 한다.
- */
+const isLowBatteryRobot = (robot) => {
+    const activity = String(robot.activity ?? "").toUpperCase();
+    const status = String(robot.status ?? "").toUpperCase();
+    const serviceKind = String(
+        robot.service_kind ?? robot.serviceKind ?? "",
+    ).toUpperCase();
+    const waitingReason = String(
+        robot.waiting_reason ?? robot.waitingReason ?? "",
+    ).toUpperCase();
+
+    if (
+        activity === "CHARGING"
+        || status === "CHARGING"
+        || serviceKind === "CHARGE"
+    ) {
+        return false;
+    }
+
+    return activity === "LOW_BATTERY"
+        || activity === "RETURNING_TO_CHARGE"
+        || waitingReason.includes("배터리")
+        || waitingReason.includes("LOW_BATTERY");
+};
+
+const lowBatteryTitle = (robot) => {
+    const activity = String(robot.activity ?? "").toUpperCase();
+    if (activity === "RETURNING_TO_CHARGE") {
+        return "배터리 부족으로 전용 충전소 복귀 중";
+    }
+    const currentTaskId = robot.current_task_id ?? robot.currentTaskId;
+    if (activity === "LOW_BATTERY" && currentTaskId !== null && currentTaskId !== undefined) {
+        return "배터리 부족 · 현재 임무 마무리 중";
+    }
+    return "배터리 부족";
+};
+
 function AnimatedRobotMarker({
     robot,
     fromX,
@@ -33,10 +58,8 @@ function AnimatedRobotMarker({
     loadTitle,
     hideLoad,
 }) {
-    // 매 프레임 React를 다시 렌더링하지 않고 SVG 그룹의 transform만 변경한다.
     const elementRef = useRef(null);
 
-    // 루프 안에서 항상 최신 값을 읽되, 값이 바뀌어도 루프를 다시 만들지 않는다.
     const targetRef = useRef(null);
 
     targetRef.current = {
@@ -48,7 +71,6 @@ function AnimatedRobotMarker({
         isRunning,
     };
 
-    // 화면에 실제로 그려지고 있는 위치
     const drawnRef = useRef(null);
 
     useEffect(() => {
@@ -117,10 +139,8 @@ function AnimatedRobotMarker({
                 window.cancelAnimationFrame(frameId);
             }
         };
-        // 마운트되어 있는 동안 한 번만 돈다.
     }, []);
 
-    // 첫 렌더에서도 로봇이 출발점으로 튀지 않도록 현재 시각 기준 위치를 적용한다.
     const initialPosition = drawnRef.current ?? robotPositionAt(
         robot,
         fromX,
@@ -130,6 +150,7 @@ function AnimatedRobotMarker({
         performance.now(),
         isRunning,
     );
+    const lowBatteryRobot = isLowBatteryRobot(robot);
 
     return (
         <g
@@ -144,6 +165,18 @@ function AnimatedRobotMarker({
                     <rect x="-23" y="-23" width="50" height="50" rx="50" ry="50" />
                 </clipPath>
             </defs>
+
+            {lowBatteryRobot && (
+                <circle
+                    cx="1"
+                    cy="1"
+                    r="27"
+                    className="warehouse-robot-low-battery-highlight"
+                    pointerEvents="none"
+                >
+                    <title>{lowBatteryTitle(robot)}</title>
+                </circle>
+            )}
 
             {isAvoidanceWaiting && (
                 <>

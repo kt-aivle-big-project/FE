@@ -17,7 +17,6 @@ function Login() {
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [isLoginLoading, setIsLoginLoading] = useState(false);
-    const [isGuestLoading, setIsGuestLoading] = useState(false);
 
     const handleLogin = async (event) => {
         event.preventDefault();
@@ -116,7 +115,7 @@ function Login() {
         }
     };
 
-    const isLoading = isLoginLoading || isGuestLoading;
+    const isLoading = isLoginLoading;
 
     return (
         <div className="auth-page login-page">
@@ -232,9 +231,7 @@ function Login() {
                         onClick={handleGuestLogin}
                         disabled={isLoading}
                     >
-                        {isGuestLoading
-                            ? "게스트 로그인 중..."
-                            : "게스트로 둘러보기"}
+                        게스트로 둘러보기
                     </button>
 
                     <p className="login-select-policy">

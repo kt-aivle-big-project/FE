@@ -52,7 +52,6 @@ const formatSimulationTime = (milliseconds) => {
         .join(":");
 };
 
-// 실제 시각이 없으면 기존처럼 시뮬레이션 경과 시간을 사용한다.
 const formatEventTime = (event) => {
     const dateTime =
         event.occurredAt
@@ -113,7 +112,6 @@ const getRobotIdLabel = (robotId) => {
         : `R${robotIdText}`;
 };
 
-// 명시된 레벨이 없으면 이벤트 유형을 기준으로 화면 레벨을 결정한다.
 const getEventLevel = (event) => {
     const explicitLevel = normalizeValue(
         event.level
@@ -164,7 +162,6 @@ const getEventLevel = (event) => {
     };
 };
 
-// 현재 이벤트 데이터의 로봇, 작업, 노드 정보를 한 칸에 모아 표시한다.
 const getEventTargetList = (event) => {
     const targetList = [];
 
@@ -268,7 +265,6 @@ const getEventDescription = (event) =>
     ?? "-";
 
 function SimulationEventList({ eventList = [] }) {
-    // 최신 이벤트가 위에 오도록 정렬하고 화면에는 최근 30건만 유지한다.
     const sortedEventList = [...eventList]
         .sort((left, right) => (
             new Date(
