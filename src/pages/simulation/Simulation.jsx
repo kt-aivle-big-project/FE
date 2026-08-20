@@ -55,6 +55,20 @@ const MIN_LIST_WIDTH = 260;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
+// 개인정보 보호를 위해 화면에 표시하는 사용자 이름 가운데를 마스킹한다.
+// 예: 홍길동 -> 홍*동, admin -> a***n
+const maskName = (value) => {
+    const normalizedName = String(value ?? "").trim();
+
+    if (!normalizedName) return "사용자";
+    if (normalizedName.length === 1) return normalizedName;
+    if (normalizedName.length === 2) {
+        return `${normalizedName.charAt(0)}*`;
+    }
+
+    return `${normalizedName.charAt(0)}${"*".repeat(normalizedName.length - 2)}${normalizedName.charAt(normalizedName.length - 1)}`;
+};
+
 // 제어바의 실제 내용 폭을 기준으로 지도 영역의 최소 너비를 계산한다.
 // 제목/요약/제어 버튼이 한 줄로 유지되는 범위보다 작게는 리사이즈되지 않는다.
 const getControlbarMinWidth = (layoutElement) => {
@@ -284,6 +298,11 @@ const mergeRobotStateBatch = (previousRobots, incomingByRobotId) => {
 
 function Simulation() {
     const navigate = useNavigate();
+
+    // 로그인 시 저장된 이름은 화면에 그대로 노출하지 않고 마스킹해서 사용한다.
+    const storedUserName = localStorage.getItem("name") || "admin";
+    const maskedUserName = maskName(storedUserName);
+    const userInitial = storedUserName.trim().charAt(0).toUpperCase() || "U";
 
     /* =========================================================
        상단 헤더 - 시뮬레이션 실행
@@ -1758,8 +1777,8 @@ function Simulation() {
                                 onClick={() => navigate("/profile")}
                                 aria-label="내 프로필로 이동"
                             >
-                                <span className="simulation-topbar-avatar">A</span>
-                                <strong>admin</strong>
+                                <span className="simulation-topbar-avatar">{userInitial}</span>
+                                <strong>{maskedUserName}</strong>
                             </button>
                         </div>
                     </div>

@@ -11,6 +11,20 @@ const INITIAL_PROFILE = {
     createdAt: "-",
 };
 
+// 개인정보 보호를 위해 이름의 첫 글자와 마지막 글자를 제외한 부분을 마스킹한다.
+// 예: 홍길동 -> 홍*동, admin -> a***n
+const maskName = (value) => {
+    const normalizedName = String(value ?? "").trim();
+
+    if (!normalizedName) return "-";
+    if (normalizedName.length === 1) return normalizedName;
+    if (normalizedName.length === 2) {
+        return `${normalizedName.charAt(0)}*`;
+    }
+
+    return `${normalizedName.charAt(0)}${"*".repeat(normalizedName.length - 2)}${normalizedName.charAt(normalizedName.length - 1)}`;
+};
+
 function Profile() {
     const navigate = useNavigate();
 
@@ -62,7 +76,7 @@ function Profile() {
         try {
             const updatedProfile = await userAccountApi.updateProfile(trimmedName);
             setProfile((prev) => ({ ...prev, ...updatedProfile }));
-            localStorage.setItem("name", updatedProfile.name);
+            localStorage.setItem("name", maskName(updatedProfile.name));
 
             alert("사용자 정보가 수정되었습니다.");
         } catch (error) {
@@ -175,7 +189,7 @@ function Profile() {
                         </div>
 
                         <div className="profile-summary-info">
-                            <strong>{profile.name}</strong>
+                            <strong>{maskName(profile.name)}</strong>
                             <span>{profile.email}</span>
                         </div>
                     </div>
